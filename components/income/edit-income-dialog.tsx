@@ -217,31 +217,11 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated }
             </Label>
           </div>
 
-          {/* Row 2.5: Annual Bonus (only shown when subject to CPF) */}
-          {subjectToCpf && (
-            <div className="space-y-2">
-              <Label htmlFor="edit-bonus">Annual Bonus (SGD)</Label>
-              <Input
-                id="edit-bonus"
-                type="number"
-                placeholder="0"
-                value={bonusAmount}
-                onChange={(e) => setBonusAmount(e.target.value)}
-                min="0"
-                step="0.01"
-                className="bg-white"
-              />
-              <p className="text-xs text-muted-foreground">
-                Enter your annual bonus amount (will be used for CPF calculations)
-              </p>
-            </div>
-          )}
-
           {/* Row 3: Amount and Frequency */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-amount">
-                Amount (SGD) <span className="text-red-500">*</span>
+                Monthly Income <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="edit-amount"
@@ -275,6 +255,39 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated }
               )}
             </div>
           </div>
+
+          {/* Row 3.5: Annual Bonus (only shown when subject to CPF) */}
+          {subjectToCpf && (
+            <div className="space-y-2">
+              <Label htmlFor="edit-bonus">Annual Bonus (Months)</Label>
+              <Input
+                id="edit-bonus"
+                type="number"
+                placeholder="0"
+                value={bonusAmount}
+                onChange={(e) => setBonusAmount(e.target.value)}
+                min="0"
+                step="0.01"
+                className="bg-white"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter number of months of bonus (e.g., 2.5 means 2.5 months of salary as bonus)
+              </p>
+              {amount && bonusAmount && parseFloat(bonusAmount) > 0 ? (
+                <p className="text-xs font-medium text-blue-600">
+                  Bonus Amount: ${(parseFloat(amount) * parseFloat(bonusAmount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              ) : amount && (!bonusAmount || parseFloat(bonusAmount) === 0) ? (
+                <p className="text-xs font-medium text-muted-foreground">
+                  Bonus Amount: $0.00
+                </p>
+              ) : (
+                <p className="text-xs font-medium text-muted-foreground">
+                  Bonus Amount: Please enter amount above
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Row 4: Start Date and End Date */}
           <div className="grid grid-cols-2 gap-4">

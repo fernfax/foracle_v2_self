@@ -112,6 +112,17 @@ export const goals = pgTable("goals", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Current Holdings table
+export const currentHoldings = pgTable("current_holdings", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Account holder
+  bankName: varchar("bank_name", { length: 255 }).notNull(),
+  holdingAmount: decimal("holding_amount", { precision: 15, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
@@ -120,6 +131,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   assets: many(assets),
   policies: many(policies),
   goals: many(goals),
+  currentHoldings: many(currentHoldings),
 }));
 
 export const familyMembersRelations = relations(familyMembers, ({ one, many }) => ({
@@ -128,6 +140,7 @@ export const familyMembersRelations = relations(familyMembers, ({ one, many }) =
     references: [users.id],
   }),
   incomes: many(incomes),
+  currentHoldings: many(currentHoldings),
 }));
 
 export const incomesRelations = relations(incomes, ({ one }) => ({
@@ -166,5 +179,16 @@ export const goalsRelations = relations(goals, ({ one }) => ({
   user: one(users, {
     fields: [goals.userId],
     references: [users.id],
+  }),
+}));
+
+export const currentHoldingsRelations = relations(currentHoldings, ({ one }) => ({
+  user: one(users, {
+    fields: [currentHoldings.userId],
+    references: [users.id],
+  }),
+  familyMember: one(familyMembers, {
+    fields: [currentHoldings.familyMemberId],
+    references: [familyMembers.id],
   }),
 }));

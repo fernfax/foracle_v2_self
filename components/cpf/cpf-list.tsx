@@ -256,6 +256,21 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                             </div>
                           </div>
 
+                          {/* Annual Bonus Summary (only shown if bonusTotalCpf > 0) */}
+                          {member.bonusTotalCpf > 0 && (
+                            <div className="grid grid-cols-3 gap-4">
+                              <div></div>
+                              <div>
+                                <span className="font-medium">Annual Gross Bonus:</span>{" "}
+                                {formatCurrency(member.bonusAmount)}
+                              </div>
+                              <div>
+                                <span className="font-medium">Annual Nett Bonus:</span>{" "}
+                                <span className="text-green-700 font-semibold">{formatCurrency(member.bonusAmount - member.bonusEmployeeCpf)}</span>
+                              </div>
+                            </div>
+                          )}
+
                           <div className="bg-blue-50 p-3 rounded-md space-y-2">
                             <div className="flex items-center justify-between">
                               <div className="font-semibold text-blue-900">CPF Breakdown (Monthly)</div>
@@ -366,6 +381,156 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                               </div>
                             </div>
                           </div>
+
+                          {/* Bonus CPF Section (only shown if bonusTotalCpf > 0) */}
+                          {member.bonusTotalCpf > 0 && (
+                            <div className="bg-purple-50 p-3 rounded-md space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="font-semibold text-purple-900">CPF Breakdown (Annual Bonuses)</div>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="text-muted-foreground hover:text-foreground transition-colors">
+                                      <Info className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[500px] max-h-[500px] overflow-y-auto" align="end">
+                                    <div className="space-y-4">
+                                      <div>
+                                        <h4 className="font-semibold text-base mb-2">Annual Wage Ceiling</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                          The annual wage ceiling limits the total amount of wages that attract CPF contributions in a calendar year.
+                                        </p>
+                                        <p className="text-sm font-medium mt-1">
+                                          The current annual wage ceiling is $102,000 (2026).
+                                        </p>
+                                        <p className="text-sm text-muted-foreground mt-2">
+                                          After monthly CPF contributions (capped at $8,000/month), bonus CPF only applies to the remaining ceiling amount.
+                                        </p>
+                                      </div>
+
+                                      <div className="bg-blue-50 p-2 rounded text-sm">
+                                        <div className="font-medium mb-1">For this member:</div>
+                                        <div>Total Bonus: {formatCurrency(member.bonusAmount)}</div>
+                                        <div>CPF Applicable Bonus: {formatCurrency(member.bonusCpfApplicableAmount)}</div>
+                                      </div>
+
+                                      {/* CPF Allocation Rates Table */}
+                                      <div>
+                                        <h4 className="font-semibold text-base mb-2">CPF Allocation Rates</h4>
+                                        <div className="border rounded-md overflow-hidden">
+                                          <table className="w-full text-xs">
+                                            <thead>
+                                              <tr className="bg-muted/50">
+                                                <th className="text-left p-2 font-medium border-b" rowSpan={2}>Employee's Age<br/>(Years)</th>
+                                                <th className="text-center p-2 font-medium border-b" colSpan={3}>Allocated to</th>
+                                              </tr>
+                                              <tr className="bg-muted/50">
+                                                <th className="text-center p-2 font-medium border-b">Ordinary Account<br/>(Ratio of Contribution)</th>
+                                                <th className="text-center p-2 font-medium border-b">Special Account<sup>1</sup><br/>(Ratio of Contribution)</th>
+                                                <th className="text-center p-2 font-medium border-b">MediSave Account<br/>(Ratio of Contribution)</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              <tr className={member.age !== null && member.age <= 35 ? "border-b bg-yellow-100" : "border-b"}>
+                                                <td className="p-2">35 & below</td>
+                                                <td className="text-center p-2">0.6217</td>
+                                                <td className="text-center p-2">0.1621</td>
+                                                <td className="text-center p-2">0.2162</td>
+                                              </tr>
+                                              <tr className={member.age !== null && member.age > 35 && member.age <= 45 ? "border-b bg-yellow-100" : "border-b bg-muted/30"}>
+                                                <td className="p-2">Above 35 - 45</td>
+                                                <td className="text-center p-2">0.5677</td>
+                                                <td className="text-center p-2">0.1891</td>
+                                                <td className="text-center p-2">0.2432</td>
+                                              </tr>
+                                              <tr className={member.age !== null && member.age > 45 && member.age <= 50 ? "border-b bg-yellow-100" : "border-b"}>
+                                                <td className="p-2">Above 45 - 50</td>
+                                                <td className="text-center p-2">0.5136</td>
+                                                <td className="text-center p-2">0.2162</td>
+                                                <td className="text-center p-2">0.2702</td>
+                                              </tr>
+                                              <tr className={member.age !== null && member.age > 50 && member.age <= 55 ? "border-b bg-yellow-100" : "border-b bg-muted/30"}>
+                                                <td className="p-2">Above 50 - 55</td>
+                                                <td className="text-center p-2">0.4055</td>
+                                                <td className="text-center p-2">0.3108</td>
+                                                <td className="text-center p-2">0.2837</td>
+                                              </tr>
+                                              <tr className="bg-muted/50 border-b">
+                                                <td className="p-2 font-medium" colSpan={4}>
+                                                  <div className="flex justify-between">
+                                                    <span>Ordinary Account (Ratio of Contribution)</span>
+                                                    <span>Retirement Account<sup>1</sup> (Ratio of Contribution)</span>
+                                                    <span>MediSave Account (Ratio of Contribution)</span>
+                                                  </div>
+                                                </td>
+                                              </tr>
+                                              <tr className={member.age !== null && member.age > 55 && member.age <= 60 ? "border-b bg-yellow-100" : "border-b"}>
+                                                <td className="p-2">Above 55 - 60</td>
+                                                <td className="text-center p-2">0.3694</td>
+                                                <td className="text-center p-2">0.3076</td>
+                                                <td className="text-center p-2">0.3230</td>
+                                              </tr>
+                                              <tr className={member.age !== null && member.age > 60 && member.age <= 65 ? "border-b bg-yellow-100" : "border-b bg-muted/30"}>
+                                                <td className="p-2">Above 60 - 65</td>
+                                                <td className="text-center p-2">0.149</td>
+                                                <td className="text-center p-2">0.4042</td>
+                                                <td className="text-center p-2">0.4468</td>
+                                              </tr>
+                                              <tr className={member.age !== null && member.age > 65 && member.age <= 70 ? "border-b bg-yellow-100" : "border-b"}>
+                                                <td className="p-2">Above 65 - 70</td>
+                                                <td className="text-center p-2">0.0607</td>
+                                                <td className="text-center p-2">0.303</td>
+                                                <td className="text-center p-2">0.6363</td>
+                                              </tr>
+                                              <tr className={member.age !== null && member.age > 70 ? "bg-yellow-100" : "bg-muted/30"}>
+                                                <td className="p-2">Above 70</td>
+                                                <td className="text-center p-2">0.08</td>
+                                                <td className="text-center p-2">0.08</td>
+                                                <td className="text-center p-2">0.84</td>
+                                              </tr>
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                          <sup>1</sup>For employees above 55, contributions go to Retirement Account instead of Special Account
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                  <span className="text-purple-700">Annual Bonus CPF Contribution:</span>{" "}
+                                  <div className="font-medium">{formatCurrency(member.bonusTotalCpf)}</div>
+                                </div>
+                                <div>
+                                  <span className="text-purple-700">Annual Employer Bonus CPF Share:</span>{" "}
+                                  <div className="font-medium">{formatCurrency(member.bonusEmployerCpf)}</div>
+                                </div>
+                                <div>
+                                  <span className="text-purple-700">Annual Employee Bonus CPF Share:</span>{" "}
+                                  <div className="font-medium">{formatCurrency(member.bonusEmployeeCpf)}</div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                  <span className="text-purple-700">Bonus OA ({formatPercentage(member.oaAllocationRate)}):</span>{" "}
+                                  <div className="font-medium">{formatCurrency(member.bonusOaAllocation)}</div>
+                                </div>
+                                <div>
+                                  <span className="text-purple-700">Bonus SA ({formatPercentage(member.saAllocationRate)}):</span>{" "}
+                                  <div className="font-medium">{formatCurrency(member.bonusSaAllocation)}</div>
+                                </div>
+                                <div>
+                                  <span className="text-purple-700">Bonus MA ({formatPercentage(member.maAllocationRate)}):</span>{" "}
+                                  <div className="font-medium">{formatCurrency(member.bonusMaAllocation)}</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

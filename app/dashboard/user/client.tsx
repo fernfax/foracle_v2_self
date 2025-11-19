@@ -13,7 +13,9 @@ import { DollarSign, Users, Building2, Briefcase } from "lucide-react";
 import { IncomeList } from "@/components/income/income-list";
 import { FamilyMemberList } from "@/components/family-members/family-member-list";
 import { CpfList } from "@/components/cpf/cpf-list";
+import { CurrentHoldingList } from "@/components/current-holdings/current-holding-list";
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
+import { CurrentHolding } from "@/lib/actions/current-holdings";
 
 type Income = {
   id: string;
@@ -49,9 +51,10 @@ interface UserHomepageClientProps {
   initialIncomes: Income[];
   initialFamilyMembers: FamilyMember[];
   initialCpfData: CpfByFamilyMember[];
+  initialCurrentHoldings: CurrentHolding[];
 }
 
-export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData }: UserHomepageClientProps) {
+export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData, initialCurrentHoldings }: UserHomepageClientProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -106,19 +109,7 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
         </TabsContent>
 
         <TabsContent value="current" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Holdings</CardTitle>
-              <CardDescription>
-                Your current investments and holdings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Your current holdings will be displayed here.
-              </p>
-            </CardContent>
-          </Card>
+          <CurrentHoldingList initialHoldings={initialCurrentHoldings} />
         </TabsContent>
       </Tabs>
       )}

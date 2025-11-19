@@ -10,6 +10,9 @@ const CPF_RATES = {
 // CPF Ordinary Wage Ceiling
 const OW_CEILING = 8000;
 
+// CPF Annual Wage Ceiling
+const ANNUAL_WAGE_CEILING = 102000;
+
 // CPF Allocation Rates (how total CPF is distributed across OA, SA, MA) based on age
 const CPF_ALLOCATION_RATES = {
   "35_and_below": { oa: 0.6217, sa: 0.1622, ma: 0.2162 },
@@ -97,6 +100,69 @@ export function calculateCPF(grossAmount: number, age: number = 30): CPFCalculat
     employerCpfContribution: Math.round(employerCpfContribution * 100) / 100,
     totalCpfContribution: Math.round(totalCpfContribution * 100) / 100,
     netTakeHome: Math.round(netTakeHome * 100) / 100,
+  };
+}
+
+/**
+ * Calculate bonus CPF contributions considering annual wage ceiling
+ * @param monthlyIncome - Monthly gross income
+ * @param bonusAmount - Total bonus amount
+ * @param age - User's age
+ * @returns Bonus CPF calculation breakdown
+ */
+export interface BonusCPFResult {
+  bonusAmount: number;
+  annualBaseCpf: number; // CPF-applicable amount from 12 months of salary
+  remainingAnnualCeiling: number; // How much of annual ceiling is left for bonus
+  bonusCpfApplicableAmount: number; // Actual bonus amount subject to CPF
+  bonusEmployeeCpf: number;
+  bonusEmployerCpf: number;
+  bonusTotalCpf: number;
+  bonusOaAllocation: number;
+  bonusSaAllocation: number;
+  bonusMaAllocation: number;
+}
+
+export function calculateBonusCPF(
+  monthlyIncome: number,
+  bonusAmount: number,
+  age: number
+): BonusCPFResult {
+  // Calculate annual base CPF (12 months of salary, capped at OW ceiling)
+  const monthlyCpfApplicableAmount = Math.min(monthlyIncome, OW_CEILING);
+  const annualBaseCpf = monthlyCpfApplicableAmount * 12;
+
+  // Calculate remaining annual ceiling for bonus
+  const remainingAnnualCeiling = Math.max(0, ANNUAL_WAGE_CEILING - annualBaseCpf);
+
+  // Bonus CPF only applies to the remaining ceiling amount
+  const bonusCpfApplicableAmount = Math.min(bonusAmount, remainingAnnualCeiling);
+
+  // Get age-based rates
+  const rates = getCPFRatesByAge(age);
+  const allocation = getCPFAllocationByAge(age);
+
+  // Calculate bonus CPF contributions
+  const bonusEmployeeCpf = bonusCpfApplicableAmount * rates.employee;
+  const bonusEmployerCpf = bonusCpfApplicableAmount * rates.employer;
+  const bonusTotalCpf = bonusEmployeeCpf + bonusEmployerCpf;
+
+  // Calculate bonus OA/SA/MA allocations
+  const bonusOaAllocation = bonusTotalCpf * allocation.oa;
+  const bonusSaAllocation = bonusTotalCpf * allocation.sa;
+  const bonusMaAllocation = bonusTotalCpf * allocation.ma;
+
+  return {
+    bonusAmount,
+    annualBaseCpf,
+    remainingAnnualCeiling,
+    bonusCpfApplicableAmount,
+    bonusEmployeeCpf: Math.round(bonusEmployeeCpf * 100) / 100,
+    bonusEmployerCpf: Math.round(bonusEmployerCpf * 100) / 100,
+    bonusTotalCpf: Math.round(bonusTotalCpf * 100) / 100,
+    bonusOaAllocation: Math.round(bonusOaAllocation * 100) / 100,
+    bonusSaAllocation: Math.round(bonusSaAllocation * 100) / 100,
+    bonusMaAllocation: Math.round(bonusMaAllocation * 100) / 100,
   };
 }
 

@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { incomes, familyMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getCPFRatesByAge, getCPFAllocationByAge } from "@/lib/cpf-calculator";
+import { getCPFRatesByAge, getCPFAllocationByAge, calculateBonusCPF } from "@/lib/cpf-calculator";
 
 export interface CpfByFamilyMember {
   familyMemberId: string;
@@ -30,6 +30,15 @@ export interface CpfByFamilyMember {
   oaAllocationRate: number;
   saAllocationRate: number;
   maAllocationRate: number;
+  // Bonus CPF fields
+  bonusAmount: number;
+  bonusCpfApplicableAmount: number;
+  bonusEmployeeCpf: number;
+  bonusEmployerCpf: number;
+  bonusTotalCpf: number;
+  bonusOaAllocation: number;
+  bonusSaAllocation: number;
+  bonusMaAllocation: number;
 }
 
 /**
@@ -140,12 +149,20 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
     let totalOa = 0;
     let totalSa = 0;
     let totalMa = 0;
+    let totalBonusAmount = 0;
 
     for (const income of memberIncomes) {
       const monthlyGross = normalizeToMonthly(
         parseFloat(income.amount),
         income.frequency
       );
+
+      // Aggregate bonus amounts (stored as number of months)
+      if (income.bonusAmount) {
+        const bonusMonths = parseFloat(income.bonusAmount);
+        const actualBonusAmount = monthlyGross * bonusMonths;
+        totalBonusAmount += actualBonusAmount;
+      }
 
       // Recalculate CPF contributions using correct age-based rates
       const cpfApplicableAmount = Math.min(monthlyGross, 8000);
@@ -186,6 +203,22 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
     const monthlySaAllocation = totalCpf * (saAllocationRate / 100);
     const monthlyMaAllocation = totalCpf * (maAllocationRate / 100);
 
+    // Calculate bonus CPF (if there's a bonus amount)
+    let bonusCpfData = {
+      bonusAmount: 0,
+      bonusCpfApplicableAmount: 0,
+      bonusEmployeeCpf: 0,
+      bonusEmployerCpf: 0,
+      bonusTotalCpf: 0,
+      bonusOaAllocation: 0,
+      bonusSaAllocation: 0,
+      bonusMaAllocation: 0,
+    };
+
+    if (totalBonusAmount > 0 && memberAge !== null) {
+      bonusCpfData = calculateBonusCPF(totalGross, totalBonusAmount, memberAge);
+    }
+
     cpfData.push({
       familyMemberId: member.id,
       familyMemberName: member.name,
@@ -209,6 +242,15 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       oaAllocationRate: parseFloat(oaAllocationRate.toFixed(2)),
       saAllocationRate: parseFloat(saAllocationRate.toFixed(2)),
       maAllocationRate: parseFloat(maAllocationRate.toFixed(2)),
+      // Bonus CPF fields
+      bonusAmount: parseFloat(bonusCpfData.bonusAmount.toFixed(2)),
+      bonusCpfApplicableAmount: parseFloat(bonusCpfData.bonusCpfApplicableAmount.toFixed(2)),
+      bonusEmployeeCpf: parseFloat(bonusCpfData.bonusEmployeeCpf.toFixed(2)),
+      bonusEmployerCpf: parseFloat(bonusCpfData.bonusEmployerCpf.toFixed(2)),
+      bonusTotalCpf: parseFloat(bonusCpfData.bonusTotalCpf.toFixed(2)),
+      bonusOaAllocation: parseFloat(bonusCpfData.bonusOaAllocation.toFixed(2)),
+      bonusSaAllocation: parseFloat(bonusCpfData.bonusSaAllocation.toFixed(2)),
+      bonusMaAllocation: parseFloat(bonusCpfData.bonusMaAllocation.toFixed(2)),
     });
   }
 
