@@ -10,6 +10,17 @@ const CPF_RATES = {
 // CPF Ordinary Wage Ceiling
 const OW_CEILING = 8000;
 
+// CPF Allocation Rates (how total CPF is distributed across OA, SA, MA) based on age
+const CPF_ALLOCATION_RATES = {
+  "35_and_below": { oa: 0.6217, sa: 0.1622, ma: 0.2162 },
+  "above_35_to_45": { oa: 0.5676, sa: 0.2162, ma: 0.2162 },
+  "above_45_to_50": { oa: 0.5135, sa: 0.2703, ma: 0.2162 },
+  "above_50_to_55": { oa: 0.4324, sa: 0.3514, ma: 0.2162 },
+  "above_55_to_60": { oa: 0.4308, sa: 0.2462, ma: 0.3231 },
+  "above_60_to_65": { oa: 0.3404, sa: 0.1489, ma: 0.5106 },
+  "above_65": { oa: 0.3333, sa: 0.0909, ma: 0.5758 },
+};
+
 export type CPFAgeGroup = keyof typeof CPF_RATES;
 
 export interface CPFCalculationResult {
@@ -22,7 +33,7 @@ export interface CPFCalculationResult {
 }
 
 /**
- * Get CPF rate based on user's age
+ * Get CPF contribution rate based on user's age
  */
 export function getCPFRatesByAge(age: number): { employer: number; employee: number } {
   if (age <= 55) {
@@ -35,6 +46,27 @@ export function getCPFRatesByAge(age: number): { employer: number; employee: num
     return CPF_RATES["above_65_to_70"];
   } else {
     return CPF_RATES["above_70"];
+  }
+}
+
+/**
+ * Get CPF allocation rates (OA/SA/MA distribution) based on user's age
+ */
+export function getCPFAllocationByAge(age: number): { oa: number; sa: number; ma: number } {
+  if (age <= 35) {
+    return CPF_ALLOCATION_RATES["35_and_below"];
+  } else if (age <= 45) {
+    return CPF_ALLOCATION_RATES["above_35_to_45"];
+  } else if (age <= 50) {
+    return CPF_ALLOCATION_RATES["above_45_to_50"];
+  } else if (age <= 55) {
+    return CPF_ALLOCATION_RATES["above_50_to_55"];
+  } else if (age <= 60) {
+    return CPF_ALLOCATION_RATES["above_55_to_60"];
+  } else if (age <= 65) {
+    return CPF_ALLOCATION_RATES["above_60_to_65"];
+  } else {
+    return CPF_ALLOCATION_RATES["above_65"];
   }
 }
 

@@ -2,11 +2,26 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { incomes } from "@/db/schema";
+import { incomes, familyMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { calculateCPF } from "@/lib/cpf-calculator";
+
+/**
+ * Calculate age from date of birth
+ */
+function calculateAge(dateOfBirth: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - dateOfBirth.getFullYear();
+  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+    age--;
+  }
+
+  return age;
+}
 
 /**
  * Get the current authenticated user's ID
@@ -96,6 +111,7 @@ export async function updateIncome(
     endDate?: string | null;
     description?: string;
     isActive?: boolean;
+    familyMemberAge?: number;
   }
 ) {
   const userId = await getCurrentUserId();
@@ -129,8 +145,20 @@ export async function updateIncome(
   const finalSubjectToCpf = data.subjectToCpf !== undefined ? data.subjectToCpf : existing.subjectToCpf;
 
   if (finalSubjectToCpf) {
-    // For now, hardcode age as 30. Will be replaced with actual user age later.
-    const userAge = 30;
+    // Determine user age for CPF calculation
+    let userAge = data.familyMemberAge ?? 30; // Use provided age or default to 30
+
+    // If age not provided but income is linked to a family member, fetch their age
+    if (!data.familyMemberAge && existing.familyMemberId) {
+      const familyMember = await db.query.familyMembers.findFirst({
+        where: eq(familyMembers.id, existing.familyMemberId),
+      });
+
+      if (familyMember?.dateOfBirth) {
+        userAge = calculateAge(new Date(familyMember.dateOfBirth));
+      }
+    }
+
     const cpfResult = calculateCPF(finalAmount, userAge);
     updateData.employeeCpfContribution = cpfResult.employeeCpfContribution.toString();
     updateData.employerCpfContribution = cpfResult.employerCpfContribution.toString();

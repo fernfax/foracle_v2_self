@@ -259,7 +259,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                   onClick={() => handleSort("name")}
                   className="h-auto p-0 font-semibold"
                 >
-                  Name
+                  Income Name
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
@@ -303,7 +303,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead>Linked To</TableHead>
+              <TableHead>Family Member</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>

@@ -448,7 +448,7 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
                   onClick={() => handleSort("name")}
                   className="h-auto p-0 font-semibold"
                 >
-                  Full Name
+                  Family Member
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>

@@ -26,6 +26,22 @@ import { CalendarIcon, Info } from "lucide-react";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import { updateIncome } from "@/lib/actions/income";
+import { getFamilyMembers } from "@/lib/actions/family-members";
+
+/**
+ * Calculate age from date of birth
+ */
+function calculateAge(dateOfBirth: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - dateOfBirth.getFullYear();
+  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+    age--;
+  }
+
+  return age;
+}
 
 interface Income {
   id: string;
@@ -42,6 +58,7 @@ interface Income {
   startDate: string;
   endDate: string | null;
   isActive: boolean | null;
+  familyMemberId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -82,6 +99,7 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated }
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [familyMemberAge, setFamilyMemberAge] = useState<number | undefined>(undefined);
 
   // Populate form when income changes
   useEffect(() => {
@@ -95,6 +113,19 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated }
       setStartDate(parse(income.startDate, "yyyy-MM-dd", new Date()));
       setEndDate(income.endDate ? parse(income.endDate, "yyyy-MM-dd", new Date()) : undefined);
       setNotes(income.description || "");
+
+      // Fetch family member age if income is linked to a family member
+      if (income.familyMemberId) {
+        getFamilyMembers().then((members) => {
+          const familyMember = members.find((m) => m.id === income.familyMemberId);
+          if (familyMember?.dateOfBirth) {
+            const age = calculateAge(new Date(familyMember.dateOfBirth));
+            setFamilyMemberAge(age);
+          }
+        });
+      } else {
+        setFamilyMemberAge(undefined);
+      }
     }
   }, [income]);
 
@@ -117,6 +148,7 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated }
         startDate: format(startDate, "yyyy-MM-dd"),
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : null,
         description: notes || undefined,
+        familyMemberAge,
       });
 
       onIncomeUpdated(updatedIncome);

@@ -259,6 +259,7 @@ export function AddIncomeDialog({ open, onOpenChange, onIncomeAdded, familyMembe
           startDate: format(startDate, "yyyy-MM-dd"),
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           description: notes || undefined,
+          familyMemberAge,
         });
       } else {
         // Create mode - create new income

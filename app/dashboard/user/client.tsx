@@ -12,6 +12,8 @@ import {
 import { DollarSign, Users, Building2, Briefcase } from "lucide-react";
 import { IncomeList } from "@/components/income/income-list";
 import { FamilyMemberList } from "@/components/family-members/family-member-list";
+import { CpfList } from "@/components/cpf/cpf-list";
+import { CpfByFamilyMember } from "@/lib/actions/cpf";
 
 type Income = {
   id: string;
@@ -46,9 +48,10 @@ type FamilyMember = {
 interface UserHomepageClientProps {
   initialIncomes: Income[];
   initialFamilyMembers: FamilyMember[];
+  initialCpfData: CpfByFamilyMember[];
 }
 
-export function UserHomepageClient({ initialIncomes, initialFamilyMembers }: UserHomepageClientProps) {
+export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData }: UserHomepageClientProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -99,19 +102,7 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers }: Use
         </TabsContent>
 
         <TabsContent value="cpf" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>CPF</CardTitle>
-              <CardDescription>
-                Your Central Provident Fund information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Your CPF details will be displayed here.
-              </p>
-            </CardContent>
-          </Card>
+          <CpfList initialCpfData={initialCpfData} />
         </TabsContent>
 
         <TabsContent value="current" className="mt-6">
