@@ -19,6 +19,8 @@ export const familyMembers = pgTable("family_members", {
   name: varchar("name", { length: 255 }).notNull(),
   relationship: varchar("relationship", { length: 100 }), // spouse, child, dependent, etc.
   dateOfBirth: date("date_of_birth"),
+  isContributing: boolean("is_contributing").default(false), // Consider this member's income into the total income
+  notes: text("notes"), // Additional notes about family member
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -27,12 +29,22 @@ export const familyMembers = pgTable("family_members", {
 export const incomes = pgTable("incomes", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
-  source: varchar("source", { length: 255 }).notNull(), // salary, freelance, business, investment, etc.
+  familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Optional link to family member
+  name: varchar("name", { length: 255 }).notNull(), // Income source name (e.g., "Primary Income", "Monthly Salary")
+  category: varchar("category", { length: 100 }).notNull(), // salary, freelance, business, investment, etc.
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
-  frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time
-  description: text("description"),
-  startDate: date("start_date"),
-  endDate: date("end_date"),
+  frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time, weekly, bi-weekly
+  subjectToCpf: boolean("subject_to_cpf").default(false), // Subject to CPF deductions
+  bonusAmount: decimal("bonus_amount", { precision: 12, scale: 2 }), // Annual bonus amount
+  employeeCpfContribution: decimal("employee_cpf_contribution", { precision: 12, scale: 2 }), // Calculated employee CPF share
+  employerCpfContribution: decimal("employer_cpf_contribution", { precision: 12, scale: 2 }), // Calculated employer CPF share
+  netTakeHome: decimal("net_take_home", { precision: 12, scale: 2 }), // Gross minus employee CPF
+  cpfOrdinaryAccount: decimal("cpf_ordinary_account", { precision: 12, scale: 2 }), // CPF OA allocation
+  cpfSpecialAccount: decimal("cpf_special_account", { precision: 12, scale: 2 }), // CPF SA allocation
+  cpfMedisaveAccount: decimal("cpf_medisave_account", { precision: 12, scale: 2 }), // CPF MA allocation
+  description: text("description"), // Payment notes
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"), // Optional - leave empty for ongoing income
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -110,17 +122,22 @@ export const usersRelations = relations(users, ({ many }) => ({
   goals: many(goals),
 }));
 
-export const familyMembersRelations = relations(familyMembers, ({ one }) => ({
+export const familyMembersRelations = relations(familyMembers, ({ one, many }) => ({
   user: one(users, {
     fields: [familyMembers.userId],
     references: [users.id],
   }),
+  incomes: many(incomes),
 }));
 
 export const incomesRelations = relations(incomes, ({ one }) => ({
   user: one(users, {
     fields: [incomes.userId],
     references: [users.id],
+  }),
+  familyMember: one(familyMembers, {
+    fields: [incomes.familyMemberId],
+    references: [familyMembers.id],
   }),
 }));
 

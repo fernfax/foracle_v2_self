@@ -3,11 +3,10 @@ import Link from "next/link";
 import {
   TrendingUp,
   Home,
-  DollarSign,
   Wallet,
   Shield,
   Target,
-  Users,
+  User,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -49,11 +48,11 @@ export default function DashboardLayout({
                 Dashboard
               </Link>
               <Link
-                href="/dashboard/income"
+                href="/dashboard/user"
                 className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
               >
-                <DollarSign className="h-5 w-5" />
-                Income
+                <User className="h-5 w-5" />
+                User Homepage
               </Link>
               <Link
                 href="/dashboard/expenses"
@@ -83,13 +82,6 @@ export default function DashboardLayout({
                 <Target className="h-5 w-5" />
                 Goals
               </Link>
-              <Link
-                href="/dashboard/family"
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-              >
-                <Users className="h-5 w-5" />
-                Family
-              </Link>
             </nav>
           </aside>
 
@@ -109,11 +101,11 @@ export default function DashboardLayout({
             <span className="text-xs">Home</span>
           </Link>
           <Link
-            href="/dashboard/income"
+            href="/dashboard/user"
             className="flex flex-col items-center gap-1 p-2 text-muted-foreground"
           >
-            <DollarSign className="h-5 w-5" />
-            <span className="text-xs">Income</span>
+            <User className="h-5 w-5" />
+            <span className="text-xs">User</span>
           </Link>
           <Link
             href="/dashboard/expenses"
