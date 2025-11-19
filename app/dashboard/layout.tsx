@@ -1,14 +1,9 @@
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import {
-  TrendingUp,
-  Home,
-  Wallet,
-  Shield,
-  Target,
-  User,
-} from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { DashboardNav } from "@/components/dashboard-nav";
+import { MobileNav } from "@/components/mobile-nav";
 
 export default function DashboardLayout({
   children,
@@ -39,50 +34,7 @@ export default function DashboardLayout({
         <div className="flex gap-8">
           {/* Sidebar Navigation - Hidden on mobile, visible on md+ */}
           <aside className="sidebar-nav w-64 shrink-0">
-            <nav className="sticky top-24 space-y-1.5">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium bg-foreground text-background transition-all"
-              >
-                <Home className="h-5 w-5" />
-                Dashboard
-              </Link>
-              <Link
-                href="/dashboard/user"
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-              >
-                <User className="h-5 w-5" />
-                User Homepage
-              </Link>
-              <Link
-                href="/dashboard/expenses"
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-              >
-                <Wallet className="h-5 w-5" />
-                Expenses
-              </Link>
-              <Link
-                href="/dashboard/assets"
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-              >
-                <TrendingUp className="h-5 w-5" />
-                Assets
-              </Link>
-              <Link
-                href="/dashboard/policies"
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-              >
-                <Shield className="h-5 w-5" />
-                Policies
-              </Link>
-              <Link
-                href="/dashboard/goals"
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-              >
-                <Target className="h-5 w-5" />
-                Goals
-              </Link>
-            </nav>
+            <DashboardNav />
           </aside>
 
           {/* Main Content */}
@@ -91,45 +43,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="bottom-nav fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 z-50">
-        <div className="grid grid-cols-5 gap-1 p-2">
-          <Link
-            href="/dashboard"
-            className="flex flex-col items-center gap-1 p-2 text-foreground"
-          >
-            <Home className="h-5 w-5" />
-            <span className="text-xs">Home</span>
-          </Link>
-          <Link
-            href="/dashboard/user"
-            className="flex flex-col items-center gap-1 p-2 text-muted-foreground"
-          >
-            <User className="h-5 w-5" />
-            <span className="text-xs">User</span>
-          </Link>
-          <Link
-            href="/dashboard/expenses"
-            className="flex flex-col items-center gap-1 p-2 text-muted-foreground"
-          >
-            <Wallet className="h-5 w-5" />
-            <span className="text-xs">Expenses</span>
-          </Link>
-          <Link
-            href="/dashboard/goals"
-            className="flex flex-col items-center gap-1 p-2 text-muted-foreground"
-          >
-            <Target className="h-5 w-5" />
-            <span className="text-xs">Goals</span>
-          </Link>
-          <Link
-            href="/dashboard/assets"
-            className="flex flex-col items-center gap-1 p-2 text-muted-foreground"
-          >
-            <TrendingUp className="h-5 w-5" />
-            <span className="text-xs">Assets</span>
-          </Link>
-        </div>
-      </nav>
+      <MobileNav />
 
       {/* Spacer for mobile bottom nav */}
       <div className="bottom-spacer h-16"></div>
