@@ -24,6 +24,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
+import { AddCpfDetailsDialog } from "@/components/income/add-cpf-details-dialog";
+import { updateIncome } from "@/lib/actions/income";
+import { getIncomes } from "@/lib/actions/income";
 
 interface CpfListProps {
   initialCpfData: CpfByFamilyMember[];
@@ -38,6 +41,10 @@ export function CpfList({ initialCpfData }: CpfListProps) {
   const [sortKey, setSortKey] = useState<SortKey>("familyMemberName");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [isCpfDialogOpen, setIsCpfDialogOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<CpfByFamilyMember | null>(null);
+  const [editingIncomeId, setEditingIncomeId] = useState<string | null>(null);
+  const [currentCpfValues, setCurrentCpfValues] = useState<{ oa: number; sa: number; ma: number } | null>(null);
 
   // Filter and sort CPF data
   const filteredData = useMemo(() => {
@@ -83,6 +90,53 @@ export function CpfList({ initialCpfData }: CpfListProps) {
       newExpanded.add(familyMemberId);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const handleEditCpf = async (member: CpfByFamilyMember) => {
+    try {
+      // Fetch all incomes to find the one for this family member
+      const allIncomes = await getIncomes();
+      const memberIncome = allIncomes.find(
+        (income) => income.familyMemberId === member.familyMemberId && income.subjectToCpf && income.isActive
+      );
+
+      if (memberIncome) {
+        setEditingMember(member);
+        setEditingIncomeId(memberIncome.id);
+        setCurrentCpfValues({
+          oa: memberIncome.cpfOrdinaryAccount ? parseFloat(memberIncome.cpfOrdinaryAccount) : 0,
+          sa: memberIncome.cpfSpecialAccount ? parseFloat(memberIncome.cpfSpecialAccount) : 0,
+          ma: memberIncome.cpfMedisaveAccount ? parseFloat(memberIncome.cpfMedisaveAccount) : 0,
+        });
+        setIsCpfDialogOpen(true);
+      } else {
+        console.error("No active CPF income found for this family member");
+      }
+    } catch (error) {
+      console.error("Failed to load income data:", error);
+    }
+  };
+
+  const handleCpfSave = async (cpfDetails: { oa: number; sa: number; ma: number }) => {
+    if (!editingIncomeId) return;
+
+    try {
+      await updateIncome(editingIncomeId, {
+        cpfOrdinaryAccount: cpfDetails.oa,
+        cpfSpecialAccount: cpfDetails.sa,
+        cpfMedisaveAccount: cpfDetails.ma,
+      });
+
+      setIsCpfDialogOpen(false);
+      setEditingMember(null);
+      setEditingIncomeId(null);
+      setCurrentCpfValues(null);
+
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to save CPF details:", error);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -223,7 +277,7 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditCpf(member)}>
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
@@ -351,7 +405,19 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                               </Popover>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-blue-200">
+                              <div>
+                                <span className="text-blue-700 font-semibold">Gross Income:</span>{" "}
+                                <div className="font-bold">{formatCurrency(member.monthlyGrossIncome)}</div>
+                              </div>
+                              <div>
+                                <span className="text-blue-700 font-semibold">Net Income:</span>{" "}
+                                <div className="font-bold">{formatCurrency(member.monthlyNettIncome)}</div>
+                              </div>
+                              <div></div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4 text-sm pt-3">
                               <div>
                                 <span className="text-blue-700">Monthly CPF Contribution:</span>{" "}
                                 <div className="font-medium">{formatCurrency(member.monthlyTotalCpf)}</div>
@@ -500,7 +566,19 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                                 </Popover>
                               </div>
 
-                              <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-purple-200">
+                                <div>
+                                  <span className="text-purple-700 font-semibold">Gross Bonus:</span>{" "}
+                                  <div className="font-bold">{formatCurrency(member.bonusAmount)}</div>
+                                </div>
+                                <div>
+                                  <span className="text-purple-700 font-semibold">Net Bonus:</span>{" "}
+                                  <div className="font-bold">{formatCurrency(member.bonusAmount - member.bonusEmployeeCpf)}</div>
+                                </div>
+                                <div></div>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-4 text-sm pt-3">
                                 <div>
                                   <span className="text-purple-700">Annual Bonus CPF Contribution:</span>{" "}
                                   <div className="font-medium">{formatCurrency(member.bonusTotalCpf)}</div>
@@ -542,6 +620,21 @@ export function CpfList({ initialCpfData }: CpfListProps) {
         </Table>
       </div>
         </div>
+      )}
+
+      {/* CPF Details Edit Dialog */}
+      {editingMember && currentCpfValues && (
+        <AddCpfDetailsDialog
+          open={isCpfDialogOpen}
+          onOpenChange={setIsCpfDialogOpen}
+          onBack={() => setIsCpfDialogOpen(false)}
+          onComplete={handleCpfSave}
+          totalCpfContribution={editingMember.monthlyTotalCpf}
+          familyMemberName={editingMember.familyMemberName}
+          initialOA={currentCpfValues.oa}
+          initialSA={currentCpfValues.sa}
+          initialMA={currentCpfValues.ma}
+        />
       )}
     </div>
   );

@@ -24,7 +24,8 @@ type Income = {
   amount: string;
   frequency: string;
   subjectToCpf: boolean | null;
-  bonusAmount: string | null;
+  accountForBonus: boolean | null;
+  bonusGroups: string | null;
   employeeCpfContribution: string | null;
   employerCpfContribution: string | null;
   netTakeHome: string | null;

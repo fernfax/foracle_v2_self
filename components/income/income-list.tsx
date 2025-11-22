@@ -39,6 +39,7 @@ import {
   ChevronRight,
   ChevronDown,
   ArrowUpDown,
+  Triangle,
   MoreHorizontal,
   Plus,
   Settings2,
@@ -50,7 +51,7 @@ import {
 import { AddIncomeDialog } from "./add-income-dialog";
 import { EditIncomeDialog } from "./edit-income-dialog";
 import { deleteIncome, toggleIncomeStatus } from "@/lib/actions/income";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 
 type Income = {
   id: string;
@@ -59,13 +60,18 @@ type Income = {
   amount: string;
   frequency: string;
   subjectToCpf: boolean | null;
-  bonusAmount: string | null;
+  accountForBonus: boolean | null;
+  bonusGroups: string | null;
   employeeCpfContribution: string | null;
   employerCpfContribution: string | null;
   netTakeHome: string | null;
   description: string | null;
   startDate: string;
   endDate: string | null;
+  futureIncomeChange: boolean | null;
+  futureIncomeAmount: string | null;
+  futureIncomeStartDate: string | null;
+  futureIncomeEndDate: string | null;
   isActive: boolean | null;
   familyMemberId: string | null;
   familyMember: {
@@ -293,16 +299,6 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("startDate")}
-                  className="h-auto p-0 font-semibold"
-                >
-                  Period
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
               <TableHead>Family Member</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[50px]"></TableHead>
@@ -311,14 +307,14 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           <TableBody>
             {paginatedIncomes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   No income records found. Add your first income to get started.
                 </TableCell>
               </TableRow>
             ) : (
               paginatedIncomes.map((income) => (
                 <React.Fragment key={income.id}>
-                  <TableRow className={income.familyMember ? "bg-blue-50/50" : ""}>
+                  <TableRow>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -337,7 +333,6 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                     <TableCell>{income.category}</TableCell>
                     <TableCell>${parseFloat(income.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</TableCell>
                     <TableCell className="capitalize">{income.frequency}</TableCell>
-                    <TableCell>{formatPeriod(income.startDate, income.endDate)}</TableCell>
                     <TableCell>
                       {income.familyMember ? (
                         <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
@@ -357,7 +352,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                             : ""
                         }
                       >
-                        {income.isActive ? "Active" : "Inactive"}
+                        {income.isActive ? "Current" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -383,20 +378,31 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                     </TableCell>
                   </TableRow>
                   {expandedRows.has(income.id) && (
-                    <TableRow className={income.familyMember ? "bg-blue-50/50" : ""}>
-                      <TableCell colSpan={9} className="bg-muted/50">
+                    <TableRow>
+                      <TableCell colSpan={8} className="bg-muted/50">
                         <div className="p-4 space-y-3">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <span className="font-medium">Subject to CPF:</span>{" "}
                               {income.subjectToCpf ? "Yes" : "No"}
                             </div>
-                            {income.bonusAmount && (
-                              <div>
-                                <span className="font-medium">Annual Bonus:</span>{" "}
-                                ${parseFloat(income.bonusAmount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                              </div>
-                            )}
+                            {income.accountForBonus && income.bonusGroups && (() => {
+                              try {
+                                const bonusGroups = JSON.parse(income.bonusGroups);
+                                const totalBonusMonths = bonusGroups.reduce((sum: number, group: { month: number; amount: string }) => {
+                                  return sum + (parseFloat(group.amount) || 0);
+                                }, 0);
+                                const annualBonusAmount = parseFloat(income.amount) * totalBonusMonths;
+                                return (
+                                  <div>
+                                    <span className="font-medium">Annual Bonus:</span>{" "}
+                                    ${annualBonusAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                                  </div>
+                                );
+                              } catch {
+                                return null;
+                              }
+                            })()}
                           </div>
                           {income.subjectToCpf && income.employeeCpfContribution && (
                             <div className="bg-blue-50 p-3 rounded-md space-y-2">
@@ -428,6 +434,64 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                           </div>
                         </div>
                       </TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* Future Income Change Sub-Row */}
+                  {income.futureIncomeChange && income.futureIncomeAmount && (
+                    <TableRow className="border-l-4 border-l-gray-300">
+                      <TableCell></TableCell>
+                      <TableCell className="pl-8">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center">
+                            <div className="w-4 h-4 border-l-2 border-b-2 border-gray-400 -ml-1"></div>
+                          </div>
+                          <span className="text-sm font-medium">
+                            {income.name}
+                          </span>
+                          <span className="text-xs text-gray-500 italic">
+                            (from {income.futureIncomeStartDate ? format(new Date(income.futureIncomeStartDate), "MMM yyyy") : "TBD"})
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{income.category}</TableCell>
+                      <TableCell className="text-sm font-semibold">
+                        <div className="flex items-center gap-1">
+                          {(() => {
+                            const currentAmount = parseFloat(income.amount);
+                            const futureAmount = parseFloat(income.futureIncomeAmount);
+                            const isIncrease = futureAmount > currentAmount;
+                            const isDecrease = futureAmount < currentAmount;
+
+                            return (
+                              <>
+                                {isIncrease && <Triangle className="h-3 w-3 text-green-600 fill-green-600" />}
+                                {isDecrease && <Triangle className="h-3 w-3 text-red-600 fill-red-600 rotate-180" />}
+                                <span>
+                                  ${futureAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                                </span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </TableCell>
+                      <TableCell className="capitalize text-sm">{income.frequency}</TableCell>
+                      <TableCell>
+                        {income.familyMember ? (
+                          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                            <Link2 className="h-3 w-3 mr-1" />
+                            {income.familyMember.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300 text-xs">
+                          Future
+                        </Badge>
+                      </TableCell>
+                      <TableCell></TableCell>
                     </TableRow>
                   )}
                 </React.Fragment>

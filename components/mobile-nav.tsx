@@ -12,9 +12,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
-  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/user", label: "User", icon: User },
-  { href: "/dashboard/expenses", label: "Expenses", icon: Wallet },
+  { href: "/dashboard/user/expenses", label: "Expenses", icon: Wallet },
   { href: "/dashboard/goals", label: "Goals", icon: Target },
   { href: "/dashboard/assets", label: "Assets", icon: TrendingUp },
 ];

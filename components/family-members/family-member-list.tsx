@@ -49,6 +49,7 @@ import {
 import { AddFamilyMemberDialog } from "./add-family-member-dialog";
 import { EditFamilyMemberDialog } from "./edit-family-member-dialog";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
+import { EditIncomeDialog } from "@/components/income/edit-income-dialog";
 import { AddCpfDetailsDialog } from "@/components/income/add-cpf-details-dialog";
 import { deleteFamilyMember, getFamilyMemberIncomes, updateFamilyMember } from "@/lib/actions/family-members";
 import { createIncome, updateIncome } from "@/lib/actions/income";
@@ -73,7 +74,8 @@ type Income = {
   amount: string;
   frequency: string;
   subjectToCpf: boolean | null;
-  bonusAmount: string | null;
+  accountForBonus: boolean | null;
+  bonusGroups: string | null;
   employeeCpfContribution: string | null;
   employerCpfContribution: string | null;
   netTakeHome: string | null;
@@ -300,32 +302,39 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
       }
 
       // Step 2: Save or update income with CPF details
+      let savedIncome;
       if (incomeToEdit && incomeToEdit.id) {
         // Update existing income
-        await updateIncome(incomeToEdit.id, {
+        savedIncome = await updateIncome(incomeToEdit.id, {
           ...pendingIncomeData,
           cpfOrdinaryAccount: cpfDetails.oa,
           cpfSpecialAccount: cpfDetails.sa,
           cpfMedisaveAccount: cpfDetails.ma,
         });
+        console.log('Updated income with CPF details:', savedIncome);
       } else {
         // Create new income
-        await createIncome({
+        savedIncome = await createIncome({
           ...pendingIncomeData,
           cpfOrdinaryAccount: cpfDetails.oa,
           cpfSpecialAccount: cpfDetails.sa,
           cpfMedisaveAccount: cpfDetails.ma,
         });
+        console.log('Created income with CPF details:', savedIncome);
       }
 
-      // Close CPF dialog and clear all pending state
+      // Close dialogs and refresh page to show updated data
       setIsCpfDetailsDialogOpen(false);
+      setIsEditDialogOpen(false);
       setPendingIncomeData(null);
       setPendingIncomeFormData(null);
       setPendingCpfData(null);
       setPendingFamilyMemberData(null);
       setContributingMemberForIncome(null);
       setIncomeToEdit(null);
+
+      // Refresh the page to show updated CPF data
+      window.location.reload();
     } catch (error) {
       console.error("Failed to save data:", error);
     }
@@ -667,13 +676,26 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
         onContributingMemberUpdated={handleContributingMemberUpdated}
       />
 
-      {contributingMemberForIncome && (
+      {contributingMemberForIncome && incomeToEdit && (
+        <EditIncomeDialog
+          open={isAddIncomeDialogOpen}
+          onOpenChange={setIsAddIncomeDialogOpen}
+          onIncomeUpdated={handleIncomeAdded}
+          income={incomeToEdit}
+          familyMember={contributingMemberForIncome}
+          pendingFormData={pendingIncomeFormData}
+          onBack={handleIncomeBack}
+          onCpfDetailsNeeded={handleCpfDetailsNeeded}
+        />
+      )}
+
+      {contributingMemberForIncome && !incomeToEdit && (
         <AddIncomeDialog
           open={isAddIncomeDialogOpen}
           onOpenChange={setIsAddIncomeDialogOpen}
           onIncomeAdded={handleIncomeAdded}
           familyMember={contributingMemberForIncome}
-          income={incomeToEdit || undefined}
+          income={undefined}
           pendingFormData={pendingIncomeFormData}
           onBack={handleIncomeBack}
           onCpfDetailsNeeded={handleCpfDetailsNeeded}

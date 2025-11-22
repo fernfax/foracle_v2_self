@@ -76,6 +76,7 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
   const [wasContributingInitially, setWasContributingInitially] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   // Populate form when member changes
   useEffect(() => {
@@ -210,7 +211,7 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
           {/* Row 3: Date of Birth */}
           <div className="space-y-2">
             <Label>Date of Birth</Label>
-            <Popover>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -227,7 +228,10 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
                 <Calendar
                   mode="single"
                   selected={dateOfBirth}
-                  onSelect={setDateOfBirth}
+                  onSelect={(date) => {
+                    setDateOfBirth(date);
+                    setDatePickerOpen(false);
+                  }}
                   initialFocus
                   fixedWeeks
                 />

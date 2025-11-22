@@ -157,11 +157,24 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
         income.frequency
       );
 
-      // Aggregate bonus amounts (stored as number of months)
-      if (income.bonusAmount) {
-        const bonusMonths = parseFloat(income.bonusAmount);
-        const actualBonusAmount = monthlyGross * bonusMonths;
-        totalBonusAmount += actualBonusAmount;
+      // Aggregate bonus amounts from bonusGroups
+      if (income.bonusGroups) {
+        try {
+          const bonusGroups = typeof income.bonusGroups === 'string'
+            ? JSON.parse(income.bonusGroups)
+            : income.bonusGroups;
+
+          // Sum all bonus months from all bonus groups
+          const totalBonusMonths = bonusGroups.reduce((sum: number, group: { month: number; amount: string }) => {
+            return sum + (parseFloat(group.amount) || 0);
+          }, 0);
+
+          // Calculate actual bonus amount
+          const actualBonusAmount = monthlyGross * totalBonusMonths;
+          totalBonusAmount += actualBonusAmount;
+        } catch (error) {
+          console.error('Error parsing bonusGroups:', error);
+        }
       }
 
       // Recalculate CPF contributions using correct age-based rates

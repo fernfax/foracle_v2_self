@@ -56,7 +56,7 @@ export async function getUserExpenses() {
 
   const userExpenses = await db.query.expenses.findMany({
     where: eq(expenses.userId, userId),
-    orderBy: (expenses, { desc }) => [desc(expenses.date)],
+    orderBy: (expenses, { desc }) => [desc(expenses.createdAt)],
   });
 
   return userExpenses;

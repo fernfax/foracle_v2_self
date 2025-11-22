@@ -138,7 +138,7 @@ export function AddCpfDetailsDialog({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            CPF Account Details {familyMemberName && `for ${familyMemberName}`}
+            {initialOA !== undefined || initialSA !== undefined || initialMA !== undefined ? 'Edit' : 'Add'} CPF Account Details {familyMemberName && `for ${familyMemberName}`}
             <Info className="h-4 w-4 text-muted-foreground" />
           </DialogTitle>
           <DialogDescription>

@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { calculateCPF } from "@/lib/cpf-calculator";
+import { subDays, format } from "date-fns";
 
 /**
  * Calculate age from date of birth
@@ -40,12 +41,19 @@ async function getCurrentUserId() {
 export async function createIncome(data: {
   name: string;
   category: string;
+  incomeCategory?: string;
   amount: number;
   frequency: string;
+  customMonths?: string | null;
   subjectToCpf: boolean;
-  bonusAmount?: number;
+  accountForBonus?: boolean;
+  bonusGroups?: string;
   startDate: string;
   endDate?: string;
+  futureIncomeChange?: boolean;
+  futureIncomeAmount?: number;
+  futureIncomeStartDate?: string;
+  futureIncomeEndDate?: string;
   description?: string;
   familyMemberId?: string;
   familyMemberAge?: number;
@@ -69,16 +77,28 @@ export async function createIncome(data: {
     netTakeHome = cpfResult.netTakeHome.toString();
   }
 
+  // Auto-calculate endDate if future income is scheduled
+  let calculatedEndDate = data.endDate || null;
+  if (data.futureIncomeChange && data.futureIncomeStartDate) {
+    // Set end date to one day before future income starts
+    const futureStartDate = new Date(data.futureIncomeStartDate);
+    const dayBeforeFutureStart = subDays(futureStartDate, 1);
+    calculatedEndDate = format(dayBeforeFutureStart, "yyyy-MM-dd");
+  }
+
   const newIncome = await db.insert(incomes).values({
     id: nanoid(),
     userId,
     familyMemberId: data.familyMemberId || null,
     name: data.name,
     category: data.category,
+    incomeCategory: data.incomeCategory || "current-recurring",
     amount: data.amount.toString(),
     frequency: data.frequency,
+    customMonths: data.customMonths || null,
     subjectToCpf: data.subjectToCpf,
-    bonusAmount: data.bonusAmount ? data.bonusAmount.toString() : null,
+    accountForBonus: data.accountForBonus || false,
+    bonusGroups: data.bonusGroups || null,
     employeeCpfContribution,
     employerCpfContribution,
     netTakeHome,
@@ -86,7 +106,11 @@ export async function createIncome(data: {
     cpfSpecialAccount: data.cpfSpecialAccount ? data.cpfSpecialAccount.toString() : null,
     cpfMedisaveAccount: data.cpfMedisaveAccount ? data.cpfMedisaveAccount.toString() : null,
     startDate: data.startDate,
-    endDate: data.endDate || null,
+    endDate: calculatedEndDate,
+    futureIncomeChange: data.futureIncomeChange || false,
+    futureIncomeAmount: data.futureIncomeAmount ? data.futureIncomeAmount.toString() : null,
+    futureIncomeStartDate: data.futureIncomeStartDate || null,
+    futureIncomeEndDate: data.futureIncomeEndDate || null,
     description: data.description || null,
     isActive: true,
   }).returning();
@@ -103,15 +127,25 @@ export async function updateIncome(
   data: {
     name?: string;
     category?: string;
+    incomeCategory?: string;
     amount?: number;
     frequency?: string;
+    customMonths?: string | null;
     subjectToCpf?: boolean;
-    bonusAmount?: number;
+    accountForBonus?: boolean;
+    bonusGroups?: string | null;
     startDate?: string;
     endDate?: string | null;
+    futureIncomeChange?: boolean;
+    futureIncomeAmount?: number | null;
+    futureIncomeStartDate?: string | null;
+    futureIncomeEndDate?: string | null;
     description?: string;
     isActive?: boolean;
     familyMemberAge?: number;
+    cpfOrdinaryAccount?: number;
+    cpfSpecialAccount?: number;
+    cpfMedisaveAccount?: number;
   }
 ) {
   const userId = await getCurrentUserId();
@@ -131,14 +165,24 @@ export async function updateIncome(
 
   if (data.name !== undefined) updateData.name = data.name;
   if (data.category !== undefined) updateData.category = data.category;
+  if (data.incomeCategory !== undefined) updateData.incomeCategory = data.incomeCategory;
   if (data.amount !== undefined) updateData.amount = data.amount.toString();
   if (data.frequency !== undefined) updateData.frequency = data.frequency;
+  if (data.customMonths !== undefined) updateData.customMonths = data.customMonths;
   if (data.subjectToCpf !== undefined) updateData.subjectToCpf = data.subjectToCpf;
-  if (data.bonusAmount !== undefined) updateData.bonusAmount = data.bonusAmount.toString();
+  if (data.accountForBonus !== undefined) updateData.accountForBonus = data.accountForBonus;
+  if (data.bonusGroups !== undefined) updateData.bonusGroups = data.bonusGroups;
   if (data.startDate !== undefined) updateData.startDate = data.startDate;
   if (data.endDate !== undefined) updateData.endDate = data.endDate;
+  if (data.futureIncomeChange !== undefined) updateData.futureIncomeChange = data.futureIncomeChange;
+  if (data.futureIncomeAmount !== undefined) updateData.futureIncomeAmount = data.futureIncomeAmount ? data.futureIncomeAmount.toString() : null;
+  if (data.futureIncomeStartDate !== undefined) updateData.futureIncomeStartDate = data.futureIncomeStartDate;
+  if (data.futureIncomeEndDate !== undefined) updateData.futureIncomeEndDate = data.futureIncomeEndDate;
   if (data.description !== undefined) updateData.description = data.description;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.cpfOrdinaryAccount !== undefined) updateData.cpfOrdinaryAccount = data.cpfOrdinaryAccount.toString();
+  if (data.cpfSpecialAccount !== undefined) updateData.cpfSpecialAccount = data.cpfSpecialAccount.toString();
+  if (data.cpfMedisaveAccount !== undefined) updateData.cpfMedisaveAccount = data.cpfMedisaveAccount.toString();
 
   // Recalculate CPF if subject to CPF or amount changed
   const finalAmount = data.amount !== undefined ? data.amount : parseFloat(existing.amount);
@@ -168,6 +212,17 @@ export async function updateIncome(
     updateData.employeeCpfContribution = null;
     updateData.employerCpfContribution = null;
     updateData.netTakeHome = null;
+  }
+
+  // Auto-calculate endDate if future income is scheduled
+  const finalFutureIncomeChange = data.futureIncomeChange !== undefined ? data.futureIncomeChange : existing.futureIncomeChange;
+  const finalFutureIncomeStartDate = data.futureIncomeStartDate !== undefined ? data.futureIncomeStartDate : existing.futureIncomeStartDate;
+
+  if (finalFutureIncomeChange && finalFutureIncomeStartDate) {
+    // Set end date to one day before future income starts
+    const futureStartDate = new Date(finalFutureIncomeStartDate);
+    const dayBeforeFutureStart = subDays(futureStartDate, 1);
+    updateData.endDate = format(dayBeforeFutureStart, "yyyy-MM-dd");
   }
 
   const updated = await db

@@ -61,6 +61,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
   const [isContributing, setIsContributing] = useState(false);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const resetForm = () => {
     setName("");
@@ -147,7 +148,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
           {/* Row 3: Date of Birth */}
           <div className="space-y-2">
             <Label>Date of Birth <span className="text-red-500">*</span></Label>
-            <Popover>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -164,7 +165,10 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
                 <Calendar
                   mode="single"
                   selected={dateOfBirth}
-                  onSelect={setDateOfBirth}
+                  onSelect={(date) => {
+                    setDateOfBirth(date);
+                    setDatePickerOpen(false);
+                  }}
                   initialFocus
                   fixedWeeks
                 />

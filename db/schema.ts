@@ -32,10 +32,13 @@ export const incomes = pgTable("incomes", {
   familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Optional link to family member
   name: varchar("name", { length: 255 }).notNull(), // Income source name (e.g., "Primary Income", "Monthly Salary")
   category: varchar("category", { length: 100 }).notNull(), // salary, freelance, business, investment, etc.
+  incomeCategory: varchar("income_category", { length: 50 }).default("current-recurring"), // current-recurring, future-recurring, temporary, one-off
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
-  frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time, weekly, bi-weekly
+  frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time, weekly, bi-weekly, custom
+  customMonths: text("custom_months"), // JSON array of month numbers for custom frequency (e.g., "[1,3,6,12]" for Jan, Mar, Jun, Dec)
   subjectToCpf: boolean("subject_to_cpf").default(false), // Subject to CPF deductions
-  bonusAmount: decimal("bonus_amount", { precision: 12, scale: 2 }), // Annual bonus amount
+  accountForBonus: boolean("account_for_bonus").default(false), // Whether to account for bonuses
+  bonusGroups: text("bonus_groups"), // JSON array of bonus groups (e.g., '[{"month": 12, "amount": "1.5"}]')
   employeeCpfContribution: decimal("employee_cpf_contribution", { precision: 12, scale: 2 }), // Calculated employee CPF share
   employerCpfContribution: decimal("employer_cpf_contribution", { precision: 12, scale: 2 }), // Calculated employer CPF share
   netTakeHome: decimal("net_take_home", { precision: 12, scale: 2 }), // Gross minus employee CPF
@@ -45,7 +48,21 @@ export const incomes = pgTable("incomes", {
   description: text("description"), // Payment notes
   startDate: date("start_date").notNull(),
   endDate: date("end_date"), // Optional - leave empty for ongoing income
+  futureIncomeChange: boolean("future_income_change").default(false), // Whether income is expected to change in the future
+  futureIncomeAmount: decimal("future_income_amount", { precision: 12, scale: 2 }), // New income amount when change occurs
+  futureIncomeStartDate: date("future_income_start_date"), // Optional - when future income change starts
+  futureIncomeEndDate: date("future_income_end_date"), // Optional - when future income change ends
   isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Expense categories table
+export const expenseCategories = pgTable("expense_categories", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  isDefault: boolean("is_default").default(false), // System default categories
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -54,12 +71,16 @@ export const incomes = pgTable("incomes", {
 export const expenses = pgTable("expenses", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
-  category: varchar("category", { length: 255 }).notNull(), // housing, food, transportation, utilities, etc.
+  name: varchar("name", { length: 255 }).notNull(), // Expense name (e.g., "Rent", "Groceries")
+  category: varchar("category", { length: 100 }).notNull(), // housing, food, transportation, utilities, etc.
+  expenseCategory: varchar("expense_category", { length: 50 }).default("current-recurring"), // current-recurring, future-recurring, temporary, one-off
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
-  frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time
-  description: text("description"),
-  date: date("date").notNull(),
-  isRecurring: boolean("is_recurring").default(false),
+  frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time, weekly, bi-weekly, custom
+  customMonths: text("custom_months"), // JSON array of month numbers for custom frequency (e.g., "[1,3,6,12]" for Jan, Mar, Jun, Dec)
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"), // Optional - leave empty for ongoing expense
+  description: text("description"), // Additional notes
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -128,6 +149,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
   incomes: many(incomes),
   expenses: many(expenses),
+  expenseCategories: many(expenseCategories),
   assets: many(assets),
   policies: many(policies),
   goals: many(goals),
@@ -157,6 +179,13 @@ export const incomesRelations = relations(incomes, ({ one }) => ({
 export const expensesRelations = relations(expenses, ({ one }) => ({
   user: one(users, {
     fields: [expenses.userId],
+    references: [users.id],
+  }),
+}));
+
+export const expenseCategoriesRelations = relations(expenseCategories, ({ one }) => ({
+  user: one(users, {
+    fields: [expenseCategories.userId],
     references: [users.id],
   }),
 }));
