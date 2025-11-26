@@ -138,14 +138,67 @@ export async function getDashboardMetrics() {
     getUserFamilyMembers(),
   ]);
 
-  // Calculate monthly income (only active incomes)
-  const monthlyIncome = userIncomes
-    .filter(income => income.isActive && income.frequency === 'monthly')
-    .reduce((sum, income) => sum + parseFloat(income.amount), 0);
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1; // 1-12
 
-  // Calculate monthly expenses (recurring only)
+  // Calculate monthly net income (after CPF, only active incomes)
+  const monthlyNetIncome = userIncomes
+    .filter(income => {
+      if (!income.isActive) return false;
+
+      // Check if income is active in current month
+      const startDate = new Date(income.startDate);
+      const endDate = income.endDate ? new Date(income.endDate) : null;
+
+      if (currentDate < startDate) return false;
+      if (endDate && currentDate > endDate) return false;
+
+      // Check frequency
+      if (income.frequency === 'monthly') return true;
+      if (income.frequency === 'custom' && income.customMonths) {
+        try {
+          const customMonths = JSON.parse(income.customMonths);
+          return customMonths.includes(currentMonth);
+        } catch {
+          return false;
+        }
+      }
+
+      return false;
+    })
+    .reduce((sum, income) => {
+      // Use net take home if subject to CPF, otherwise use full amount
+      if (income.subjectToCpf && income.netTakeHome) {
+        return sum + parseFloat(income.netTakeHome);
+      }
+      return sum + parseFloat(income.amount);
+    }, 0);
+
+  // Calculate current month expenses (only active expenses in current month)
   const monthlyExpenses = userExpenses
-    .filter(expense => expense.isRecurring && expense.frequency === 'monthly')
+    .filter(expense => {
+      if (!expense.isActive) return false;
+
+      // Check if expense is active in current month
+      const startDate = new Date(expense.startDate);
+      const endDate = expense.endDate ? new Date(expense.endDate) : null;
+
+      if (currentDate < startDate) return false;
+      if (endDate && currentDate > endDate) return false;
+
+      // Check frequency
+      if (expense.frequency === 'monthly') return true;
+      if (expense.frequency === 'custom' && expense.customMonths) {
+        try {
+          const customMonths = JSON.parse(expense.customMonths);
+          return customMonths.includes(currentMonth);
+        } catch {
+          return false;
+        }
+      }
+
+      return false;
+    })
     .reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
 
   // Calculate total assets value
@@ -156,9 +209,9 @@ export async function getDashboardMetrics() {
   const activeGoals = userGoals.filter(goal => !goal.isAchieved).length;
 
   return {
-    totalIncome: monthlyIncome,
+    totalIncome: monthlyNetIncome,
     totalExpenses: monthlyExpenses,
-    netSavings: monthlyIncome - monthlyExpenses,
+    netSavings: monthlyNetIncome - monthlyExpenses,
     totalAssets,
     activeGoals,
     familyMembers: userFamily.length,

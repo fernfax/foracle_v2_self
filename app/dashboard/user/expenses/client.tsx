@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Receipt, TrendingUp } from "lucide-react";
+import { Receipt, TrendingUp, PieChart } from "lucide-react";
 import { ExpenseList } from "@/components/expenses/expense-list";
 import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
+import { ExpenseReports } from "@/components/expenses/expense-reports";
 
 interface Expense {
   id: string;
@@ -88,7 +89,7 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="expenses" className="flex items-center gap-2">
               <Receipt className="h-4 w-4" />
               <span className="hidden sm:inline">Expenses</span>
@@ -96,6 +97,10 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
             <TabsTrigger value="graph" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               <span className="hidden sm:inline">Graph</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <PieChart className="h-4 w-4" />
+              <span className="hidden sm:inline">Reports</span>
             </TabsTrigger>
           </TabsList>
 
@@ -105,6 +110,10 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
 
           <TabsContent value="graph" className="mt-6">
             <MonthlyBalanceGraph incomes={initialIncomes} expenses={initialExpenses} holdings={initialHoldings} />
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-6">
+            <ExpenseReports expenses={initialExpenses} />
           </TabsContent>
         </Tabs>
       )}
