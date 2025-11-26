@@ -170,12 +170,12 @@ export function calculateMonthlyBalance(
   const data: MonthlyBalanceData[] = [];
   let cumulativeBalance = startingBalance;
 
-  // Filter for current-recurring items only
+  // Include all active incomes and expenses (including one-time items)
   const activeIncomes = incomes.filter(
-    (income) => income.incomeCategory === "current-recurring" && income.isActive !== false
+    (income) => income.isActive !== false
   );
   const activeExpenses = expenses.filter(
-    (expense) => expense.expenseCategory === "current-recurring" && expense.isActive !== false
+    (expense) => expense.isActive !== false
   );
 
   for (let monthOffset = 0; monthOffset < totalMonths; monthOffset++) {
