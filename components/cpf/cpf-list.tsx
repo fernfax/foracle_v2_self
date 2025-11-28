@@ -83,12 +83,12 @@ export function CpfList({ initialCpfData }: CpfListProps) {
   };
 
   const toggleRow = (familyMemberId: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(familyMemberId)) {
-      newExpanded.delete(familyMemberId);
-    } else {
+    const newExpanded = new Set<string>();
+    if (!expandedRows.has(familyMemberId)) {
+      // Only open the clicked row, close all others
       newExpanded.add(familyMemberId);
     }
+    // If clicking the same row that's open, it closes (set remains empty)
     setExpandedRows(newExpanded);
   };
 
@@ -291,9 +291,9 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                     </TableCell>
                   </TableRow>
 
-                  {isExpanded && (
-                    <TableRow key={`${member.familyMemberId}-details`}>
-                      <TableCell colSpan={6} className="bg-muted/50">
+                  <TableRow key={`${member.familyMemberId}-details`} className={`transition-all duration-300 ease-in-out ${!isExpanded && 'h-0'}`}>
+                    <TableCell colSpan={6} className={`bg-muted/50 p-0 transition-all duration-300 ease-in-out ${!isExpanded && 'p-0 border-0'}`}>
+                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                         <div className="p-4 space-y-3">
                           <div className="grid grid-cols-3 gap-4">
                             <div>
@@ -610,9 +610,9 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                             </div>
                           )}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 </React.Fragment>
               );
             })}

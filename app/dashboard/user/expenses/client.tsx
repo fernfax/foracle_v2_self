@@ -92,15 +92,15 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="expenses" className="flex items-center gap-2">
               <Receipt className="h-4 w-4" />
-              <span className="hidden sm:inline">Expenses</span>
+              <span>Expenses</span>
             </TabsTrigger>
             <TabsTrigger value="graph" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              <span className="hidden sm:inline">Graph</span>
+              <span>Graph</span>
             </TabsTrigger>
             <TabsTrigger value="reports" className="flex items-center gap-2">
               <PieChart className="h-4 w-4" />
-              <span className="hidden sm:inline">Reports</span>
+              <span>Reports</span>
             </TabsTrigger>
           </TabsList>
 

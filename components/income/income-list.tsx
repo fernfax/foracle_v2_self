@@ -4,6 +4,8 @@ import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
 import {
   Table,
   TableBody,
@@ -36,6 +38,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ChevronRight,
   ChevronDown,
   ArrowUpDown,
@@ -47,11 +56,15 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Link2,
+  DollarSign,
+  Briefcase,
+  Expand,
 } from "lucide-react";
 import { AddIncomeDialog } from "./add-income-dialog";
 import { EditIncomeDialog } from "./edit-income-dialog";
 import { deleteIncome, toggleIncomeStatus } from "@/lib/actions/income";
 import { format, subDays } from "date-fns";
+import { cn } from "@/lib/utils";
 
 type Income = {
   id: string;
@@ -92,6 +105,7 @@ interface IncomeListProps {
 export function IncomeList({ initialIncomes }: IncomeListProps) {
   const [incomes, setIncomes] = useState<Income[]>(initialIncomes);
   const [search, setSearch] = useState("");
+  const [selectedFrequency, setSelectedFrequency] = useState<string>("All");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -100,15 +114,26 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [incomeToEdit, setIncomeToEdit] = useState<Income | null>(null);
+  const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
+
+  // Get unique frequencies with counts
+  const frequencyCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    incomes.forEach((income) => {
+      counts[income.frequency] = (counts[income.frequency] || 0) + 1;
+    });
+    return counts;
+  }, [incomes]);
 
   // Filter and sort incomes
   const filteredAndSortedIncomes = useMemo(() => {
     let filtered = incomes.filter(
       (income) =>
-        income.name.toLowerCase().includes(search.toLowerCase()) ||
-        income.category.toLowerCase().includes(search.toLowerCase())
+        (income.name.toLowerCase().includes(search.toLowerCase()) ||
+        income.category.toLowerCase().includes(search.toLowerCase())) &&
+        (selectedFrequency === "All" || income.frequency === selectedFrequency)
     );
 
     filtered.sort((a, b) => {
@@ -138,7 +163,161 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
     });
 
     return filtered;
-  }, [incomes, search, sortKey, sortDirection]);
+  }, [incomes, search, sortKey, sortDirection, selectedFrequency]);
+
+  // Calculate annual income summary stats
+  const incomeSummaryStats = useMemo(() => {
+    let grossAnnualIncome = 0;
+    let netAnnualIncome = 0;
+    let totalBonuses = 0;
+    const categoryBreakdown: Record<string, { gross: number; net: number; count: number }> = {};
+    const familyMemberBreakdown: Record<string, { gross: number; net: number; count: number; name: string }> = {};
+
+    incomes.forEach((income) => {
+      if (!income.isActive) return;
+
+      const amount = parseFloat(income.amount);
+      let annualAmount = 0;
+
+      // Calculate annual amount based on frequency
+      switch (income.frequency) {
+        case "monthly":
+          annualAmount = amount * 12;
+          break;
+        case "yearly":
+          annualAmount = amount;
+          break;
+        case "weekly":
+          annualAmount = amount * 52;
+          break;
+        case "bi-weekly":
+          annualAmount = amount * 26;
+          break;
+        case "one-time":
+          annualAmount = amount;
+          break;
+        case "custom":
+          // For custom, count months in customMonths array
+          if (income.customMonths) {
+            try {
+              const customMonths = JSON.parse(income.customMonths);
+              annualAmount = amount * customMonths.length;
+            } catch {
+              annualAmount = amount * 12; // Default to monthly if parse fails
+            }
+          } else {
+            annualAmount = amount * 12;
+          }
+          break;
+        default:
+          annualAmount = amount * 12;
+      }
+
+      grossAnnualIncome += annualAmount;
+
+      // Calculate net (after employee CPF if applicable)
+      let netAmount = annualAmount;
+      if (income.subjectToCpf && income.employeeCpfContribution) {
+        const employeeCpf = parseFloat(income.employeeCpfContribution.toString());
+        // Employee CPF is monthly, so annualize it
+        netAmount = annualAmount - (employeeCpf * 12);
+      }
+      netAnnualIncome += netAmount;
+
+      // Add to category breakdown
+      if (!categoryBreakdown[income.category]) {
+        categoryBreakdown[income.category] = { gross: 0, net: 0, count: 0 };
+      }
+      categoryBreakdown[income.category].gross += annualAmount;
+      categoryBreakdown[income.category].net += netAmount;
+      categoryBreakdown[income.category].count += 1;
+
+      // Add to family member breakdown
+      const familyMemberId = income.familyMemberId || 'user';
+      const familyMemberName = income.familyMember?.name || 'You';
+      if (!familyMemberBreakdown[familyMemberId]) {
+        familyMemberBreakdown[familyMemberId] = { gross: 0, net: 0, count: 0, name: familyMemberName };
+      }
+      familyMemberBreakdown[familyMemberId].gross += annualAmount;
+      familyMemberBreakdown[familyMemberId].net += netAmount;
+      familyMemberBreakdown[familyMemberId].count += 1;
+
+      // Track bonuses separately
+      if (income.accountForBonus && income.bonusGroups) {
+        try {
+          const bonusGroups = JSON.parse(income.bonusGroups);
+          bonusGroups.forEach((bonus: { month: number; amount: string }) => {
+            const bonusAmount = parseFloat(bonus.amount) * amount;
+            totalBonuses += bonusAmount;
+          });
+        } catch {}
+      }
+    });
+
+    // Convert category breakdown to sorted array
+    const categoriesArray = Object.entries(categoryBreakdown)
+      .map(([category, data]) => ({
+        category,
+        gross: data.gross,
+        net: data.net,
+        count: data.count,
+        percentage: grossAnnualIncome > 0 ? (data.gross / grossAnnualIncome) * 100 : 0,
+      }))
+      .sort((a, b) => b.gross - a.gross);
+
+    // Convert family member breakdown to sorted array
+    const familyMembersArray = Object.entries(familyMemberBreakdown)
+      .map(([id, data]) => ({
+        id,
+        name: data.name,
+        gross: data.gross,
+        net: data.net,
+        count: data.count,
+        percentage: grossAnnualIncome > 0 ? (data.gross / grossAnnualIncome) * 100 : 0,
+      }))
+      .sort((a, b) => b.gross - a.gross);
+
+    return {
+      grossAnnualIncome,
+      netAnnualIncome,
+      totalBonuses,
+      activeIncomeCount: incomes.filter(i => i.isActive).length,
+      categoriesArray,
+      familyMembersArray,
+    };
+  }, [incomes]);
+
+  // Calculate monthly CPF contributions
+  const cpfSummaryStats = useMemo(() => {
+    let monthlyEmployeeCpf = 0;
+    let monthlyEmployerCpf = 0;
+    let cpfSubjectIncomeCount = 0;
+
+    incomes.forEach((income) => {
+      if (!income.isActive || !income.subjectToCpf) return;
+
+      if (income.employeeCpfContribution) {
+        monthlyEmployeeCpf += parseFloat(income.employeeCpfContribution.toString());
+      }
+
+      if (income.employerCpfContribution) {
+        monthlyEmployerCpf += parseFloat(income.employerCpfContribution.toString());
+      }
+
+      cpfSubjectIncomeCount += 1;
+    });
+
+    const totalMonthlyCpf = monthlyEmployeeCpf + monthlyEmployerCpf;
+    const annualCpf = totalMonthlyCpf * 12;
+
+    return {
+      monthlyEmployeeCpf,
+      monthlyEmployerCpf,
+      totalMonthlyCpf,
+      annualCpf,
+      cpfSubjectIncomeCount,
+    };
+  }, [incomes]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedIncomes.length / rowsPerPage);
@@ -156,12 +335,12 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
   };
 
   const toggleRow = (id: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
+    const newExpanded = new Set<string>();
+    if (!expandedRows.has(id)) {
+      // Only open the clicked row, close all others
       newExpanded.add(id);
     }
+    // If clicking the same row that's open, it closes (set remains empty)
     setExpandedRows(newExpanded);
   };
 
@@ -236,6 +415,97 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         </div>
       </div>
 
+      {/* Summary Cards */}
+      {incomes.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {/* Card 1: Annual Income Summary */}
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative"
+            onClick={() => setIsBreakdownModalOpen(true)}
+          >
+            <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Annual Income
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950">
+                <DollarSign className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold">
+                ${incomeSummaryStats.grossAnnualIncome.toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">
+                Net take-home: ${incomeSummaryStats.netAnnualIncome.toLocaleString()} (after CPF)
+              </p>
+
+              {incomeSummaryStats.categoriesArray.length > 0 && (
+                <div className="pt-3 border-t">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Quick Stats</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Income Sources:</span>
+                      <span className="font-semibold">{incomeSummaryStats.activeIncomeCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Categories:</span>
+                      <span className="font-semibold">{incomeSummaryStats.categoriesArray.length}</span>
+                    </div>
+                    {incomeSummaryStats.totalBonuses > 0 && (
+                      <div className="flex justify-between col-span-2">
+                        <span className="text-muted-foreground">Total Bonuses:</span>
+                        <span className="font-semibold">${incomeSummaryStats.totalBonuses.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Card 2: CPF Contributions */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Monthly CPF Contributions
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950">
+                <Briefcase className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold">
+                ${cpfSummaryStats.totalMonthlyCpf.toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">
+                Employee: ${cpfSummaryStats.monthlyEmployeeCpf.toLocaleString()} | Employer: ${cpfSummaryStats.monthlyEmployerCpf.toLocaleString()}
+              </p>
+
+              {cpfSummaryStats.cpfSubjectIncomeCount > 0 && (
+                <div className="pt-3 border-t">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">CPF Details</p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">CPF-subject incomes:</span>
+                      <span className="font-semibold">{cpfSummaryStats.cpfSubjectIncomeCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Annual employee CPF:</span>
+                      <span className="font-semibold">${(cpfSummaryStats.monthlyEmployeeCpf * 12).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Annual total CPF:</span>
+                      <span className="font-semibold">${cpfSummaryStats.annualCpf.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Search and Info */}
       <div className="flex items-center justify-between">
         <Input
@@ -251,6 +521,49 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedIncomes.length)} of{" "}
           {filteredAndSortedIncomes.length} results
         </p>
+      </div>
+
+      {/* Frequency Filters */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        <Button
+          variant={selectedFrequency === "All" ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            setSelectedFrequency("All");
+            setCurrentPage(1);
+          }}
+          className={cn(
+            "flex-shrink-0",
+            selectedFrequency === "All" && "bg-black text-white hover:bg-black/90"
+          )}
+        >
+          All
+          <Badge variant="secondary" className="ml-2">
+            {incomes.length}
+          </Badge>
+        </Button>
+        {Object.entries(frequencyCounts)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([frequency, count]) => (
+            <Button
+              key={frequency}
+              variant={selectedFrequency === frequency ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setSelectedFrequency(frequency);
+                setCurrentPage(1);
+              }}
+              className={cn(
+                "flex-shrink-0",
+                selectedFrequency === frequency && "bg-black text-white hover:bg-black/90"
+              )}
+            >
+              {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+              <Badge variant="secondary" className="ml-2">
+                {count}
+              </Badge>
+            </Button>
+          ))}
       </div>
 
       {/* Table */}
@@ -377,9 +690,9 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                  {expandedRows.has(income.id) && (
-                    <TableRow>
-                      <TableCell colSpan={8} className="bg-muted/50">
+                  <TableRow className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedRows.has(income.id) ? 'opacity-100' : 'opacity-0 h-0'}`}>
+                    <TableCell colSpan={8} className="bg-muted/50 p-0">
+                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedRows.has(income.id) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         <div className="p-4 space-y-3">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -432,10 +745,61 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                             <span className="font-medium">Created:</span>{" "}
                             {format(new Date(income.createdAt), "dd MMM yyyy")}
                           </div>
+
+                          {/* Future Income Timeline Diagram */}
+                          {income.futureIncomeChange && income.futureIncomeAmount && income.futureIncomeStartDate && (() => {
+                            const currentAmount = parseFloat(income.amount);
+                            const futureAmount = parseFloat(income.futureIncomeAmount);
+                            const futureDate = format(new Date(income.futureIncomeStartDate), "MMM dd");
+                            const isIncrease = futureAmount > currentAmount;
+
+                            return (
+                              <div className="mt-6 pt-4 border-t border-gray-200">
+                                <div className="font-medium mb-4 text-gray-700">Income Timeline</div>
+                                <div className="relative" style={{ height: '140px' }}>
+                                  <svg width="100%" height="140" viewBox="0 0 1000 140" preserveAspectRatio="xMidYMid meet">
+                                    {/* Step line path */}
+                                    <path
+                                      d={isIncrease
+                                        ? "M 0 100 L 450 100 L 450 40 L 950 40"
+                                        : "M 0 40 L 450 40 L 450 100 L 950 100"
+                                      }
+                                      stroke="#2563eb"
+                                      strokeWidth="3"
+                                      fill="none"
+                                      strokeLinecap="square"
+                                    />
+
+                                    {/* Arrow at the end */}
+                                    <polygon
+                                      points={isIncrease ? "950,40 940,35 940,45" : "950,100 940,95 940,105"}
+                                      fill="#2563eb"
+                                    />
+
+                                    {/* Current amount label */}
+                                    <text x="10" y={isIncrease ? "90" : "30"} fontSize="16" fontWeight="600" fill="#111827">
+                                      ${currentAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </text>
+                                    <text x="10" y={isIncrease ? "125" : "65"} fontSize="13" fill="#6b7280">
+                                      Present
+                                    </text>
+
+                                    {/* Future amount label */}
+                                    <text x="460" y={isIncrease ? "30" : "90"} fontSize="16" fontWeight="600" fill="#111827">
+                                      ${futureAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </text>
+                                    <text x="460" y={isIncrease ? "65" : "125"} fontSize="13" fill="#6b7280">
+                                      {futureDate}
+                                    </text>
+                                  </svg>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
 
                   {/* Future Income Change Sub-Row */}
                   {income.futureIncomeChange && income.futureIncomeAmount && (
@@ -607,6 +971,102 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Income Breakdown Modal */}
+      <Dialog open={isBreakdownModalOpen} onOpenChange={setIsBreakdownModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Income Breakdown</DialogTitle>
+            <DialogDescription>
+              Detailed breakdown of your annual income by category and family member
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+              <div>
+                <p className="text-sm text-muted-foreground">Gross Annual Income</p>
+                <p className="text-2xl font-semibold">${incomeSummaryStats.grossAnnualIncome.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Net Annual Income (after CPF)</p>
+                <p className="text-2xl font-semibold">${incomeSummaryStats.netAnnualIncome.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Active Income Sources</p>
+                <p className="text-lg font-semibold">{incomeSummaryStats.activeIncomeCount}</p>
+              </div>
+              {incomeSummaryStats.totalBonuses > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Bonuses</p>
+                  <p className="text-lg font-semibold">${incomeSummaryStats.totalBonuses.toLocaleString()}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Family Member Breakdown */}
+            {incomeSummaryStats.familyMembersArray.length > 1 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">By Family Member</h3>
+                <div className="space-y-3">
+                  {incomeSummaryStats.familyMembersArray.map((member) => (
+                    <div key={member.id} className="border rounded-lg p-4 bg-background">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold">{member.name}</h4>
+                          <p className="text-xs text-muted-foreground">{member.count} income source{member.count !== 1 ? 's' : ''}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold">${member.gross.toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground">{member.percentage.toFixed(1)}% of total</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Gross Annual:</span>
+                        <span className="font-semibold">${member.gross.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Net Annual:</span>
+                        <span className="font-semibold">${member.net.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Category Breakdown */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">By Category</h3>
+              <div className="space-y-3">
+                {incomeSummaryStats.categoriesArray.map((cat) => (
+                  <div key={cat.category} className="border rounded-lg p-4 bg-background">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h4 className="font-semibold">{cat.category}</h4>
+                        <p className="text-xs text-muted-foreground">{cat.count} income source{cat.count !== 1 ? 's' : ''}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold">${cat.gross.toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">{cat.percentage.toFixed(1)}% of total</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Gross Annual:</span>
+                      <span className="font-semibold">${cat.gross.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Net Annual:</span>
+                      <span className="font-semibold">${cat.net.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

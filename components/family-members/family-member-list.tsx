@@ -45,6 +45,11 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Lock,
+  User,
+  Users,
+  Baby,
+  Heart,
+  UserCircle,
 } from "lucide-react";
 import { AddFamilyMemberDialog } from "./add-family-member-dialog";
 import { EditFamilyMemberDialog } from "./edit-family-member-dialog";
@@ -55,6 +60,32 @@ import { deleteFamilyMember, getFamilyMemberIncomes, updateFamilyMember } from "
 import { createIncome, updateIncome } from "@/lib/actions/income";
 import { calculateCPF } from "@/lib/cpf-calculator";
 import { format, differenceInYears } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Shield, DollarSign, Expand } from "lucide-react";
+import { CpfByFamilyMember } from "@/lib/actions/cpf";
+import { CurrentHolding } from "@/lib/actions/current-holdings";
+
+type Policy = {
+  id: string;
+  userId: string;
+  familyMemberId: string | null;
+  linkedExpenseId: string | null;
+  provider: string;
+  policyNumber: string | null;
+  policyType: string;
+  status: string | null;
+  startDate: string;
+  maturityDate: string | null;
+  coverageUntilAge: number | null;
+  premiumAmount: string;
+  premiumFrequency: string;
+  totalPremiumDuration: number | null;
+  coverageOptions: string | null;
+  description: string | null;
+  isActive: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 type FamilyMember = {
   id: string;
@@ -97,9 +128,12 @@ type SortDirection = "asc" | "desc";
 interface FamilyMemberListProps {
   initialMembers: FamilyMember[];
   incomes?: Income[];
+  cpfData?: CpfByFamilyMember[];
+  holdings?: CurrentHolding[];
+  policies?: Policy[];
 }
 
-export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberListProps) {
+export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], holdings = [], policies = [] }: FamilyMemberListProps) {
   const [members, setMembers] = useState<FamilyMember[]>(initialMembers);
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -130,10 +164,136 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
     return differenceInYears(new Date(), new Date(dateOfBirth));
   };
 
+  // Get avatar icon and color based on relationship
+  const getAvatarConfig = (relationship: string | null) => {
+    const rel = relationship?.toLowerCase() || '';
+
+    switch (rel) {
+      case 'self':
+        return {
+          icon: User,
+          bgColor: 'bg-blue-100',
+          iconColor: 'text-blue-600'
+        };
+      case 'spouse':
+        return {
+          icon: Heart,
+          bgColor: 'bg-pink-100',
+          iconColor: 'text-pink-600'
+        };
+      case 'child':
+        return {
+          icon: Baby,
+          bgColor: 'bg-green-100',
+          iconColor: 'text-green-600'
+        };
+      case 'parent':
+        return {
+          icon: Users,
+          bgColor: 'bg-purple-100',
+          iconColor: 'text-purple-600'
+        };
+      case 'sibling':
+        return {
+          icon: Users,
+          bgColor: 'bg-orange-100',
+          iconColor: 'text-orange-600'
+        };
+      default:
+        return {
+          icon: UserCircle,
+          bgColor: 'bg-gray-100',
+          iconColor: 'text-gray-600'
+        };
+    }
+  };
+
   const getMemberGrossSalary = (memberId: string): number => {
     const memberIncomes = incomes.filter((income) => income.familyMemberId === memberId);
     return memberIncomes.reduce((total, income) => total + parseFloat(income.amount), 0);
   };
+
+  // Calculate family financial overview
+  const familyOverviewStats = useMemo(() => {
+    // Total family members
+    const totalMembers = members.length;
+
+    // Contributing members (those with income)
+    const contributingMembers = members.filter(m =>
+      incomes.some(inc => inc.familyMemberId === m.id && inc.isActive)
+    ).length;
+
+    // Total household income (monthly)
+    const totalHouseholdIncome = incomes
+      .filter(inc => inc.isActive)
+      .reduce((total, inc) => total + parseFloat(inc.amount), 0);
+
+    // Total CPF assets (sum of all OA, SA, MA)
+    const totalCpfAssets = cpfData.reduce((total, cpf) => {
+      return total + cpf.monthlyOaContribution + cpf.monthlySaContribution + cpf.monthlyMaContribution;
+    }, 0);
+
+    // Total current holdings
+    const totalHoldings = holdings.reduce((total, holding) => {
+      return total + parseFloat(holding.holdingAmount);
+    }, 0);
+
+    // Total insurance policies count
+    const totalPolicies = policies.filter(p => p.isActive).length;
+
+    // Total monthly premiums
+    const totalMonthlyPremiums = policies
+      .filter(p => p.isActive && p.premiumFrequency === 'monthly')
+      .reduce((total, p) => total + parseFloat(p.premiumAmount), 0);
+
+    // Average age
+    const membersWithAge = members.filter(m => m.dateOfBirth);
+    const averageAge = membersWithAge.length > 0
+      ? membersWithAge.reduce((sum, m) => sum + (calculateAge(m.dateOfBirth) || 0), 0) / membersWithAge.length
+      : 0;
+
+    // Per-member breakdown
+    const memberBreakdown = members.map(member => {
+      const memberIncome = incomes
+        .filter(inc => inc.familyMemberId === member.id && inc.isActive)
+        .reduce((sum, inc) => sum + parseFloat(inc.amount), 0);
+
+      const memberCpf = cpfData.find(cpf => cpf.familyMemberId === member.id);
+      const memberCpfTotal = memberCpf
+        ? memberCpf.monthlyOaContribution + memberCpf.monthlySaContribution + memberCpf.monthlyMaContribution
+        : 0;
+
+      const memberHoldings = holdings
+        .filter(h => h.familyMemberId === member.id)
+        .reduce((sum, h) => sum + parseFloat(h.holdingAmount), 0);
+
+      const memberPoliciesCount = policies.filter(p => p.familyMemberId === member.id && p.isActive).length;
+
+      return {
+        ...member,
+        income: memberIncome,
+        cpfTotal: memberCpfTotal,
+        holdings: memberHoldings,
+        policiesCount: memberPoliciesCount,
+      };
+    }).sort((a, b) => b.income - a.income); // Sort by income descending
+
+    // Top contributor
+    const topContributor = memberBreakdown[0] || null;
+
+    return {
+      totalMembers,
+      contributingMembers,
+      totalHouseholdIncome,
+      totalCpfAssets,
+      totalHoldings,
+      totalPolicies,
+      totalMonthlyPremiums,
+      averageAge,
+      memberBreakdown,
+      topContributor,
+    };
+  }, [members, incomes, cpfData, holdings, policies]);
 
   // Filter and sort members
   const filteredAndSortedMembers = useMemo(() => {
@@ -188,12 +348,12 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
   };
 
   const toggleRow = (id: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
+    const newExpanded = new Set<string>();
+    if (!expandedRows.has(id)) {
+      // Only open the clicked row, close all others
       newExpanded.add(id);
     }
+    // If clicking the same row that's open, it closes (set remains empty)
     setExpandedRows(newExpanded);
   };
 
@@ -428,6 +588,120 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
         </Button>
       </div>
 
+      {/* Summary Cards */}
+      {members.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {/* Primary Card: Family Financial Overview */}
+          <Card className="col-span-full sm:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Family Financial Overview
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950">
+                <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold">{familyOverviewStats.totalMembers} Members</div>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">
+                {familyOverviewStats.contributingMembers} contributing · ${familyOverviewStats.totalHouseholdIncome.toLocaleString()}/mo household income
+              </p>
+
+              <div className="pt-3 border-t">
+                <p className="text-xs font-semibold text-muted-foreground mb-3">Member Breakdown</p>
+                <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+                  {familyOverviewStats.memberBreakdown.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between gap-2 p-2 rounded hover:bg-muted/50">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className={`flex items-center justify-center w-6 h-6 rounded-full ${getAvatarConfig(member.relationship).bgColor}`}>
+                          {(() => {
+                            const AvatarIcon = getAvatarConfig(member.relationship).icon;
+                            return <AvatarIcon className={`w-3 h-3 ${getAvatarConfig(member.relationship).iconColor}`} />;
+                          })()}
+                        </div>
+                        <span className="text-sm font-medium truncate">{member.name}</span>
+                      </div>
+                      <div className="flex items-center gap-4 flex-shrink-0 text-xs">
+                        {member.income > 0 && (
+                          <div className="flex items-center gap-1 text-green-600">
+                            <DollarSign className="h-3 w-3" />
+                            <span className="font-semibold">${member.income.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {member.cpfTotal > 0 && (
+                          <div className="text-muted-foreground">
+                            CPF: ${member.cpfTotal.toLocaleString()}
+                          </div>
+                        )}
+                        {member.holdings > 0 && (
+                          <div className="text-muted-foreground">
+                            Hold: ${member.holdings.toLocaleString()}
+                          </div>
+                        )}
+                        {member.policiesCount > 0 && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Shield className="h-3 w-3" />
+                            <span>{member.policiesCount}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Secondary Card: Quick Stats */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Quick Stats
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950">
+                <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold">{familyOverviewStats.totalPolicies} Policies</div>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">
+                ${familyOverviewStats.totalMonthlyPremiums.toLocaleString()}/mo in premiums
+              </p>
+
+              <div className="pt-3 border-t">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Family Details</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total CPF:</span>
+                    <span className="font-semibold">${familyOverviewStats.totalCpfAssets.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Holdings:</span>
+                    <span className="font-semibold">${familyOverviewStats.totalHoldings.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Average Age:</span>
+                    <span className="font-semibold">{familyOverviewStats.averageAge.toFixed(0)} years</span>
+                  </div>
+                  {familyOverviewStats.topContributor && (
+                    <div className="pt-2 mt-2 border-t">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Top Contributor:</span>
+                        <span className="font-semibold truncate max-w-[120px]">{familyOverviewStats.topContributor.name}</span>
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-muted-foreground">Income:</span>
+                        <span className="font-semibold text-green-600">${familyOverviewStats.topContributor.income.toLocaleString()}/mo</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Search and Info */}
       <div className="flex items-center justify-between">
         <Input
@@ -502,7 +776,11 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedMembers.map((member) => (
+              paginatedMembers.map((member) => {
+                const avatarConfig = getAvatarConfig(member.relationship);
+                const AvatarIcon = avatarConfig.icon;
+
+                return (
                 <React.Fragment key={member.id}>
                   <TableRow className={member.relationship === "Self" ? "bg-blue-50/50" : ""}>
                     <TableCell>
@@ -519,7 +797,14 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
                         )}
                       </Button>
                     </TableCell>
-                    <TableCell className="font-medium">{member.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className={`flex items-center justify-center w-8 h-8 rounded-full ${avatarConfig.bgColor}`}>
+                          <AvatarIcon className={`w-4 h-4 ${avatarConfig.iconColor}`} />
+                        </div>
+                        <span className="font-medium">{member.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {member.relationship === "Self" ? (
                         <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
@@ -562,9 +847,9 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                  {expandedRows.has(member.id) && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="bg-muted/50">
+                  <TableRow className={`transition-all duration-300 ease-in-out ${!expandedRows.has(member.id) && 'h-0'}`}>
+                    <TableCell colSpan={6} className={`bg-muted/50 p-0 transition-all duration-300 ease-in-out ${!expandedRows.has(member.id) && 'p-0 border-0'}`}>
+                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedRows.has(member.id) ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                         <div className="p-4 space-y-2">
                           {getMemberGrossSalary(member.id) > 0 && (
                             <div>
@@ -590,11 +875,12 @@ export function FamilyMemberList({ initialMembers, incomes = [] }: FamilyMemberL
                             {format(new Date(member.createdAt), "dd MMM yyyy")}
                           </div>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 </React.Fragment>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
+import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, Expand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { AddExpenseDialog } from "./add-expense-dialog";
 import { EditExpenseDialog } from "./edit-expense-dialog";
 import { ManageCategoriesDialog } from "./manage-categories-dialog";
@@ -73,7 +80,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [isBreakdownExpanded, setIsBreakdownExpanded] = useState(false);
+  const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
   const [breakdownSortBy, setBreakdownSortBy] = useState<"amount" | "category" | "count">("amount");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
@@ -369,20 +376,14 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       {/* Summary Cards */}
       {expenses.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-3">
-          <Card className={cn("cursor-pointer hover:shadow-md transition-shadow col-span-full", !isBreakdownExpanded && "sm:col-span-2")} onClick={() => setIsBreakdownExpanded(!isBreakdownExpanded)}>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative" onClick={() => setIsBreakdownModalOpen(true)}>
+            <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Current Month Expected Expenses
               </CardTitle>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
-                  <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                {isBreakdownExpanded ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
+                <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -391,8 +392,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                 Monthly & custom expenses for this month
               </p>
 
-              {/* Collapsed View - Split Layout */}
-              {!isBreakdownExpanded && breakdownDetails.categories.length > 0 && (
+              {/* Split Layout */}
+              {breakdownDetails.categories.length > 0 && (
                 <div className="pt-3 border-t">
                   <p className="text-xs font-semibold text-muted-foreground mb-2">Categories</p>
                   <div className="grid grid-cols-2 gap-4">
@@ -466,183 +467,6 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                                     <p className="text-xs text-muted-foreground">
                                       ${data.value.toLocaleString()}
                                     </p>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Expanded View - Enhanced Split Layout */}
-              {isBreakdownExpanded && breakdownDetails.categories.length > 0 && (
-                <div className="mt-6 pt-6 border-t bg-muted/30 -mx-6 px-6 pb-6 rounded-b-lg" onClick={(e) => e.stopPropagation()}>
-                  <p className="text-xs font-semibold text-muted-foreground mb-4">Detailed Breakdown</p>
-                  <div className="grid grid-cols-2 gap-6">
-                    {/* Left: Enhanced Category List with Individual Expenses */}
-                    <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                      {breakdownDetails.categories.map((cat) => {
-                        const isExpanded = expandedCategories.has(cat.category);
-                        const categoryExpenses = expenses.filter(e =>
-                          e.category === cat.category &&
-                          e.isActive &&
-                          (() => {
-                            const currentDate = new Date();
-                            const currentMonth = currentDate.getMonth() + 1;
-                            const startDate = new Date(e.startDate);
-                            const endDate = e.endDate ? new Date(e.endDate) : null;
-                            if (currentDate < startDate) return false;
-                            if (endDate && currentDate > endDate) return false;
-                            if (e.frequency === 'monthly') return true;
-                            if (e.frequency === 'custom' && e.customMonths) {
-                              try {
-                                const customMonths = JSON.parse(e.customMonths);
-                                return customMonths.includes(currentMonth);
-                              } catch { return false; }
-                            }
-                            if (e.frequency === 'one-time') {
-                              const expenseMonth = startDate.getMonth() + 1;
-                              const expenseYear = startDate.getFullYear();
-                              const currentYear = currentDate.getFullYear();
-                              return expenseMonth === currentMonth && expenseYear === currentYear;
-                            }
-                            return false;
-                          })()
-                        );
-
-                        return (
-                          <div key={cat.category} className="border rounded-lg overflow-hidden bg-background">
-                            {/* Category Header - Clickable */}
-                            <div
-                              className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const newExpanded = new Set(expandedCategories);
-                                if (isExpanded) {
-                                  newExpanded.delete(cat.category);
-                                } else {
-                                  newExpanded.add(cat.category);
-                                }
-                                setExpandedCategories(newExpanded);
-                              }}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  {isExpanded ? (
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                  )}
-                                  <div
-                                    className="w-3 h-3 rounded-full flex-shrink-0"
-                                    style={{ backgroundColor: cat.color }}
-                                  />
-                                  <span className="text-sm font-semibold truncate">{cat.category}</span>
-                                </div>
-                                <div className="flex items-center gap-3 flex-shrink-0">
-                                  <span className="text-sm font-bold">${cat.amount.toLocaleString()}</span>
-                                  <span className="text-xs text-muted-foreground">{cat.percentage.toFixed(1)}%</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4 mt-2 ml-6 text-xs text-muted-foreground">
-                                <span>{cat.count} expense{cat.count !== 1 ? 's' : ''}</span>
-                              </div>
-                            </div>
-
-                            {/* Individual Expenses - Expandable */}
-                            {isExpanded && categoryExpenses.length > 0 && (
-                              <div className="border-t bg-muted/20">
-                                {categoryExpenses.map((expense) => (
-                                  <div key={expense.id} className="px-3 py-2 border-b last:border-b-0 hover:bg-muted/30">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <span className="text-xs font-medium truncate">{expense.name}</span>
-                                      <span className="text-xs font-semibold">${parseFloat(expense.amount).toLocaleString()}</span>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground mt-0.5">
-                                      {expense.frequency}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Right: Larger Interactive Pie Chart */}
-                    <div className="flex items-center justify-center">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <PieChart>
-                          <Pie
-                            data={breakdownDetails.categories.map((cat) => ({
-                              name: cat.category,
-                              value: cat.amount,
-                              color: cat.color,
-                              percentage: cat.percentage,
-                              count: cat.count,
-                              avgPerExpense: cat.avgPerExpense,
-                            }))}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                              if (percent < 0.08) return null;
-                              const RADIAN = Math.PI / 180;
-                              const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                              const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                              const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                              return (
-                                <text
-                                  x={x}
-                                  y={y}
-                                  fill="white"
-                                  textAnchor="middle"
-                                  dominantBaseline="central"
-                                  className="text-sm font-bold"
-                                >
-                                  {`${(percent * 100).toFixed(0)}%`}
-                                </text>
-                              );
-                            }}
-                            outerRadius={140}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {breakdownDetails.categories.map((cat, index) => (
-                              <Cell key={`cell-${index}`} fill={cat.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            content={({ active, payload }) => {
-                              if (active && payload && payload.length) {
-                                const data = payload[0].payload;
-                                return (
-                                  <div className="bg-background border rounded-lg shadow-lg p-3">
-                                    <p className="text-sm font-bold mb-2">{data.name}</p>
-                                    <div className="space-y-1 text-xs">
-                                      <div className="flex justify-between gap-4">
-                                        <span className="text-muted-foreground">Total:</span>
-                                        <span className="font-semibold">${data.value.toLocaleString()}</span>
-                                      </div>
-                                      <div className="flex justify-between gap-4">
-                                        <span className="text-muted-foreground">Percentage:</span>
-                                        <span className="font-semibold">{data.percentage.toFixed(1)}%</span>
-                                      </div>
-                                      <div className="flex justify-between gap-4">
-                                        <span className="text-muted-foreground">Count:</span>
-                                        <span className="font-semibold">{data.count}</span>
-                                      </div>
-                                      <div className="flex justify-between gap-4">
-                                        <span className="text-muted-foreground">Average:</span>
-                                        <span className="font-semibold">${data.avgPerExpense.toLocaleString()}</span>
-                                      </div>
-                                    </div>
                                   </div>
                                 );
                               }
@@ -913,6 +737,212 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           // Optionally reload categories or refresh page
         }}
       />
+
+      {/* Expense Breakdown Modal */}
+      <Dialog open={isBreakdownModalOpen} onOpenChange={setIsBreakdownModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Expense Breakdown</DialogTitle>
+            <DialogDescription>
+              Detailed breakdown of your monthly expenses by category
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Summary Stats Grid */}
+            <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Monthly</p>
+                <p className="text-2xl font-bold">${(summaryStats.totalMonthlyExpenses || 0).toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Active Expenses</p>
+                <p className="text-2xl font-bold">{summaryStats.activeExpensesCount || 0}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Categories</p>
+                <p className="text-2xl font-bold">{breakdownDetails.categories?.length || 0}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Top Category</p>
+                <p className="text-xl font-bold">{summaryStats.topCategory?.name || 'N/A'}</p>
+              </div>
+            </div>
+
+            {/* Detailed Breakdown */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left: Enhanced Category List with Individual Expenses */}
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                {breakdownDetails.categories.map((cat) => {
+                  const isExpanded = expandedCategories.has(cat.category);
+                  const categoryExpenses = expenses.filter(e =>
+                    e.category === cat.category &&
+                    e.isActive &&
+                    (() => {
+                      const currentDate = new Date();
+                      const currentMonth = currentDate.getMonth() + 1;
+                      const startDate = new Date(e.startDate);
+                      const endDate = e.endDate ? new Date(e.endDate) : null;
+                      if (currentDate < startDate) return false;
+                      if (endDate && currentDate > endDate) return false;
+                      if (e.frequency === 'monthly') return true;
+                      if (e.frequency === 'custom' && e.customMonths) {
+                        try {
+                          const customMonths = JSON.parse(e.customMonths);
+                          return customMonths.includes(currentMonth);
+                        } catch { return false; }
+                      }
+                      if (e.frequency === 'one-time') {
+                        const expenseMonth = startDate.getMonth() + 1;
+                        const expenseYear = startDate.getFullYear();
+                        const currentYear = currentDate.getFullYear();
+                        return expenseMonth === currentMonth && expenseYear === currentYear;
+                      }
+                      return false;
+                    })()
+                  );
+
+                  return (
+                    <div key={cat.category} className="border rounded-lg overflow-hidden bg-background">
+                      {/* Category Header - Clickable */}
+                      <div
+                        className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newExpanded = new Set(expandedCategories);
+                          if (isExpanded) {
+                            newExpanded.delete(cat.category);
+                          } else {
+                            newExpanded.add(cat.category);
+                          }
+                          setExpandedCategories(newExpanded);
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <div
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            <span className="text-sm font-semibold truncate">{cat.category}</span>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <span className="text-sm font-bold">${cat.amount.toLocaleString()}</span>
+                            <span className="text-xs text-muted-foreground">{cat.percentage.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 ml-6 text-xs text-muted-foreground">
+                          <span>{cat.count} expense{cat.count !== 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+
+                      {/* Individual Expenses - Expandable */}
+                      {isExpanded && categoryExpenses.length > 0 && (
+                        <div className="border-t bg-muted/20">
+                          {categoryExpenses.map((expense) => (
+                            <div key={expense.id} className="px-3 py-2 border-b last:border-b-0 hover:bg-muted/30">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-medium truncate">{expense.name}</span>
+                                <span className="text-xs font-semibold">${parseFloat(expense.amount).toLocaleString()}</span>
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                {expense.frequency}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Right: Larger Interactive Pie Chart */}
+              <div className="flex items-center justify-center">
+                <ResponsiveContainer width="100%" height={400}>
+                  <PieChart>
+                    <Pie
+                      data={breakdownDetails.categories.map((cat) => ({
+                        name: cat.category,
+                        value: cat.amount,
+                        color: cat.color,
+                        percentage: cat.percentage,
+                        count: cat.count,
+                        avgPerExpense: cat.avgPerExpense,
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                        if (percent < 0.08) return null;
+                        const RADIAN = Math.PI / 180;
+                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                        return (
+                          <text
+                            x={x}
+                            y={y}
+                            fill="white"
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            className="text-sm font-bold"
+                          >
+                            {`${(percent * 100).toFixed(0)}%`}
+                          </text>
+                        );
+                      }}
+                      outerRadius={140}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {breakdownDetails.categories.map((cat, index) => (
+                        <Cell key={`cell-${index}`} fill={cat.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-background border rounded-lg shadow-lg p-3">
+                              <p className="text-sm font-bold mb-2">{data.name}</p>
+                              <div className="space-y-1 text-xs">
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-muted-foreground">Total:</span>
+                                  <span className="font-semibold">${data.value.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-muted-foreground">Percentage:</span>
+                                  <span className="font-semibold">{data.percentage.toFixed(1)}%</span>
+                                </div>
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-muted-foreground">Count:</span>
+                                  <span className="font-semibold">{data.count}</span>
+                                </div>
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-muted-foreground">Average:</span>
+                                  <span className="font-semibold">${data.avgPerExpense.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -67,10 +67,21 @@ export const expenseCategories = pgTable("expense_categories", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Insurance providers table
+export const insuranceProviders = pgTable("insurance_providers", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  isDefault: boolean("is_default").default(false), // System default providers
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Expenses table
 export const expenses = pgTable("expenses", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  linkedPolicyId: varchar("linked_policy_id", { length: 255 }), // Link to insurance policy if expense is auto-generated from policy
   name: varchar("name", { length: 255 }).notNull(), // Expense name (e.g., "Rent", "Groceries")
   category: varchar("category", { length: 100 }).notNull(), // housing, food, transportation, utilities, etc.
   expenseCategory: varchar("expense_category", { length: 50 }).default("current-recurring"), // current-recurring, future-recurring, temporary, one-off
@@ -103,16 +114,30 @@ export const assets = pgTable("assets", {
 export const policies = pgTable("policies", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
-  type: varchar("type", { length: 100 }).notNull(), // life, health, auto, home, subscription, etc.
-  provider: varchar("provider", { length: 255 }).notNull(),
-  policyNumber: varchar("policy_number", { length: 255 }),
-  premium: decimal("premium", { precision: 12, scale: 2 }).notNull(),
-  frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, quarterly
-  coverageAmount: decimal("coverage_amount", { precision: 15, scale: 2 }),
+  familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Policy holder
+  linkedExpenseId: varchar("linked_expense_id", { length: 255 }), // Link to auto-generated expense if policy is tracked in expenditures
+
+  // Policy Information
+  provider: varchar("provider", { length: 255 }).notNull(), // Insurance provider
+  policyNumber: varchar("policy_number", { length: 255 }), // Optional policy number
+  policyType: varchar("policy_type", { length: 100 }).notNull(), // life, health, auto, home, etc.
+  status: varchar("status", { length: 50 }).default("active"), // active, lapsed, cancelled, matured
+
+  // Policy Dates
   startDate: date("start_date").notNull(),
-  endDate: date("end_date"),
-  isActive: boolean("is_active").default(true),
+  maturityDate: date("maturity_date"), // Auto-populated or manually set
+  coverageUntilAge: integer("coverage_until_age"), // Age when coverage ends
+
+  // Premium Details
+  premiumAmount: decimal("premium_amount", { precision: 12, scale: 2 }).notNull(),
+  premiumFrequency: varchar("premium_frequency", { length: 50 }).notNull(), // monthly, yearly, quarterly, etc.
+  totalPremiumDuration: integer("total_premium_duration"), // Total number of years to pay premiums
+
+  // Coverage & Benefits (stored as JSON)
+  coverageOptions: text("coverage_options"), // JSON: { death: amount, tpd: amount, criticalIllness: amount, earlyCriticalIllness: amount, hospitalisationPlan: amount }
+
   description: text("description"),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -163,6 +188,7 @@ export const familyMembersRelations = relations(familyMembers, ({ one, many }) =
   }),
   incomes: many(incomes),
   currentHoldings: many(currentHoldings),
+  policies: many(policies),
 }));
 
 export const incomesRelations = relations(incomes, ({ one }) => ({
@@ -201,6 +227,10 @@ export const policiesRelations = relations(policies, ({ one }) => ({
   user: one(users, {
     fields: [policies.userId],
     references: [users.id],
+  }),
+  familyMember: one(familyMembers, {
+    fields: [policies.familyMemberId],
+    references: [familyMembers.id],
   }),
 }));
 

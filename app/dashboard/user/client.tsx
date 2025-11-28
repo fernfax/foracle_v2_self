@@ -17,6 +17,28 @@ import { CurrentHoldingList } from "@/components/current-holdings/current-holdin
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
 import { CurrentHolding } from "@/lib/actions/current-holdings";
 
+type Policy = {
+  id: string;
+  userId: string;
+  familyMemberId: string | null;
+  linkedExpenseId: string | null;
+  provider: string;
+  policyNumber: string | null;
+  policyType: string;
+  status: string | null;
+  startDate: string;
+  maturityDate: string | null;
+  coverageUntilAge: number | null;
+  premiumAmount: string;
+  premiumFrequency: string;
+  totalPremiumDuration: number | null;
+  coverageOptions: string | null;
+  description: string | null;
+  isActive: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 type Income = {
   id: string;
   name: string;
@@ -53,9 +75,10 @@ interface UserHomepageClientProps {
   initialFamilyMembers: FamilyMember[];
   initialCpfData: CpfByFamilyMember[];
   initialCurrentHoldings: CurrentHolding[];
+  initialPolicies: Policy[];
 }
 
-export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData, initialCurrentHoldings }: UserHomepageClientProps) {
+export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies }: UserHomepageClientProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -81,24 +104,30 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="family" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Family Members</span>
+            <span>Family</span>
           </TabsTrigger>
           <TabsTrigger value="incomes" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">Incomes</span>
+            <span>Incomes</span>
           </TabsTrigger>
           <TabsTrigger value="cpf" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            <span className="hidden sm:inline">CPF</span>
+            <span>CPF</span>
           </TabsTrigger>
           <TabsTrigger value="current" className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" />
-            <span className="hidden sm:inline">Current</span>
+            <span>Holdings</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="family" className="mt-6">
-          <FamilyMemberList initialMembers={initialFamilyMembers} incomes={initialIncomes} />
+          <FamilyMemberList
+            initialMembers={initialFamilyMembers}
+            incomes={initialIncomes}
+            cpfData={initialCpfData}
+            holdings={initialCurrentHoldings}
+            policies={initialPolicies}
+          />
         </TabsContent>
 
         <TabsContent value="incomes" className="mt-6">
