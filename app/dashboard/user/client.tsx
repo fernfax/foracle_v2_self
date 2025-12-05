@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -79,11 +80,27 @@ interface UserHomepageClientProps {
 }
 
 export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies }: UserHomepageClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "family");
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Sync activeTab with URL search params when they change
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab") || "family";
+    if (tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    router.push(`/dashboard/user?tab=${value}`, { scroll: false });
+  };
 
   return (
     <div className="space-y-8">
@@ -100,7 +117,7 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <Tabs defaultValue="family" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="family" className="flex items-center gap-2">
             <Users className="h-4 w-4" />

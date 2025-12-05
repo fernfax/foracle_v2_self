@@ -69,6 +69,14 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
     setMounted(true);
   }, []);
 
+  // Sync activeTab with URL search params when they change
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab") || "expenses";
+    if (tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     router.push(`/dashboard/user/expenses?tab=${value}`, { scroll: false });

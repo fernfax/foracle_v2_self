@@ -4,6 +4,7 @@ import { TrendingUp } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { MobileNav } from "@/components/mobile-nav";
+import { HeaderQuickLinks } from "@/components/header/header-quick-links";
 
 export default function DashboardLayout({
   children,
@@ -23,6 +24,12 @@ export default function DashboardLayout({
               Foracle
             </span>
           </Link>
+
+          {/* Quick Links - Center */}
+          <div className="flex items-center">
+            <HeaderQuickLinks />
+          </div>
+
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <UserButton afterSignOutUrl="/" />

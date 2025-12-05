@@ -169,6 +169,19 @@ export const currentHoldings = pgTable("current_holdings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Quick Links table - user-customizable header shortcuts
+export const quickLinks = pgTable("quick_links", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  linkKey: varchar("link_key", { length: 100 }).notNull(), // e.g., "expenses-graph", "user-incomes"
+  label: varchar("label", { length: 100 }).notNull(),
+  href: varchar("href", { length: 255 }).notNull(),
+  icon: varchar("icon", { length: 50 }).notNull(), // lucide icon name
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
@@ -179,6 +192,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   policies: many(policies),
   goals: many(goals),
   currentHoldings: many(currentHoldings),
+  quickLinks: many(quickLinks),
 }));
 
 export const familyMembersRelations = relations(familyMembers, ({ one, many }) => ({
@@ -249,5 +263,12 @@ export const currentHoldingsRelations = relations(currentHoldings, ({ one }) => 
   familyMember: one(familyMembers, {
     fields: [currentHoldings.familyMemberId],
     references: [familyMembers.id],
+  }),
+}));
+
+export const quickLinksRelations = relations(quickLinks, ({ one }) => ({
+  user: one(users, {
+    fields: [quickLinks.userId],
+    references: [users.id],
   }),
 }));
