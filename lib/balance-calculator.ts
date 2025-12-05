@@ -2,6 +2,7 @@ import { parse, format, addMonths, isSameMonth, isWithinInterval, startOfMonth, 
 import { calculateCPF } from "./cpf-calculator";
 
 interface Income {
+  name: string;
   amount: string;
   frequency: string;
   customMonths: string | null;
@@ -18,6 +19,7 @@ interface Income {
 }
 
 interface Expense {
+  name: string;
   amount: string;
   frequency: string;
   customMonths: string | null;
@@ -27,12 +29,19 @@ interface Expense {
   isActive: boolean | null;
 }
 
+export interface SpecialItem {
+  name: string;
+  amount: number;
+  type: 'one-off-income' | 'one-off-expense' | 'custom-expense';
+}
+
 export interface MonthlyBalanceData {
   month: string;
   balance: number;
   income: number;
   expense: number;
   monthlyBalance: number;
+  specialItems: SpecialItem[];
 }
 
 /**
@@ -180,6 +189,7 @@ export function calculateMonthlyBalance(
 
   for (let monthOffset = 0; monthOffset < totalMonths; monthOffset++) {
     const targetMonth = addMonths(new Date(), monthOffset);
+    const specialItems: SpecialItem[] = [];
 
     // Calculate total income for this month
     const monthlyIncome = activeIncomes.reduce((total, income) => {
@@ -227,6 +237,15 @@ export function calculateMonthlyBalance(
         monthOffset
       );
 
+      // Track one-off incomes for arrow markers
+      if (income.frequency === 'one-time' && allocatedAmount > 0) {
+        specialItems.push({
+          name: income.name,
+          amount: allocatedAmount,
+          type: 'one-off-income',
+        });
+      }
+
       return total + allocatedAmount;
     }, 0);
 
@@ -241,6 +260,23 @@ export function calculateMonthlyBalance(
         expense.customMonths,
         monthOffset
       );
+
+      // Track one-off expenses and custom frequency expenses for arrow markers
+      if (allocatedAmount > 0) {
+        if (expense.frequency === 'one-time') {
+          specialItems.push({
+            name: expense.name,
+            amount: allocatedAmount,
+            type: 'one-off-expense',
+          });
+        } else if (expense.frequency === 'custom') {
+          specialItems.push({
+            name: expense.name,
+            amount: allocatedAmount,
+            type: 'custom-expense',
+          });
+        }
+      }
 
       return total + allocatedAmount;
     }, 0);
@@ -257,6 +293,7 @@ export function calculateMonthlyBalance(
       income: Math.round(monthlyIncome * 100) / 100,
       expense: Math.round(monthlyExpense * 100) / 100,
       monthlyBalance: Math.round(monthlyBalance * 100) / 100, // Monthly net balance (non-cumulative)
+      specialItems,
     });
   }
 

@@ -14,6 +14,7 @@ export type Expense = {
   expenseCategory: string;
   amount: string;
   frequency: string;
+  customMonths: string | null;
   startDate: string;
   endDate: string | null;
   description: string | null;

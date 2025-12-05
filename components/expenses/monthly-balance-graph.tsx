@@ -4,11 +4,12 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { calculateMonthlyBalance, timeRangeToMonths, type MonthlyBalanceData } from "@/lib/balance-calculator";
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { calculateMonthlyBalance, timeRangeToMonths, type MonthlyBalanceData, type SpecialItem } from "@/lib/balance-calculator";
 
 interface Income {
   id: string;
+  name: string;
   amount: string;
   frequency: string;
   customMonths: string | null;
@@ -26,6 +27,7 @@ interface Income {
 
 interface Expense {
   id: string;
+  name: string;
   amount: string;
   frequency: string;
   customMonths: string | null;
@@ -60,6 +62,70 @@ const TIME_RANGES = [
   { value: "120", label: "10 Years" },
 ];
 
+// Arrow marker colors
+const ARROW_COLORS = {
+  'one-off-income': '#10b981',    // emerald-500
+  'one-off-expense': '#ef4444',   // red-500
+  'custom-expense': '#f59e0b',    // amber-500
+};
+
+// Custom dot component that renders balance dots and arrow markers for special items
+const CustomBalanceDot = (props: any) => {
+  const { cx, cy, payload } = props;
+  if (cx === undefined || cy === undefined) return null;
+
+  const elements: React.ReactNode[] = [];
+
+  // Always render the regular balance dot
+  elements.push(
+    <circle key="balance-dot" cx={cx} cy={cy} r={4} fill="#3b82f6" />
+  );
+
+  // Render arrows for special items if present
+  if (payload.specialItems && payload.specialItems.length > 0) {
+    let incomeOffset = 0;
+    let expenseOffset = 0;
+
+    payload.specialItems.forEach((item: SpecialItem, idx: number) => {
+      const baseOffset = 20; // pixels from the dot
+      const stackOffset = 15; // pixels between stacked arrows
+
+      if (item.type === 'one-off-income') {
+        // Green up arrow above the line
+        const yPos = cy - baseOffset - (incomeOffset * stackOffset);
+        elements.push(
+          <polygon
+            key={`arrow-income-${idx}`}
+            points={`${cx},${yPos - 10} ${cx - 7},${yPos + 5} ${cx + 7},${yPos + 5}`}
+            fill={ARROW_COLORS['one-off-income']}
+            stroke="white"
+            strokeWidth={1}
+          />
+        );
+        incomeOffset++;
+      } else {
+        // Red or orange down arrow below the line
+        const color = item.type === 'one-off-expense'
+          ? ARROW_COLORS['one-off-expense']
+          : ARROW_COLORS['custom-expense'];
+        const yPos = cy + baseOffset + (expenseOffset * stackOffset);
+        elements.push(
+          <polygon
+            key={`arrow-expense-${idx}`}
+            points={`${cx},${yPos + 10} ${cx - 7},${yPos - 5} ${cx + 7},${yPos - 5}`}
+            fill={color}
+            stroke="white"
+            strokeWidth={1}
+          />
+        );
+        expenseOffset++;
+      }
+    });
+  }
+
+  return <g>{elements}</g>;
+};
+
 /**
  * Format currency for display
  */
@@ -73,11 +139,50 @@ function formatCurrency(value: number): string {
 }
 
 /**
+ * Get label for special item type
+ */
+function getSpecialItemLabel(type: SpecialItem['type']): string {
+  switch (type) {
+    case 'one-off-income': return 'One-off';
+    case 'one-off-expense': return 'One-off';
+    case 'custom-expense': return 'Custom';
+    default: return '';
+  }
+}
+
+/**
  * Custom tooltip component
  */
 function CustomTooltip({ active, payload, viewMode }: any) {
   if (active && payload && payload.length) {
+    // Check if this is a scatter point (arrow marker)
+    const firstPayload = payload[0];
+    if (firstPayload.dataKey === 'y' && firstPayload.payload.type) {
+      // This is an arrow marker tooltip
+      const arrowData = firstPayload.payload as ArrowDataPoint;
+      const color = ARROW_COLORS[arrowData.type];
+      return (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+          <p className="font-semibold text-gray-900 mb-2">{arrowData.month}</p>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: color }}
+            />
+            <span className="text-sm">
+              {getSpecialItemLabel(arrowData.type)}: ${arrowData.amount.toLocaleString()} - {arrowData.name}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // Regular line tooltip
     const data = payload[0].payload as MonthlyBalanceData;
+
+    // Collect special items for this month
+    const specialItems = data.specialItems || [];
+
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
         <p className="font-semibold text-gray-900 mb-2">{data.month}</p>
@@ -106,6 +211,23 @@ function CustomTooltip({ active, payload, viewMode }: any) {
                 Net Balance: {formatCurrency(data.monthlyBalance)}
               </p>
             </>
+          )}
+
+          {/* Show special items if any */}
+          {specialItems.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              {specialItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-sm"
+                    style={{ backgroundColor: ARROW_COLORS[item.type] }}
+                  />
+                  <span className="text-xs">
+                    {getSpecialItemLabel(item.type)}: ${item.amount.toLocaleString()} - {item.name}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -235,9 +357,9 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
       <CardContent>
         <div className="w-full h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
+            <ComposedChart
               data={balanceData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
@@ -257,7 +379,16 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
               <Tooltip content={<CustomTooltip viewMode={viewMode} />} />
               <Legend
                 wrapperStyle={{ paddingTop: "20px" }}
-                iconType="line"
+                payload={viewMode === "cumulative" ? [
+                  { value: 'Cumulative Balance', type: 'line', color: '#3b82f6' },
+                  { value: 'One-off Expenditures', type: 'triangle', color: ARROW_COLORS['one-off-expense'] },
+                  { value: 'One-off Incomes', type: 'triangle', color: ARROW_COLORS['one-off-income'] },
+                  { value: 'Custom Frequency Expenditures', type: 'triangle', color: ARROW_COLORS['custom-expense'] },
+                ] : [
+                  { value: 'Income', type: 'line', color: '#10b981' },
+                  { value: 'Expenses', type: 'line', color: '#ef4444' },
+                  { value: 'Net Balance', type: 'line', color: '#3b82f6' },
+                ]}
               />
 
               {viewMode === "cumulative" ? (
@@ -266,7 +397,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
                   dataKey="balance"
                   stroke="#3b82f6"
                   strokeWidth={3}
-                  dot={{ fill: "#3b82f6", r: 4 }}
+                  dot={<CustomBalanceDot />}
                   activeDot={{ r: 6 }}
                   name="Cumulative Balance"
                 />
@@ -301,7 +432,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
                   />
                 </>
               )}
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
 

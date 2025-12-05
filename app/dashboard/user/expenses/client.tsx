@@ -26,6 +26,7 @@ interface Expense {
 
 interface Income {
   id: string;
+  name: string;
   amount: string;
   frequency: string;
   customMonths: string | null;

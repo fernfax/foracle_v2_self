@@ -8,13 +8,14 @@ import {
 } from "@/components/ui/card";
 import {
   DollarSign,
-  TrendingDown,
   TrendingUp,
   Wallet,
   Target,
   Users,
 } from "lucide-react";
 import { getDashboardMetrics } from "@/lib/actions/user";
+import { TotalExpensesCard } from "@/components/dashboard/total-expenses-card";
+import { TotalIncomeCard } from "@/components/dashboard/total-income-card";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -41,56 +42,10 @@ export default async function DashboardPage() {
       {/* Metrics Grid */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {/* Total Income */}
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Income
-            </CardTitle>
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950">
-              <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold tabular-nums">
-              ${metrics.totalIncome.toLocaleString()}
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="inline-flex items-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                +12.5%
-              </span>
-              <span className="text-xs text-muted-foreground">
-                from last month
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <TotalIncomeCard totalIncome={metrics.totalIncome} />
 
         {/* Total Expenses */}
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Expenses
-            </CardTitle>
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950">
-              <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold tabular-nums">
-              ${metrics.totalExpenses.toLocaleString()}
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="inline-flex items-center text-xs font-medium text-red-600 dark:text-red-400">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                +5.2%
-              </span>
-              <span className="text-xs text-muted-foreground">
-                from last month
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <TotalExpensesCard totalExpenses={metrics.totalExpenses} />
 
         {/* Net Savings */}
         <Card className="relative overflow-hidden">
