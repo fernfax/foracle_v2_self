@@ -38,13 +38,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   ChevronRight,
   ChevronDown,
   ArrowUpDown,
@@ -62,6 +55,7 @@ import {
 } from "lucide-react";
 import { AddIncomeDialog } from "./add-income-dialog";
 import { EditIncomeDialog } from "./edit-income-dialog";
+import { IncomeBreakdownModal } from "./income-breakdown-modal";
 import { deleteIncome, toggleIncomeStatus } from "@/lib/actions/income";
 import { format, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -972,101 +966,11 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Income Breakdown Modal */}
-      <Dialog open={isBreakdownModalOpen} onOpenChange={setIsBreakdownModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Income Breakdown</DialogTitle>
-            <DialogDescription>
-              Detailed breakdown of your annual income by category and family member
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
-              <div>
-                <p className="text-sm text-muted-foreground">Gross Annual Income</p>
-                <p className="text-2xl font-semibold">${incomeSummaryStats.grossAnnualIncome.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Net Annual Income (after CPF)</p>
-                <p className="text-2xl font-semibold">${incomeSummaryStats.netAnnualIncome.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Active Income Sources</p>
-                <p className="text-lg font-semibold">{incomeSummaryStats.activeIncomeCount}</p>
-              </div>
-              {incomeSummaryStats.totalBonuses > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Bonuses</p>
-                  <p className="text-lg font-semibold">${incomeSummaryStats.totalBonuses.toLocaleString()}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Family Member Breakdown */}
-            {incomeSummaryStats.familyMembersArray.length > 1 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">By Family Member</h3>
-                <div className="space-y-3">
-                  {incomeSummaryStats.familyMembersArray.map((member) => (
-                    <div key={member.id} className="border rounded-lg p-4 bg-background">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold">{member.name}</h4>
-                          <p className="text-xs text-muted-foreground">{member.count} income source{member.count !== 1 ? 's' : ''}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold">${member.gross.toLocaleString()}</p>
-                          <p className="text-xs text-muted-foreground">{member.percentage.toFixed(1)}% of total</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Gross Annual:</span>
-                        <span className="font-semibold">${member.gross.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Net Annual:</span>
-                        <span className="font-semibold">${member.net.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Category Breakdown */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">By Category</h3>
-              <div className="space-y-3">
-                {incomeSummaryStats.categoriesArray.map((cat) => (
-                  <div key={cat.category} className="border rounded-lg p-4 bg-background">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <h4 className="font-semibold">{cat.category}</h4>
-                        <p className="text-xs text-muted-foreground">{cat.count} income source{cat.count !== 1 ? 's' : ''}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold">${cat.gross.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">{cat.percentage.toFixed(1)}% of total</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Gross Annual:</span>
-                      <span className="font-semibold">${cat.gross.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Net Annual:</span>
-                      <span className="font-semibold">${cat.net.toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <IncomeBreakdownModal
+        open={isBreakdownModalOpen}
+        onOpenChange={setIsBreakdownModalOpen}
+        incomes={incomes}
+      />
     </div>
   );
 }

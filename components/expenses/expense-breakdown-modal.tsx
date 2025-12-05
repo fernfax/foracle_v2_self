@@ -29,12 +29,14 @@ interface ExpenseBreakdownModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   expenses: Expense[];
+  currentMonthTotal: number;
 }
 
 export function ExpenseBreakdownModal({
   open,
   onOpenChange,
   expenses,
+  currentMonthTotal,
 }: ExpenseBreakdownModalProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
@@ -133,14 +135,10 @@ export function ExpenseBreakdownModal({
 
         <div className="space-y-6">
           {/* Summary Stats Grid */}
-          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+          <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
             <div>
-              <p className="text-xs text-muted-foreground">Total Monthly</p>
-              <p className="text-2xl font-bold">${breakdownDetails.totalMonthlyExpenses.toLocaleString()}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Active Expenses</p>
-              <p className="text-2xl font-bold">{breakdownDetails.activeExpensesCount}</p>
+              <p className="text-xs text-muted-foreground">Current Month Expected</p>
+              <p className="text-2xl font-bold">${currentMonthTotal.toLocaleString()}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Categories</p>

@@ -84,6 +84,7 @@ export function TotalExpensesCard({ totalExpenses }: TotalExpensesCardProps) {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         expenses={expenses}
+        currentMonthTotal={totalExpenses}
       />
     </>
   );

@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { IncomeBreakdownModal } from "@/components/dashboard/income-breakdown-modal";
+import { IncomeBreakdownModal } from "@/components/income/income-breakdown-modal";
 import { getUserIncomes } from "@/lib/actions/user";
 
 interface TotalIncomeCardProps {
