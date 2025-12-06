@@ -127,27 +127,9 @@ export function TotalExpensesCard({ totalExpenses }: TotalExpensesCardProps) {
         onClick={() => setIsModalOpen(true)}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={(e) => { e.stopPropagation(); goToPreviousMonth(); }}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <CardTitle className="text-sm font-medium text-muted-foreground min-w-[140px] text-center">
-              {formatMonthDisplay(selectedMonth)}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={(e) => { e.stopPropagation(); goToNextMonth(); }}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Total Expenses
+          </CardTitle>
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950">
             <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
           </div>
@@ -156,9 +138,27 @@ export function TotalExpensesCard({ totalExpenses }: TotalExpensesCardProps) {
           <div className="text-3xl font-semibold tabular-nums">
             ${displayAmount.toLocaleString()}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Expected expenses for {formatMonthDisplay(selectedMonth)}
-          </p>
+          <div className="flex items-center gap-1 mt-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5"
+              onClick={(e) => { e.stopPropagation(); goToPreviousMonth(); }}
+            >
+              <ChevronLeft className="h-3 w-3" />
+            </Button>
+            <span className="text-xs text-muted-foreground min-w-[100px] text-center">
+              {formatMonthDisplay(selectedMonth)}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5"
+              onClick={(e) => { e.stopPropagation(); goToNextMonth(); }}
+            >
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

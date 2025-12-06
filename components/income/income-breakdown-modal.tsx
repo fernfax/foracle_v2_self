@@ -31,13 +31,22 @@ interface IncomeBreakdownModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   incomes: Income[];
+  selectedMonth?: Date;
 }
 
 export function IncomeBreakdownModal({
   open,
   onOpenChange,
   incomes,
+  selectedMonth,
 }: IncomeBreakdownModalProps) {
+  // Format month display
+  const formatMonthDisplay = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  // Use current month if not provided
+  const effectiveMonth = selectedMonth || new Date();
   // Calculate breakdown details
   const breakdownDetails = useMemo(() => {
     let grossAnnualIncome = 0;
@@ -148,9 +157,9 @@ export function IncomeBreakdownModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Income Breakdown</DialogTitle>
+          <DialogTitle>Income Breakdown - {formatMonthDisplay(effectiveMonth)}</DialogTitle>
           <DialogDescription>
-            Detailed breakdown of your annual income by category and family member
+            Detailed breakdown of your income for {formatMonthDisplay(effectiveMonth)}
           </DialogDescription>
         </DialogHeader>
 

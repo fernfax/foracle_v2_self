@@ -415,36 +415,36 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           <Card className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative" onClick={() => setIsBreakdownModalOpen(true)}>
             <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={(e) => { e.stopPropagation(); goToPreviousMonth(); }}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <CardTitle className="text-sm font-medium text-muted-foreground min-w-[140px] text-center">
-                  {formatMonthDisplay(selectedMonth)}
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={(e) => { e.stopPropagation(); goToNextMonth(); }}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Current Month Expected Expenses
+              </CardTitle>
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
                 <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
               <div className="text-2xl font-semibold">${summaryStats.currentMonthExpenses.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1 mb-4">
-                Expected expenses for {formatMonthDisplay(selectedMonth)}
-              </p>
+              <div className="flex items-center gap-1 mt-2 mb-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5"
+                  onClick={(e) => { e.stopPropagation(); goToPreviousMonth(); }}
+                >
+                  <ChevronLeft className="h-3 w-3" />
+                </Button>
+                <span className="text-xs text-muted-foreground min-w-[100px] text-center">
+                  {formatMonthDisplay(selectedMonth)}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5"
+                  onClick={(e) => { e.stopPropagation(); goToNextMonth(); }}
+                >
+                  <ChevronRight className="h-3 w-3" />
+                </Button>
+              </div>
 
               {/* Split Layout */}
               {breakdownDetails.categories.length > 0 && (
