@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, Expand, Shield } from "lucide-react";
+import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Expand, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -89,6 +89,26 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
   const [breakdownSortBy, setBreakdownSortBy] = useState<"amount" | "category" | "count">("amount");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
+  // Month navigation state (default to current month)
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+
+  // Month navigation handlers
+  const goToPreviousMonth = () => {
+    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
+  // Format month display
+  const formatMonthDisplay = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
   // Load categories on mount
   useEffect(() => {
     const loadCategories = async () => {
@@ -107,17 +127,21 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
     return counts;
   }, [expenses]);
 
-  // Calculate summary statistics
+  // Calculate summary statistics for selected month
   const summaryStats = useMemo(() => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; // 1-12
+    const selectedYear = selectedMonth.getFullYear();
+    const selectedMonthNum = selectedMonth.getMonth() + 1; // 1-12
+
+    // Create start and end of selected month for date comparisons
+    const monthStart = new Date(selectedYear, selectedMonth.getMonth(), 1);
+    const monthEnd = new Date(selectedYear, selectedMonth.getMonth() + 1, 0); // Last day of month
 
     const categoryTotals: Record<string, number> = {};
-    let currentMonthExpenses = 0;
+    let selectedMonthExpenses = 0;
     let totalActiveCategories = 0;
 
-    // Calculate expenses that apply to current month
-    const currentMonthCategoryTotals: Record<string, number> = {};
+    // Calculate expenses that apply to selected month
+    const selectedMonthCategoryTotals: Record<string, number> = {};
 
     expenses.forEach((expense) => {
       if (!expense.isActive) return;
@@ -126,11 +150,13 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       const startDate = new Date(expense.startDate);
       const endDate = expense.endDate ? new Date(expense.endDate) : null;
 
-      // Check if expense is active in current month
-      if (currentDate < startDate) return;
-      if (endDate && currentDate > endDate) return;
+      // Check if expense is valid for selected month
+      // Expense must have started by the end of selected month
+      if (startDate > monthEnd) return;
+      // Expense must not have ended before selected month started
+      if (endDate && endDate < monthStart) return;
 
-      // Check if expense applies to current month based on frequency (case-insensitive)
+      // Check if expense applies to selected month based on frequency (case-insensitive)
       let appliesThisMonth = false;
       const frequency = expense.frequency.toLowerCase();
 
@@ -139,46 +165,49 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       } else if (frequency === 'custom' && expense.customMonths) {
         try {
           const customMonths = JSON.parse(expense.customMonths);
-          appliesThisMonth = customMonths.includes(currentMonth);
+          appliesThisMonth = customMonths.includes(selectedMonthNum);
         } catch {
           appliesThisMonth = false;
         }
       } else if (frequency === 'one-time') {
-        // Check if one-time expense is in current month
+        // Check if one-time expense is in selected month
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
-        const currentYear = currentDate.getFullYear();
-        appliesThisMonth = expenseMonth === currentMonth && expenseYear === currentYear;
+        appliesThisMonth = expenseMonth === selectedMonthNum && expenseYear === selectedYear;
       }
 
       if (appliesThisMonth) {
-        currentMonthExpenses += amount;
-        currentMonthCategoryTotals[expense.category] = (currentMonthCategoryTotals[expense.category] || 0) + amount;
+        selectedMonthExpenses += amount;
+        selectedMonthCategoryTotals[expense.category] = (selectedMonthCategoryTotals[expense.category] || 0) + amount;
       }
 
       // Count all active categories
       categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + amount;
     });
 
-    const sortedCurrentMonthCategories = Object.entries(currentMonthCategoryTotals).sort((a, b) => b[1] - a[1]);
-    const topCategory = sortedCurrentMonthCategories[0] || null;
+    const sortedSelectedMonthCategories = Object.entries(selectedMonthCategoryTotals).sort((a, b) => b[1] - a[1]);
+    const topCategory = sortedSelectedMonthCategories[0] || null;
     totalActiveCategories = Object.keys(categoryTotals).length;
 
     return {
       topCategory: topCategory ? {
         name: topCategory[0],
         amount: topCategory[1],
-        percentage: (topCategory[1] / currentMonthExpenses) * 100
+        percentage: (topCategory[1] / selectedMonthExpenses) * 100
       } : null,
-      currentMonthExpenses,
+      currentMonthExpenses: selectedMonthExpenses,
       activeCategories: totalActiveCategories,
     };
-  }, [expenses]);
+  }, [expenses, selectedMonth]);
 
-  // Calculate breakdown details for expanded view
+  // Calculate breakdown details for expanded view (uses selectedMonth)
   const breakdownDetails = useMemo(() => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
+    const selectedYear = selectedMonth.getFullYear();
+    const selectedMonthNum = selectedMonth.getMonth() + 1;
+
+    // Create start and end of selected month for date comparisons
+    const monthStart = new Date(selectedYear, selectedMonth.getMonth(), 1);
+    const monthEnd = new Date(selectedYear, selectedMonth.getMonth() + 1, 0); // Last day of month
 
     const monthlyExpenses: Expense[] = [];
     const customExpenses: Expense[] = [];
@@ -192,8 +221,9 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       const startDate = new Date(expense.startDate);
       const endDate = expense.endDate ? new Date(expense.endDate) : null;
 
-      if (currentDate < startDate) return;
-      if (endDate && currentDate > endDate) return;
+      // Check if expense is valid for selected month
+      if (startDate > monthEnd) return;
+      if (endDate && endDate < monthStart) return;
 
       let appliesThisMonth = false;
       let frequencyType: "monthly" | "custom" | "one-time" | null = null;
@@ -205,7 +235,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       } else if (frequency === 'custom' && expense.customMonths) {
         try {
           const customMonths = JSON.parse(expense.customMonths);
-          if (customMonths.includes(currentMonth)) {
+          if (customMonths.includes(selectedMonthNum)) {
             appliesThisMonth = true;
             frequencyType = "custom";
           }
@@ -213,8 +243,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       } else if (frequency === 'one-time') {
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
-        const currentYear = currentDate.getFullYear();
-        if (expenseMonth === currentMonth && expenseYear === currentYear) {
+        if (expenseMonth === selectedMonthNum && expenseYear === selectedYear) {
           appliesThisMonth = true;
           frequencyType = "one-time";
         }
@@ -267,7 +296,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       categories: categoriesArray,
       topCategories: categoriesArray.slice(0, 5),
     };
-  }, [expenses, breakdownSortBy]);
+  }, [expenses, breakdownSortBy, selectedMonth]);
 
   // Filter and sort expenses
   const filteredExpenses = useMemo(() => {
@@ -386,9 +415,27 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           <Card className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative" onClick={() => setIsBreakdownModalOpen(true)}>
             <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Current Month Expected Expenses
-              </CardTitle>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => { e.stopPropagation(); goToPreviousMonth(); }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <CardTitle className="text-sm font-medium text-muted-foreground min-w-[140px] text-center">
+                  {formatMonthDisplay(selectedMonth)}
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => { e.stopPropagation(); goToNextMonth(); }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
                 <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
@@ -396,7 +443,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             <CardContent className="pb-6">
               <div className="text-2xl font-semibold">${summaryStats.currentMonthExpenses.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground mt-1 mb-4">
-                Monthly & custom expenses for this month
+                Expected expenses for {formatMonthDisplay(selectedMonth)}
               </p>
 
               {/* Split Layout */}
@@ -469,9 +516,9 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                               if (active && payload && payload.length) {
                                 const data = payload[0].payload;
                                 return (
-                                  <div className="bg-background border rounded-lg shadow-lg p-2">
-                                    <p className="text-xs font-semibold">{data.name}</p>
-                                    <p className="text-xs text-muted-foreground">
+                                  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
+                                    <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">{data.name}</p>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">
                                       ${data.value.toLocaleString()}
                                     </p>
                                   </div>
@@ -565,13 +612,12 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
       {/* Category Filter Buttons */}
       {categories.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant={selectedCategory === null ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedCategory(null)}
             className={cn(
-              "flex-shrink-0",
               selectedCategory === null && "bg-black text-white hover:bg-black/90"
             )}
           >
@@ -591,7 +637,6 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                 size="sm"
                 onClick={() => setSelectedCategory(category.name)}
                 className={cn(
-                  "flex-shrink-0",
                   selectedCategory === category.name && "bg-black text-white hover:bg-black/90"
                 )}
               >
@@ -762,6 +807,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
         onOpenChange={setIsBreakdownModalOpen}
         expenses={expenses}
         currentMonthTotal={summaryStats.currentMonthExpenses}
+        selectedMonth={selectedMonth}
       />
     </div>
   );

@@ -30,6 +30,7 @@ interface ExpenseBreakdownModalProps {
   onOpenChange: (open: boolean) => void;
   expenses: Expense[];
   currentMonthTotal: number;
+  selectedMonth: Date;
 }
 
 export function ExpenseBreakdownModal({
@@ -37,19 +38,24 @@ export function ExpenseBreakdownModal({
   onOpenChange,
   expenses,
   currentMonthTotal,
+  selectedMonth,
 }: ExpenseBreakdownModalProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // Calculate breakdown details
   const breakdownDetails = useMemo(() => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
+    const selectedYear = selectedMonth.getFullYear();
+    const selectedMonthNum = selectedMonth.getMonth() + 1;
+
+    // For date comparisons, create start/end of selected month
+    const monthStart = new Date(selectedYear, selectedMonth.getMonth(), 1);
+    const monthEnd = new Date(selectedYear, selectedMonth.getMonth() + 1, 0);
 
     const categoryBreakdown: Record<string, { amount: number; count: number; expenses: Expense[] }> = {};
     let totalMonthlyExpenses = 0;
     let activeExpensesCount = 0;
 
-    // Only include monthly, custom (if current month selected), and one-time (if in current month)
+    // Only include monthly, custom (if selected month matches), and one-time (if in selected month)
     // This matches the calculation in expense-list.tsx and getDashboardMetrics
     expenses.forEach((expense) => {
       if (!expense.isActive) return;
@@ -58,8 +64,11 @@ export function ExpenseBreakdownModal({
       const startDate = new Date(expense.startDate);
       const endDate = expense.endDate ? new Date(expense.endDate) : null;
 
-      if (currentDate < startDate) return;
-      if (endDate && currentDate > endDate) return;
+      // Check if expense is valid for selected month
+      // Expense must have started by the end of selected month
+      if (startDate > monthEnd) return;
+      // Expense must not have ended before selected month started
+      if (endDate && endDate < monthStart) return;
 
       let appliesThisMonth = false;
       const frequency = expense.frequency.toLowerCase();
@@ -69,15 +78,14 @@ export function ExpenseBreakdownModal({
       } else if (frequency === 'custom' && expense.customMonths) {
         try {
           const customMonths = JSON.parse(expense.customMonths);
-          appliesThisMonth = customMonths.includes(currentMonth);
+          appliesThisMonth = customMonths.includes(selectedMonthNum);
         } catch {
           appliesThisMonth = false;
         }
       } else if (frequency === 'one-time') {
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
-        const currentYear = currentDate.getFullYear();
-        appliesThisMonth = expenseMonth === currentMonth && expenseYear === currentYear;
+        appliesThisMonth = expenseMonth === selectedMonthNum && expenseYear === selectedYear;
       }
 
       if (appliesThisMonth) {
@@ -114,7 +122,7 @@ export function ExpenseBreakdownModal({
       activeExpensesCount,
       topCategory,
     };
-  }, [expenses]);
+  }, [expenses, selectedMonth]);
 
   const toggleCategory = (category: string) => {
     const newExpanded = new Set(expandedCategories);
@@ -126,13 +134,18 @@ export function ExpenseBreakdownModal({
     setExpandedCategories(newExpanded);
   };
 
+  // Format month display
+  const formatMonthDisplay = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Expense Breakdown</DialogTitle>
+          <DialogTitle>Expense Breakdown - {formatMonthDisplay(selectedMonth)}</DialogTitle>
           <DialogDescription>
-            Detailed breakdown of your monthly expenses by category
+            Detailed breakdown of your expenses for {formatMonthDisplay(selectedMonth)}
           </DialogDescription>
         </DialogHeader>
 
@@ -140,7 +153,7 @@ export function ExpenseBreakdownModal({
           {/* Summary Stats Grid */}
           <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
             <div>
-              <p className="text-xs text-muted-foreground">Current Month Expected</p>
+              <p className="text-xs text-muted-foreground">Expected for {formatMonthDisplay(selectedMonth)}</p>
               <p className="text-2xl font-bold">${currentMonthTotal.toLocaleString()}</p>
             </div>
             <div>
@@ -287,24 +300,24 @@ export function ExpenseBreakdownModal({
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
-                            <div className="bg-background border rounded-lg shadow-lg p-3">
-                              <p className="text-sm font-bold mb-2">{data.name}</p>
+                            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">
+                              <p className="text-sm font-bold mb-2 text-gray-900 dark:text-gray-100">{data.name}</p>
                               <div className="space-y-1 text-xs">
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-muted-foreground">Total:</span>
-                                  <span className="font-semibold">${data.value.toLocaleString()}</span>
+                                  <span className="text-gray-600 dark:text-gray-400">Total:</span>
+                                  <span className="font-semibold text-gray-900 dark:text-gray-100">${data.value.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-muted-foreground">Percentage:</span>
-                                  <span className="font-semibold">{data.percentage.toFixed(1)}%</span>
+                                  <span className="text-gray-600 dark:text-gray-400">Percentage:</span>
+                                  <span className="font-semibold text-gray-900 dark:text-gray-100">{data.percentage.toFixed(1)}%</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-muted-foreground">Count:</span>
-                                  <span className="font-semibold">{data.count}</span>
+                                  <span className="text-gray-600 dark:text-gray-400">Count:</span>
+                                  <span className="font-semibold text-gray-900 dark:text-gray-100">{data.count}</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-muted-foreground">Average:</span>
-                                  <span className="font-semibold">${data.avgPerExpense.toLocaleString()}</span>
+                                  <span className="text-gray-600 dark:text-gray-400">Average:</span>
+                                  <span className="font-semibold text-gray-900 dark:text-gray-100">${data.avgPerExpense.toLocaleString()}</span>
                                 </div>
                               </div>
                             </div>
