@@ -79,16 +79,22 @@ export function TotalIncomeCard({ totalIncome }: TotalIncomeCardProps) {
     incomes.forEach((income) => {
       if (!income.isActive) return;
 
-      const startDate = new Date(income.startDate);
-      const endDate = income.endDate ? new Date(income.endDate) : null;
+      // Helper to parse date strings as local dates (not UTC)
+      const parseLocalDate = (dateStr: string) => {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      };
+
+      const startDate = parseLocalDate(income.startDate);
+      const endDate = income.endDate ? parseLocalDate(income.endDate) : null;
 
       // Determine which amount to use - check for future income changes
       let effectiveAmount = parseFloat(income.amount);
       let useFutureIncome = false;
 
       if (income.futureIncomeChange && income.futureIncomeAmount && income.futureIncomeStartDate) {
-        const futureStartDate = new Date(income.futureIncomeStartDate);
-        const futureEndDate = income.futureIncomeEndDate ? new Date(income.futureIncomeEndDate) : null;
+        const futureStartDate = parseLocalDate(income.futureIncomeStartDate);
+        const futureEndDate = income.futureIncomeEndDate ? parseLocalDate(income.futureIncomeEndDate) : null;
 
         // Check if the selected month falls within the future income change period
         // Use future amount if: month starts on or after future start date AND
@@ -110,7 +116,7 @@ export function TotalIncomeCard({ totalIncome }: TotalIncomeCardProps) {
 
       // If using future income, also check if the future income period has ended
       if (useFutureIncome && income.futureIncomeEndDate) {
-        const futureEndDate = new Date(income.futureIncomeEndDate);
+        const futureEndDate = parseLocalDate(income.futureIncomeEndDate);
         if (futureEndDate < monthStart) return;
       }
 
