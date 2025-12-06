@@ -15,7 +15,7 @@ interface Income {
   customMonths: string | null;
   startDate: string;
   endDate: string | null;
-  incomeCategory: string;
+  incomeCategory: string | null;
   isActive: boolean | null;
   netTakeHome: string | null;
   subjectToCpf: boolean | null;
@@ -33,7 +33,7 @@ interface Expense {
   customMonths: string | null;
   startDate: string;
   endDate: string | null;
-  expenseCategory: string;
+  expenseCategory: string | null;
   isActive: boolean | null;
 }
 
@@ -46,6 +46,15 @@ interface CurrentHolding {
   createdAt: Date;
   updatedAt: Date;
   familyMemberName?: string | null;
+}
+
+interface ArrowDataPoint {
+  type: 'one-off-income' | 'one-off-expense' | 'custom-expense';
+  month: string;
+  amount: number;
+  name: string;
+  x: number;
+  y: number;
 }
 
 interface MonthlyBalanceGraphProps {
@@ -379,16 +388,6 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
               <Tooltip content={<CustomTooltip viewMode={viewMode} />} />
               <Legend
                 wrapperStyle={{ paddingTop: "20px" }}
-                payload={viewMode === "cumulative" ? [
-                  { value: 'Cumulative Balance', type: 'line', color: '#3b82f6' },
-                  { value: 'One-off Expenditures', type: 'triangle', color: ARROW_COLORS['one-off-expense'] },
-                  { value: 'One-off Incomes', type: 'triangle', color: ARROW_COLORS['one-off-income'] },
-                  { value: 'Custom Frequency Expenditures', type: 'triangle', color: ARROW_COLORS['custom-expense'] },
-                ] : [
-                  { value: 'Income', type: 'line', color: '#10b981' },
-                  { value: 'Expenses', type: 'line', color: '#ef4444' },
-                  { value: 'Net Balance', type: 'line', color: '#3b82f6' },
-                ]}
               />
 
               {viewMode === "cumulative" ? (

@@ -13,7 +13,7 @@ export default async function PoliciesPage() {
 
   const [policies, familyMembers] = await Promise.all([
     getUserPolicies(user.id),
-    getUserFamilyMembers(user.id),
+    getUserFamilyMembers(),
   ]);
 
   return (

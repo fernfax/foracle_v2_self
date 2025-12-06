@@ -21,7 +21,7 @@ interface Income {
   employerCpfContribution: string | null;
   isActive: boolean | null;
   familyMemberId: string | null;
-  familyMember: {
+  familyMember?: {
     id: string;
     name: string;
   } | null;

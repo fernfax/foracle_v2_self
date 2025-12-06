@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Shield, Plus, User, Users, Baby, Heart, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,7 @@ interface Policy {
   coverageUntilAge: number | null;
   premiumAmount: string;
   premiumFrequency: string;
+  customMonths: string | null;
   totalPremiumDuration: number | null;
   coverageOptions: string | null;
   isActive: boolean | null;
@@ -57,6 +59,7 @@ interface PoliciesClientProps {
 
 export function PoliciesClient({ initialPolicies, familyMembers, userId }: PoliciesClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [policies, setPolicies] = useState<Policy[]>(initialPolicies);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -71,6 +74,26 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
   useEffect(() => {
     setPolicies(initialPolicies);
   }, [initialPolicies]);
+
+  // Handle URL-based edit parameter (e.g., ?edit=policyId)
+  // Use initialPolicies directly to avoid timing issues with state sync
+  useEffect(() => {
+    const editPolicyId = searchParams.get("edit");
+    if (editPolicyId && initialPolicies.length > 0) {
+      const policyToEdit = initialPolicies.find(p => p.id === editPolicyId);
+      if (policyToEdit) {
+        // Use setTimeout to ensure the dialog opens after the component has fully mounted
+        // This prevents race conditions with state updates
+        const timeoutId = setTimeout(() => {
+          setEditingPolicy(policyToEdit);
+          setEditDialogOpen(true);
+          // Clear the URL param after opening the dialog
+          router.replace("/dashboard/policies", { scroll: false });
+        }, 100);
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [searchParams, initialPolicies, router]);
 
   // Get unique policy types with counts
   const policyTypeCounts = useMemo(() => {

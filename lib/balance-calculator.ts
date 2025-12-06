@@ -8,7 +8,7 @@ interface Income {
   customMonths: string | null;
   startDate: string;
   endDate: string | null;
-  incomeCategory: string;
+  incomeCategory: string | null;
   isActive: boolean | null;
   netTakeHome: string | null;
   subjectToCpf: boolean | null;
@@ -25,7 +25,7 @@ interface Expense {
   customMonths: string | null;
   startDate: string;
   endDate: string | null;
-  expenseCategory: string;
+  expenseCategory: string | null;
   isActive: boolean | null;
 }
 
@@ -116,7 +116,10 @@ function allocateAmountToMonth(
   const start = parse(startDate, "yyyy-MM-dd", new Date());
   const startMonthNumber = start.getMonth() + 1;
 
-  switch (frequency) {
+  // Normalize frequency to lowercase for case-insensitive comparison
+  const normalizedFrequency = frequency.toLowerCase();
+
+  switch (normalizedFrequency) {
     case "monthly":
       return amount;
 
@@ -263,13 +266,14 @@ export function calculateMonthlyBalance(
 
       // Track one-off expenses and custom frequency expenses for arrow markers
       if (allocatedAmount > 0) {
-        if (expense.frequency === 'one-time') {
+        const expenseFrequency = expense.frequency.toLowerCase();
+        if (expenseFrequency === 'one-time') {
           specialItems.push({
             name: expense.name,
             amount: allocatedAmount,
             type: 'one-off-expense',
           });
-        } else if (expense.frequency === 'custom') {
+        } else if (expenseFrequency === 'custom') {
           specialItems.push({
             name: expense.name,
             amount: allocatedAmount,

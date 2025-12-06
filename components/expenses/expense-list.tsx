@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, Expand } from "lucide-react";
+import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, Expand, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -49,10 +49,14 @@ import { getCategoryColor } from "@/lib/expense-calculator";
 
 interface Expense {
   id: string;
+  userId?: string;
+  linkedPolicyId?: string | null;
   name: string;
   category: string;
+  expenseCategory: string | null;
   amount: string;
   frequency: string;
+  customMonths: string | null;
   startDate: string;
   endDate: string | null;
   description: string | null;
@@ -126,19 +130,20 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       if (currentDate < startDate) return;
       if (endDate && currentDate > endDate) return;
 
-      // Check if expense applies to current month based on frequency
+      // Check if expense applies to current month based on frequency (case-insensitive)
       let appliesThisMonth = false;
+      const frequency = expense.frequency.toLowerCase();
 
-      if (expense.frequency === 'monthly') {
+      if (frequency === 'monthly') {
         appliesThisMonth = true;
-      } else if (expense.frequency === 'custom' && expense.customMonths) {
+      } else if (frequency === 'custom' && expense.customMonths) {
         try {
           const customMonths = JSON.parse(expense.customMonths);
           appliesThisMonth = customMonths.includes(currentMonth);
         } catch {
           appliesThisMonth = false;
         }
-      } else if (expense.frequency === 'one-time') {
+      } else if (frequency === 'one-time') {
         // Check if one-time expense is in current month
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
@@ -192,11 +197,12 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
       let appliesThisMonth = false;
       let frequencyType: "monthly" | "custom" | "one-time" | null = null;
+      const frequency = expense.frequency.toLowerCase();
 
-      if (expense.frequency === 'monthly') {
+      if (frequency === 'monthly') {
         appliesThisMonth = true;
         frequencyType = "monthly";
-      } else if (expense.frequency === 'custom' && expense.customMonths) {
+      } else if (frequency === 'custom' && expense.customMonths) {
         try {
           const customMonths = JSON.parse(expense.customMonths);
           if (customMonths.includes(currentMonth)) {
@@ -204,7 +210,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             frequencyType = "custom";
           }
         } catch {}
-      } else if (expense.frequency === 'one-time') {
+      } else if (frequency === 'one-time') {
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
         const currentYear = currentDate.getFullYear();
@@ -432,7 +438,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                             cy="50%"
                             labelLine={false}
                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                              if (percent < 0.08) return null;
+                              if (!percent || percent < 0.08 || midAngle === undefined || innerRadius === undefined || outerRadius === undefined || cx === undefined || cy === undefined) return null;
                               const RADIAN = Math.PI / 180;
                               const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                               const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -665,7 +671,16 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             <TableBody>
               {filteredExpenses.map((expense) => (
                 <TableRow key={expense.id}>
-                  <TableCell className="font-medium">{expense.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1.5">
+                      {expense.name}
+                      {expense.linkedPolicyId && (
+                        <span title="Linked to insurance policy">
+                          <Shield className="h-3.5 w-3.5 text-blue-600" />
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{expense.category}</TableCell>
                   <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
                   <TableCell className="capitalize">{expense.frequency}</TableCell>
@@ -678,14 +693,16 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEditClick(expense)}>
-                          Edit
+                          {expense.linkedPolicyId ? "View" : "Edit"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteClick(expense)}
-                          className="text-red-600"
-                        >
-                          Delete
-                        </DropdownMenuItem>
+                        {!expense.linkedPolicyId && (
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(expense)}
+                            className="text-red-600"
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

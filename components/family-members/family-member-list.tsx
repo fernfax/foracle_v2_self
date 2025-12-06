@@ -102,8 +102,10 @@ type Income = {
   id: string;
   name: string;
   category: string;
+  incomeCategory: string | null;
   amount: string;
   frequency: string;
+  customMonths: string | null;
   subjectToCpf: boolean | null;
   accountForBonus: boolean | null;
   bonusGroups: string | null;
@@ -116,8 +118,12 @@ type Income = {
   description: string | null;
   startDate: string;
   endDate: string | null;
+  futureIncomeChange: boolean | null;
+  futureIncomeAmount: string | null;
+  futureIncomeStartDate: string | null;
+  futureIncomeEndDate: string | null;
   isActive: boolean | null;
-  familyMemberId?: string | null;
+  familyMemberId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

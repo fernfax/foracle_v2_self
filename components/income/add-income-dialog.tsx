@@ -53,8 +53,10 @@ interface Income {
   id: string;
   name: string;
   category: string;
+  incomeCategory: string | null;
   amount: string;
   frequency: string;
+  customMonths: string | null;
   subjectToCpf: boolean | null;
   accountForBonus: boolean | null;
   bonusGroups: string | null;
@@ -67,7 +69,16 @@ interface Income {
   description: string | null;
   startDate: string;
   endDate: string | null;
+  futureIncomeChange: boolean | null;
+  futureIncomeAmount: string | null;
+  futureIncomeStartDate: string | null;
+  futureIncomeEndDate: string | null;
   isActive: boolean | null;
+  familyMemberId: string | null;
+  familyMember?: {
+    id: string;
+    name: string;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -178,7 +189,7 @@ export function AddIncomeDialog({ open, onOpenChange, onIncomeAdded, familyMembe
         setFrequency(income.frequency);
         setSubjectToCpf(income.subjectToCpf || false);
         setAccountForBonus(income.accountForBonus || false);
-        setBonusGroups(income.bonusGroups || []);
+        setBonusGroups(income.bonusGroups ? JSON.parse(income.bonusGroups) : []);
         setStartDate(income.startDate ? new Date(income.startDate) : new Date());
         setEndDate(income.endDate ? new Date(income.endDate) : undefined);
         setNotes(income.description || "");
@@ -404,7 +415,7 @@ export function AddIncomeDialog({ open, onOpenChange, onIncomeAdded, familyMembe
           subjectToCpf,
           accountForBonus,
           bonusGroups: accountForBonus ? JSON.stringify(bonusGroups) : undefined,
-          startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+          startDate: format(startDate || new Date(), "yyyy-MM-dd"),
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           futureIncomeChange,
           futureIncomeAmount: futureIncomeAmount ? parseFloat(futureIncomeAmount) : undefined,

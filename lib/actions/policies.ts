@@ -27,6 +27,7 @@ export async function createPolicy(data: {
   coverageUntilAge?: number;
   premiumAmount: string;
   premiumFrequency: string;
+  customMonths?: string;
   totalPremiumDuration?: number;
   coverageOptions?: string;
   description?: string;
@@ -54,6 +55,7 @@ export async function updatePolicy(
     coverageUntilAge: number;
     premiumAmount: string;
     premiumFrequency: string;
+    customMonths: string;
     totalPremiumDuration: number;
     coverageOptions: string;
     description: string;

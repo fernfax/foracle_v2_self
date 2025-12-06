@@ -7,7 +7,7 @@ interface Expense {
   id: string;
   name: string;
   category: string;
-  expenseCategory: string;
+  expenseCategory: string | null;
   amount: string;
   frequency: string;
   customMonths: string | null;
@@ -143,7 +143,10 @@ export function calculateMonthlyAmount(
   frequency: string,
   customMonths: string | null
 ): number {
-  switch (frequency) {
+  // Normalize frequency to lowercase for case-insensitive comparison
+  const normalizedFrequency = frequency.toLowerCase();
+
+  switch (normalizedFrequency) {
     case "monthly":
       return amount;
     case "yearly":

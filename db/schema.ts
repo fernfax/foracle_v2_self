@@ -130,7 +130,8 @@ export const policies = pgTable("policies", {
 
   // Premium Details
   premiumAmount: decimal("premium_amount", { precision: 12, scale: 2 }).notNull(),
-  premiumFrequency: varchar("premium_frequency", { length: 50 }).notNull(), // monthly, yearly, quarterly, etc.
+  premiumFrequency: varchar("premium_frequency", { length: 50 }).notNull(), // monthly, custom
+  customMonths: text("custom_months"), // JSON array of month numbers for custom frequency (e.g., "[1,3,6,12]" for Jan, Mar, Jun, Dec)
   totalPremiumDuration: integer("total_premium_duration"), // Total number of years to pay premiums
 
   // Coverage & Benefits (stored as JSON)

@@ -58,6 +58,7 @@ interface Income {
   id: string;
   name: string;
   category: string;
+  incomeCategory: string | null;
   amount: string;
   frequency: string;
   customMonths: string | null;
@@ -67,11 +68,29 @@ interface Income {
   employeeCpfContribution: string | null;
   employerCpfContribution: string | null;
   netTakeHome: string | null;
+  cpfOrdinaryAccount: string | null;
+  cpfSpecialAccount: string | null;
+  cpfMedisaveAccount: string | null;
   description: string | null;
   startDate: string;
   endDate: string | null;
+  futureIncomeChange: boolean | null;
+  futureIncomeAmount: string | null;
+  futureIncomeStartDate: string | null;
+  futureIncomeEndDate: string | null;
   isActive: boolean | null;
   familyMemberId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface FamilyMember {
+  id: string;
+  name: string;
+  relationship: string | null;
+  dateOfBirth: string | null;
+  isContributing: boolean | null;
+  notes: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

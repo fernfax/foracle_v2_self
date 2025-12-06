@@ -76,9 +76,22 @@ const POLICY_STATUSES = [
 
 const PREMIUM_FREQUENCIES = [
   "Monthly",
-  "Quarterly",
-  "Semi-Yearly",
-  "Yearly",
+  "Custom",
+];
+
+const MONTHS = [
+  { value: 1, label: "Jan" },
+  { value: 2, label: "Feb" },
+  { value: 3, label: "Mar" },
+  { value: 4, label: "Apr" },
+  { value: 5, label: "May" },
+  { value: 6, label: "Jun" },
+  { value: 7, label: "Jul" },
+  { value: 8, label: "Aug" },
+  { value: 9, label: "Sep" },
+  { value: 10, label: "Oct" },
+  { value: 11, label: "Nov" },
+  { value: 12, label: "Dec" },
 ];
 
 export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyMemberId, onPolicyAdded }: AddPolicyDialogProps) {
@@ -114,6 +127,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
   // Premium Details
   const [premiumAmount, setPremiumAmount] = useState("");
   const [premiumFrequency, setPremiumFrequency] = useState("");
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [totalPremiumDuration, setTotalPremiumDuration] = useState("");
 
   // Coverage Options
@@ -132,7 +146,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
   // Load family members and providers
   useEffect(() => {
     const loadData = async () => {
-      const members = await getUserFamilyMembers(userId);
+      const members = await getUserFamilyMembers();
       setFamilyMembers(members);
       const providersList = await getInsuranceProviders();
       setProviders(providersList);
@@ -146,6 +160,13 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
   const loadProviders = async () => {
     const providersList = await getInsuranceProviders();
     setProviders(providersList);
+  };
+
+  // Toggle month selection for custom frequency
+  const toggleMonth = (month: number) => {
+    setSelectedMonths((prev) =>
+      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month].sort((a, b) => a - b)
+    );
   };
 
   // Calculate age when family member is selected
@@ -182,6 +203,11 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
       // Validate required fields
       if (!startDate || !premiumAmount || !premiumFrequency) {
         setValidationError("Please fill in Start Date, Premium Amount, and Premium Frequency before adding to expenses.");
+        return;
+      }
+      // Validate custom months if Custom frequency is selected
+      if (premiumFrequency === "Custom" && selectedMonths.length === 0) {
+        setValidationError("Please select at least one month for custom premium frequency.");
         return;
       }
       setValidationError("");
@@ -228,6 +254,10 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
       };
 
       // Create the policy first
+      const customMonthsJson = premiumFrequency === "Custom" && selectedMonths.length > 0
+        ? JSON.stringify(selectedMonths)
+        : undefined;
+
       const newPolicy = await createPolicy({
         userId,
         familyMemberId: selectedFamilyMember || undefined,
@@ -240,6 +270,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
         coverageUntilAge: coverageUntilAge ? parseInt(coverageUntilAge) : undefined,
         premiumAmount,
         premiumFrequency,
+        customMonths: customMonthsJson,
         totalPremiumDuration: totalPremiumDuration ? parseInt(totalPremiumDuration) : undefined,
         coverageOptions: JSON.stringify(coverageOptions),
       });
@@ -259,6 +290,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
           provider,
           premiumAmount: parseFloat(premiumAmount),
           premiumFrequency: policyFrequencyToExpenseFrequency(premiumFrequency),
+          customMonths: customMonthsJson,
           startDate: format(startDate!, "yyyy-MM-dd"),
           maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
         });
@@ -297,6 +329,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
     setMaturityDate(undefined);
     setPremiumAmount("");
     setPremiumFrequency("");
+    setSelectedMonths([]);
     setTotalPremiumDuration("");
     setDeathCoverage({ enabled: false, amount: "" });
     setTpdCoverage({ enabled: false, amount: "" });
@@ -538,7 +571,12 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                 <Label htmlFor="premiumFrequency">
                   Premium Frequency <span className="text-red-500">*</span>
                 </Label>
-                <Select value={premiumFrequency} onValueChange={setPremiumFrequency} required>
+                <Select value={premiumFrequency} onValueChange={(value) => {
+                  setPremiumFrequency(value);
+                  if (value !== "Custom") {
+                    setSelectedMonths([]);
+                  }
+                }} required>
                   <SelectTrigger id="premiumFrequency">
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
@@ -551,6 +589,44 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Month Picker for Custom Frequency */}
+              {premiumFrequency === "Custom" && (
+                <div className="md:col-span-2 space-y-2">
+                  <Label>
+                    Select Months <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {MONTHS.map((month) => (
+                      <Button
+                        key={month.value}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleMonth(month.value)}
+                        className={cn(
+                          "h-10 font-medium",
+                          selectedMonths.includes(month.value)
+                            ? "bg-black text-white hover:bg-black/90 border-black"
+                            : "bg-white hover:bg-gray-50"
+                        )}
+                      >
+                        {month.label}
+                      </Button>
+                    ))}
+                  </div>
+                  {selectedMonths.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Select the months when premium is due
+                    </p>
+                  )}
+                  {selectedMonths.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Premium due in: {selectedMonths.map(m => MONTHS.find(month => month.value === m)?.label).join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="md:col-span-2">
                 <Label htmlFor="totalPremiumDuration">
@@ -841,6 +917,18 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
 
               <div className="text-gray-600">Frequency:</div>
               <div className="font-medium">{premiumFrequency}</div>
+
+              {premiumFrequency === "Custom" && selectedMonths.length > 0 && (
+                <>
+                  <div className="text-gray-600">Selected Months:</div>
+                  <div className="font-medium">
+                    {selectedMonths
+                      .sort((a, b) => a - b)
+                      .map(m => MONTHS.find(month => month.value === m)?.label)
+                      .join(", ")}
+                  </div>
+                </>
+              )}
 
               <div className="text-gray-600">Start Date:</div>
               <div className="font-medium">

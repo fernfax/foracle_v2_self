@@ -64,14 +64,19 @@ type Income = {
   id: string;
   name: string;
   category: string;
+  incomeCategory: string | null;
   amount: string;
   frequency: string;
+  customMonths: string | null;
   subjectToCpf: boolean | null;
   accountForBonus: boolean | null;
   bonusGroups: string | null;
   employeeCpfContribution: string | null;
   employerCpfContribution: string | null;
   netTakeHome: string | null;
+  cpfOrdinaryAccount: string | null;
+  cpfSpecialAccount: string | null;
+  cpfMedisaveAccount: string | null;
   description: string | null;
   startDate: string;
   endDate: string | null;
@@ -81,7 +86,7 @@ type Income = {
   futureIncomeEndDate: string | null;
   isActive: boolean | null;
   familyMemberId: string | null;
-  familyMember: {
+  familyMember?: {
     id: string;
     name: string;
   } | null;

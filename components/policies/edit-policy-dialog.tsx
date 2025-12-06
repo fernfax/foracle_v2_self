@@ -56,6 +56,7 @@ interface Policy {
   coverageUntilAge: number | null;
   premiumAmount: string;
   premiumFrequency: string;
+  customMonths: string | null;
   totalPremiumDuration: number | null;
   coverageOptions: string | null;
   isActive: boolean | null;
@@ -98,14 +99,28 @@ const POLICY_STATUSES = [
 
 const PREMIUM_FREQUENCIES = [
   "Monthly",
-  "Quarterly",
-  "Semi-Yearly",
-  "Yearly",
+  "Custom",
+];
+
+const MONTHS = [
+  { value: 1, label: "Jan" },
+  { value: 2, label: "Feb" },
+  { value: 3, label: "Mar" },
+  { value: 4, label: "Apr" },
+  { value: 5, label: "May" },
+  { value: 6, label: "Jun" },
+  { value: 7, label: "Jul" },
+  { value: 8, label: "Aug" },
+  { value: 9, label: "Sep" },
+  { value: 10, label: "Oct" },
+  { value: 11, label: "Nov" },
+  { value: 12, label: "Dec" },
 ];
 
 export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyUpdated }: EditPolicyDialogProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [providers, setProviders] = useState<InsuranceProvider[]>([]);
 
@@ -129,6 +144,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
   // Premium Details
   const [premiumAmount, setPremiumAmount] = useState("");
   const [premiumFrequency, setPremiumFrequency] = useState("");
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [totalPremiumDuration, setTotalPremiumDuration] = useState("");
 
   // Coverage Options
@@ -150,74 +166,94 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
   // Track if policy data has changed (for update modal)
   const [policyDataChanged, setPolicyDataChanged] = useState(false);
 
-  // Load family members and providers
+  // Load family members and providers, then populate form
   useEffect(() => {
     const loadData = async () => {
-      const members = await getUserFamilyMembers(userId);
-      setFamilyMembers(members);
-      const providersList = await getInsuranceProviders();
-      setProviders(providersList);
-    };
-    if (open) {
-      loadData();
-    }
-  }, [userId, open]);
+      try {
+        setIsDataLoading(true);
+        const members = await getUserFamilyMembers();
+        setFamilyMembers(members);
+        const providersList = await getInsuranceProviders();
+        setProviders(providersList);
 
-  // Populate form when policy changes
-  useEffect(() => {
-    if (policy && open) {
-      setSelectedFamilyMember(policy.familyMemberId || "");
-      setProvider(policy.provider);
-      setPolicyNumber(policy.policyNumber || "");
-      setPolicyType(policy.policyType);
-      setStatus(policy.status || "Active");
-      setStartDate(new Date(policy.startDate));
-      setCoverageUntilAge(policy.coverageUntilAge?.toString() || "");
-      setMaturityDate(policy.maturityDate ? new Date(policy.maturityDate) : undefined);
-      setPremiumAmount(policy.premiumAmount);
-      setPremiumFrequency(policy.premiumFrequency);
-      setTotalPremiumDuration(policy.totalPremiumDuration?.toString() || "");
+        // Populate form AFTER data is loaded
+        if (policy) {
+        setSelectedFamilyMember(policy.familyMemberId || "");
+        setProvider(policy.provider);
+        setPolicyNumber(policy.policyNumber || "");
+        setPolicyType(policy.policyType);
+        setStatus(policy.status || "Active");
+        setStartDate(new Date(policy.startDate));
+        setCoverageUntilAge(policy.coverageUntilAge?.toString() || "");
+        setMaturityDate(policy.maturityDate ? new Date(policy.maturityDate) : undefined);
+        setPremiumAmount(policy.premiumAmount);
+        setPremiumFrequency(policy.premiumFrequency);
+        setTotalPremiumDuration(policy.totalPremiumDuration?.toString() || "");
 
-      // Set toggle state based on linkedExpenseId
-      const hasLinkedExpense = !!policy.linkedExpenseId;
-      setAddToExpenditures(hasLinkedExpense);
-      setInitialAddToExpenditures(hasLinkedExpense);
-      setPolicyDataChanged(false);
-      setValidationError("");
+        // Parse custom months if available
+        if (policy.customMonths) {
+          try {
+            const months = JSON.parse(policy.customMonths);
+            setSelectedMonths(Array.isArray(months) ? months : []);
+          } catch {
+            setSelectedMonths([]);
+          }
+        } else {
+          setSelectedMonths([]);
+        }
 
-      // Parse coverage options
-      if (policy.coverageOptions) {
-        try {
-          const options = JSON.parse(policy.coverageOptions);
-          setDeathCoverage({
-            enabled: options.death > 0,
-            amount: options.death > 0 ? options.death.toString() : "",
-          });
-          setTpdCoverage({
-            enabled: options.tpd > 0,
-            amount: options.tpd > 0 ? options.tpd.toString() : "",
-          });
-          setCriticalIllness({
-            enabled: options.criticalIllness > 0,
-            amount: options.criticalIllness > 0 ? options.criticalIllness.toString() : "",
-          });
-          setEarlyCriticalIllness({
-            enabled: options.earlyCriticalIllness > 0,
-            amount: options.earlyCriticalIllness > 0 ? options.earlyCriticalIllness.toString() : "",
-          });
-          setHospitalisationPlan({
-            enabled: options.hospitalisationPlan > 0,
-            amount: options.hospitalisationPlan > 0 ? options.hospitalisationPlan.toString() : "",
-          });
-        } catch (e) {
-          // Reset if parsing fails
-          setDeathCoverage({ enabled: false, amount: "" });
-          setTpdCoverage({ enabled: false, amount: "" });
-          setCriticalIllness({ enabled: false, amount: "" });
-          setEarlyCriticalIllness({ enabled: false, amount: "" });
-          setHospitalisationPlan({ enabled: false, amount: "" });
+        // Set toggle state based on linkedExpenseId
+        const hasLinkedExpense = !!policy.linkedExpenseId;
+        setAddToExpenditures(hasLinkedExpense);
+        setInitialAddToExpenditures(hasLinkedExpense);
+        setPolicyDataChanged(false);
+        setValidationError("");
+
+        // Parse coverage options
+        if (policy.coverageOptions) {
+          try {
+            const options = JSON.parse(policy.coverageOptions);
+            setDeathCoverage({
+              enabled: options.death > 0,
+              amount: options.death > 0 ? options.death.toString() : "",
+            });
+            setTpdCoverage({
+              enabled: options.tpd > 0,
+              amount: options.tpd > 0 ? options.tpd.toString() : "",
+            });
+            setCriticalIllness({
+              enabled: options.criticalIllness > 0,
+              amount: options.criticalIllness > 0 ? options.criticalIllness.toString() : "",
+            });
+            setEarlyCriticalIllness({
+              enabled: options.earlyCriticalIllness > 0,
+              amount: options.earlyCriticalIllness > 0 ? options.earlyCriticalIllness.toString() : "",
+            });
+            setHospitalisationPlan({
+              enabled: options.hospitalisationPlan > 0,
+              amount: options.hospitalisationPlan > 0 ? options.hospitalisationPlan.toString() : "",
+            });
+          } catch (e) {
+            // Reset if parsing fails
+            setDeathCoverage({ enabled: false, amount: "" });
+            setTpdCoverage({ enabled: false, amount: "" });
+            setCriticalIllness({ enabled: false, amount: "" });
+            setEarlyCriticalIllness({ enabled: false, amount: "" });
+            setHospitalisationPlan({ enabled: false, amount: "" });
+          }
         }
       }
+      } catch (error) {
+        console.error("Error loading policy data:", error);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+    if (open && policy) {
+      loadData();
+    } else if (!open) {
+      // Reset loading state when dialog closes
+      setIsDataLoading(true);
     }
   }, [policy, open]);
 
@@ -225,6 +261,13 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
   const loadProviders = async () => {
     const providersList = await getInsuranceProviders();
     setProviders(providersList);
+  };
+
+  // Toggle month selection for custom frequency
+  const toggleMonth = (month: number) => {
+    setSelectedMonths((prev) =>
+      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month].sort((a, b) => a - b)
+    );
   };
 
   // Calculate age when family member is selected
@@ -263,16 +306,21 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
       return;
     }
 
+    // Compare customMonths - need to handle JSON comparison
+    const policyCustomMonths = policy.customMonths ? JSON.stringify(JSON.parse(policy.customMonths).sort()) : null;
+    const currentCustomMonths = selectedMonths.length > 0 ? JSON.stringify([...selectedMonths].sort()) : null;
+
     const hasChanged =
       policy.policyType !== policyType ||
       policy.provider !== provider ||
       policy.premiumAmount !== premiumAmount ||
       policy.premiumFrequency !== premiumFrequency ||
+      policyCustomMonths !== currentCustomMonths ||
       format(new Date(policy.startDate), "yyyy-MM-dd") !== (startDate ? format(startDate, "yyyy-MM-dd") : "") ||
       (policy.maturityDate ? format(new Date(policy.maturityDate), "yyyy-MM-dd") : null) !== (maturityDate ? format(maturityDate, "yyyy-MM-dd") : null);
 
     setPolicyDataChanged(hasChanged);
-  }, [policy, policyType, provider, premiumAmount, premiumFrequency, startDate, maturityDate, initialAddToExpenditures, addToExpenditures]);
+  }, [policy, policyType, provider, premiumAmount, premiumFrequency, selectedMonths, startDate, maturityDate, initialAddToExpenditures, addToExpenditures]);
 
   const handleToggleChange = (checked: boolean) => {
     if (checked) {
@@ -281,9 +329,14 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         setValidationError("Please fill in Start Date, Premium Amount, and Premium Frequency before adding to expenses.");
         return;
       }
+      // Validate custom months if Custom frequency is selected
+      if (premiumFrequency === "Custom" && selectedMonths.length === 0) {
+        setValidationError("Please select at least one month for custom premium frequency.");
+        return;
+      }
       setValidationError("");
       // Initialize expense name with family member's first name
-      const memberName = familyMembers.find(m => m.id === policy.familyMemberId)?.name || "";
+      const memberName = familyMembers.find(m => m.id === policy?.familyMemberId)?.name || "";
       const firstName = memberName.split(" ")[0];
       setExpenseName(firstName ? `${firstName}'s ${policyType} - ${provider}` : `${policyType} - ${provider}`);
       setConfirmAddModalOpen(true);
@@ -316,7 +369,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
     // If policy data changed and expense is linked, show update confirmation
     if (policyDataChanged && initialAddToExpenditures && addToExpenditures) {
       // Initialize expense name with family member's first name
-      const memberName = familyMembers.find(m => m.id === policy.familyMemberId)?.name || "";
+      const memberName = familyMembers.find(m => m.id === policy?.familyMemberId)?.name || "";
       const firstName = memberName.split(" ")[0];
       setExpenseName(firstName ? `${firstName}'s ${policyType} - ${provider}` : `${policyType} - ${provider}`);
       setConfirmUpdateModalOpen(true);
@@ -349,6 +402,11 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         hospitalisationPlan: hospitalisationPlan.enabled ? parseFloat(hospitalisationPlan.amount) || 0 : 0,
       };
 
+      // Create customMonths JSON if Custom frequency is selected
+      const customMonthsJson = premiumFrequency === "Custom" && selectedMonths.length > 0
+        ? JSON.stringify(selectedMonths)
+        : undefined;
+
       // Update the policy
       await updatePolicy(policy.id, {
         familyMemberId: selectedFamilyMember || undefined,
@@ -361,6 +419,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         coverageUntilAge: coverageUntilAge ? parseInt(coverageUntilAge) : undefined,
         premiumAmount,
         premiumFrequency,
+        customMonths: customMonthsJson,
         totalPremiumDuration: totalPremiumDuration ? parseInt(totalPremiumDuration) : undefined,
         coverageOptions: JSON.stringify(coverageOptions),
       });
@@ -380,6 +439,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
           provider,
           premiumAmount: parseFloat(premiumAmount),
           premiumFrequency: policyFrequencyToExpenseFrequency(premiumFrequency),
+          customMonths: customMonthsJson,
           startDate: format(startDate!, "yyyy-MM-dd"),
           maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
         });
@@ -413,6 +473,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
           provider,
           premiumAmount: parseFloat(premiumAmount),
           premiumFrequency: policyFrequencyToExpenseFrequency(premiumFrequency),
+          customMonths: customMonthsJson,
           startDate: format(startDate!, "yyyy-MM-dd"),
           maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
         });
@@ -444,6 +505,12 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
           </DialogDescription>
         </DialogHeader>
 
+        {isDataLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <span className="ml-3 text-muted-foreground">Loading policy details...</span>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Policy Holder */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-4">
@@ -665,7 +732,12 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
                 <Label htmlFor="premiumFrequency">
                   Premium Frequency <span className="text-red-500">*</span>
                 </Label>
-                <Select value={premiumFrequency} onValueChange={setPremiumFrequency} required>
+                <Select value={premiumFrequency} onValueChange={(value) => {
+                  setPremiumFrequency(value);
+                  if (value !== "Custom") {
+                    setSelectedMonths([]);
+                  }
+                }} required>
                   <SelectTrigger id="premiumFrequency">
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
@@ -678,6 +750,44 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Month Picker for Custom Frequency */}
+              {premiumFrequency === "Custom" && (
+                <div className="md:col-span-2 space-y-2">
+                  <Label>
+                    Select Months <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {MONTHS.map((month) => (
+                      <Button
+                        key={month.value}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleMonth(month.value)}
+                        className={cn(
+                          "h-10 font-medium",
+                          selectedMonths.includes(month.value)
+                            ? "bg-black text-white hover:bg-black/90 border-black"
+                            : "bg-white hover:bg-gray-50"
+                        )}
+                      >
+                        {month.label}
+                      </Button>
+                    ))}
+                  </div>
+                  {selectedMonths.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Select the months when premium is due
+                    </p>
+                  )}
+                  {selectedMonths.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Premium due in: {selectedMonths.map(m => MONTHS.find(month => month.value === m)?.label).join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="md:col-span-2">
                 <Label htmlFor="totalPremiumDuration">
@@ -932,6 +1042,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
 
       {/* Add Confirmation Modal */}
@@ -969,6 +1080,18 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
               <div className="text-gray-600">Frequency:</div>
               <div className="font-medium">{premiumFrequency}</div>
+
+              {premiumFrequency === "Custom" && selectedMonths.length > 0 && (
+                <>
+                  <div className="text-gray-600">Selected Months:</div>
+                  <div className="font-medium">
+                    {selectedMonths
+                      .sort((a, b) => a - b)
+                      .map(m => MONTHS.find(month => month.value === m)?.label)
+                      .join(", ")}
+                  </div>
+                </>
+              )}
 
               <div className="text-gray-600">Start Date:</div>
               <div className="font-medium">
@@ -1021,6 +1144,18 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
               <div className="text-gray-600">Frequency:</div>
               <div className="font-medium">{premiumFrequency}</div>
+
+              {premiumFrequency === "Custom" && selectedMonths.length > 0 && (
+                <>
+                  <div className="text-gray-600">Selected Months:</div>
+                  <div className="font-medium">
+                    {selectedMonths
+                      .sort((a, b) => a - b)
+                      .map(m => MONTHS.find(month => month.value === m)?.label)
+                      .join(", ")}
+                  </div>
+                </>
+              )}
 
               <div className="text-gray-600">Start Date:</div>
               <div className="font-medium">

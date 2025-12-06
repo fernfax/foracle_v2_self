@@ -153,9 +153,10 @@ export async function getDashboardMetrics() {
       if (currentDate < startDate) return false;
       if (endDate && currentDate > endDate) return false;
 
-      // Check frequency
-      if (income.frequency === 'monthly') return true;
-      if (income.frequency === 'custom' && income.customMonths) {
+      // Check frequency (case-insensitive)
+      const frequency = income.frequency.toLowerCase();
+      if (frequency === 'monthly') return true;
+      if (frequency === 'custom' && income.customMonths) {
         try {
           const customMonths = JSON.parse(income.customMonths);
           return customMonths.includes(currentMonth);
@@ -175,6 +176,7 @@ export async function getDashboardMetrics() {
     }, 0);
 
   // Calculate current month expenses (only active expenses in current month)
+  // Includes: monthly, custom (if current month selected), one-time (if in current month)
   const monthlyExpenses = userExpenses
     .filter(expense => {
       if (!expense.isActive) return false;
@@ -186,15 +188,23 @@ export async function getDashboardMetrics() {
       if (currentDate < startDate) return false;
       if (endDate && currentDate > endDate) return false;
 
-      // Check frequency
-      if (expense.frequency === 'monthly') return true;
-      if (expense.frequency === 'custom' && expense.customMonths) {
+      // Check frequency (case-insensitive)
+      const frequency = expense.frequency.toLowerCase();
+      if (frequency === 'monthly') return true;
+      if (frequency === 'custom' && expense.customMonths) {
         try {
           const customMonths = JSON.parse(expense.customMonths);
           return customMonths.includes(currentMonth);
         } catch {
           return false;
         }
+      }
+      if (frequency === 'one-time') {
+        // Check if one-time expense is in current month
+        const expenseMonth = startDate.getMonth() + 1;
+        const expenseYear = startDate.getFullYear();
+        const currentYear = currentDate.getFullYear();
+        return expenseMonth === currentMonth && expenseYear === currentYear;
       }
 
       return false;

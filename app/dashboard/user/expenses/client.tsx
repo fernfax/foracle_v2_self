@@ -10,9 +10,11 @@ import { ExpenseReports } from "@/components/expenses/expense-reports";
 
 interface Expense {
   id: string;
+  userId: string;
+  linkedPolicyId: string | null;
   name: string;
   category: string;
-  expenseCategory: string;
+  expenseCategory: string | null;
   amount: string;
   frequency: string;
   customMonths: string | null;
@@ -32,7 +34,7 @@ interface Income {
   customMonths: string | null;
   startDate: string;
   endDate: string | null;
-  incomeCategory: string;
+  incomeCategory: string | null;
   isActive: boolean | null;
   netTakeHome: string | null;
   subjectToCpf: boolean | null;

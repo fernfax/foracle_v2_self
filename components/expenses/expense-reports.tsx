@@ -32,7 +32,7 @@ interface Expense {
   id: string;
   name: string;
   category: string;
-  expenseCategory: string;
+  expenseCategory: string | null;
   amount: string;
   frequency: string;
   customMonths: string | null;

@@ -9,9 +9,10 @@ import { randomUUID } from "crypto";
 export type Expense = {
   id: string;
   userId: string;
+  linkedPolicyId: string | null;
   name: string;
   category: string;
-  expenseCategory: string;
+  expenseCategory: string | null;
   amount: string;
   frequency: string;
   customMonths: string | null;
@@ -167,6 +168,7 @@ export async function createExpenseFromPolicy(data: {
   provider: string;
   premiumAmount: number;
   premiumFrequency: string;
+  customMonths?: string | null;
   startDate: string;
   maturityDate?: string | null;
 }): Promise<Expense> {
@@ -191,7 +193,7 @@ export async function createExpenseFromPolicy(data: {
     expenseCategory: "current-recurring",
     amount: data.premiumAmount.toString(),
     frequency: data.premiumFrequency,
-    customMonths: null,
+    customMonths: data.customMonths || null,
     startDate: data.startDate,
     endDate: data.maturityDate || null,
     description: `Auto-generated from insurance policy`,
@@ -217,10 +219,12 @@ export async function createExpenseFromPolicy(data: {
 export async function updateExpenseFromPolicy(
   expenseId: string,
   data: {
+    name?: string;
     policyType: string;
     provider: string;
     premiumAmount: number;
     premiumFrequency: string;
+    customMonths?: string | null;
     startDate: string;
     maturityDate?: string | null;
   }
@@ -242,9 +246,10 @@ export async function updateExpenseFromPolicy(
   const [updatedExpense] = await db
     .update(expenses)
     .set({
-      name: `${data.policyType} - ${data.provider}`,
+      name: data.name || `${data.policyType} - ${data.provider}`,
       amount: data.premiumAmount.toString(),
       frequency: data.premiumFrequency,
+      customMonths: data.customMonths || null,
       startDate: data.startDate,
       endDate: data.maturityDate || null,
       updatedAt: new Date(),

@@ -49,6 +49,8 @@ export function ExpenseBreakdownModal({
     let totalMonthlyExpenses = 0;
     let activeExpensesCount = 0;
 
+    // Only include monthly, custom (if current month selected), and one-time (if in current month)
+    // This matches the calculation in expense-list.tsx and getDashboardMetrics
     expenses.forEach((expense) => {
       if (!expense.isActive) return;
 
@@ -60,17 +62,18 @@ export function ExpenseBreakdownModal({
       if (endDate && currentDate > endDate) return;
 
       let appliesThisMonth = false;
+      const frequency = expense.frequency.toLowerCase();
 
-      if (expense.frequency === 'monthly') {
+      if (frequency === 'monthly') {
         appliesThisMonth = true;
-      } else if (expense.frequency === 'custom' && expense.customMonths) {
+      } else if (frequency === 'custom' && expense.customMonths) {
         try {
           const customMonths = JSON.parse(expense.customMonths);
           appliesThisMonth = customMonths.includes(currentMonth);
         } catch {
           appliesThisMonth = false;
         }
-      } else if (expense.frequency === 'one-time') {
+      } else if (frequency === 'one-time') {
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
         const currentYear = currentDate.getFullYear();
@@ -191,17 +194,44 @@ export function ExpenseBreakdownModal({
                       {/* Individual Expenses - Expandable */}
                       {isExpanded && cat.expenses.length > 0 && (
                         <div className="border-t bg-muted/20">
-                          {cat.expenses.map((expense) => (
-                            <div key={expense.id} className="px-3 py-2 border-b last:border-b-0 hover:bg-muted/30">
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-xs font-medium truncate">{expense.name}</span>
-                                <span className="text-xs font-semibold">${parseFloat(expense.amount).toLocaleString()}</span>
+                          {cat.expenses.map((expense) => {
+                            const displayAmount = parseFloat(expense.amount);
+
+                            // Format frequency display
+                            const getFrequencyDisplay = () => {
+                              const frequency = expense.frequency.toLowerCase();
+                              const capitalizedFrequency = expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1).toLowerCase();
+
+                              if (frequency === 'custom' && expense.customMonths) {
+                                try {
+                                  const customMonths = JSON.parse(expense.customMonths) as number[];
+                                  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                  const monthLabels = customMonths
+                                    .sort((a, b) => a - b)
+                                    .map(m => monthNames[m - 1])
+                                    .join(', ');
+                                  return `Custom (${monthLabels})`;
+                                } catch {
+                                  return capitalizedFrequency;
+                                }
+                              }
+                              return capitalizedFrequency;
+                            };
+
+                            return (
+                              <div key={expense.id} className="px-3 py-2 border-b last:border-b-0 hover:bg-muted/30">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-xs font-medium truncate">{expense.name}</span>
+                                  <span className="text-xs font-semibold">
+                                    ${displayAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  {getFrequencyDisplay()}
+                                </div>
                               </div>
-                              <div className="text-xs text-muted-foreground mt-0.5">
-                                {expense.frequency}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -226,7 +256,7 @@ export function ExpenseBreakdownModal({
                       cy="50%"
                       labelLine={false}
                       label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                        if (percent < 0.08) return null;
+                        if (!percent || percent < 0.08 || midAngle === undefined || innerRadius === undefined || outerRadius === undefined || cx === undefined || cy === undefined) return null;
                         const RADIAN = Math.PI / 180;
                         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                         const x = cx + radius * Math.cos(-midAngle * RADIAN);
