@@ -14,8 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { getDashboardMetrics } from "@/lib/actions/user";
-import { TotalExpensesCard } from "@/components/dashboard/total-expenses-card";
-import { TotalIncomeCard } from "@/components/dashboard/total-income-card";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -29,44 +28,15 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-          Overview
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Welcome back! Here's your financial snapshot.
-        </p>
-      </div>
+      {/* Header with universal month toggle and metrics cards */}
+      <DashboardHeader
+        totalIncome={metrics.totalIncome}
+        totalExpenses={metrics.totalExpenses}
+        netSavings={metrics.netSavings}
+      />
 
-      {/* Metrics Grid */}
+      {/* Secondary Metrics Grid */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Total Income */}
-        <TotalIncomeCard totalIncome={metrics.totalIncome} />
-
-        {/* Total Expenses */}
-        <TotalExpensesCard totalExpenses={metrics.totalExpenses} />
-
-        {/* Net Savings */}
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Net Savings
-            </CardTitle>
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950">
-              <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold tabular-nums">
-              ${metrics.netSavings.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Income minus expenses
-            </p>
-          </CardContent>
-        </Card>
-
         {/* Total Assets */}
         <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

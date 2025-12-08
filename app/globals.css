@@ -98,4 +98,35 @@
       display: none;
     }
   }
+
+  /* Slide animations for month navigation */
+  @keyframes slideInFromLeft {
+    from {
+      transform: translateX(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-left {
+    animation: slideInFromLeft 0.36s ease-out;
+  }
+
+  .animate-slide-right {
+    animation: slideInFromRight 0.36s ease-out;
+  }
 }

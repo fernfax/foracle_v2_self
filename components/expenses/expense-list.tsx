@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Expand, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -20,6 +19,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,7 +49,6 @@ import { ManageCategoriesDialog } from "./manage-categories-dialog";
 import { ExpenseBreakdownModal } from "./expense-breakdown-modal";
 import { deleteExpense } from "@/lib/actions/expenses";
 import { getExpenseCategories, type ExpenseCategory } from "@/lib/actions/expense-categories";
-import { cn } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip, PieChart, Pie, Legend } from "recharts";
 import { getCategoryColor } from "@/lib/expense-calculator";
 
@@ -84,6 +89,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedFrequency, setSelectedFrequency] = useState<string | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
   const [breakdownSortBy, setBreakdownSortBy] = useState<"amount" | "category" | "count">("amount");
@@ -123,6 +129,16 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
     const counts: Record<string, number> = {};
     expenses.forEach((expense) => {
       counts[expense.category] = (counts[expense.category] || 0) + 1;
+    });
+    return counts;
+  }, [expenses]);
+
+  // Calculate frequency counts
+  const frequencyCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    expenses.forEach((expense) => {
+      const freq = expense.frequency.toLowerCase();
+      counts[freq] = (counts[freq] || 0) + 1;
     });
     return counts;
   }, [expenses]);
@@ -307,6 +323,13 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       filtered = filtered.filter((expense) => expense.category === selectedCategory);
     }
 
+    // Apply frequency filter
+    if (selectedFrequency) {
+      filtered = filtered.filter((expense) =>
+        expense.frequency.toLowerCase() === selectedFrequency.toLowerCase()
+      );
+    }
+
     // Apply search filter
     if (search) {
       const searchLower = search.toLowerCase();
@@ -337,7 +360,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
     });
 
     return filtered;
-  }, [expenses, search, selectedCategory, sortKey, sortDirection]);
+  }, [expenses, search, selectedCategory, selectedFrequency, sortKey, sortDirection]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -610,45 +633,76 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
         </div>
       </div>
 
-      {/* Category Filter Buttons */}
-      {categories.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={selectedCategory === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory(null)}
-            className={cn(
-              selectedCategory === null && "bg-black text-white hover:bg-black/90"
-            )}
-          >
-            All
-            <Badge variant="secondary" className="ml-2">
-              {expenses.length}
-            </Badge>
-          </Button>
-          {categories.map((category) => {
-            const count = categoryCounts[category.name] || 0;
-            if (count === 0) return null;
+      {/* Filter Dropdowns */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Category Filter */}
+        <Select
+          value={selectedCategory || "all"}
+          onValueChange={(value) => setSelectedCategory(value === "all" ? null : value)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              All Categories ({expenses.length})
+            </SelectItem>
+            {categories.map((category) => {
+              const count = categoryCounts[category.name] || 0;
+              if (count === 0) return null;
+              return (
+                <SelectItem key={category.id} value={category.name}>
+                  {category.name} ({count})
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
 
-            return (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.name ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category.name)}
-                className={cn(
-                  selectedCategory === category.name && "bg-black text-white hover:bg-black/90"
-                )}
-              >
-                {category.name}
-                <Badge variant="secondary" className="ml-2">
-                  {count}
-                </Badge>
-              </Button>
-            );
-          })}
-        </div>
-      )}
+        {/* Frequency Filter */}
+        <Select
+          value={selectedFrequency || "all"}
+          onValueChange={(value) => setSelectedFrequency(value === "all" ? null : value)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Frequency" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              All Frequencies ({expenses.length})
+            </SelectItem>
+            {frequencyCounts["monthly"] > 0 && (
+              <SelectItem value="monthly">
+                Monthly ({frequencyCounts["monthly"]})
+              </SelectItem>
+            )}
+            {frequencyCounts["custom"] > 0 && (
+              <SelectItem value="custom">
+                Custom ({frequencyCounts["custom"]})
+              </SelectItem>
+            )}
+            {frequencyCounts["one-time"] > 0 && (
+              <SelectItem value="one-time">
+                One-time ({frequencyCounts["one-time"]})
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+
+        {/* Clear Filters button (only show when filters active) */}
+        {(selectedCategory || selectedFrequency) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSelectedCategory(null);
+              setSelectedFrequency(null);
+            }}
+          >
+            Clear filters
+          </Button>
+        )}
+      </div>
 
       {/* Expenses Table */}
       {expenses.length === 0 ? (

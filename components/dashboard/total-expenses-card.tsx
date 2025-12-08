@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,8 +11,12 @@ import {
 import { ExpenseBreakdownModal } from "@/components/expenses/expense-breakdown-modal";
 import { getUserExpenses } from "@/lib/actions/user";
 
+type SlideDirection = "left" | "right" | null;
+
 interface TotalExpensesCardProps {
   totalExpenses: number;
+  selectedMonth: Date;
+  slideDirection: SlideDirection;
 }
 
 interface Expense {
@@ -29,39 +32,16 @@ interface Expense {
   isActive: boolean | null;
 }
 
-export function TotalExpensesCard({ totalExpenses }: TotalExpensesCardProps) {
+export function TotalExpensesCard({ totalExpenses, selectedMonth, slideDirection }: TotalExpensesCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Month navigation state (default to current month)
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
-
-  // Month navigation handlers
-  const goToPreviousMonth = () => {
-    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
-
-  // Format month display
-  const formatMonthDisplay = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  };
-
-  // Calculate current month expenses based on selected month
-  const currentMonthExpenses = useMemo(() => {
-    const selectedYear = selectedMonth.getFullYear();
-    const selectedMonthNum = selectedMonth.getMonth() + 1;
-
-    // For date comparisons, create start/end of selected month
-    const monthStart = new Date(selectedYear, selectedMonth.getMonth(), 1);
-    const monthEnd = new Date(selectedYear, selectedMonth.getMonth() + 1, 0);
+  // Calculate expenses for a given month
+  const calculateExpensesForMonth = useCallback((targetMonth: Date) => {
+    const targetYear = targetMonth.getFullYear();
+    const targetMonthNum = targetMonth.getMonth() + 1;
+    const monthStart = new Date(targetYear, targetMonth.getMonth(), 1);
+    const monthEnd = new Date(targetYear, targetMonth.getMonth() + 1, 0);
 
     let totalMonthlyExpenses = 0;
 
@@ -72,7 +52,6 @@ export function TotalExpensesCard({ totalExpenses }: TotalExpensesCardProps) {
       const startDate = new Date(expense.startDate);
       const endDate = expense.endDate ? new Date(expense.endDate) : null;
 
-      // Check if expense is valid for selected month
       if (startDate > monthEnd) return;
       if (endDate && endDate < monthStart) return;
 
@@ -84,14 +63,14 @@ export function TotalExpensesCard({ totalExpenses }: TotalExpensesCardProps) {
       } else if (frequency === 'custom' && expense.customMonths) {
         try {
           const customMonths = JSON.parse(expense.customMonths);
-          appliesThisMonth = customMonths.includes(selectedMonthNum);
+          appliesThisMonth = customMonths.includes(targetMonthNum);
         } catch {
           appliesThisMonth = false;
         }
       } else if (frequency === 'one-time') {
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
-        appliesThisMonth = expenseMonth === selectedMonthNum && expenseYear === selectedYear;
+        appliesThisMonth = expenseMonth === targetMonthNum && expenseYear === targetYear;
       }
 
       if (appliesThisMonth) {
@@ -100,20 +79,29 @@ export function TotalExpensesCard({ totalExpenses }: TotalExpensesCardProps) {
     });
 
     return totalMonthlyExpenses;
-  }, [expenses, selectedMonth]);
+  }, [expenses]);
+
+  // Calculate current and previous month expenses
+  const currentMonthExpenses = useMemo(() => calculateExpensesForMonth(selectedMonth), [calculateExpensesForMonth, selectedMonth]);
+
+  const previousMonth = useMemo(() => new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1), [selectedMonth]);
+  const previousMonthExpenses = useMemo(() => calculateExpensesForMonth(previousMonth), [calculateExpensesForMonth, previousMonth]);
+
+  // Calculate change from previous month
+  const monthChange = useMemo(() => {
+    const change = currentMonthExpenses - previousMonthExpenses;
+    const percentChange = previousMonthExpenses > 0 ? (change / previousMonthExpenses) * 100 : 0;
+    return { amount: change, percent: percentChange };
+  }, [currentMonthExpenses, previousMonthExpenses]);
 
   // Fetch expenses on component mount to enable month navigation
   useEffect(() => {
-    setIsLoading(true);
     getUserExpenses()
       .then((data) => {
         setExpenses(data as Expense[]);
       })
       .catch((error) => {
         console.error("Failed to fetch expenses:", error);
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
   }, []);
 
@@ -135,30 +123,36 @@ export function TotalExpensesCard({ totalExpenses }: TotalExpensesCardProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-semibold tabular-nums">
-            ${displayAmount.toLocaleString()}
-          </div>
-          <div className="flex items-center gap-1 mt-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5"
-              onClick={(e) => { e.stopPropagation(); goToPreviousMonth(); }}
+          <div className="overflow-hidden">
+            <div
+              key={selectedMonth.toISOString()}
+              className={`text-3xl font-semibold tabular-nums transition-all duration-300 ${
+                slideDirection === "left"
+                  ? "animate-slide-left"
+                  : slideDirection === "right"
+                  ? "animate-slide-right"
+                  : ""
+              }`}
             >
-              <ChevronLeft className="h-3 w-3" />
-            </Button>
-            <span className="text-xs text-muted-foreground min-w-[100px] text-center">
-              {formatMonthDisplay(selectedMonth)}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5"
-              onClick={(e) => { e.stopPropagation(); goToNextMonth(); }}
-            >
-              <ChevronRight className="h-3 w-3" />
-            </Button>
+              ${displayAmount.toLocaleString()}
+            </div>
           </div>
+          {expenses.length > 0 && monthChange.amount !== 0 && (
+            <div className={`flex items-center gap-1 mt-1 text-xs ${
+              monthChange.amount < 0 ? "text-emerald-600" : "text-red-500"
+            }`}>
+              {monthChange.amount < 0 ? (
+                <TrendingDown className="h-3 w-3" />
+              ) : (
+                <TrendingUp className="h-3 w-3" />
+              )}
+              <span>
+                {monthChange.amount > 0 ? "+" : ""}${Math.abs(monthChange.amount).toLocaleString()}
+                {monthChange.percent !== 0 && ` (${monthChange.percent > 0 ? "+" : ""}${monthChange.percent.toFixed(1)}%)`}
+              </span>
+              <span className="text-muted-foreground">vs last month</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 

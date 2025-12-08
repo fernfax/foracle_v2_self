@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,8 +11,12 @@ import {
 import { IncomeBreakdownModal } from "@/components/income/income-breakdown-modal";
 import { getUserIncomes } from "@/lib/actions/user";
 
+type SlideDirection = "left" | "right" | null;
+
 interface TotalIncomeCardProps {
   totalIncome: number;
+  selectedMonth: Date;
+  slideDirection: SlideDirection;
 }
 
 interface Income {
@@ -40,55 +43,32 @@ interface Income {
   futureIncomeEndDate?: string | null;
 }
 
-export function TotalIncomeCard({ totalIncome }: TotalIncomeCardProps) {
+export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: TotalIncomeCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [incomes, setIncomes] = useState<Income[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Month navigation state (default to current month)
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
+  // Helper to parse date strings as local dates (not UTC)
+  const parseLocalDate = useCallback((dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }, []);
 
-  // Month navigation handlers
-  const goToPreviousMonth = () => {
-    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
-
-  // Format month display
-  const formatMonthDisplay = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  };
-
-  // Calculate current month income based on selected month
-  const currentMonthIncome = useMemo(() => {
-    const selectedYear = selectedMonth.getFullYear();
-    const selectedMonthNum = selectedMonth.getMonth() + 1;
-
-    // For date comparisons, create start/end of selected month
-    const monthStart = new Date(selectedYear, selectedMonth.getMonth(), 1);
-    const monthEnd = new Date(selectedYear, selectedMonth.getMonth() + 1, 0);
+  // Calculate income for a given month (returns both gross and net after CPF)
+  const calculateIncomeForMonth = useCallback((targetMonth: Date) => {
+    const targetYear = targetMonth.getFullYear();
+    const targetMonthNum = targetMonth.getMonth() + 1;
+    const monthStart = new Date(targetYear, targetMonth.getMonth(), 1);
+    const monthEnd = new Date(targetYear, targetMonth.getMonth() + 1, 0);
 
     let totalMonthlyIncome = 0;
+    let totalCpfDeduction = 0;
 
     incomes.forEach((income) => {
       if (!income.isActive) return;
 
-      // Helper to parse date strings as local dates (not UTC)
-      const parseLocalDate = (dateStr: string) => {
-        const [year, month, day] = dateStr.split('-').map(Number);
-        return new Date(year, month - 1, day);
-      };
-
       const startDate = parseLocalDate(income.startDate);
       const endDate = income.endDate ? parseLocalDate(income.endDate) : null;
 
-      // Determine which amount to use - check for future income changes
       let effectiveAmount = parseFloat(income.amount);
       let useFutureIncome = false;
 
@@ -96,32 +76,21 @@ export function TotalIncomeCard({ totalIncome }: TotalIncomeCardProps) {
         const futureStartDate = parseLocalDate(income.futureIncomeStartDate);
         const futureEndDate = income.futureIncomeEndDate ? parseLocalDate(income.futureIncomeEndDate) : null;
 
-        // Check if the selected month falls within the future income change period
-        // Use future amount if: month starts on or after future start date AND
-        // (no future end date OR month starts before or on future end date)
         if (monthStart >= futureStartDate && (!futureEndDate || monthStart <= futureEndDate)) {
           effectiveAmount = parseFloat(income.futureIncomeAmount);
           useFutureIncome = true;
         }
       }
 
-      // Check if income is valid for selected month
-      // Income must have started by the end of selected month
       if (startDate > monthEnd) return;
-
-      // Income must not have ended before selected month started
-      // BUT: if we're using future income, ignore the original end_date
-      // (the future income effectively extends the income)
       if (!useFutureIncome && endDate && endDate < monthStart) return;
 
-      // If using future income, also check if the future income period has ended
       if (useFutureIncome && income.futureIncomeEndDate) {
         const futureEndDate = parseLocalDate(income.futureIncomeEndDate);
         if (futureEndDate < monthStart) return;
       }
 
       const frequency = income.frequency.toLowerCase();
-
       let appliesThisMonth = false;
 
       if (frequency === 'monthly') {
@@ -129,29 +98,23 @@ export function TotalIncomeCard({ totalIncome }: TotalIncomeCardProps) {
       } else if (frequency === 'custom' && income.customMonths) {
         try {
           const customMonths = JSON.parse(income.customMonths);
-          appliesThisMonth = customMonths.includes(selectedMonthNum);
+          appliesThisMonth = customMonths.includes(targetMonthNum);
         } catch {
           appliesThisMonth = false;
         }
       } else if (frequency === 'yearly') {
-        // Yearly income typically applies in a specific month (e.g., bonus in December)
-        // For now, we'll distribute it across all months
         appliesThisMonth = true;
       } else if (frequency === 'weekly') {
-        // Weekly income applies every month
         appliesThisMonth = true;
       } else if (frequency === 'bi-weekly') {
-        // Bi-weekly income applies every month
         appliesThisMonth = true;
       } else if (frequency === 'one-time') {
-        // One-time income - check if it's in the selected month/year
         const incomeMonth = startDate.getMonth() + 1;
         const incomeYear = startDate.getFullYear();
-        appliesThisMonth = incomeMonth === selectedMonthNum && incomeYear === selectedYear;
+        appliesThisMonth = incomeMonth === targetMonthNum && incomeYear === targetYear;
       }
 
       if (appliesThisMonth) {
-        // Calculate monthly equivalent
         let monthlyAmount = effectiveAmount;
         if (frequency === 'yearly') {
           monthlyAmount = effectiveAmount / 12;
@@ -161,29 +124,46 @@ export function TotalIncomeCard({ totalIncome }: TotalIncomeCardProps) {
           monthlyAmount = (effectiveAmount * 26) / 12;
         }
         totalMonthlyIncome += monthlyAmount;
+
+        // Calculate CPF deduction if applicable (employeeCpfContribution is stored as monthly dollar amount)
+        if (income.subjectToCpf && income.employeeCpfContribution) {
+          const monthlyCpfDeduction = parseFloat(income.employeeCpfContribution);
+          totalCpfDeduction += monthlyCpfDeduction;
+        }
       }
     });
 
-    return totalMonthlyIncome;
-  }, [incomes, selectedMonth]);
+    return { gross: totalMonthlyIncome, cpfDeduction: totalCpfDeduction, net: totalMonthlyIncome - totalCpfDeduction };
+  }, [incomes, parseLocalDate]);
+
+  // Calculate current and previous month income
+  const currentMonthData = useMemo(() => calculateIncomeForMonth(selectedMonth), [calculateIncomeForMonth, selectedMonth]);
+
+  const previousMonth = useMemo(() => new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1), [selectedMonth]);
+  const previousMonthData = useMemo(() => calculateIncomeForMonth(previousMonth), [calculateIncomeForMonth, previousMonth]);
+
+  // Calculate change from previous month (based on gross income)
+  const monthChange = useMemo(() => {
+    const change = currentMonthData.gross - previousMonthData.gross;
+    const percentChange = previousMonthData.gross > 0 ? (change / previousMonthData.gross) * 100 : 0;
+    return { amount: change, percent: percentChange };
+  }, [currentMonthData.gross, previousMonthData.gross]);
 
   // Fetch incomes on component mount to enable month navigation
   useEffect(() => {
-    setIsLoading(true);
     getUserIncomes()
       .then((data) => {
         setIncomes(data as Income[]);
       })
       .catch((error) => {
         console.error("Failed to fetch incomes:", error);
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
   }, []);
 
   // Use calculated amount if incomes loaded, otherwise use prop
-  const displayAmount = incomes.length > 0 ? currentMonthIncome : totalIncome;
+  const displayAmount = incomes.length > 0 ? currentMonthData.gross : totalIncome;
+  const netIncomeAfterCpf = incomes.length > 0 ? currentMonthData.net : null;
+  const hasCpfDeductions = incomes.length > 0 && currentMonthData.cpfDeduction > 0;
 
   return (
     <>
@@ -200,30 +180,41 @@ export function TotalIncomeCard({ totalIncome }: TotalIncomeCardProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-semibold tabular-nums">
-            ${displayAmount.toLocaleString()}
-          </div>
-          <div className="flex items-center gap-1 mt-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5"
-              onClick={(e) => { e.stopPropagation(); goToPreviousMonth(); }}
+          <div className="overflow-hidden">
+            <div
+              key={selectedMonth.toISOString()}
+              className={`text-3xl font-semibold tabular-nums transition-all duration-300 ${
+                slideDirection === "left"
+                  ? "animate-slide-left"
+                  : slideDirection === "right"
+                  ? "animate-slide-right"
+                  : ""
+              }`}
             >
-              <ChevronLeft className="h-3 w-3" />
-            </Button>
-            <span className="text-xs text-muted-foreground min-w-[100px] text-center">
-              {formatMonthDisplay(selectedMonth)}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5"
-              onClick={(e) => { e.stopPropagation(); goToNextMonth(); }}
-            >
-              <ChevronRight className="h-3 w-3" />
-            </Button>
+              ${displayAmount.toLocaleString()}
+            </div>
           </div>
+          {hasCpfDeductions && netIncomeAfterCpf !== null && (
+            <p className="text-xs text-muted-foreground mt-1">
+              After CPF: ${netIncomeAfterCpf.toLocaleString()}
+            </p>
+          )}
+          {incomes.length > 0 && monthChange.amount !== 0 && (
+            <div className={`flex items-center gap-1 mt-1 text-xs ${
+              monthChange.amount > 0 ? "text-emerald-600" : "text-red-500"
+            }`}>
+              {monthChange.amount > 0 ? (
+                <TrendingUp className="h-3 w-3" />
+              ) : (
+                <TrendingDown className="h-3 w-3" />
+              )}
+              <span>
+                {monthChange.amount > 0 ? "+" : ""}${Math.abs(monthChange.amount).toLocaleString()}
+                {monthChange.percent !== 0 && ` (${monthChange.percent > 0 ? "+" : ""}${monthChange.percent.toFixed(1)}%)`}
+              </span>
+              <span className="text-muted-foreground">vs last month</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
