@@ -444,7 +444,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Current Month Expected Expenses
+                Expected Expenses
               </CardTitle>
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
                 <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -567,7 +567,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Top Category (Current Month)
+                Top Category ({formatMonthDisplay(selectedMonth)})
               </CardTitle>
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950">
                 <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
