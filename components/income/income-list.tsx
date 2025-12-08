@@ -44,10 +44,7 @@ import {
   Triangle,
   MoreHorizontal,
   Plus,
-  Settings2,
   ChevronLeft,
-  ChevronsLeft,
-  ChevronsRight,
   Link2,
   DollarSign,
   Briefcase,
@@ -399,19 +396,9 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Income Details Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Income List</h2>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Settings2 className="h-4 w-4 mr-2" />
-            Manage Categories
-          </Button>
-          <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Income
-          </Button>
-        </div>
+        <h2 className="text-2xl font-semibold">Income Details</h2>
       </div>
 
       {/* Summary Cards */}
@@ -505,8 +492,11 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         </div>
       )}
 
-      {/* Search and Info */}
-      <div className="flex items-center justify-between">
+      {/* Income List Header */}
+      <h2 className="text-2xl font-semibold pt-4">Income List</h2>
+
+      {/* Search */}
+      <div className="flex items-center">
         <Input
           placeholder="Search income..."
           value={search}
@@ -516,53 +506,55 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           }}
           className="max-w-sm"
         />
-        <p className="text-sm text-muted-foreground">
-          Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedIncomes.length)} of{" "}
-          {filteredAndSortedIncomes.length} results
-        </p>
       </div>
 
-      {/* Frequency Filters */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
-        <Button
-          variant={selectedFrequency === "All" ? "default" : "outline"}
-          size="sm"
-          onClick={() => {
-            setSelectedFrequency("All");
-            setCurrentPage(1);
-          }}
-          className={cn(
-            "flex-shrink-0",
-            selectedFrequency === "All" && "bg-black text-white hover:bg-black/90"
-          )}
-        >
-          All
-          <Badge variant="secondary" className="ml-2">
-            {incomes.length}
-          </Badge>
+      {/* Frequency Filters and Add Button */}
+      <div className="flex items-center justify-between gap-2 pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <Button
+            variant={selectedFrequency === "All" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setSelectedFrequency("All");
+              setCurrentPage(1);
+            }}
+            className={cn(
+              "flex-shrink-0",
+              selectedFrequency === "All" && "bg-black text-white hover:bg-black/90"
+            )}
+          >
+            All
+            <Badge variant="secondary" className="ml-2">
+              {incomes.length}
+            </Badge>
+          </Button>
+          {Object.entries(frequencyCounts)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([frequency, count]) => (
+              <Button
+                key={frequency}
+                variant={selectedFrequency === frequency ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setSelectedFrequency(frequency);
+                  setCurrentPage(1);
+                }}
+                className={cn(
+                  "flex-shrink-0",
+                  selectedFrequency === frequency && "bg-black text-white hover:bg-black/90"
+                )}
+              >
+                {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+                <Badge variant="secondary" className="ml-2">
+                  {count}
+                </Badge>
+              </Button>
+            ))}
+        </div>
+        <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Income
         </Button>
-        {Object.entries(frequencyCounts)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([frequency, count]) => (
-            <Button
-              key={frequency}
-              variant={selectedFrequency === frequency ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setSelectedFrequency(frequency);
-                setCurrentPage(1);
-              }}
-              className={cn(
-                "flex-shrink-0",
-                selectedFrequency === frequency && "bg-black text-white hover:bg-black/90"
-              )}
-            >
-              {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
-              <Badge variant="secondary" className="ml-2">
-                {count}
-              </Badge>
-            </Button>
-          ))}
       </div>
 
       {/* Table */}
@@ -864,6 +856,12 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         </Table>
       </div>
 
+      {/* Results count */}
+      <p className="text-sm text-muted-foreground">
+        Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedIncomes.length)} of{" "}
+        {filteredAndSortedIncomes.length} results
+      </p>
+
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -890,22 +888,14 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="default" size="sm" className="min-w-[40px]">
-            {currentPage}
-          </Button>
+          <span className="text-sm text-muted-foreground px-2">
+            Page {currentPage} of {totalPages}
+          </span>
           <Button
             variant="outline"
             size="sm"
@@ -913,14 +903,6 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
             disabled={currentPage === totalPages || totalPages === 0}
           >
             <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages || totalPages === 0}
-          >
-            <ChevronsRight className="h-4 w-4" />
           </Button>
         </div>
       </div>

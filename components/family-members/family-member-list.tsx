@@ -42,8 +42,6 @@ import {
   MoreHorizontal,
   Plus,
   ChevronLeft,
-  ChevronsLeft,
-  ChevronsRight,
   Lock,
   User,
   Users,
@@ -585,13 +583,9 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Family Details Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Family Members</h2>
-        <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Member
-        </Button>
+        <h2 className="text-2xl font-semibold">Family Details</h2>
       </div>
 
       {/* Summary Cards */}
@@ -708,7 +702,10 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
         </div>
       )}
 
-      {/* Search and Info */}
+      {/* Family Members Header */}
+      <h2 className="text-2xl font-semibold pt-4">Family Members</h2>
+
+      {/* Search and Add Button */}
       <div className="flex items-center justify-between">
         <Input
           placeholder="Search family members..."
@@ -719,10 +716,10 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
           }}
           className="max-w-sm"
         />
-        <p className="text-sm text-muted-foreground">
-          Showing {filteredAndSortedMembers.length > 0 ? startIndex + 1 : 0} to{" "}
-          {Math.min(endIndex, filteredAndSortedMembers.length)} of {filteredAndSortedMembers.length} results
-        </p>
+        <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Member
+        </Button>
       </div>
 
       {/* Table */}
@@ -892,6 +889,12 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
         </Table>
       </div>
 
+      {/* Results count */}
+      <p className="text-sm text-muted-foreground">
+        Showing {filteredAndSortedMembers.length > 0 ? startIndex + 1 : 0} to{" "}
+        {Math.min(endIndex, filteredAndSortedMembers.length)} of {filteredAndSortedMembers.length} results
+      </p>
+
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -918,22 +921,14 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="default" size="sm" className="min-w-[40px]">
-            {currentPage}
-          </Button>
+          <span className="text-sm text-muted-foreground px-2">
+            Page {currentPage} of {totalPages}
+          </span>
           <Button
             variant="outline"
             size="sm"
@@ -941,14 +936,6 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
             disabled={currentPage === totalPages || totalPages === 0}
           >
             <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages || totalPages === 0}
-          >
-            <ChevronsRight className="h-4 w-4" />
           </Button>
         </div>
       </div>

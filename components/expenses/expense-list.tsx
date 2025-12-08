@@ -95,6 +95,10 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
   const [breakdownSortBy, setBreakdownSortBy] = useState<"amount" | "category" | "count">("amount");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   // Month navigation state (default to current month)
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -362,6 +366,17 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
     return filtered;
   }, [expenses, search, selectedCategory, selectedFrequency, sortKey, sortDirection]);
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredExpenses.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedExpenses = filteredExpenses.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory, selectedFrequency, rowsPerPage]);
+
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -417,19 +432,9 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Expense Details Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Expense List</h2>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setManageCategoriesOpen(true)}>
-            <Settings2 className="h-4 w-4 mr-2" />
-            Manage Categories
-          </Button>
-          <Button onClick={() => setAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Expense
-          </Button>
-        </div>
+        <h2 className="text-2xl font-semibold">Expense Details</h2>
       </div>
 
       {/* Summary Cards */}
@@ -618,23 +623,22 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
         </div>
       )}
 
-      {/* Search Bar and Results Counter */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1 max-w-md">
-          <Input
-            placeholder="Search expenses..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-background"
-          />
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredResults === 0 ? 0 : 1} to {filteredResults} of {totalResults} results
-        </div>
+      {/* Expense List Header */}
+      <h2 className="text-2xl font-semibold pt-4">Expense List</h2>
+
+      {/* Search Bar */}
+      <div className="flex items-center">
+        <Input
+          placeholder="Search expenses..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm bg-background"
+        />
       </div>
 
-      {/* Filter Dropdowns */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Filter Dropdowns and Add Button */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
         {/* Category Filter */}
         <Select
           value={selectedCategory || "all"}
@@ -702,6 +706,17 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             Clear filters
           </Button>
         )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setManageCategoriesOpen(true)}>
+            <Settings2 className="h-4 w-4 mr-2" />
+            Manage Categories
+          </Button>
+          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Expense
+          </Button>
+        </div>
       </div>
 
       {/* Expenses Table */}
@@ -768,7 +783,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredExpenses.map((expense) => (
+              {paginatedExpenses.map((expense) => (
                 <TableRow key={expense.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-1.5">
@@ -809,6 +824,60 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Results count and Pagination */}
+      {expenses.length > 0 && filteredExpenses.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredExpenses.length)} of {filteredExpenses.length} results
+          </p>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page</span>
+              <Select
+                value={rowsPerPage.toString()}
+                onValueChange={(value) => {
+                  setRowsPerPage(parseInt(value));
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages || totalPages === 0}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -152,19 +152,15 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Holdings Details Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold tracking-tight">Current Holdings</h2>
-        <Button onClick={() => {
-          setHoldingToEdit(null);
-          setIsAddDialogOpen(true);
-        }}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Holding
-        </Button>
+        <h2 className="text-2xl font-semibold tracking-tight">Holdings Details</h2>
       </div>
 
-      {/* Search Bar and Results Counter */}
+      {/* Current Holdings Header */}
+      <h2 className="text-2xl font-semibold pt-4">Current Holdings</h2>
+
+      {/* Search Bar and Add Button */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 max-w-md">
           <Input
@@ -174,9 +170,13 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
             className="bg-background"
           />
         </div>
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredResults === 0 ? 0 : 1} to {filteredResults} of {totalResults} results
-        </div>
+        <Button size="sm" onClick={() => {
+          setHoldingToEdit(null);
+          setIsAddDialogOpen(true);
+        }}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Holding
+        </Button>
       </div>
 
       {/* Empty State */}
@@ -269,6 +269,13 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {/* Results count */}
+      {holdings.length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          Showing {filteredResults === 0 ? 0 : 1} to {filteredResults} of {totalResults} results
+        </p>
       )}
 
       {/* Add/Edit Dialog */}
