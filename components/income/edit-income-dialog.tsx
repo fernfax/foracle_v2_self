@@ -331,7 +331,7 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated, 
         subjectToCpf,
         accountForBonus,
         bonusGroups: accountForBonus ? JSON.stringify(bonusGroups) : undefined,
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        startDate: format(startDate || new Date(), "yyyy-MM-dd"),
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : null,
         futureIncomeChange,
         futureIncomeAmount: futureIncomeAmount ? parseFloat(futureIncomeAmount) : null,
@@ -359,7 +359,7 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated, 
         subjectToCpf,
         accountForBonus,
         bonusGroups: accountForBonus ? JSON.stringify(bonusGroups) : undefined,
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        startDate: format(startDate || new Date(), "yyyy-MM-dd"),
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : null,
         futureIncomeChange,
         futureIncomeAmount: futureIncomeAmount ? parseFloat(futureIncomeAmount) : null,
@@ -479,7 +479,9 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated, 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {FREQUENCIES.map((freq) => (
+                  {FREQUENCIES.filter(freq =>
+                    incomeCategory !== "current-recurring" || freq.value !== "one-time"
+                  ).map((freq) => (
                     <SelectItem key={freq.value} value={freq.value}>
                       {freq.label}
                     </SelectItem>
@@ -597,15 +599,18 @@ export function EditIncomeDialog({ open, onOpenChange, income, onIncomeUpdated, 
             )}
 
             {/* CPF Checkbox */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="edit-cpf"
-                checked={subjectToCpf}
-                onCheckedChange={(checked) => setSubjectToCpf(checked as boolean)}
-              />
-              <Label htmlFor="edit-cpf" className="text-sm font-medium leading-none">
-                Subject to CPF Deductions <span className="text-red-500">*</span>
-              </Label>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-cpf"
+                  checked={subjectToCpf}
+                  onCheckedChange={(checked) => setSubjectToCpf(checked as boolean)}
+                />
+                <Label htmlFor="edit-cpf" className="text-sm font-medium leading-none">
+                  Subject to CPF Deductions <span className="text-red-500">*</span>
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">Enable if this income has CPF contributions (typically for Singapore employment income)</p>
             </div>
           </div>
 

@@ -589,9 +589,9 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
       </div>
 
       {/* Summary Cards */}
-      {members.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          {/* Primary Card: Family Financial Overview */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {/* Primary Card: Family Financial Overview */}
+        {members.length > 0 ? (
           <Card className="col-span-full sm:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -651,8 +651,35 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               </div>
             </CardContent>
           </Card>
+        ) : (
+          <Card className="col-span-full sm:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Family Financial Overview
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950">
+                <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold text-muted-foreground">0 Members</div>
+              <p className="text-sm text-muted-foreground mt-3">
+                No family members added yet. Add family members to track household finances, CPF contributions, and insurance coverage.
+              </p>
+              <Button
+                size="sm"
+                className="mt-4"
+                onClick={() => setIsAddDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Family Member
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Secondary Card: Quick Stats */}
+        {/* Secondary Card: Quick Stats */}
+        {members.length > 0 ? (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -699,8 +726,25 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
+        ) : (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Quick Stats
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950">
+                <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold text-muted-foreground">—</div>
+              <p className="text-sm text-muted-foreground mt-3">
+                Family statistics will appear here once you add family members.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Family Members Header */}
       <h2 className="text-2xl font-semibold pt-4">Family Members</h2>
@@ -716,8 +760,13 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
           }}
           className="max-w-sm"
         />
-        <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsAddDialogOpen(true)}
+          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+        >
+          <Plus className="h-4 w-4 mr-1.5" />
           Add Member
         </Button>
       </div>

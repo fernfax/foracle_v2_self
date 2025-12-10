@@ -438,8 +438,9 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       </div>
 
       {/* Summary Cards */}
-      {expenses.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {/* Card 1: Expected Expenses */}
+        {expenses.length > 0 ? (
           <Card className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative" onClick={() => setIsBreakdownModalOpen(true)}>
             <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -563,7 +564,35 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               )}
             </CardContent>
           </Card>
+        ) : (
+          <Card className="col-span-full sm:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Expected Expenses
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
+                <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold text-muted-foreground">$0</div>
+              <p className="text-sm text-muted-foreground mt-3">
+                No expenses added yet. Add your first expense to start tracking your spending and see detailed breakdowns.
+              </p>
+              <Button
+                size="sm"
+                className="mt-4"
+                onClick={() => setAddDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Expense
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
+        {/* Card 2: Top Category */}
+        {expenses.length > 0 ? (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -620,8 +649,25 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               )}
             </CardContent>
           </Card>
-        </div>
-      )}
+        ) : (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Top Category
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950">
+                <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold text-muted-foreground">—</div>
+              <p className="text-sm text-muted-foreground mt-3">
+                Your top spending category will appear here once you add expenses.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Expense List Header */}
       <h2 className="text-2xl font-semibold pt-4">Expense List</h2>
@@ -708,12 +754,22 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
         )}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setManageCategoriesOpen(true)}>
-            <Settings2 className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setManageCategoriesOpen(true)}
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+          >
+            <Settings2 className="h-4 w-4 mr-1.5" />
             Manage Categories
           </Button>
-          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAddDialogOpen(true)}
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
             Add Expense
           </Button>
         </div>
@@ -725,8 +781,12 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           <p className="text-muted-foreground mb-4">
             No expenses yet. Add your first expense to start tracking your spending.
           </p>
-          <Button onClick={() => setAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button
+            variant="outline"
+            onClick={() => setAddDialogOpen(true)}
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
             Add Expense
           </Button>
         </div>

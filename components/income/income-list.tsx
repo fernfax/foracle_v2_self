@@ -52,8 +52,10 @@ import {
 } from "lucide-react";
 import { AddIncomeDialog } from "./add-income-dialog";
 import { EditIncomeDialog } from "./edit-income-dialog";
+import { AddCpfDetailsDialog } from "./add-cpf-details-dialog";
 import { IncomeBreakdownModal } from "./income-breakdown-modal";
-import { deleteIncome, toggleIncomeStatus } from "@/lib/actions/income";
+import { deleteIncome, toggleIncomeStatus, updateIncome } from "@/lib/actions/income";
+import { calculateCPF } from "@/lib/cpf-calculator";
 import { format, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -113,6 +115,14 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
   const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
+
+  // CPF details flow states
+  const [isCpfDetailsDialogOpen, setIsCpfDetailsDialogOpen] = useState(false);
+  const [pendingIncomeData, setPendingIncomeData] = useState<any>(null);
+  const [pendingIncomeFormData, setPendingIncomeFormData] = useState<any>(null);
+  const [pendingCpfData, setPendingCpfData] = useState<{oa?: number; sa?: number; ma?: number} | null>(null);
+  const [totalCpfForDialog, setTotalCpfForDialog] = useState(0);
+  const [cpfInitialValues, setCpfInitialValues] = useState<{oa?: number; sa?: number; ma?: number}>({});
 
   // Get unique frequencies with counts
   const frequencyCounts = useMemo(() => {
@@ -394,6 +404,104 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
     setIncomes(incomes.map((i) => (i.id === updatedIncome.id ? updatedIncome : i)));
   };
 
+  // CPF Details Flow Handlers
+  const handleCpfDetailsNeeded = (incomeData: any) => {
+    // Store the raw form data for potential back navigation
+    setPendingIncomeFormData(incomeData);
+
+    // Calculate CPF contributions based on income amount and family member age
+    const cpfResult = calculateCPF(incomeData.amount, incomeData.familyMemberAge || 30);
+
+    // Store income data with calculated CPF values
+    const enrichedIncomeData = {
+      ...incomeData,
+      employeeCpfContribution: cpfResult.employeeCpfContribution.toString(),
+      employerCpfContribution: cpfResult.employerCpfContribution.toString(),
+      netTakeHome: cpfResult.netTakeHome.toString(),
+    };
+    setPendingIncomeData(enrichedIncomeData);
+
+    // Set total CPF for the dialog
+    setTotalCpfForDialog(cpfResult.totalCpfContribution);
+
+    // Priority 1: Use pending CPF data (from back navigation)
+    if (pendingCpfData) {
+      setCpfInitialValues(pendingCpfData);
+    }
+    // Priority 2: Extract existing CPF values if editing
+    else if (incomeToEdit && incomeToEdit.cpfOrdinaryAccount) {
+      setCpfInitialValues({
+        oa: parseFloat(incomeToEdit.cpfOrdinaryAccount),
+        sa: parseFloat(incomeToEdit.cpfSpecialAccount || '0'),
+        ma: parseFloat(incomeToEdit.cpfMedisaveAccount || '0'),
+      });
+    }
+    // Priority 3: No initial values
+    else {
+      setCpfInitialValues({});
+    }
+
+    // Close income dialog and open CPF dialog
+    setIsEditDialogOpen(false);
+    setIsCpfDetailsDialogOpen(true);
+  };
+
+  const handleCpfComplete = async (cpfDetails: { oa: number; sa: number; ma: number }) => {
+    if (!pendingIncomeData || !incomeToEdit) return;
+
+    try {
+      // Update existing income with CPF details
+      const savedIncome = await updateIncome(incomeToEdit.id, {
+        ...pendingIncomeData,
+        cpfOrdinaryAccount: cpfDetails.oa,
+        cpfSpecialAccount: cpfDetails.sa,
+        cpfMedisaveAccount: cpfDetails.ma,
+      });
+
+      // Update local state
+      setIncomes(incomes.map((i) => (i.id === savedIncome.id ? savedIncome : i)));
+
+      // Close dialogs and reset state
+      setIsCpfDetailsDialogOpen(false);
+      setIsEditDialogOpen(false);
+      setPendingIncomeData(null);
+      setPendingIncomeFormData(null);
+      setPendingCpfData(null);
+      setIncomeToEdit(null);
+
+      // Refresh the page to show updated CPF data
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to save income with CPF details:", error);
+    }
+  };
+
+  const handleCpfBack = (cpfData?: { oa: number; sa: number; ma: number }) => {
+    // Store CPF data for when user comes back to Step 3
+    if (cpfData) {
+      setPendingCpfData(cpfData);
+    }
+
+    // Return to income dialog from CPF dialog
+    setIsCpfDetailsDialogOpen(false);
+    setIsEditDialogOpen(true);
+  };
+
+  // Get family member as expected by EditIncomeDialog
+  const getFamilyMemberForEdit = () => {
+    if (!incomeToEdit?.familyMember) return undefined;
+    return {
+      id: incomeToEdit.familyMember.id,
+      name: incomeToEdit.familyMember.name,
+      relationship: null,
+      dateOfBirth: null,
+      isContributing: null,
+      notes: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  };
+
   return (
     <div className="space-y-4">
       {/* Income Details Header */}
@@ -402,9 +510,9 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
       </div>
 
       {/* Summary Cards */}
-      {incomes.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          {/* Card 1: Annual Income Summary */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {/* Card 1: Annual Income Summary */}
+        {incomes.length > 0 ? (
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative"
             onClick={() => setIsBreakdownModalOpen(true)}
@@ -449,8 +557,35 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               )}
             </CardContent>
           </Card>
+        ) : (
+          <Card className="col-span-full sm:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Annual Income
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950">
+                <DollarSign className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold text-muted-foreground">$0</div>
+              <p className="text-sm text-muted-foreground mt-3">
+                No income sources added yet. Add your first income to track your annual earnings and see detailed breakdowns.
+              </p>
+              <Button
+                size="sm"
+                className="mt-4"
+                onClick={() => setIsAddDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Income
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Card 2: CPF Contributions */}
+        {/* Card 2: CPF Contributions */}
+        {incomes.length > 0 ? (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -489,8 +624,25 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               )}
             </CardContent>
           </Card>
-        </div>
-      )}
+        ) : (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Monthly CPF Contributions
+              </CardTitle>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950">
+                <Briefcase className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-2xl font-semibold text-muted-foreground">$0</div>
+              <p className="text-sm text-muted-foreground mt-3">
+                CPF contributions will be calculated automatically when you add income sources with CPF enabled.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Income List Header */}
       <h2 className="text-2xl font-semibold pt-4">Income List</h2>
@@ -551,8 +703,13 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               </Button>
             ))}
         </div>
-        <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsAddDialogOpen(true)}
+          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+        >
+          <Plus className="h-4 w-4 mr-1.5" />
           Add Income
         </Button>
       </div>
@@ -918,6 +1075,21 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         onOpenChange={setIsEditDialogOpen}
         income={incomeToEdit}
         onIncomeUpdated={handleIncomeUpdated}
+        familyMember={getFamilyMemberForEdit()}
+        pendingFormData={pendingIncomeFormData}
+        onCpfDetailsNeeded={handleCpfDetailsNeeded}
+      />
+
+      <AddCpfDetailsDialog
+        open={isCpfDetailsDialogOpen}
+        onOpenChange={setIsCpfDetailsDialogOpen}
+        onBack={handleCpfBack}
+        onComplete={handleCpfComplete}
+        totalCpfContribution={totalCpfForDialog}
+        familyMemberName={incomeToEdit?.familyMember?.name}
+        initialOA={cpfInitialValues.oa}
+        initialSA={cpfInitialValues.sa}
+        initialMA={cpfInitialValues.ma}
       />
 
       <AlertDialog open={deleteConfirmOpen} onOpenChange={(open) => {

@@ -365,13 +365,14 @@ export function AddIncomeDialog({ open, onOpenChange, onIncomeAdded, familyMembe
       const incomeData = {
         name,
         category,
+        incomeCategory,
         amount: parseFloat(amount),
         frequency,
         customMonths: frequency === "custom" ? JSON.stringify(selectedMonths) : null,
         subjectToCpf,
         accountForBonus,
         bonusGroups: accountForBonus ? JSON.stringify(bonusGroups) : undefined,
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        startDate: format(startDate || new Date(), "yyyy-MM-dd"),
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         description: notes || undefined,
         familyMemberId: familyMember.id,
@@ -398,7 +399,7 @@ export function AddIncomeDialog({ open, onOpenChange, onIncomeAdded, familyMembe
           subjectToCpf,
           accountForBonus,
           bonusGroups: accountForBonus ? JSON.stringify(bonusGroups) : undefined,
-          startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+          startDate: format(startDate || new Date(), "yyyy-MM-dd"),
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           description: notes || undefined,
           familyMemberAge,
@@ -548,7 +549,9 @@ export function AddIncomeDialog({ open, onOpenChange, onIncomeAdded, familyMembe
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {FREQUENCIES.map((freq) => (
+                  {FREQUENCIES.filter(freq =>
+                    incomeCategory !== "current-recurring" || freq.value !== "one-time"
+                  ).map((freq) => (
                     <SelectItem key={freq.value} value={freq.value}>
                       {freq.label}
                     </SelectItem>
@@ -666,15 +669,18 @@ export function AddIncomeDialog({ open, onOpenChange, onIncomeAdded, familyMembe
             )}
 
             {/* CPF Checkbox */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="cpf"
-                checked={subjectToCpf}
-                onCheckedChange={(checked) => setSubjectToCpf(checked as boolean)}
-              />
-              <Label htmlFor="cpf" className="text-sm font-medium leading-none">
-                Subject to CPF Deductions <span className="text-red-500">*</span>
-              </Label>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="cpf"
+                  checked={subjectToCpf}
+                  onCheckedChange={(checked) => setSubjectToCpf(checked as boolean)}
+                />
+                <Label htmlFor="cpf" className="text-sm font-medium leading-none">
+                  Subject to CPF Deductions <span className="text-red-500">*</span>
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">Enable if this income has CPF contributions (typically for Singapore employment income)</p>
             </div>
           </div>
 
