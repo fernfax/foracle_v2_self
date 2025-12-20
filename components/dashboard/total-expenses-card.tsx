@@ -26,7 +26,7 @@ interface Expense {
   amount: string;
   frequency: string;
   customMonths?: string | null;
-  startDate: string;
+  startDate: string | null;
   endDate: string | null;
   description?: string | null;
   isActive: boolean | null;
@@ -49,10 +49,12 @@ export function TotalExpensesCard({ totalExpenses, selectedMonth, slideDirection
       if (!expense.isActive) return;
 
       const amount = parseFloat(expense.amount);
-      const startDate = new Date(expense.startDate);
+      // For recurring expenses (current-recurring), startDate may be null - treat as always valid
+      const startDate = expense.startDate ? new Date(expense.startDate) : null;
       const endDate = expense.endDate ? new Date(expense.endDate) : null;
 
-      if (startDate > monthEnd) return;
+      // Skip check if no startDate - always valid
+      if (startDate && startDate > monthEnd) return;
       if (endDate && endDate < monthStart) return;
 
       let appliesThisMonth = false;
@@ -67,7 +69,7 @@ export function TotalExpensesCard({ totalExpenses, selectedMonth, slideDirection
         } catch {
           appliesThisMonth = false;
         }
-      } else if (frequency === 'one-time') {
+      } else if (frequency === 'one-time' && startDate) {
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
         appliesThisMonth = expenseMonth === targetMonthNum && expenseYear === targetYear;

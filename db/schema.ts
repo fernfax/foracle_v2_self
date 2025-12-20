@@ -88,7 +88,7 @@ export const expenses = pgTable("expenses", {
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time, weekly, bi-weekly, custom
   customMonths: text("custom_months"), // JSON array of month numbers for custom frequency (e.g., "[1,3,6,12]" for Jan, Mar, Jun, Dec)
-  startDate: date("start_date").notNull(),
+  startDate: date("start_date"), // Optional - null for recurring expenses (applicable for all past/future months)
   endDate: date("end_date"), // Optional - leave empty for ongoing expense
   description: text("description"), // Additional notes
   isActive: boolean("is_active").default(true),

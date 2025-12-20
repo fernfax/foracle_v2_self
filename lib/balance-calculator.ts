@@ -23,7 +23,7 @@ interface Expense {
   amount: string;
   frequency: string;
   customMonths: string | null;
-  startDate: string;
+  startDate: string | null;
   endDate: string | null;
   expenseCategory: string | null;
   isActive: boolean | null;
@@ -75,8 +75,20 @@ function isDateInRange(date: Date, monthOffset: number): boolean {
 /**
  * Check if an item is active for a given month
  */
-function isActiveInMonth(startDate: string, endDate: string | null, monthOffset: number): boolean {
+function isActiveInMonth(startDate: string | null, endDate: string | null, monthOffset: number): boolean {
   const targetMonth = addMonths(startOfMonth(new Date()), monthOffset);
+
+  // If no start date (recurring expenses), treat as always active from the past
+  if (!startDate) {
+    // If no end date either, it's always active
+    if (!endDate) {
+      return true;
+    }
+    // Check if target month is before end date
+    const end = parse(endDate, "yyyy-MM-dd", new Date());
+    return targetMonth <= endOfMonth(end);
+  }
+
   const start = parse(startDate, "yyyy-MM-dd", new Date());
 
   // If item hasn't started yet
@@ -101,7 +113,7 @@ function isActiveInMonth(startDate: string, endDate: string | null, monthOffset:
 function allocateAmountToMonth(
   amount: number,
   frequency: string,
-  startDate: string,
+  startDate: string | null,
   endDate: string | null,
   customMonths: string | null,
   monthOffset: number
@@ -113,8 +125,8 @@ function allocateAmountToMonth(
 
   const targetMonth = addMonths(new Date(), monthOffset);
   const targetMonthNumber = targetMonth.getMonth() + 1; // 1-12
-  const start = parse(startDate, "yyyy-MM-dd", new Date());
-  const startMonthNumber = start.getMonth() + 1;
+  const start = startDate ? parse(startDate, "yyyy-MM-dd", new Date()) : null;
+  const startMonthNumber = start ? start.getMonth() + 1 : 1;
 
   // Normalize frequency to lowercase for case-insensitive comparison
   const normalizedFrequency = frequency.toLowerCase();
@@ -126,20 +138,26 @@ function allocateAmountToMonth(
     case "quarterly":
       // Quarterly payments (every 3 months)
       // Check if this month is a payment month (3 months after start)
-      const monthsSinceStart = (targetMonth.getFullYear() - start.getFullYear()) * 12 +
-                               (targetMonth.getMonth() - start.getMonth());
-      if (monthsSinceStart >= 0 && monthsSinceStart % 3 === 0 && targetMonthNumber === targetMonth.getMonth() + 1) {
-        return amount;
+      // If no start date, assume from beginning of current year
+      if (start) {
+        const monthsSinceStart = (targetMonth.getFullYear() - start.getFullYear()) * 12 +
+                                 (targetMonth.getMonth() - start.getMonth());
+        if (monthsSinceStart >= 0 && monthsSinceStart % 3 === 0 && targetMonthNumber === targetMonth.getMonth() + 1) {
+          return amount;
+        }
       }
       return 0;
 
     case "semi-yearly":
       // Semi-yearly payments (every 6 months)
       // Check if this month is a payment month (6 months after start)
-      const monthsSinceStartSemi = (targetMonth.getFullYear() - start.getFullYear()) * 12 +
-                                   (targetMonth.getMonth() - start.getMonth());
-      if (monthsSinceStartSemi >= 0 && monthsSinceStartSemi % 6 === 0 && targetMonthNumber === targetMonth.getMonth() + 1) {
-        return amount;
+      // If no start date, assume from beginning of current year
+      if (start) {
+        const monthsSinceStartSemi = (targetMonth.getFullYear() - start.getFullYear()) * 12 +
+                                     (targetMonth.getMonth() - start.getMonth());
+        if (monthsSinceStartSemi >= 0 && monthsSinceStartSemi % 6 === 0 && targetMonthNumber === targetMonth.getMonth() + 1) {
+          return amount;
+        }
       }
       return 0;
 
@@ -160,7 +178,8 @@ function allocateAmountToMonth(
 
     case "one-time":
       // Only allocate to the month of the start date
-      if (isDateInRange(start, monthOffset)) {
+      // One-time expenses require a start date
+      if (start && isDateInRange(start, monthOffset)) {
         return amount;
       }
       return 0;

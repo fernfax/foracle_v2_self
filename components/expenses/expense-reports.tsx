@@ -36,7 +36,7 @@ interface Expense {
   amount: string;
   frequency: string;
   customMonths: string | null;
-  startDate: string;
+  startDate: string | null;
   endDate: string | null;
   description: string | null;
   isActive: boolean | null;

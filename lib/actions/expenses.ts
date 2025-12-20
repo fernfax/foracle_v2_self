@@ -16,7 +16,7 @@ export type Expense = {
   amount: string;
   frequency: string;
   customMonths: string | null;
-  startDate: string;
+  startDate: string | null;
   endDate: string | null;
   description: string | null;
   isActive: boolean | null;
@@ -57,7 +57,7 @@ export async function addExpense(data: {
   amount: number;
   frequency: string;
   customMonths?: string;
-  startDate: string;
+  startDate?: string | null;
   endDate?: string | null;
   description?: string;
 }): Promise<Expense> {
@@ -79,7 +79,7 @@ export async function addExpense(data: {
       amount: data.amount.toString(),
       frequency: data.frequency,
       customMonths: data.customMonths || null,
-      startDate: data.startDate,
+      startDate: data.startDate || null,
       endDate: data.endDate || null,
       description: data.description || null,
       isActive: true,
@@ -101,7 +101,7 @@ export async function updateExpense(
     amount?: number;
     frequency?: string;
     customMonths?: string | null;
-    startDate?: string;
+    startDate?: string | null;
     endDate?: string | null;
     description?: string;
   }

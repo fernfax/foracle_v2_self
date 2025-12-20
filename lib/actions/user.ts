@@ -182,10 +182,12 @@ export async function getDashboardMetrics() {
       if (!expense.isActive) return false;
 
       // Check if expense is active in current month
-      const startDate = new Date(expense.startDate);
+      // For recurring expenses (current-recurring), startDate may be null - treat as always valid
+      const startDate = expense.startDate ? new Date(expense.startDate) : null;
       const endDate = expense.endDate ? new Date(expense.endDate) : null;
 
-      if (currentDate < startDate) return false;
+      // Skip check if no startDate - always valid (recurring expenses)
+      if (startDate && currentDate < startDate) return false;
       if (endDate && currentDate > endDate) return false;
 
       // Check frequency (case-insensitive)
@@ -199,7 +201,7 @@ export async function getDashboardMetrics() {
           return false;
         }
       }
-      if (frequency === 'one-time') {
+      if (frequency === 'one-time' && startDate) {
         // Check if one-time expense is in current month
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();

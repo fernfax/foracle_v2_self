@@ -39,7 +39,7 @@ interface Expense {
   amount: string;
   frequency: string;
   customMonths: string | null;
-  startDate: string;
+  startDate: string | null;
   endDate: string | null;
   description: string | null;
   isActive: boolean | null;
@@ -113,7 +113,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
       setExpenseCategory(expense.expenseCategory || "current-recurring");
       setAmount(expense.amount);
       setFrequency(expense.frequency);
-      setStartDate(parse(expense.startDate, "yyyy-MM-dd", new Date()));
+      setStartDate(expense.startDate ? parse(expense.startDate, "yyyy-MM-dd", new Date()) : undefined);
       setEndDate(expense.endDate ? parse(expense.endDate, "yyyy-MM-dd", new Date()) : undefined);
       setNotes(expense.description || "");
       // Parse custom months if they exist
@@ -138,7 +138,9 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
   };
 
   const handleSubmit = async () => {
-    if (!expense || !name || !category || !amount || !startDate) {
+    // For recurring expenses, startDate is not required
+    const isRecurring = expenseCategory === "current-recurring";
+    if (!expense || !name || !category || !amount || (!isRecurring && !startDate)) {
       return;
     }
 
@@ -156,8 +158,8 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
         amount: parseFloat(amount),
         frequency,
         customMonths: frequency === "custom" ? JSON.stringify(selectedMonths) : null,
-        startDate: format(startDate, "yyyy-MM-dd"),
-        endDate: endDate ? format(endDate, "yyyy-MM-dd") : null,
+        startDate: isRecurring ? null : (startDate ? format(startDate, "yyyy-MM-dd") : null),
+        endDate: isRecurring ? null : (endDate ? format(endDate, "yyyy-MM-dd") : null),
         description: notes || undefined,
       });
 
@@ -386,103 +388,105 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             </div>
           )}
 
-          {/* Row 3: Start Date and End Date */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1">
-                Start Date <span className="text-red-500">*</span>
-                {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
-              </Label>
-              {isLinkedToPolicy ? (
-                <Button
-                  variant="outline"
-                  disabled
-                  className="w-full justify-start text-left font-normal bg-gray-100 cursor-not-allowed"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
-                </Button>
-              ) : (
-                <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        setStartDate(date);
-                        setStartDateOpen(false);
-                      }}
-                      initialFocus
-                      fixedWeeks
-                    />
-                  </PopoverContent>
-                </Popover>
-              )}
-              {isLinkedToPolicy && (
-                <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-              )}
+          {/* Row 3: Start Date and End Date - Only show for non-recurring expenses */}
+          {expenseCategory !== "current-recurring" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1">
+                  Start Date <span className="text-red-500">*</span>
+                  {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                </Label>
+                {isLinkedToPolicy ? (
+                  <Button
+                    variant="outline"
+                    disabled
+                    className="w-full justify-start text-left font-normal bg-gray-100 cursor-not-allowed"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
+                  </Button>
+                ) : (
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={(date) => {
+                          setStartDate(date);
+                          setStartDateOpen(false);
+                        }}
+                        initialFocus
+                        fixedWeeks
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+                {isLinkedToPolicy && (
+                  <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1">
+                  End Date
+                  {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                </Label>
+                {isLinkedToPolicy ? (
+                  <Button
+                    variant="outline"
+                    disabled
+                    className="w-full justify-start text-left font-normal bg-gray-100 cursor-not-allowed"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "MMMM do, yyyy") : "No end date"}
+                  </Button>
+                ) : (
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(date) => {
+                          setEndDate(date);
+                          setEndDateOpen(false);
+                        }}
+                        initialFocus
+                        fixedWeeks
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+                {isLinkedToPolicy ? (
+                  <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Leave empty for ongoing expense</p>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1">
-                End Date
-                {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
-              </Label>
-              {isLinkedToPolicy ? (
-                <Button
-                  variant="outline"
-                  disabled
-                  className="w-full justify-start text-left font-normal bg-gray-100 cursor-not-allowed"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "MMMM do, yyyy") : "No end date"}
-                </Button>
-              ) : (
-                <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => {
-                        setEndDate(date);
-                        setEndDateOpen(false);
-                      }}
-                      initialFocus
-                      fixedWeeks
-                    />
-                  </PopoverContent>
-                </Popover>
-              )}
-              {isLinkedToPolicy ? (
-                <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-              ) : (
-                <p className="text-xs text-muted-foreground">Leave empty for ongoing expense</p>
-              )}
-            </div>
-          </div>
+          )}
 
           {/* Row 4: Notes */}
           <div className="space-y-2">
@@ -523,7 +527,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                   !name ||
                   !category ||
                   !amount ||
-                  !startDate ||
+                  (expenseCategory !== "current-recurring" && !startDate) ||
                   (frequency.toLowerCase() === "custom" && selectedMonths.length === 0) ||
                   isSubmitting
                 }

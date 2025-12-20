@@ -11,7 +11,7 @@ interface Expense {
   amount: string;
   frequency: string;
   customMonths: string | null;
-  startDate: string;
+  startDate: string | null;
   endDate: string | null;
   isActive: boolean | null;
 }
@@ -76,11 +76,13 @@ export function filterExpensesByDateRange(
   return expenses.filter((expense) => {
     if (!expense.isActive) return false;
 
-    const expenseStart = new Date(expense.startDate);
+    // For recurring expenses (current-recurring), startDate may be null - treat as always valid
+    const expenseStart = expense.startDate ? new Date(expense.startDate) : null;
     const expenseEnd = expense.endDate ? new Date(expense.endDate) : null;
 
     // Check if expense overlaps with the date range
-    if (expenseStart > endDate) return false;
+    // Skip check if no startDate - always valid (recurring expenses)
+    if (expenseStart && expenseStart > endDate) return false;
     if (expenseEnd && expenseEnd < startDate) return false;
 
     return true;

@@ -50,7 +50,7 @@ interface Expense {
   frequency: string;
   customMonths?: string | null;
   isActive: boolean | null;
-  startDate: string;
+  startDate: string | null;
   endDate?: string | null;
 }
 
@@ -152,10 +152,12 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
     expenses.forEach((expense) => {
       if (!expense.isActive) return;
 
-      const startDate = parseLocalDate(expense.startDate);
+      // For recurring expenses (current-recurring), startDate may be null - treat as always valid
+      const startDate = expense.startDate ? parseLocalDate(expense.startDate) : null;
       const endDate = expense.endDate ? parseLocalDate(expense.endDate) : null;
 
-      if (startDate > monthEnd) return;
+      // Skip check if no startDate - always valid
+      if (startDate && startDate > monthEnd) return;
       if (endDate && endDate < monthStart) return;
 
       const frequency = expense.frequency.toLowerCase();
@@ -176,7 +178,7 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
         appliesThisMonth = true;
       } else if (frequency === 'bi-weekly') {
         appliesThisMonth = true;
-      } else if (frequency === 'one-time') {
+      } else if (frequency === 'one-time' && startDate) {
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
         appliesThisMonth = expenseMonth === targetMonthNum && expenseYear === targetYear;

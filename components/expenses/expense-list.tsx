@@ -62,7 +62,7 @@ interface Expense {
   amount: string;
   frequency: string;
   customMonths: string | null;
-  startDate: string;
+  startDate: string | null;
   endDate: string | null;
   description: string | null;
   isActive: boolean | null;
@@ -167,12 +167,13 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       if (!expense.isActive) return;
 
       const amount = parseFloat(expense.amount);
-      const startDate = new Date(expense.startDate);
+      // For recurring expenses (current-recurring), startDate may be null - treat as always valid
+      const startDate = expense.startDate ? new Date(expense.startDate) : null;
       const endDate = expense.endDate ? new Date(expense.endDate) : null;
 
       // Check if expense is valid for selected month
-      // Expense must have started by the end of selected month
-      if (startDate > monthEnd) return;
+      // Expense must have started by the end of selected month (skip check if no startDate - always valid)
+      if (startDate && startDate > monthEnd) return;
       // Expense must not have ended before selected month started
       if (endDate && endDate < monthStart) return;
 
@@ -189,7 +190,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
         } catch {
           appliesThisMonth = false;
         }
-      } else if (frequency === 'one-time') {
+      } else if (frequency === 'one-time' && startDate) {
         // Check if one-time expense is in selected month
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
@@ -238,11 +239,12 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       if (!expense.isActive) return;
 
       const amount = parseFloat(expense.amount);
-      const startDate = new Date(expense.startDate);
+      // For recurring expenses (current-recurring), startDate may be null - treat as always valid
+      const startDate = expense.startDate ? new Date(expense.startDate) : null;
       const endDate = expense.endDate ? new Date(expense.endDate) : null;
 
-      // Check if expense is valid for selected month
-      if (startDate > monthEnd) return;
+      // Check if expense is valid for selected month (skip check if no startDate - always valid)
+      if (startDate && startDate > monthEnd) return;
       if (endDate && endDate < monthStart) return;
 
       let appliesThisMonth = false;
@@ -260,7 +262,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             frequencyType = "custom";
           }
         } catch {}
-      } else if (frequency === 'one-time') {
+      } else if (frequency === 'one-time' && startDate) {
         const expenseMonth = startDate.getMonth() + 1;
         const expenseYear = startDate.getFullYear();
         if (expenseMonth === selectedMonthNum && expenseYear === selectedYear) {
