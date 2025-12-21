@@ -1,4 +1,5 @@
 import { getPropertyAssets } from "@/lib/actions/property-assets";
+import { getVehicleAssets } from "@/lib/actions/vehicle-assets";
 import { AssetsClient } from "./client";
 
 export const metadata = {
@@ -7,7 +8,15 @@ export const metadata = {
 };
 
 export default async function AssetsPage() {
-  const propertyAssets = await getPropertyAssets();
+  const [propertyAssets, vehicleAssets] = await Promise.all([
+    getPropertyAssets(),
+    getVehicleAssets(),
+  ]);
 
-  return <AssetsClient initialPropertyAssets={propertyAssets} />;
+  return (
+    <AssetsClient
+      initialPropertyAssets={propertyAssets}
+      initialVehicleAssets={vehicleAssets}
+    />
+  );
 }

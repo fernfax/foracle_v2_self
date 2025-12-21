@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Home, Calendar, TrendingUp, Building2, Wallet } from "lucide-react";
+import { Home, Calendar, TrendingUp, Building2, Wallet, Check, X } from "lucide-react";
 import { format } from "date-fns";
 
 interface PropertyAsset {
@@ -71,6 +71,13 @@ export function PropertyDetailsModal({
                 <Calendar className="h-3 w-3" />
                 Purchased {format(new Date(property.purchaseDate), "MMMM d, yyyy")}
               </p>
+              <Badge
+                variant="outline"
+                className={`text-xs font-medium mt-2 ${property.linkedExpenseId ? 'text-green-600 border-green-200' : 'text-gray-400 border-gray-200'}`}
+              >
+                {property.linkedExpenseId ? <Check className="h-3 w-3 mr-1" /> : <X className="h-3 w-3 mr-1" />}
+                {property.linkedExpenseId ? 'In Expenses' : 'Not in Expenses'}
+              </Badge>
             </div>
           </div>
         </DialogHeader>
@@ -193,15 +200,6 @@ export function PropertyDetailsModal({
             </div>
           )}
 
-          {/* Linked Expense Badge */}
-          {property.linkedExpenseId && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg px-4 py-3">
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                Linked to Expenses
-              </Badge>
-              <span>Monthly payment is tracked in your expenditures</span>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

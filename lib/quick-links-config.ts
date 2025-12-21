@@ -11,7 +11,7 @@ export const QUICK_LINK_OPTIONS: QuickLinkOption[] = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: "Home", category: "main" },
   { key: "user", label: "User Homepage", href: "/dashboard/user", icon: "User", category: "main" },
   { key: "expenses", label: "Expenses", href: "/dashboard/user/expenses", icon: "Wallet", category: "main" },
-  { key: "assets", label: "Assets", href: "/dashboard/assets", icon: "TrendingUp", category: "main" },
+  { key: "assets", label: "Assets", href: "/dashboard/user/assets", icon: "TrendingUp", category: "main" },
   { key: "insurance", label: "Insurance", href: "/dashboard/policies", icon: "Shield", category: "main" },
   { key: "goals", label: "Goals", href: "/dashboard/goals", icon: "Target", category: "main" },
 

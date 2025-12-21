@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Home, Car, Package, Plus } from "lucide-react";
 import { PropertyList } from "@/components/assets/property-list";
+import { VehicleList } from "@/components/assets/vehicle-list";
 
 interface PropertyAsset {
   id: string;
@@ -25,11 +26,27 @@ interface PropertyAsset {
   updatedAt: Date;
 }
 
-interface AssetsClientProps {
-  initialPropertyAssets: PropertyAsset[];
+interface VehicleAsset {
+  id: string;
+  vehicleName: string;
+  purchaseDate: string;
+  coeExpiryDate: string | null;
+  originalPurchasePrice: string;
+  loanAmountTaken: string | null;
+  loanAmountRepaid: string | null;
+  monthlyLoanPayment: string | null;
+  linkedExpenseId: string | null;
+  isActive: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export function AssetsClient({ initialPropertyAssets }: AssetsClientProps) {
+interface AssetsClientProps {
+  initialPropertyAssets: PropertyAsset[];
+  initialVehicleAssets: VehicleAsset[];
+}
+
+export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: AssetsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -88,19 +105,7 @@ export function AssetsClient({ initialPropertyAssets }: AssetsClientProps) {
           </TabsContent>
 
           <TabsContent value="vehicle" className="mt-6">
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <Car className="h-8 w-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-sm">
-                Vehicle tracking coming soon.
-              </p>
-              <Button disabled>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Vehicle
-              </Button>
-            </div>
+            <VehicleList initialVehicles={initialVehicleAssets} />
           </TabsContent>
 
           <TabsContent value="others" className="mt-6">

@@ -19,96 +19,102 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Home, MoreHorizontal, Pencil, Trash2, Plus, TrendingUp } from "lucide-react";
-import { format } from "date-fns";
-import { AddPropertyDialog } from "./add-property-dialog";
-import { PropertyDetailsModal } from "./property-details-modal";
-import { deletePropertyAsset } from "@/lib/actions/property-assets";
+import { Badge } from "@/components/ui/badge";
+import { Car, MoreHorizontal, Pencil, Trash2, Plus, Clock } from "lucide-react";
+import { format, differenceInDays, differenceInMonths, differenceInYears } from "date-fns";
+import { AddVehicleDialog } from "./add-vehicle-dialog";
+import { VehicleDetailsModal } from "./vehicle-details-modal";
+import { deleteVehicleAsset } from "@/lib/actions/vehicle-assets";
 
-interface PropertyAsset {
+interface VehicleAsset {
   id: string;
-  propertyName: string;
+  vehicleName: string;
   purchaseDate: string;
+  coeExpiryDate: string | null;
   originalPurchasePrice: string;
   loanAmountTaken: string | null;
-  outstandingLoan: string;
-  monthlyLoanPayment: string;
-  interestRate: string;
-  principalCpfWithdrawn: string | null;
-  housingGrantTaken: string | null;
-  accruedInterestToDate: string | null;
+  loanAmountRepaid: string | null;
+  monthlyLoanPayment: string | null;
   linkedExpenseId: string | null;
   isActive: boolean | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface PropertyListProps {
-  initialProperties: PropertyAsset[];
+interface VehicleListProps {
+  initialVehicles: VehicleAsset[];
 }
 
-export function PropertyList({ initialProperties }: PropertyListProps) {
-  const [properties, setProperties] = useState<PropertyAsset[]>(initialProperties);
+export function VehicleList({ initialVehicles }: VehicleListProps) {
+  const [vehicles, setVehicles] = useState<VehicleAsset[]>(initialVehicles);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editingProperty, setEditingProperty] = useState<PropertyAsset | null>(null);
+  const [editingVehicle, setEditingVehicle] = useState<VehicleAsset | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [propertyToDelete, setPropertyToDelete] = useState<PropertyAsset | null>(null);
+  const [vehicleToDelete, setVehicleToDelete] = useState<VehicleAsset | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<PropertyAsset | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleAsset | null>(null);
 
   const handleDelete = async () => {
-    if (!propertyToDelete) return;
+    if (!vehicleToDelete) return;
 
     setIsDeleting(true);
     try {
-      await deletePropertyAsset(propertyToDelete.id);
-      setProperties((prev) => prev.filter((p) => p.id !== propertyToDelete.id));
+      await deleteVehicleAsset(vehicleToDelete.id);
+      setVehicles((prev) => prev.filter((v) => v.id !== vehicleToDelete.id));
       setDeleteDialogOpen(false);
-      setPropertyToDelete(null);
+      setVehicleToDelete(null);
     } catch (error) {
-      console.error("Failed to delete property:", error);
+      console.error("Failed to delete vehicle:", error);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const calculateProgress = (property: PropertyAsset) => {
-    const loanTaken = parseFloat(property.loanAmountTaken || "0");
-    const outstanding = parseFloat(property.outstandingLoan);
+  const calculateProgress = (vehicle: VehicleAsset) => {
+    const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
+    const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
     if (loanTaken === 0) return 100; // Fully paid or no loan
-    const repaid = loanTaken - outstanding;
-    return Math.min(100, Math.max(0, (repaid / loanTaken) * 100));
+    return Math.min(100, Math.max(0, (loanRepaid / loanTaken) * 100));
   };
 
-  const calculateInterestRepayment = (property: PropertyAsset) => {
-    const outstanding = parseFloat(property.outstandingLoan);
-    const rate = parseFloat(property.interestRate);
-    return (outstanding * (rate / 100)) / 12;
+  const getCoeCountdown = (coeExpiryDate: string | null) => {
+    if (!coeExpiryDate) return null;
+
+    const expiryDate = new Date(coeExpiryDate);
+    const today = new Date();
+
+    if (expiryDate <= today) {
+      return { expired: true, text: "Expired", days: 0 };
+    }
+
+    const days = differenceInDays(expiryDate, today);
+    const months = differenceInMonths(expiryDate, today);
+    const years = differenceInYears(expiryDate, today);
+
+    if (years > 0) {
+      const remainingMonths = months - (years * 12);
+      return {
+        expired: false,
+        text: `${years}y ${remainingMonths}m`,
+        days
+      };
+    } else if (months > 0) {
+      return { expired: false, text: `${months}m`, days };
+    } else {
+      return { expired: false, text: `${days}d`, days };
+    }
   };
 
-  const calculatePrincipalRepayment = (property: PropertyAsset) => {
-    const monthly = parseFloat(property.monthlyLoanPayment);
-    const interest = calculateInterestRepayment(property);
-    return monthly - interest;
-  };
-
-  const calculateCpfReturn = (property: PropertyAsset) => {
-    const principal = parseFloat(property.principalCpfWithdrawn || "0");
-    const grant = parseFloat(property.housingGrantTaken || "0");
-    const accrued = parseFloat(property.accruedInterestToDate || "0");
-    return principal + grant + accrued;
-  };
-
-  if (properties.length === 0) {
+  if (vehicles.length === 0) {
     return (
       <>
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-            <Home className="h-8 w-8 text-gray-400" />
+            <Car className="h-8 w-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No properties yet</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles yet</h3>
           <p className="text-muted-foreground mb-6 max-w-sm">
-            Add your first property to start tracking your real estate assets and loan progress.
+            Add your first vehicle to start tracking your vehicle assets and loan progress.
           </p>
           <Button
             variant="outline"
@@ -116,11 +122,11 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
             className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Property
+            Add Vehicle
           </Button>
         </div>
 
-        <AddPropertyDialog
+        <AddVehicleDialog
           open={addDialogOpen}
           onOpenChange={setAddDialogOpen}
           onSuccess={() => window.location.reload()}
@@ -134,7 +140,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            {properties.length} {properties.length === 1 ? "property" : "properties"}
+            {vehicles.length} {vehicles.length === 1 ? "vehicle" : "vehicles"}
           </p>
           <Button
             variant="outline"
@@ -142,34 +148,34 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
             className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Property
+            Add Vehicle
           </Button>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {properties.map((property) => {
-            const progress = calculateProgress(property);
-            const interestRepayment = calculateInterestRepayment(property);
-            const principalRepayment = calculatePrincipalRepayment(property);
-            const cpfReturn = calculateCpfReturn(property);
-            const loanRepaid = parseFloat(property.loanAmountTaken || "0") - parseFloat(property.outstandingLoan);
+          {vehicles.map((vehicle) => {
+            const progress = calculateProgress(vehicle);
+            const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
+            const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
+            const outstandingLoan = Math.max(0, loanTaken - loanRepaid);
+            const coeCountdown = getCoeCountdown(vehicle.coeExpiryDate);
 
             return (
               <Card
-                key={property.id}
+                key={vehicle.id}
                 className="relative overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedProperty(property)}
+                onClick={() => setSelectedVehicle(vehicle)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950">
-                        <Home className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
+                        <Car className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-lg">{property.propertyName}</h3>
+                        <h3 className="font-semibold text-lg">{vehicle.vehicleName}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Purchased {format(new Date(property.purchaseDate), "MMM yyyy")}
+                          Purchased {format(new Date(vehicle.purchaseDate), "MMM yyyy")}
                         </p>
                       </div>
                     </div>
@@ -187,7 +193,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={(e) => {
                             e.stopPropagation();
-                            setEditingProperty(property);
+                            setEditingVehicle(vehicle);
                           }}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
@@ -196,7 +202,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                           className="text-red-600"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPropertyToDelete(property);
+                            setVehicleToDelete(vehicle);
                             setDeleteDialogOpen(true);
                           }}
                         >
@@ -214,19 +220,38 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                     <div>
                       <p className="text-sm text-muted-foreground">Purchase Price</p>
                       <p className="text-2xl font-semibold tabular-nums">
-                        ${parseFloat(property.originalPurchasePrice).toLocaleString()}
+                        ${parseFloat(vehicle.originalPurchasePrice).toLocaleString()}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Outstanding Loan</p>
                       <p className="text-2xl font-semibold tabular-nums text-amber-600">
-                        ${parseFloat(property.outstandingLoan).toLocaleString()}
+                        ${outstandingLoan.toLocaleString()}
                       </p>
                     </div>
                   </div>
 
+                  {/* COE Expiry Badge */}
+                  {coeCountdown && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">COE:</span>
+                      <Badge
+                        variant="secondary"
+                        className={coeCountdown.expired
+                          ? "bg-red-100 text-red-700"
+                          : coeCountdown.days < 365
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-emerald-100 text-emerald-700"
+                        }
+                      >
+                        {coeCountdown.expired ? "Expired" : `${coeCountdown.text} left`}
+                      </Badge>
+                    </div>
+                  )}
+
                   {/* Progress Bar */}
-                  {property.loanAmountTaken && parseFloat(property.loanAmountTaken) > 0 && (
+                  {loanTaken > 0 && (
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Loan Progress</span>
@@ -237,61 +262,28 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                           className="h-full rounded-full transition-all duration-500 ease-out"
                           style={{
                             width: `${progress}%`,
-                            background: `linear-gradient(90deg, #10b981 0%, #34d399 100%)`,
+                            background: `linear-gradient(90deg, #a855f7 0%, #c084fc 100%)`,
                           }}
                         />
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>${loanRepaid.toLocaleString()} repaid</span>
-                        <span>${parseFloat(property.loanAmountTaken).toLocaleString()} total</span>
+                        <span>${loanTaken.toLocaleString()} total</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Monthly Payment Details */}
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Monthly Payment</p>
-                      <p className="text-lg font-semibold tabular-nums">
-                        ${parseFloat(property.monthlyLoanPayment).toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Interest Rate</p>
-                      <p className="text-lg font-semibold tabular-nums">
-                        {parseFloat(property.interestRate).toFixed(2)}%
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Footer with breakdown */}
-                  <div className="pt-3 border-t bg-gray-50/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <span className="text-muted-foreground">Principal:</span>{" "}
-                          <span className="font-medium text-emerald-600">
-                            ${principalRepayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Interest:</span>{" "}
-                          <span className="font-medium text-amber-600">
-                            ${interestRepayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </span>
-                        </div>
+                  {/* Footer with Monthly Payment */}
+                  {vehicle.monthlyLoanPayment && parseFloat(vehicle.monthlyLoanPayment) > 0 && (
+                    <div className="pt-3 border-t bg-gray-50/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Monthly Payment:</span>
+                        <span className="font-semibold text-gray-900">
+                          ${parseFloat(vehicle.monthlyLoanPayment).toLocaleString()}
+                        </span>
                       </div>
-                      {cpfReturn > 0 && (
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3 text-blue-500" />
-                          <span className="text-muted-foreground">CPF Return:</span>{" "}
-                          <span className="font-medium text-blue-600">
-                            ${cpfReturn.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </span>
-                        </div>
-                      )}
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -299,18 +291,18 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
         </div>
       </div>
 
-      {/* Add Property Dialog */}
-      <AddPropertyDialog
+      {/* Add Vehicle Dialog */}
+      <AddVehicleDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={() => window.location.reload()}
       />
 
-      {/* Edit Property Dialog */}
-      <AddPropertyDialog
-        open={!!editingProperty}
-        onOpenChange={(open) => !open && setEditingProperty(null)}
-        property={editingProperty}
+      {/* Edit Vehicle Dialog */}
+      <AddVehicleDialog
+        open={!!editingVehicle}
+        onOpenChange={(open) => !open && setEditingVehicle(null)}
+        vehicle={editingVehicle}
         onSuccess={() => window.location.reload()}
       />
 
@@ -318,10 +310,10 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogTitle>Delete Vehicle</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{propertyToDelete?.propertyName}"?
-              {propertyToDelete?.linkedExpenseId && (
+              Are you sure you want to delete "{vehicleToDelete?.vehicleName}"?
+              {vehicleToDelete?.linkedExpenseId && (
                 <span className="block mt-2 text-amber-600">
                   This will also remove the linked monthly expense.
                 </span>
@@ -342,11 +334,11 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Property Details Modal */}
-      <PropertyDetailsModal
-        open={!!selectedProperty}
-        onOpenChange={(open) => !open && setSelectedProperty(null)}
-        property={selectedProperty}
+      {/* Vehicle Details Modal */}
+      <VehicleDetailsModal
+        open={!!selectedVehicle}
+        onOpenChange={(open) => !open && setSelectedVehicle(null)}
+        vehicle={selectedVehicle}
       />
     </>
   );

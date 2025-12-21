@@ -83,6 +83,7 @@ export const expenses = pgTable("expenses", {
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   linkedPolicyId: varchar("linked_policy_id", { length: 255 }), // Link to insurance policy if expense is auto-generated from policy
   linkedPropertyId: varchar("linked_property_id", { length: 255 }), // Link to property asset if expense is auto-generated from property
+  linkedVehicleId: varchar("linked_vehicle_id", { length: 255 }), // Link to vehicle asset if expense is auto-generated from vehicle
   name: varchar("name", { length: 255 }).notNull(), // Expense name (e.g., "Rent", "Groceries")
   category: varchar("category", { length: 100 }).notNull(), // housing, food, transportation, utilities, etc.
   expenseCategory: varchar("expense_category", { length: 50 }).default("current-recurring"), // current-recurring, future-recurring, temporary, one-off
@@ -134,6 +135,31 @@ export const propertyAssets = pgTable("property_assets", {
   principalCpfWithdrawn: decimal("principal_cpf_withdrawn", { precision: 15, scale: 2 }),
   housingGrantTaken: decimal("housing_grant_taken", { precision: 15, scale: 2 }),
   accruedInterestToDate: decimal("accrued_interest_to_date", { precision: 15, scale: 2 }),
+
+  // Metadata
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Vehicle Assets table
+export const vehicleAssets = pgTable("vehicle_assets", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  linkedExpenseId: varchar("linked_expense_id", { length: 255 }),
+
+  // Vehicle Information
+  vehicleName: varchar("vehicle_name", { length: 255 }).notNull(),
+  purchaseDate: date("purchase_date").notNull(),
+  coeExpiryDate: date("coe_expiry_date"), // Certificate of Entitlement expiry date (Singapore)
+
+  // Purchase Details
+  originalPurchasePrice: decimal("original_purchase_price", { precision: 15, scale: 2 }).notNull(),
+  loanAmountTaken: decimal("loan_amount_taken", { precision: 15, scale: 2 }),
+
+  // Loan Repayment
+  loanAmountRepaid: decimal("loan_amount_repaid", { precision: 15, scale: 2 }),
+  monthlyLoanPayment: decimal("monthly_loan_payment", { precision: 12, scale: 2 }),
 
   // Metadata
   isActive: boolean("is_active").default(true),
@@ -222,6 +248,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   expenseCategories: many(expenseCategories),
   assets: many(assets),
   propertyAssets: many(propertyAssets),
+  vehicleAssets: many(vehicleAssets),
   policies: many(policies),
   goals: many(goals),
   currentHoldings: many(currentHoldings),
@@ -273,6 +300,13 @@ export const assetsRelations = relations(assets, ({ one }) => ({
 export const propertyAssetsRelations = relations(propertyAssets, ({ one }) => ({
   user: one(users, {
     fields: [propertyAssets.userId],
+    references: [users.id],
+  }),
+}));
+
+export const vehicleAssetsRelations = relations(vehicleAssets, ({ one }) => ({
+  user: one(users, {
+    fields: [vehicleAssets.userId],
     references: [users.id],
   }),
 }));
