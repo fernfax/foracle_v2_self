@@ -84,6 +84,7 @@ export const expenses = pgTable("expenses", {
   linkedPolicyId: varchar("linked_policy_id", { length: 255 }), // Link to insurance policy if expense is auto-generated from policy
   linkedPropertyId: varchar("linked_property_id", { length: 255 }), // Link to property asset if expense is auto-generated from property
   linkedVehicleId: varchar("linked_vehicle_id", { length: 255 }), // Link to vehicle asset if expense is auto-generated from vehicle
+  linkedGoalId: varchar("linked_goal_id", { length: 255 }), // Link to goal if expense is auto-generated from goal contribution
   name: varchar("name", { length: 255 }).notNull(), // Expense name (e.g., "Rent", "Groceries")
   category: varchar("category", { length: 100 }).notNull(), // housing, food, transportation, utilities, etc.
   expenseCategory: varchar("expense_category", { length: 50 }).default("current-recurring"), // current-recurring, future-recurring, temporary, one-off
@@ -204,14 +205,22 @@ export const policies = pgTable("policies", {
 export const goals = pgTable("goals", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 255 }).notNull(),
+  linkedExpenseId: varchar("linked_expense_id", { length: 255 }), // Link to auto-generated expense if goal contribution is tracked
+
+  // Basic Details
+  goalName: varchar("goal_name", { length: 255 }).notNull(),
+  goalType: varchar("goal_type", { length: 50 }).notNull().default("primary"), // primary, secondary
   targetAmount: decimal("target_amount", { precision: 15, scale: 2 }).notNull(),
-  currentAmount: decimal("current_amount", { precision: 15, scale: 2 }).default("0"),
-  targetDate: date("target_date"),
-  category: varchar("category", { length: 100 }), // retirement, emergency fund, house, education, etc.
-  priority: integer("priority").default(1), // 1-5 scale
+  targetDate: date("target_date").notNull(),
+
+  // Progress Tracking
+  currentAmountSaved: decimal("current_amount_saved", { precision: 15, scale: 2 }).default("0"),
+  monthlyContribution: decimal("monthly_contribution", { precision: 12, scale: 2 }),
   description: text("description"),
+
+  // Metadata
   isAchieved: boolean("is_achieved").default(false),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

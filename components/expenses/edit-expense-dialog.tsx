@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Info, Lock, Shield } from "lucide-react";
+import { CalendarIcon, Info, Lock, Shield, Home, Car, Target } from "lucide-react";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import { updateExpense } from "@/lib/actions/expenses";
@@ -33,6 +33,9 @@ interface Expense {
   id: string;
   userId?: string;
   linkedPolicyId?: string | null;
+  linkedPropertyId?: string | null;
+  linkedVehicleId?: string | null;
+  linkedGoalId?: string | null;
   name: string;
   category: string;
   expenseCategory: string | null;
@@ -46,6 +49,69 @@ interface Expense {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Helper to get integration type info
+type IntegrationType = "policy" | "property" | "vehicle" | "goal" | null;
+
+const getIntegrationType = (expense: Expense | null): IntegrationType => {
+  if (!expense) return null;
+  if (expense.linkedPolicyId) return "policy";
+  if (expense.linkedPropertyId) return "property";
+  if (expense.linkedVehicleId) return "vehicle";
+  if (expense.linkedGoalId) return "goal";
+  return null;
+};
+
+const integrationConfig = {
+  policy: {
+    icon: Shield,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    textColor: "text-blue-800",
+    title: "View Insurance Expense",
+    description: "This expense is linked to an insurance policy. Some fields cannot be edited here.",
+    alertMessage: "This expense is linked to an insurance policy.",
+    linkText: "go to Insurance Policies",
+    linkHref: (expense: Expense) => `/dashboard/policies?edit=${expense.linkedPolicyId}`,
+  },
+  property: {
+    icon: Home,
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    textColor: "text-emerald-800",
+    title: "View Property Expense",
+    description: "This expense is linked to a property asset. Some fields cannot be edited here.",
+    alertMessage: "This expense is linked to a property asset.",
+    linkText: "go to Assets",
+    linkHref: () => `/dashboard/user/assets?tab=property`,
+  },
+  vehicle: {
+    icon: Car,
+    color: "text-amber-600",
+    bgColor: "bg-amber-50",
+    borderColor: "border-amber-200",
+    textColor: "text-amber-800",
+    title: "View Vehicle Expense",
+    description: "This expense is linked to a vehicle asset. Some fields cannot be edited here.",
+    alertMessage: "This expense is linked to a vehicle asset.",
+    linkText: "go to Assets",
+    linkHref: () => `/dashboard/user/assets?tab=vehicle`,
+  },
+  goal: {
+    icon: Target,
+    color: "text-violet-600",
+    bgColor: "bg-violet-50",
+    borderColor: "border-violet-200",
+    textColor: "text-violet-800",
+    title: "View Goal Contribution",
+    description: "This expense is linked to a savings goal. Some fields cannot be edited here.",
+    alertMessage: "This expense is linked to a savings goal.",
+    linkText: "go to Goals",
+    linkHref: () => `/dashboard/goals`,
+  },
+};
 
 interface EditExpenseDialogProps {
   open: boolean;
@@ -90,8 +156,10 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
   const [endDateOpen, setEndDateOpen] = useState(false);
   const [expenseCategory, setExpenseCategory] = useState("current-recurring");
 
-  // Check if this expense is linked to a policy
-  const isLinkedToPolicy = expense?.linkedPolicyId != null;
+  // Check if this expense is linked to any integration
+  const integrationType = getIntegrationType(expense);
+  const isLinked = integrationType !== null;
+  const config = integrationType ? integrationConfig[integrationType] : null;
 
   // Load categories when dialog opens
   useEffect(() => {
@@ -177,10 +245,10 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isLinkedToPolicy ? (
+            {isLinked && config ? (
               <>
-                <Shield className="h-5 w-5 text-blue-600" />
-                View Insurance Expense
+                <config.icon className={`h-5 w-5 ${config.color}`} />
+                {config.title}
               </>
             ) : (
               <>
@@ -190,29 +258,29 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             )}
           </DialogTitle>
           <DialogDescription>
-            {isLinkedToPolicy
-              ? "This expense is linked to an insurance policy. Some fields cannot be edited here."
+            {isLinked && config
+              ? config.description
               : "Update the expense details."}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Linked Policy Alert */}
-        {isLinkedToPolicy && (
-          <div className="flex gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
-            <Lock className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-blue-800">
-              <span className="font-medium">This expense is linked to an insurance policy.</span>
+        {/* Linked Integration Alert */}
+        {isLinked && config && expense && (
+          <div className={`flex gap-3 p-4 rounded-lg ${config.bgColor} border ${config.borderColor}`}>
+            <Lock className={`h-4 w-4 ${config.color} mt-0.5 flex-shrink-0`} />
+            <div className={config.textColor}>
+              <span className="font-medium">{config.alertMessage}</span>
               <br />
               <span className="text-sm">
-                To edit the premium amount, frequency, dates, or selected months, please{" "}
+                To edit the amount, frequency, dates, or selected months, please{" "}
                 <Link
-                  href={`/dashboard/policies?edit=${expense?.linkedPolicyId}`}
-                  className="font-medium underline hover:text-blue-900"
+                  href={config.linkHref(expense)}
+                  className="font-medium underline hover:opacity-80"
                   onClick={() => onOpenChange(false)}
                 >
-                  go to Insurance Policies
+                  {config.linkText}
                 </Link>
-                {" "}and edit the policy directly.
+                {" "}and edit directly.
               </span>
             </div>
           </div>
@@ -222,10 +290,10 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
         <div className="space-y-2">
           <Label htmlFor="edit-expense-type" className="flex items-center gap-1">
             Expense Type
-            {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+            {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
           </Label>
-          <Select value={expenseCategory} onValueChange={isLinkedToPolicy ? undefined : setExpenseCategory} disabled={isLinkedToPolicy}>
-            <SelectTrigger className={cn("bg-white", isLinkedToPolicy && "bg-gray-100 cursor-not-allowed")}>
+          <Select value={expenseCategory} onValueChange={isLinked ? undefined : setExpenseCategory} disabled={isLinked}>
+            <SelectTrigger className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -234,7 +302,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
               <SelectItem value="one-off">One-off Expense</SelectItem>
             </SelectContent>
           </Select>
-          {isLinkedToPolicy ? (
+          {isLinked ? (
             <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
           ) : (
             <>
@@ -257,27 +325,27 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             <div className="space-y-2">
               <Label htmlFor="edit-name" className="flex items-center gap-1">
                 Expense Name <span className="text-red-500">*</span>
-                {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <Input
                 id="edit-name"
                 placeholder="e.g., Rent, Groceries"
                 value={name}
-                onChange={(e) => !isLinkedToPolicy && setName(e.target.value)}
-                className={cn("bg-white", isLinkedToPolicy && "bg-gray-100 cursor-not-allowed")}
-                disabled={isLinkedToPolicy}
+                onChange={(e) => !isLinked && setName(e.target.value)}
+                className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}
+                disabled={isLinked}
               />
-              {isLinkedToPolicy && (
+              {isLinked && (
                 <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-category" className="flex items-center gap-1">
                 Category <span className="text-red-500">*</span>
-                {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
-              <Select value={category} onValueChange={isLinkedToPolicy ? undefined : setCategory} disabled={isLinkedToPolicy}>
-                <SelectTrigger className={cn("bg-white", isLinkedToPolicy && "bg-gray-100 cursor-not-allowed")}>
+              <Select value={category} onValueChange={isLinked ? undefined : setCategory} disabled={isLinked}>
+                <SelectTrigger className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -288,7 +356,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                   ))}
                 </SelectContent>
               </Select>
-              {isLinkedToPolicy ? (
+              {isLinked ? (
                 <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
               ) : (
                 <CategoryManagerPopover categories={categories} onCategoriesChanged={loadCategories} />
@@ -301,30 +369,30 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             <div className="space-y-2">
               <Label htmlFor="edit-amount" className="flex items-center gap-1">
                 Expense Amount <span className="text-red-500">*</span>
-                {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <Input
                 id="edit-amount"
                 type="number"
                 placeholder="0"
                 value={amount}
-                onChange={(e) => !isLinkedToPolicy && setAmount(e.target.value)}
+                onChange={(e) => !isLinked && setAmount(e.target.value)}
                 min="0"
                 step="0.01"
-                className={cn("bg-white", isLinkedToPolicy && "bg-gray-100 cursor-not-allowed")}
-                disabled={isLinkedToPolicy}
+                className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}
+                disabled={isLinked}
               />
-              {isLinkedToPolicy && (
+              {isLinked && (
                 <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-frequency" className="flex items-center gap-1">
                 Expense Frequency <span className="text-red-500">*</span>
-                {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
-              <Select value={frequency} onValueChange={isLinkedToPolicy ? undefined : setFrequency} disabled={isLinkedToPolicy}>
-                <SelectTrigger className={cn("bg-white", isLinkedToPolicy && "bg-gray-100 cursor-not-allowed")}>
+              <Select value={frequency} onValueChange={isLinked ? undefined : setFrequency} disabled={isLinked}>
+                <SelectTrigger className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -335,7 +403,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                   ))}
                 </SelectContent>
               </Select>
-              {isLinkedToPolicy ? (
+              {isLinked ? (
                 <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
               ) : (
                 selectedFrequency && (
@@ -350,7 +418,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             <div className="space-y-2">
               <Label className="flex items-center gap-1">
                 Select Months <span className="text-red-500">*</span>
-                {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <div className="grid grid-cols-6 gap-2">
                 {MONTHS.map((month) => (
@@ -359,14 +427,14 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => !isLinkedToPolicy && toggleMonth(month.value)}
-                    disabled={isLinkedToPolicy}
+                    onClick={() => !isLinked && toggleMonth(month.value)}
+                    disabled={isLinked}
                     className={cn(
                       "h-10 font-medium",
                       selectedMonths.includes(month.value)
                         ? "bg-black text-white hover:bg-black/90 border-black"
                         : "bg-white hover:bg-gray-50",
-                      isLinkedToPolicy && "cursor-not-allowed opacity-70"
+                      isLinked && "cursor-not-allowed opacity-70"
                     )}
                   >
                     {month.label}
@@ -382,7 +450,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                     }).join(", ")
                   : "None"}
               </p>
-              {isLinkedToPolicy && (
+              {isLinked && (
                 <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
               )}
             </div>
@@ -394,9 +462,9 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   Start Date <span className="text-red-500">*</span>
-                  {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                  {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </Label>
-                {isLinkedToPolicy ? (
+                {isLinked ? (
                   <Button
                     variant="outline"
                     disabled
@@ -433,16 +501,16 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                     </PopoverContent>
                   </Popover>
                 )}
-                {isLinkedToPolicy && (
+                {isLinked && (
                   <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   End Date
-                  {isLinkedToPolicy && <Lock className="h-3 w-3 text-muted-foreground" />}
+                  {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </Label>
-                {isLinkedToPolicy ? (
+                {isLinked ? (
                   <Button
                     variant="outline"
                     disabled
@@ -479,7 +547,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                     </PopoverContent>
                   </Popover>
                 )}
-                {isLinkedToPolicy ? (
+                {isLinked ? (
                   <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
                 ) : (
                   <p className="text-xs text-muted-foreground">Leave empty for ongoing expense</p>
@@ -505,11 +573,11 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
 
         {/* Footer */}
         <div className="flex justify-end gap-3">
-          {isLinkedToPolicy ? (
+          {isLinked && config && expense ? (
             <>
               <Button asChild variant="outline">
-                <Link href={`/dashboard/policies?edit=${expense?.linkedPolicyId}`} onClick={() => onOpenChange(false)}>
-                  Go to Insurance Policies
+                <Link href={config.linkHref(expense)} onClick={() => onOpenChange(false)}>
+                  {config.linkText.replace("go to ", "Go to ")}
                 </Link>
               </Button>
               <Button onClick={() => onOpenChange(false)}>

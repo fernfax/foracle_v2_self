@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Expand, Shield } from "lucide-react";
+import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Expand, Shield, Home, Car, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +56,9 @@ interface Expense {
   id: string;
   userId?: string;
   linkedPolicyId?: string | null;
+  linkedPropertyId?: string | null;
+  linkedVehicleId?: string | null;
+  linkedGoalId?: string | null;
   name: string;
   category: string;
   expenseCategory: string | null;
@@ -69,6 +72,28 @@ interface Expense {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Helper function to check if expense is linked to any integration
+const isLinkedExpense = (expense: Expense) => {
+  return !!(expense.linkedPolicyId || expense.linkedPropertyId || expense.linkedVehicleId || expense.linkedGoalId);
+};
+
+// Helper function to get the integration icon and tooltip
+const getIntegrationInfo = (expense: Expense) => {
+  if (expense.linkedPolicyId) {
+    return { icon: Shield, color: "text-blue-600", tooltip: "Linked to insurance policy" };
+  }
+  if (expense.linkedPropertyId) {
+    return { icon: Home, color: "text-emerald-600", tooltip: "Linked to property asset" };
+  }
+  if (expense.linkedVehicleId) {
+    return { icon: Car, color: "text-amber-600", tooltip: "Linked to vehicle asset" };
+  }
+  if (expense.linkedGoalId) {
+    return { icon: Target, color: "text-violet-600", tooltip: "Linked to savings goal" };
+  }
+  return null;
+};
 
 interface ExpenseListProps {
   initialExpenses: Expense[];
@@ -845,45 +870,50 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedExpenses.map((expense) => (
-                <TableRow key={expense.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-1.5">
-                      {expense.name}
-                      {expense.linkedPolicyId && (
-                        <span title="Linked to insurance policy">
-                          <Shield className="h-3.5 w-3.5 text-blue-600" />
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{expense.category}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
-                  <TableCell className="capitalize">{expense.frequency}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditClick(expense)}>
-                          {expense.linkedPolicyId ? "View" : "Edit"}
-                        </DropdownMenuItem>
-                        {!expense.linkedPolicyId && (
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteClick(expense)}
-                            className="text-red-600"
-                          >
-                            Delete
-                          </DropdownMenuItem>
+              {paginatedExpenses.map((expense) => {
+                const integrationInfo = getIntegrationInfo(expense);
+                const isLinked = isLinkedExpense(expense);
+
+                return (
+                  <TableRow key={expense.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-1.5">
+                        {expense.name}
+                        {integrationInfo && (
+                          <span title={integrationInfo.tooltip}>
+                            <integrationInfo.icon className={`h-3.5 w-3.5 ${integrationInfo.color}`} />
+                          </span>
                         )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>{expense.category}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                    <TableCell className="capitalize">{expense.frequency}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditClick(expense)}>
+                            {isLinked ? "View" : "Edit"}
+                          </DropdownMenuItem>
+                          {!isLinked && (
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClick(expense)}
+                              className="text-red-600"
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
