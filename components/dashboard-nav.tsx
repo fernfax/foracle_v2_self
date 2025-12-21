@@ -16,7 +16,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/user", label: "User Homepage", icon: User },
   { href: "/dashboard/user/expenses", label: "Expenses", icon: Wallet },
-  { href: "/dashboard/assets", label: "Assets", icon: TrendingUp },
+  { href: "/dashboard/user/assets", label: "Assets", icon: TrendingUp },
   { href: "/dashboard/policies", label: "Insurance", icon: Shield },
   { href: "/dashboard/goals", label: "Goals", icon: Target },
 ];

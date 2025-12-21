@@ -82,6 +82,7 @@ export const expenses = pgTable("expenses", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   linkedPolicyId: varchar("linked_policy_id", { length: 255 }), // Link to insurance policy if expense is auto-generated from policy
+  linkedPropertyId: varchar("linked_property_id", { length: 255 }), // Link to property asset if expense is auto-generated from property
   name: varchar("name", { length: 255 }).notNull(), // Expense name (e.g., "Rent", "Groceries")
   category: varchar("category", { length: 100 }).notNull(), // housing, food, transportation, utilities, etc.
   expenseCategory: varchar("expense_category", { length: 50 }).default("current-recurring"), // current-recurring, future-recurring, temporary, one-off
@@ -96,7 +97,7 @@ export const expenses = pgTable("expenses", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Assets table
+// Assets table (generic)
 export const assets = pgTable("assets", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -106,6 +107,36 @@ export const assets = pgTable("assets", {
   purchaseValue: decimal("purchase_value", { precision: 15, scale: 2 }),
   purchaseDate: date("purchase_date"),
   description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Property Assets table
+export const propertyAssets = pgTable("property_assets", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  linkedExpenseId: varchar("linked_expense_id", { length: 255 }),
+
+  // Property Information
+  propertyName: varchar("property_name", { length: 255 }).notNull(),
+  purchaseDate: date("purchase_date").notNull(),
+
+  // Purchase Details
+  originalPurchasePrice: decimal("original_purchase_price", { precision: 15, scale: 2 }).notNull(),
+  loanAmountTaken: decimal("loan_amount_taken", { precision: 15, scale: 2 }),
+
+  // Loan Repayment
+  outstandingLoan: decimal("outstanding_loan", { precision: 15, scale: 2 }).notNull(),
+  monthlyLoanPayment: decimal("monthly_loan_payment", { precision: 12, scale: 2 }).notNull(),
+  interestRate: decimal("interest_rate", { precision: 5, scale: 2 }).notNull(),
+
+  // Additional Details (CPF)
+  principalCpfWithdrawn: decimal("principal_cpf_withdrawn", { precision: 15, scale: 2 }),
+  housingGrantTaken: decimal("housing_grant_taken", { precision: 15, scale: 2 }),
+  accruedInterestToDate: decimal("accrued_interest_to_date", { precision: 15, scale: 2 }),
+
+  // Metadata
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -190,6 +221,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   expenses: many(expenses),
   expenseCategories: many(expenseCategories),
   assets: many(assets),
+  propertyAssets: many(propertyAssets),
   policies: many(policies),
   goals: many(goals),
   currentHoldings: many(currentHoldings),
@@ -234,6 +266,13 @@ export const expenseCategoriesRelations = relations(expenseCategories, ({ one })
 export const assetsRelations = relations(assets, ({ one }) => ({
   user: one(users, {
     fields: [assets.userId],
+    references: [users.id],
+  }),
+}));
+
+export const propertyAssetsRelations = relations(propertyAssets, ({ one }) => ({
+  user: one(users, {
+    fields: [propertyAssets.userId],
     references: [users.id],
   }),
 }));
