@@ -48,10 +48,8 @@ export const incomes = pgTable("incomes", {
   description: text("description"), // Payment notes
   startDate: date("start_date").notNull(),
   endDate: date("end_date"), // Optional - leave empty for ongoing income
-  futureIncomeChange: boolean("future_income_change").default(false), // Whether income is expected to change in the future
-  futureIncomeAmount: decimal("future_income_amount", { precision: 12, scale: 2 }), // New income amount when change occurs
-  futureIncomeStartDate: date("future_income_start_date"), // Optional - when future income change starts
-  futureIncomeEndDate: date("future_income_end_date"), // Optional - when future income change ends
+  pastIncomeHistory: text("past_income_history"), // JSON: historical income data [{period, granularity, amount, notes}]
+  futureMilestones: text("future_milestones"), // JSON: planned income changes [{id, targetMonth, amount, reason, notes}]
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

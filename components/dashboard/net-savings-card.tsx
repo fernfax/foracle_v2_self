@@ -36,10 +36,7 @@ interface Income {
   } | null;
   startDate: string;
   endDate?: string | null;
-  futureIncomeChange?: boolean | null;
-  futureIncomeAmount?: string | null;
-  futureIncomeStartDate?: string | null;
-  futureIncomeEndDate?: string | null;
+  futureMilestones?: string | null;
 }
 
 interface Expense {
@@ -80,25 +77,28 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
       const endDate = income.endDate ? parseLocalDate(income.endDate) : null;
 
       let effectiveAmount = parseFloat(income.amount);
-      let useFutureIncome = false;
 
-      if (income.futureIncomeChange && income.futureIncomeAmount && income.futureIncomeStartDate) {
-        const futureStartDate = parseLocalDate(income.futureIncomeStartDate);
-        const futureEndDate = income.futureIncomeEndDate ? parseLocalDate(income.futureIncomeEndDate) : null;
+      // Check for future milestones
+      if (income.futureMilestones) {
+        try {
+          const milestones = JSON.parse(income.futureMilestones);
+          const targetPeriod = `${targetYear}-${String(targetMonthNum).padStart(2, '0')}`;
 
-        if (monthStart >= futureStartDate && (!futureEndDate || monthStart <= futureEndDate)) {
-          effectiveAmount = parseFloat(income.futureIncomeAmount);
-          useFutureIncome = true;
+          // Find the most recent milestone that applies
+          const applicableMilestones = milestones
+            .filter((m: { targetMonth: string }) => m.targetMonth <= targetPeriod)
+            .sort((a: { targetMonth: string }, b: { targetMonth: string }) => b.targetMonth.localeCompare(a.targetMonth));
+
+          if (applicableMilestones.length > 0) {
+            effectiveAmount = applicableMilestones[0].amount;
+          }
+        } catch {
+          // Fall through to current amount
         }
       }
 
       if (startDate > monthEnd) return;
-      if (!useFutureIncome && endDate && endDate < monthStart) return;
-
-      if (useFutureIncome && income.futureIncomeEndDate) {
-        const futureEndDate = parseLocalDate(income.futureIncomeEndDate);
-        if (futureEndDate < monthStart) return;
-      }
+      if (endDate && endDate < monthStart) return;
 
       const frequency = income.frequency.toLowerCase();
       let appliesThisMonth = false;

@@ -19,6 +19,21 @@ interface TotalIncomeCardProps {
   slideDirection: SlideDirection;
 }
 
+interface PastIncomeEntry {
+  period: string;
+  granularity: "yearly" | "monthly";
+  amount: number;
+  notes?: string;
+}
+
+interface FutureMilestone {
+  id: string;
+  targetMonth: string;
+  amount: number;
+  reason?: string;
+  notes?: string;
+}
+
 interface Income {
   id: string;
   name: string;
@@ -37,10 +52,8 @@ interface Income {
   } | null;
   startDate: string;
   endDate?: string | null;
-  futureIncomeChange?: boolean | null;
-  futureIncomeAmount?: string | null;
-  futureIncomeStartDate?: string | null;
-  futureIncomeEndDate?: string | null;
+  pastIncomeHistory?: string | null;
+  futureMilestones?: string | null;
 }
 
 export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: TotalIncomeCardProps) {
@@ -59,6 +72,12 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
     const targetMonthNum = targetMonth.getMonth() + 1;
     const monthStart = new Date(targetYear, targetMonth.getMonth(), 1);
     const monthEnd = new Date(targetYear, targetMonth.getMonth() + 1, 0);
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const isHistoricalMonth = monthStart < currentMonthStart;
+    const isFutureMonth = monthStart > currentMonthStart;
+    const targetPeriodMonthly = `${targetYear}-${String(targetMonthNum).padStart(2, '0')}`;
+    const targetPeriodYearly = `${targetYear}`;
 
     let totalMonthlyIncome = 0;
     let totalCpfDeduction = 0;
@@ -66,29 +85,83 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
     incomes.forEach((income) => {
       if (!income.isActive) return;
 
-      const startDate = parseLocalDate(income.startDate);
-      const endDate = income.endDate ? parseLocalDate(income.endDate) : null;
+      let usedHistoricalData = false;
+      let usedMilestoneData = false;
 
-      let effectiveAmount = parseFloat(income.amount);
-      let useFutureIncome = false;
+      // For historical months, check pastIncomeHistory first
+      if (isHistoricalMonth && income.pastIncomeHistory) {
+        try {
+          const history: PastIncomeEntry[] = JSON.parse(income.pastIncomeHistory);
 
-      if (income.futureIncomeChange && income.futureIncomeAmount && income.futureIncomeStartDate) {
-        const futureStartDate = parseLocalDate(income.futureIncomeStartDate);
-        const futureEndDate = income.futureIncomeEndDate ? parseLocalDate(income.futureIncomeEndDate) : null;
-
-        if (monthStart >= futureStartDate && (!futureEndDate || monthStart <= futureEndDate)) {
-          effectiveAmount = parseFloat(income.futureIncomeAmount);
-          useFutureIncome = true;
+          // Check for monthly granularity match first
+          const monthlyEntry = history.find(
+            h => h.granularity === 'monthly' && h.period === targetPeriodMonthly
+          );
+          if (monthlyEntry) {
+            totalMonthlyIncome += monthlyEntry.amount;
+            // Apply CPF deduction proportionally if applicable
+            if (income.subjectToCpf && income.employeeCpfContribution) {
+              const baseAmount = parseFloat(income.amount);
+              const cpfRate = baseAmount > 0 ? parseFloat(income.employeeCpfContribution) / baseAmount : 0;
+              totalCpfDeduction += monthlyEntry.amount * cpfRate;
+            }
+            usedHistoricalData = true;
+          } else {
+            // Check for yearly granularity match
+            const yearlyEntry = history.find(
+              h => h.granularity === 'yearly' && h.period === targetPeriodYearly
+            );
+            if (yearlyEntry) {
+              // Convert yearly to monthly
+              totalMonthlyIncome += yearlyEntry.amount / 12;
+              if (income.subjectToCpf && income.employeeCpfContribution) {
+                const baseAmount = parseFloat(income.amount);
+                const cpfRate = baseAmount > 0 ? parseFloat(income.employeeCpfContribution) / baseAmount : 0;
+                totalCpfDeduction += (yearlyEntry.amount / 12) * cpfRate;
+              }
+              usedHistoricalData = true;
+            }
+          }
+        } catch {
+          // Fall through to current calculation
         }
       }
 
-      if (startDate > monthEnd) return;
-      if (!useFutureIncome && endDate && endDate < monthStart) return;
+      // For future months, check futureMilestones
+      if (isFutureMonth && !usedHistoricalData && income.futureMilestones) {
+        try {
+          const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
+          // Find the most recent milestone that applies
+          const applicableMilestones = milestones
+            .filter(m => m.targetMonth <= targetPeriodMonthly)
+            .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
 
-      if (useFutureIncome && income.futureIncomeEndDate) {
-        const futureEndDate = parseLocalDate(income.futureIncomeEndDate);
-        if (futureEndDate < monthStart) return;
+          if (applicableMilestones.length > 0) {
+            totalMonthlyIncome += applicableMilestones[0].amount;
+            // Apply CPF deduction proportionally if applicable
+            if (income.subjectToCpf && income.employeeCpfContribution) {
+              const baseAmount = parseFloat(income.amount);
+              const cpfRate = baseAmount > 0 ? parseFloat(income.employeeCpfContribution) / baseAmount : 0;
+              totalCpfDeduction += applicableMilestones[0].amount * cpfRate;
+            }
+            usedMilestoneData = true;
+          }
+        } catch {
+          // Fall through to current calculation
+        }
       }
+
+      // If we used historical or milestone data, skip the regular calculation
+      if (usedHistoricalData || usedMilestoneData) return;
+
+      // Regular calculation for current income
+      const startDate = parseLocalDate(income.startDate);
+      const endDate = income.endDate ? parseLocalDate(income.endDate) : null;
+
+      const effectiveAmount = parseFloat(income.amount);
+
+      if (startDate > monthEnd) return;
+      if (endDate && endDate < monthStart) return;
 
       const frequency = income.frequency.toLowerCase();
       let appliesThisMonth = false;

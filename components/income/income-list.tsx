@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceDot, LabelList } from "recharts";
 import {
   Table,
   TableBody,
@@ -41,7 +41,6 @@ import {
   ChevronRight,
   ChevronDown,
   ArrowUpDown,
-  Triangle,
   MoreHorizontal,
   Plus,
   ChevronLeft,
@@ -50,8 +49,7 @@ import {
   Briefcase,
   Expand,
 } from "lucide-react";
-import { AddIncomeDialog } from "./add-income-dialog";
-import { EditIncomeDialog } from "./edit-income-dialog";
+import { IncomeModal } from "./income-modal";
 import { AddCpfDetailsDialog } from "./add-cpf-details-dialog";
 import { IncomeBreakdownModal } from "./income-breakdown-modal";
 import { deleteIncome, toggleIncomeStatus, updateIncome } from "@/lib/actions/income";
@@ -61,6 +59,7 @@ import { cn } from "@/lib/utils";
 
 type Income = {
   id: string;
+  userId: string;
   name: string;
   category: string;
   incomeCategory: string | null;
@@ -79,15 +78,16 @@ type Income = {
   description: string | null;
   startDate: string;
   endDate: string | null;
-  futureIncomeChange: boolean | null;
-  futureIncomeAmount: string | null;
-  futureIncomeStartDate: string | null;
-  futureIncomeEndDate: string | null;
+  pastIncomeHistory: string | null;
+  futureMilestones: string | null;
   isActive: boolean | null;
   familyMemberId: string | null;
   familyMember?: {
     id: string;
     name: string;
+    relationship: string | null;
+    dateOfBirth: string | null;
+    isContributing: boolean | null;
   } | null;
   createdAt: Date;
   updatedAt: Date;
@@ -392,16 +392,20 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
   };
 
   const handleIncomeAdded = (newIncome: Income) => {
-    setIncomes([newIncome, ...incomes]);
+    // Check if this is an update (income already exists) or a new add
+    const existingIndex = incomes.findIndex(i => i.id === newIncome.id);
+    if (existingIndex >= 0) {
+      // Update existing income
+      setIncomes(incomes.map((i) => (i.id === newIncome.id ? newIncome : i)));
+    } else {
+      // Add new income
+      setIncomes([newIncome, ...incomes]);
+    }
   };
 
   const handleEditClick = (income: Income) => {
     setIncomeToEdit(income);
     setIsEditDialogOpen(true);
-  };
-
-  const handleIncomeUpdated = (updatedIncome: Income) => {
-    setIncomes(incomes.map((i) => (i.id === updatedIncome.id ? updatedIncome : i)));
   };
 
   // CPF Details Flow Handlers
@@ -485,21 +489,6 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
     // Return to income dialog from CPF dialog
     setIsCpfDetailsDialogOpen(false);
     setIsEditDialogOpen(true);
-  };
-
-  // Get family member as expected by EditIncomeDialog
-  const getFamilyMemberForEdit = () => {
-    if (!incomeToEdit?.familyMember) return undefined;
-    return {
-      id: incomeToEdit.familyMember.id,
-      name: incomeToEdit.familyMember.name,
-      relationship: null,
-      dateOfBirth: null,
-      isContributing: null,
-      notes: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
   };
 
   return (
@@ -894,52 +883,232 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                             {format(new Date(income.createdAt), "dd MMM yyyy")}
                           </div>
 
-                          {/* Future Income Timeline Diagram */}
-                          {income.futureIncomeChange && income.futureIncomeAmount && income.futureIncomeStartDate && (() => {
+                          {/* Income Timeline with Projected Growth Curve */}
+                          {(() => {
                             const currentAmount = parseFloat(income.amount);
-                            const futureAmount = parseFloat(income.futureIncomeAmount);
-                            const futureDate = format(new Date(income.futureIncomeStartDate), "MMM dd");
-                            const isIncrease = futureAmount > currentAmount;
+                            let milestones: { targetMonth: string; amount: number; reason?: string }[] = [];
+
+                            // Parse future milestones
+                            if (income.futureMilestones) {
+                              try {
+                                milestones = JSON.parse(income.futureMilestones);
+                              } catch {
+                                milestones = [];
+                              }
+                            }
+
+                            // Build timeline data points (past + present + future)
+                            const timelinePoints: { date: string; amount: number; label: string; reason?: string; isPast?: boolean; isPresent?: boolean; isExtension?: boolean }[] = [];
+
+                            // Parse past income history
+                            if (income.pastIncomeHistory) {
+                              try {
+                                const pastHistory = JSON.parse(income.pastIncomeHistory);
+                                pastHistory.forEach((entry: { period: string; amount: number; granularity: string }) => {
+                                  const label = entry.granularity === 'yearly'
+                                    ? entry.period
+                                    : format(new Date(entry.period + '-01'), 'MMM yyyy');
+                                  timelinePoints.push({
+                                    date: entry.period,
+                                    amount: entry.amount,
+                                    label,
+                                    isPast: true,
+                                  });
+                                });
+                              } catch {
+                                // ignore
+                              }
+                            }
+
+                            // Add present
+                            timelinePoints.push({
+                              date: format(new Date(), 'yyyy-MM'),
+                              amount: currentAmount,
+                              label: 'Now',
+                              isPresent: true,
+                            });
+
+                            // Add future milestones
+                            milestones.forEach((m) => {
+                              const [year, month] = m.targetMonth.split('-');
+                              timelinePoints.push({
+                                date: m.targetMonth,
+                                amount: m.amount,
+                                label: format(new Date(parseInt(year), parseInt(month) - 1, 1), 'MMMM yyyy'),
+                                reason: m.reason,
+                              });
+                            });
+
+                            // Sort by date
+                            timelinePoints.sort((a, b) => a.date.localeCompare(b.date));
+
+                            // Only show if we have milestones or past data
+                            if (timelinePoints.length <= 1) return null;
+
+                            // Add extension point 6 months after the last data point
+                            const lastPoint = timelinePoints[timelinePoints.length - 1];
+                            const lastDate = new Date(lastPoint.date + '-01');
+                            const extensionDate = new Date(lastDate);
+                            extensionDate.setMonth(extensionDate.getMonth() + 6);
+                            timelinePoints.push({
+                              date: format(extensionDate, 'yyyy-MM'),
+                              amount: lastPoint.amount,
+                              label: format(extensionDate, 'MMM yyyy'),
+                              isExtension: true,
+                            });
+
+                            // Find present point for the reference dot
+                            const presentPoint = timelinePoints.find(p => p.isPresent);
+
+                            // Prepare chart data with timestamp for proper time scaling
+                            const chartData = timelinePoints.map((point, index) => {
+                              // Check if this is a duplicate amount (same as previous)
+                              const prevPoint = index > 0 ? timelinePoints[index - 1] : null;
+                              const isDuplicateAmount = prevPoint && prevPoint.amount === point.amount;
+
+                              return {
+                                name: point.label,
+                                amount: point.amount,
+                                timestamp: new Date(point.date + '-01').getTime(),
+                                isPresent: point.isPresent,
+                                isPast: point.isPast,
+                                isFuture: !point.isPast && !point.isPresent,
+                                // Only show label if not extension and not a duplicate amount
+                                displayLabel: point.isExtension || isDuplicateAmount ? '' : `$${point.amount.toLocaleString()}/mth`,
+                              };
+                            });
+
+                            // Get the present point timestamp for ReferenceDot
+                            const presentTimestamp = presentPoint ? new Date(presentPoint.date + '-01').getTime() : null;
+
+                            // Create merged data with separate fields for past/present and future
+                            const presentIndex = chartData.findIndex(p => p.isPresent);
+                            const mergedChartData = chartData.map((p, index) => ({
+                              ...p,
+                              pastAmount: index <= presentIndex ? p.amount : undefined,
+                              futureAmount: index >= presentIndex ? p.amount : undefined,
+                              // Separate labels for each area
+                              pastLabel: index <= presentIndex ? p.displayLabel : '',
+                              futureLabel: index > presentIndex ? p.displayLabel : '',
+                            }));
 
                             return (
                               <div className="mt-6 pt-4 border-t border-gray-200">
                                 <div className="font-medium mb-4 text-gray-700">Income Timeline</div>
-                                <div className="relative" style={{ height: '140px' }}>
-                                  <svg width="100%" height="140" viewBox="0 0 1000 140" preserveAspectRatio="xMidYMid meet">
-                                    {/* Step line path */}
-                                    <path
-                                      d={isIncrease
-                                        ? "M 0 100 L 450 100 L 450 40 L 950 40"
-                                        : "M 0 40 L 450 40 L 450 100 L 950 100"
-                                      }
-                                      stroke="#2563eb"
-                                      strokeWidth="3"
-                                      fill="none"
-                                      strokeLinecap="square"
-                                    />
+                                <div className="grid grid-cols-3 gap-8">
+                                  {/* Left side - Timeline list (1/3 width) */}
+                                  <div className="space-y-3">
+                                    {timelinePoints.filter(p => !p.isExtension).map((point, index) => (
+                                      <div key={index} className="flex items-center gap-3">
+                                        <div
+                                          className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                                            point.isPresent
+                                              ? 'bg-gray-400'
+                                              : point.isPast
+                                                ? 'bg-gray-300'
+                                                : 'bg-violet-500'
+                                          }`}
+                                        />
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className={`text-sm ${point.isPresent ? 'text-gray-600' : point.isPast ? 'text-gray-500' : 'text-gray-900'}`}>
+                                            {point.label}
+                                          </span>
+                                          <span className={`font-semibold ${point.isPresent ? 'text-gray-700' : point.isPast ? 'text-gray-600' : 'text-gray-900'}`}>
+                                            ${point.amount.toLocaleString()}
+                                          </span>
+                                          {point.isPast && (
+                                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                                              Past Income
+                                            </span>
+                                          )}
+                                          {point.reason && (
+                                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                              {point.reason.charAt(0).toUpperCase() + point.reason.slice(1)}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
 
-                                    {/* Arrow at the end */}
-                                    <polygon
-                                      points={isIncrease ? "950,40 940,35 940,45" : "950,100 940,95 940,105"}
-                                      fill="#2563eb"
-                                    />
-
-                                    {/* Current amount label */}
-                                    <text x="10" y={isIncrease ? "90" : "30"} fontSize="16" fontWeight="600" fill="#111827">
-                                      ${currentAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </text>
-                                    <text x="10" y={isIncrease ? "125" : "65"} fontSize="13" fill="#6b7280">
-                                      Present
-                                    </text>
-
-                                    {/* Future amount label */}
-                                    <text x="460" y={isIncrease ? "30" : "90"} fontSize="16" fontWeight="600" fill="#111827">
-                                      ${futureAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </text>
-                                    <text x="460" y={isIncrease ? "65" : "125"} fontSize="13" fill="#6b7280">
-                                      {futureDate}
-                                    </text>
-                                  </svg>
+                                  {/* Right side - Income Chart using Recharts (2/3 width) */}
+                                  <div className="col-span-2 relative bg-gray-50 rounded-xl overflow-hidden" style={{ height: 140 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <AreaChart data={mergedChartData} margin={{ top: 20, right: 40, left: 50, bottom: 20 }}>
+                                        <defs>
+                                          <linearGradient id={`gradient-past-${income.id}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#6b7280" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#6b7280" stopOpacity={0.05} />
+                                          </linearGradient>
+                                          <linearGradient id={`gradient-future-${income.id}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05} />
+                                          </linearGradient>
+                                        </defs>
+                                        <XAxis dataKey="timestamp" type="number" domain={['dataMin', 'dataMax']} hide />
+                                        <YAxis hide domain={['dataMin * 0.6', 'dataMax * 1.1']} />
+                                        {/* Past/Present - solid line */}
+                                        <Area
+                                          type="stepAfter"
+                                          dataKey="pastAmount"
+                                          stroke="#6b7280"
+                                          strokeWidth={2}
+                                          fill={`url(#gradient-past-${income.id})`}
+                                          connectNulls={false}
+                                        >
+                                          <LabelList
+                                            dataKey="pastLabel"
+                                            position="top"
+                                            offset={8}
+                                            style={{ fontSize: 11, fontWeight: 500, fill: '#4b5563' }}
+                                          />
+                                        </Area>
+                                        {/* Future - dashed violet line */}
+                                        <Area
+                                          type="stepAfter"
+                                          dataKey="futureAmount"
+                                          stroke="#8b5cf6"
+                                          strokeWidth={2}
+                                          strokeDasharray="6 4"
+                                          fill={`url(#gradient-future-${income.id})`}
+                                          connectNulls={false}
+                                        >
+                                          <LabelList
+                                            dataKey="futureLabel"
+                                            position="top"
+                                            offset={8}
+                                            style={{ fontSize: 11, fontWeight: 500, fill: '#4b5563' }}
+                                          />
+                                        </Area>
+                                        {presentTimestamp && presentPoint && (
+                                          <ReferenceDot
+                                            x={presentTimestamp}
+                                            y={presentPoint.amount}
+                                            r={6}
+                                            fill="white"
+                                            stroke="#8b5cf6"
+                                            strokeWidth={2}
+                                            shape={(props: any) => (
+                                              <circle cx={props.cx} cy={props.cy} r={6} fill="white" stroke="#8b5cf6" strokeWidth={2}>
+                                                <animate
+                                                  attributeName="r"
+                                                  values="5;7;5"
+                                                  dur="2s"
+                                                  repeatCount="indefinite"
+                                                />
+                                                <animate
+                                                  attributeName="opacity"
+                                                  values="1;0.7;1"
+                                                  dur="2s"
+                                                  repeatCount="indefinite"
+                                                />
+                                              </circle>
+                                            )}
+                                          />
+                                        )}
+                                      </AreaChart>
+                                    </ResponsiveContainer>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -949,63 +1118,6 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                     </TableCell>
                   </TableRow>
 
-                  {/* Future Income Change Sub-Row */}
-                  {income.futureIncomeChange && income.futureIncomeAmount && (
-                    <TableRow className="border-l-4 border-l-gray-300">
-                      <TableCell></TableCell>
-                      <TableCell className="pl-8">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center">
-                            <div className="w-4 h-4 border-l-2 border-b-2 border-gray-400 -ml-1"></div>
-                          </div>
-                          <span className="text-sm font-medium">
-                            {income.name}
-                          </span>
-                          <span className="text-xs text-gray-500 italic">
-                            (from {income.futureIncomeStartDate ? format(new Date(income.futureIncomeStartDate), "MMM yyyy") : "TBD"})
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{income.category}</TableCell>
-                      <TableCell className="text-sm font-semibold">
-                        <div className="flex items-center gap-1">
-                          {(() => {
-                            const currentAmount = parseFloat(income.amount);
-                            const futureAmount = parseFloat(income.futureIncomeAmount);
-                            const isIncrease = futureAmount > currentAmount;
-                            const isDecrease = futureAmount < currentAmount;
-
-                            return (
-                              <>
-                                {isIncrease && <Triangle className="h-3 w-3 text-green-600 fill-green-600" />}
-                                {isDecrease && <Triangle className="h-3 w-3 text-red-600 fill-red-600 rotate-180" />}
-                                <span>
-                                  ${futureAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                                </span>
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </TableCell>
-                      <TableCell className="capitalize text-sm">{income.frequency}</TableCell>
-                      <TableCell>
-                        {income.familyMember ? (
-                          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
-                            <Link2 className="h-3 w-3 mr-1" />
-                            {income.familyMember.name}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300 text-xs">
-                          Future
-                        </Badge>
-                      </TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  )}
                 </React.Fragment>
               ))
             )}
@@ -1064,20 +1176,21 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         </div>
       </div>
 
-      <AddIncomeDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
+      <IncomeModal
+        open={isAddDialogOpen || isEditDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsAddDialogOpen(false);
+            setIsEditDialogOpen(false);
+            setIncomeToEdit(null);
+            setPendingIncomeFormData(null);
+          }
+        }}
         onIncomeAdded={handleIncomeAdded}
-      />
-
-      <EditIncomeDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
         income={incomeToEdit}
-        onIncomeUpdated={handleIncomeUpdated}
-        familyMember={getFamilyMemberForEdit()}
         pendingFormData={pendingIncomeFormData}
         onCpfDetailsNeeded={handleCpfDetailsNeeded}
+        mode={isEditDialogOpen ? "edit" : "add"}
       />
 
       <AddCpfDetailsDialog

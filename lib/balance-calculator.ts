@@ -1,6 +1,14 @@
 import { parse, format, addMonths, isSameMonth, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import { calculateCPF } from "./cpf-calculator";
 
+interface FutureMilestone {
+  id: string;
+  targetMonth: string;  // "2025-06" (YYYY-MM format)
+  amount: number;
+  reason?: string;
+  notes?: string;
+}
+
 interface Income {
   name: string;
   amount: string;
@@ -12,10 +20,7 @@ interface Income {
   isActive: boolean | null;
   netTakeHome: string | null;
   subjectToCpf: boolean | null;
-  futureIncomeChange: boolean | null;
-  futureIncomeAmount: string | null;
-  futureIncomeStartDate: string | null;
-  futureIncomeEndDate: string | null;
+  futureMilestones: string | null;  // JSON string of FutureMilestone[]
 }
 
 interface Expense {
@@ -216,32 +221,35 @@ export function calculateMonthlyBalance(
     // Calculate total income for this month
     const monthlyIncome = activeIncomes.reduce((total, income) => {
       let amount = parseFloat(income.amount);
-      let effectiveStartDate = income.startDate;
-      let effectiveEndDate = income.endDate;
-      let isUsingFutureIncome = false;
+      const effectiveStartDate = income.startDate;
+      const effectiveEndDate = income.endDate;
+      let isUsingMilestone = false;
 
-      // Check if this income has a future income change
-      if (income.futureIncomeChange && income.futureIncomeAmount && income.futureIncomeStartDate) {
-        const futureStartDate = parse(income.futureIncomeStartDate, "yyyy-MM-dd", new Date());
+      // Check if this income has future milestones
+      if (income.futureMilestones) {
+        try {
+          const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
+          const targetPeriod = format(targetMonth, "yyyy-MM");
 
-        // If we're in the future income period, use the future amount
-        if (targetMonth >= startOfMonth(futureStartDate)) {
-          amount = parseFloat(income.futureIncomeAmount);
-          effectiveStartDate = income.futureIncomeStartDate;
-          effectiveEndDate = income.futureIncomeEndDate || null;
-          isUsingFutureIncome = true;
-        } else {
-          // We're still in the current income period
-          // Set the end date to the day before future income starts
-          effectiveEndDate = income.futureIncomeStartDate;
+          // Find the most recent milestone that applies to this month
+          const applicableMilestones = milestones
+            .filter(m => m.targetMonth <= targetPeriod)
+            .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
+
+          if (applicableMilestones.length > 0) {
+            amount = applicableMilestones[0].amount;
+            isUsingMilestone = true;
+          }
+        } catch {
+          // Fall through to current calculation
         }
       }
 
       // Calculate effective amount (net take home if subject to CPF)
       let effectiveAmount = amount;
       if (income.subjectToCpf) {
-        if (isUsingFutureIncome) {
-          // For future income, calculate CPF dynamically based on future amount
+        if (isUsingMilestone) {
+          // For milestone income, calculate CPF dynamically based on new amount
           const cpfResult = calculateCPF(amount);
           effectiveAmount = cpfResult.netTakeHome;
         } else {

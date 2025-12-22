@@ -51,8 +51,7 @@ import {
 } from "lucide-react";
 import { AddFamilyMemberDialog } from "./add-family-member-dialog";
 import { EditFamilyMemberDialog } from "./edit-family-member-dialog";
-import { AddIncomeDialog } from "@/components/income/add-income-dialog";
-import { EditIncomeDialog } from "@/components/income/edit-income-dialog";
+import { IncomeModal } from "@/components/income/income-modal";
 import { AddCpfDetailsDialog } from "@/components/income/add-cpf-details-dialog";
 import { deleteFamilyMember, getFamilyMemberIncomes, updateFamilyMember } from "@/lib/actions/family-members";
 import { createIncome, updateIncome } from "@/lib/actions/income";
@@ -98,6 +97,7 @@ type FamilyMember = {
 
 type Income = {
   id: string;
+  userId: string;
   name: string;
   category: string;
   incomeCategory: string | null;
@@ -116,12 +116,17 @@ type Income = {
   description: string | null;
   startDate: string;
   endDate: string | null;
-  futureIncomeChange: boolean | null;
-  futureIncomeAmount: string | null;
-  futureIncomeStartDate: string | null;
-  futureIncomeEndDate: string | null;
+  pastIncomeHistory: string | null;
+  futureMilestones: string | null;
   isActive: boolean | null;
   familyMemberId: string | null;
+  familyMember?: {
+    id: string;
+    name: string;
+    relationship: string | null;
+    dateOfBirth: string | null;
+    isContributing: boolean | null;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -1004,29 +1009,17 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
         onContributingMemberUpdated={handleContributingMemberUpdated}
       />
 
-      {contributingMemberForIncome && incomeToEdit && (
-        <EditIncomeDialog
+      {contributingMemberForIncome && (
+        <IncomeModal
           open={isAddIncomeDialogOpen}
           onOpenChange={setIsAddIncomeDialogOpen}
-          onIncomeUpdated={handleIncomeAdded}
+          onIncomeAdded={handleIncomeAdded}
           income={incomeToEdit}
           familyMember={contributingMemberForIncome}
           pendingFormData={pendingIncomeFormData}
           onBack={handleIncomeBack}
           onCpfDetailsNeeded={handleCpfDetailsNeeded}
-        />
-      )}
-
-      {contributingMemberForIncome && !incomeToEdit && (
-        <AddIncomeDialog
-          open={isAddIncomeDialogOpen}
-          onOpenChange={setIsAddIncomeDialogOpen}
-          onIncomeAdded={handleIncomeAdded}
-          familyMember={contributingMemberForIncome}
-          income={undefined}
-          pendingFormData={pendingIncomeFormData}
-          onBack={handleIncomeBack}
-          onCpfDetailsNeeded={handleCpfDetailsNeeded}
+          mode={incomeToEdit ? "edit" : "add"}
         />
       )}
 

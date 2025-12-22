@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { familyMembers, users } from "@/db/schema";
+import { familyMembers, users, incomes } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
@@ -116,7 +116,7 @@ export async function getFamilyMemberIncomes(id: string) {
 }
 
 /**
- * Delete a family member and all linked incomes (cascading)
+ * Delete a family member and all linked incomes (including CPF data)
  */
 export async function deleteFamilyMember(id: string) {
   const userId = await getCurrentUserId();
@@ -140,7 +140,10 @@ export async function deleteFamilyMember(id: string) {
     throw new Error("Family member not found or access denied");
   }
 
-  // Delete family member (incomes will be cascaded automatically by database)
+  // Explicitly delete all incomes linked to this family member (includes CPF data stored in income records)
+  await db.delete(incomes).where(eq(incomes.familyMemberId, id));
+
+  // Delete the family member
   await db.delete(familyMembers).where(and(eq(familyMembers.id, id), eq(familyMembers.userId, userId)));
 
   revalidatePath("/dashboard/user");

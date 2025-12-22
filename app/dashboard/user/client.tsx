@@ -42,6 +42,7 @@ type Policy = {
 
 type Income = {
   id: string;
+  userId: string;
   name: string;
   category: string;
   incomeCategory: string | null;
@@ -60,15 +61,16 @@ type Income = {
   description: string | null;
   startDate: string;
   endDate: string | null;
-  futureIncomeChange: boolean | null;
-  futureIncomeAmount: string | null;
-  futureIncomeStartDate: string | null;
-  futureIncomeEndDate: string | null;
+  pastIncomeHistory: string | null;
+  futureMilestones: string | null;
   isActive: boolean | null;
   familyMemberId: string | null;
   familyMember: {
     id: string;
     name: string;
+    relationship: string | null;
+    dateOfBirth: string | null;
+    isContributing: boolean | null;
   } | null;
   createdAt: Date;
   updatedAt: Date;

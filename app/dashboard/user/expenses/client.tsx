@@ -38,10 +38,7 @@ interface Income {
   isActive: boolean | null;
   netTakeHome: string | null;
   subjectToCpf: boolean | null;
-  futureIncomeChange: boolean | null;
-  futureIncomeAmount: string | null;
-  futureIncomeStartDate: string | null;
-  futureIncomeEndDate: string | null;
+  futureMilestones: string | null;
 }
 
 interface CurrentHolding {
