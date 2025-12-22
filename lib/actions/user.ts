@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { users, incomes, expenses, assets, policies, goals, familyMembers } from "@/db/schema";
+import { users, incomes, expenses, assets, propertyAssets, vehicleAssets, policies, goals, familyMembers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 /**
@@ -63,7 +63,7 @@ export async function getUserExpenses() {
 }
 
 /**
- * Get all assets for the current user
+ * Get all assets for the current user (generic assets table)
  * Ensures data isolation - users can only see their own data
  */
 export async function getUserAssets() {
@@ -75,6 +75,34 @@ export async function getUserAssets() {
   });
 
   return userAssets;
+}
+
+/**
+ * Get all property assets for the current user
+ */
+export async function getUserPropertyAssets() {
+  const userId = await getCurrentUserId();
+
+  const userPropertyAssets = await db.query.propertyAssets.findMany({
+    where: eq(propertyAssets.userId, userId),
+    orderBy: (propertyAssets, { desc }) => [desc(propertyAssets.createdAt)],
+  });
+
+  return userPropertyAssets;
+}
+
+/**
+ * Get all vehicle assets for the current user
+ */
+export async function getUserVehicleAssets() {
+  const userId = await getCurrentUserId();
+
+  const userVehicleAssets = await db.query.vehicleAssets.findMany({
+    where: eq(vehicleAssets.userId, userId),
+    orderBy: (vehicleAssets, { desc }) => [desc(vehicleAssets.createdAt)],
+  });
+
+  return userVehicleAssets;
 }
 
 /**
@@ -130,10 +158,11 @@ export async function getDashboardMetrics() {
   const userId = await getCurrentUserId();
 
   // Get all user data
-  const [userIncomes, userExpenses, userAssets, userGoals, userFamily] = await Promise.all([
+  const [userIncomes, userExpenses, userPropertyAssets, userVehicleAssets, userGoals, userFamily] = await Promise.all([
     getUserIncomes(),
     getUserExpenses(),
-    getUserAssets(),
+    getUserPropertyAssets(),
+    getUserVehicleAssets(),
     getUserGoals(),
     getUserFamilyMembers(),
   ]);
@@ -213,12 +242,33 @@ export async function getDashboardMetrics() {
     })
     .reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
 
-  // Calculate total assets value
-  const totalAssets = userAssets
-    .reduce((sum, asset) => sum + parseFloat(asset.currentValue), 0);
+  // Calculate total assets value (equity-based)
+  // Property equity = Original purchase price - Outstanding loan
+  const propertyEquity = userPropertyAssets
+    .filter(property => property.isActive !== false)
+    .reduce((sum, property) => {
+      const purchasePrice = parseFloat(property.originalPurchasePrice);
+      const outstandingLoan = parseFloat(property.outstandingLoan);
+      const equity = purchasePrice - outstandingLoan;
+      return sum + equity;
+    }, 0);
 
-  // Count active goals (not achieved)
-  const activeGoals = userGoals.filter(goal => !goal.isAchieved).length;
+  // Vehicle equity = Original purchase price - Remaining loan (loan taken - loan repaid)
+  const vehicleEquity = userVehicleAssets
+    .filter(vehicle => vehicle.isActive !== false)
+    .reduce((sum, vehicle) => {
+      const purchasePrice = parseFloat(vehicle.originalPurchasePrice);
+      const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
+      const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
+      const remainingLoan = loanTaken - loanRepaid;
+      const equity = purchasePrice - remainingLoan;
+      return sum + equity;
+    }, 0);
+
+  const totalAssets = propertyEquity + vehicleEquity;
+
+  // Count active goals (not achieved and active)
+  const activeGoals = userGoals.filter(goal => goal.isAchieved !== true && goal.isActive !== false).length;
 
   return {
     totalIncome: monthlyNetIncome,

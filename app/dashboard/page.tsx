@@ -8,13 +8,13 @@ import {
 } from "@/components/ui/card";
 import {
   DollarSign,
-  TrendingUp,
   Wallet,
   Target,
   Users,
 } from "lucide-react";
 import { getDashboardMetrics } from "@/lib/actions/user";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { TotalAssetsCard } from "@/components/dashboard/total-assets-card";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -38,24 +38,7 @@ export default async function DashboardPage() {
       {/* Secondary Metrics Grid */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {/* Total Assets */}
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Assets
-            </CardTitle>
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
-              <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold tabular-nums">
-              ${metrics.totalAssets.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Current value of all assets
-            </p>
-          </CardContent>
-        </Card>
+        <TotalAssetsCard totalAssets={metrics.totalAssets} />
 
         {/* Active Goals */}
         <Card className="relative overflow-hidden">
