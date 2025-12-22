@@ -222,7 +222,7 @@ export function calculateMonthlyBalance(
     const monthlyIncome = activeIncomes.reduce((total, income) => {
       let amount = parseFloat(income.amount);
       const effectiveStartDate = income.startDate;
-      const effectiveEndDate = income.endDate;
+      let effectiveEndDate = income.endDate;
       let isUsingMilestone = false;
 
       // Check if this income has future milestones
@@ -239,6 +239,13 @@ export function calculateMonthlyBalance(
           if (applicableMilestones.length > 0) {
             amount = applicableMilestones[0].amount;
             isUsingMilestone = true;
+          }
+
+          // If there are future milestones, the income should continue indefinitely
+          // (or at least until well beyond the last milestone for projection purposes)
+          if (milestones.length > 0 && effectiveEndDate) {
+            // Remove end date restriction - income with future milestones continues indefinitely
+            effectiveEndDate = null;
           }
         } catch {
           // Fall through to current calculation
