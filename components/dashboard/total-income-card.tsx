@@ -127,28 +127,37 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
         }
       }
 
-      // For future months, check futureMilestones
-      if (isFutureMonth && !usedHistoricalData && income.futureMilestones) {
+      // Check if income has future milestones (used to ignore endDate)
+      let hasFutureMilestones = false;
+      let parsedMilestones: FutureMilestone[] = [];
+      if (income.futureMilestones) {
         try {
-          const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
-          // Find the most recent milestone that applies
-          const applicableMilestones = milestones
-            .filter(m => m.targetMonth <= targetPeriodMonthly)
-            .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
-
-          if (applicableMilestones.length > 0) {
-            totalMonthlyIncome += applicableMilestones[0].amount;
-            // Apply CPF deduction proportionally if applicable
-            if (income.subjectToCpf && income.employeeCpfContribution) {
-              const baseAmount = parseFloat(income.amount);
-              const cpfRate = baseAmount > 0 ? parseFloat(income.employeeCpfContribution) / baseAmount : 0;
-              totalCpfDeduction += applicableMilestones[0].amount * cpfRate;
-            }
-            usedMilestoneData = true;
-          }
+          parsedMilestones = JSON.parse(income.futureMilestones);
+          hasFutureMilestones = parsedMilestones.length > 0;
         } catch {
-          // Fall through to current calculation
+          // ignore
         }
+      }
+
+      // For future months, check futureMilestones
+      if (isFutureMonth && !usedHistoricalData && hasFutureMilestones) {
+        // Find the most recent milestone that applies
+        const applicableMilestones = parsedMilestones
+          .filter(m => m.targetMonth <= targetPeriodMonthly)
+          .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
+
+        if (applicableMilestones.length > 0) {
+          totalMonthlyIncome += applicableMilestones[0].amount;
+          // Apply CPF deduction proportionally if applicable
+          if (income.subjectToCpf && income.employeeCpfContribution) {
+            const baseAmount = parseFloat(income.amount);
+            const cpfRate = baseAmount > 0 ? parseFloat(income.employeeCpfContribution) / baseAmount : 0;
+            totalCpfDeduction += applicableMilestones[0].amount * cpfRate;
+          }
+          usedMilestoneData = true;
+        }
+        // If no milestone applies yet but milestones exist, use current income amount
+        // (for months before the first milestone)
       }
 
       // If we used historical or milestone data, skip the regular calculation
@@ -156,7 +165,8 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
 
       // Regular calculation for current income
       const startDate = parseLocalDate(income.startDate);
-      const endDate = income.endDate ? parseLocalDate(income.endDate) : null;
+      // Ignore endDate if there are future milestones (income continues indefinitely)
+      const endDate = (income.endDate && !hasFutureMilestones) ? parseLocalDate(income.endDate) : null;
 
       const effectiveAmount = parseFloat(income.amount);
 

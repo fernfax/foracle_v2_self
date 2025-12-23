@@ -995,15 +995,15 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                             return (
                               <div className="mt-6 pt-4 border-t border-gray-200">
                                 <div className="font-medium mb-4 text-gray-700">Income Timeline</div>
-                                <div className="grid grid-cols-3 gap-8">
-                                  {/* Left side - Timeline list (1/3 width) */}
-                                  <div className="space-y-3">
+                                <div className="grid grid-cols-3 gap-8" style={{ height: 160 }}>
+                                  {/* Left side - Timeline list (1/3 width) - scrollable */}
+                                  <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: 160 }}>
                                     {timelinePoints.filter(p => !p.isExtension).map((point, index) => (
                                       <div key={index} className="flex items-center gap-3">
                                         <div
                                           className={`w-3 h-3 rounded-full flex-shrink-0 ${
                                             point.isPresent
-                                              ? 'bg-gray-400'
+                                              ? 'bg-emerald-500'
                                               : point.isPast
                                                 ? 'bg-gray-300'
                                                 : 'bg-violet-500'
@@ -1031,8 +1031,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                     ))}
                                   </div>
 
-                                  {/* Right side - Income Chart using Recharts (2/3 width) */}
-                                  <div className="col-span-2 relative bg-gray-50 rounded-xl overflow-hidden" style={{ height: 140 }}>
+                                  {/* Right side - Income Chart using Recharts (2/3 width) - fills container height */}
+                                  <div className="col-span-2 relative bg-gray-50 rounded-xl overflow-hidden h-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                       <AreaChart data={mergedChartData} margin={{ top: 20, right: 40, left: 50, bottom: 20 }}>
                                         <defs>
@@ -1085,11 +1085,11 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                             x={presentTimestamp}
                                             y={presentPoint.amount}
                                             r={6}
-                                            fill="white"
-                                            stroke="#8b5cf6"
+                                            fill="#10b981"
+                                            stroke="#10b981"
                                             strokeWidth={2}
                                             shape={(props: any) => (
-                                              <circle cx={props.cx} cy={props.cy} r={6} fill="white" stroke="#8b5cf6" strokeWidth={2}>
+                                              <circle cx={props.cx} cy={props.cy} r={6} fill="#10b981" stroke="#10b981" strokeWidth={2}>
                                                 <animate
                                                   attributeName="r"
                                                   values="5;7;5"

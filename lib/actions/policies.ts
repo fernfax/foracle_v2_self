@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { policies } from "@/db/schema";
+import { policies, expenses } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function getUserPolicies(userId: string) {
@@ -72,5 +72,16 @@ export async function updatePolicy(
 }
 
 export async function deletePolicy(policyId: string) {
+  // First, get the policy to find the linked expense
+  const policy = await db.query.policies.findFirst({
+    where: eq(policies.id, policyId),
+  });
+
+  // Delete the linked expense if it exists
+  if (policy?.linkedExpenseId) {
+    await db.delete(expenses).where(eq(expenses.id, policy.linkedExpenseId));
+  }
+
+  // Then delete the policy
   await db.delete(policies).where(eq(policies.id, policyId));
 }

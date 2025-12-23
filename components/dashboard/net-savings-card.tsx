@@ -74,14 +74,16 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
       if (!income.isActive) return;
 
       const startDate = parseLocalDate(income.startDate);
-      const endDate = income.endDate ? parseLocalDate(income.endDate) : null;
 
+      // Check if income has future milestones (used to ignore endDate)
+      let hasFutureMilestones = false;
       let effectiveAmount = parseFloat(income.amount);
 
       // Check for future milestones
       if (income.futureMilestones) {
         try {
           const milestones = JSON.parse(income.futureMilestones);
+          hasFutureMilestones = milestones.length > 0;
           const targetPeriod = `${targetYear}-${String(targetMonthNum).padStart(2, '0')}`;
 
           // Find the most recent milestone that applies
@@ -96,6 +98,9 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
           // Fall through to current amount
         }
       }
+
+      // Ignore endDate if there are future milestones (income continues indefinitely)
+      const endDate = (income.endDate && !hasFutureMilestones) ? parseLocalDate(income.endDate) : null;
 
       if (startDate > monthEnd) return;
       if (endDate && endDate < monthStart) return;
