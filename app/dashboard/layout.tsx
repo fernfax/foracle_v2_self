@@ -37,15 +37,15 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex gap-8">
           {/* Sidebar Navigation - Hidden on mobile, visible on md+ */}
-          <aside className="sidebar-nav w-64 shrink-0">
+          <aside className="sidebar-nav w-64 shrink-0 pr-8 border-r border-border/60 py-6 sm:py-8">
             <DashboardNav />
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0">{children}</main>
+          <main className="flex-1 min-w-0 py-6 sm:py-8">{children}</main>
         </div>
       </div>
 

@@ -97,18 +97,33 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="expenses" className="flex items-center gap-2">
-              <Receipt className="h-4 w-4" />
-              <span>Expenses</span>
+          <TabsList className="h-auto flex gap-2 overflow-x-auto bg-transparent">
+            <TabsTrigger
+              value="expenses"
+              className="group flex-1 min-w-[120px] flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-white data-[state=inactive]:hover:shadow-md"
+            >
+              <div className="p-1.5 rounded-md transition-colors bg-slate-100 group-data-[state=active]:bg-white/20 group-hover:bg-indigo-50 group-data-[state=active]:group-hover:bg-white/20">
+                <Receipt className="h-4 w-4" />
+              </div>
+              <span className="font-semibold text-sm">Expenses</span>
             </TabsTrigger>
-            <TabsTrigger value="graph" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              <span>Graph</span>
+            <TabsTrigger
+              value="graph"
+              className="group flex-1 min-w-[120px] flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-white data-[state=inactive]:hover:shadow-md"
+            >
+              <div className="p-1.5 rounded-md transition-colors bg-slate-100 group-data-[state=active]:bg-white/20 group-hover:bg-indigo-50 group-data-[state=active]:group-hover:bg-white/20">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+              <span className="font-semibold text-sm">Graph</span>
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <PieChart className="h-4 w-4" />
-              <span>Reports</span>
+            <TabsTrigger
+              value="reports"
+              className="group flex-1 min-w-[120px] flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-white data-[state=inactive]:hover:shadow-md"
+            >
+              <div className="p-1.5 rounded-md transition-colors bg-slate-100 group-data-[state=active]:bg-white/20 group-hover:bg-indigo-50 group-data-[state=active]:group-hover:bg-white/20">
+                <PieChart className="h-4 w-4" />
+              </div>
+              <span className="font-semibold text-sm">Reports</span>
             </TabsTrigger>
           </TabsList>
 

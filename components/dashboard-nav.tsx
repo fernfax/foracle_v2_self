@@ -25,7 +25,7 @@ export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-24 space-y-1.5">
+    <nav className="sticky top-24 space-y-2">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         const Icon = item.icon;
@@ -35,14 +35,21 @@ export function DashboardNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
+              "group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
               isActive
-                ? "bg-secondary text-secondary-foreground font-semibold shadow-sm"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
+                : "bg-white text-slate-600 hover:shadow-md"
             )}
           >
-            <Icon className="h-5 w-5" />
-            {item.label}
+            <div className={cn(
+              "p-2 rounded-lg transition-colors",
+              isActive
+                ? "bg-white/20"
+                : "bg-slate-100 group-hover:bg-indigo-50"
+            )}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <span className="font-semibold text-sm">{item.label}</span>
           </Link>
         );
       })}

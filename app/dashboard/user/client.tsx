@@ -134,22 +134,42 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="family" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span>Family</span>
+        <TabsList className="h-auto flex gap-2 overflow-x-auto bg-transparent">
+          <TabsTrigger
+            value="family"
+            className="group flex-1 min-w-[120px] flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-white data-[state=inactive]:hover:shadow-md"
+          >
+            <div className="p-1.5 rounded-md transition-colors bg-slate-100 group-data-[state=active]:bg-white/20 group-hover:bg-indigo-50 group-data-[state=active]:group-hover:bg-white/20">
+              <Users className="h-4 w-4" />
+            </div>
+            <span className="font-semibold text-sm">Family</span>
           </TabsTrigger>
-          <TabsTrigger value="incomes" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            <span>Incomes</span>
+          <TabsTrigger
+            value="incomes"
+            className="group flex-1 min-w-[120px] flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-white data-[state=inactive]:hover:shadow-md"
+          >
+            <div className="p-1.5 rounded-md transition-colors bg-slate-100 group-data-[state=active]:bg-white/20 group-hover:bg-indigo-50 group-data-[state=active]:group-hover:bg-white/20">
+              <DollarSign className="h-4 w-4" />
+            </div>
+            <span className="font-semibold text-sm">Incomes</span>
           </TabsTrigger>
-          <TabsTrigger value="cpf" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            <span>CPF</span>
+          <TabsTrigger
+            value="cpf"
+            className="group flex-1 min-w-[120px] flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-white data-[state=inactive]:hover:shadow-md"
+          >
+            <div className="p-1.5 rounded-md transition-colors bg-slate-100 group-data-[state=active]:bg-white/20 group-hover:bg-indigo-50 group-data-[state=active]:group-hover:bg-white/20">
+              <Building2 className="h-4 w-4" />
+            </div>
+            <span className="font-semibold text-sm">CPF</span>
           </TabsTrigger>
-          <TabsTrigger value="current" className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4" />
-            <span>Holdings</span>
+          <TabsTrigger
+            value="current"
+            className="group flex-1 min-w-[120px] flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-white data-[state=inactive]:hover:shadow-md"
+          >
+            <div className="p-1.5 rounded-md transition-colors bg-slate-100 group-data-[state=active]:bg-white/20 group-hover:bg-indigo-50 group-data-[state=active]:group-hover:bg-white/20">
+              <Briefcase className="h-4 w-4" />
+            </div>
+            <span className="font-semibold text-sm">Holdings</span>
           </TabsTrigger>
         </TabsList>
 
