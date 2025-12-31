@@ -35,9 +35,9 @@ export async function createFamilyMember(data: {
     userId,
     name: data.name,
     relationship: data.relationship,
-    dateOfBirth: data.dateOfBirth || null,
+    ...(data.dateOfBirth ? { dateOfBirth: data.dateOfBirth } : {}),
     isContributing: data.isContributing || false,
-    notes: data.notes || null,
+    ...(data.notes ? { notes: data.notes } : {}),
   }).returning();
 
   revalidatePath("/dashboard/user");
@@ -182,7 +182,7 @@ export async function getFamilyMembers() {
       userId,
       name: userName,
       relationship: "Self",
-      dateOfBirth: null,
+      isContributing: false,
       notes: "Primary account holder",
     }).returning();
 

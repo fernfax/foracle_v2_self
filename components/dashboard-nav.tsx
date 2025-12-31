@@ -37,8 +37,8 @@ export function DashboardNav() {
             className={cn(
               "group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
               isActive
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                : "bg-white text-slate-600 hover:shadow-md"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200 border border-indigo-600"
+                : "bg-white text-slate-600 shadow-sm hover:shadow-md border border-slate-200"
             )}
           >
             <div className={cn(
