@@ -160,9 +160,27 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       // Aggregate bonus amounts from bonusGroups
       if (income.bonusGroups) {
         try {
-          const bonusGroups = typeof income.bonusGroups === 'string'
-            ? JSON.parse(income.bonusGroups)
-            : income.bonusGroups;
+          let bonusGroups;
+
+          // Handle different formats of bonusGroups
+          if (typeof income.bonusGroups === 'string') {
+            // Skip if it's the string "[object Object]" (corrupted data)
+            if (income.bonusGroups.startsWith('[object')) {
+              console.warn('Skipping corrupted bonusGroups data for income:', income.id);
+              continue;
+            }
+            bonusGroups = JSON.parse(income.bonusGroups);
+          } else if (Array.isArray(income.bonusGroups)) {
+            bonusGroups = income.bonusGroups;
+          } else {
+            // Skip invalid data
+            continue;
+          }
+
+          // Ensure bonusGroups is an array
+          if (!Array.isArray(bonusGroups)) {
+            continue;
+          }
 
           // Sum all bonus months from all bonus groups
           const totalBonusMonths = bonusGroups.reduce((sum: number, group: { month: number; amount: string }) => {
@@ -173,7 +191,7 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
           const actualBonusAmount = monthlyGross * totalBonusMonths;
           totalBonusAmount += actualBonusAmount;
         } catch (error) {
-          console.error('Error parsing bonusGroups:', error);
+          console.error('Error parsing bonusGroups for income', income.id, ':', error);
         }
       }
 
