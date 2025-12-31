@@ -1,6 +1,8 @@
 import { getGoals } from "@/lib/actions/goals";
 import { GoalsClient } from "./client";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Goals | Foracle",
   description: "Set and track your financial goals",

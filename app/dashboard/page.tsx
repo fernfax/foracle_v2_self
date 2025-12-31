@@ -1,4 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
+
+export const dynamic = 'force-dynamic';
+
 import {
   Card,
   CardContent,

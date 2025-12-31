@@ -1,4 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
+
+export const dynamic = 'force-dynamic';
+
 import { redirect } from "next/navigation";
 import { getUserPolicies } from "@/lib/actions/policies";
 import { getUserFamilyMembers } from "@/lib/actions/user";

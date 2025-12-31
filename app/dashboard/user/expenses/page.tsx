@@ -3,6 +3,8 @@ import { getIncomes } from "@/lib/actions/income";
 import { getCurrentHoldings } from "@/lib/actions/current-holdings";
 import { ExpensesClient } from "./client";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Expenses | Foracle",
   description: "Track and manage your expenses",

@@ -1,4 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
+
+export const dynamic = 'force-dynamic';
+
 import { getIncomes } from "@/lib/actions/income";
 import { getFamilyMembers } from "@/lib/actions/family-members";
 import { getCpfByFamilyMember } from "@/lib/actions/cpf";

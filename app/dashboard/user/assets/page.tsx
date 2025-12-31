@@ -2,6 +2,8 @@ import { getPropertyAssets } from "@/lib/actions/property-assets";
 import { getVehicleAssets } from "@/lib/actions/vehicle-assets";
 import { AssetsClient } from "./client";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Assets | Foracle",
   description: "Manage your property, vehicle, and other assets",
