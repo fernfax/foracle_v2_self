@@ -48,7 +48,7 @@ interface CurrentHoldingListProps {
 export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps) {
   const [holdings, setHoldings] = useState<CurrentHolding[]>(initialHoldings);
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("bankName");
+  const [sortKey, setSortKey] = useState<SortKey>("familyMemberName");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [holdingToEdit, setHoldingToEdit] = useState<CurrentHolding | null>(null);
