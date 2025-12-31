@@ -1,6 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+
+// Safe JSON parse helper that handles corrupted data
+function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback;
+  if (typeof value !== 'string') return value as T;
+  if (value.startsWith('[object')) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -132,7 +144,7 @@ export function IncomeModal({
         setCategory(pendingFormData.category || "");
         setAmount(pendingFormData.amount?.toString() || "");
         setFrequency(pendingFormData.frequency || "monthly");
-        setSelectedMonths(pendingFormData.customMonths ? JSON.parse(pendingFormData.customMonths) : []);
+        setSelectedMonths(safeJsonParse(pendingFormData.customMonths, []));
         setIncomeCategory(pendingFormData.incomeCategory || "current-recurring");
         setSubjectToCpf(pendingFormData.subjectToCpf || false);
         setAccountForBonus(pendingFormData.accountForBonus || false);
@@ -150,16 +162,16 @@ export function IncomeModal({
         setCategory(income.category);
         setAmount(income.amount);
         setFrequency(income.frequency);
-        setSelectedMonths(income.customMonths ? JSON.parse(income.customMonths) : []);
+        setSelectedMonths(safeJsonParse(income.customMonths, []));
         setIncomeCategory(income.incomeCategory || "current-recurring");
         setSubjectToCpf(income.subjectToCpf || false);
         setAccountForBonus(income.accountForBonus || false);
-        setBonusGroups(income.bonusGroups ? JSON.parse(income.bonusGroups) : []);
+        setBonusGroups(safeJsonParse(income.bonusGroups, []));
         setStartDate(income.startDate ? new Date(income.startDate) : undefined);
         setEndDate(income.endDate ? new Date(income.endDate) : undefined);
         setNotes(income.description || "");
-        setPastIncomeHistory(income.pastIncomeHistory ? JSON.parse(income.pastIncomeHistory) : []);
-        setFutureMilestones(income.futureMilestones ? JSON.parse(income.futureMilestones) : []);
+        setPastIncomeHistory(safeJsonParse(income.pastIncomeHistory, []));
+        setFutureMilestones(safeJsonParse(income.futureMilestones, []));
       }
       // Priority 3: Reset form for new income
       else {
