@@ -225,12 +225,12 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
   const previousMonth = useMemo(() => new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1), [selectedMonth]);
   const previousMonthData = useMemo(() => calculateIncomeForMonth(previousMonth), [calculateIncomeForMonth, previousMonth]);
 
-  // Calculate change from previous month (based on gross income)
+  // Calculate change from previous month (based on net income)
   const monthChange = useMemo(() => {
-    const change = currentMonthData.gross - previousMonthData.gross;
-    const percentChange = previousMonthData.gross > 0 ? (change / previousMonthData.gross) * 100 : 0;
+    const change = currentMonthData.net - previousMonthData.net;
+    const percentChange = previousMonthData.net > 0 ? (change / previousMonthData.net) * 100 : 0;
     return { amount: change, percent: percentChange };
-  }, [currentMonthData.gross, previousMonthData.gross]);
+  }, [currentMonthData.net, previousMonthData.net]);
 
   // Fetch incomes on component mount to enable month navigation
   useEffect(() => {
@@ -244,8 +244,9 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
   }, []);
 
   // Use calculated amount if incomes loaded, otherwise use prop
-  const displayAmount = incomes.length > 0 ? currentMonthData.gross : totalIncome;
-  const netIncomeAfterCpf = incomes.length > 0 ? currentMonthData.net : null;
+  // Display NET income as the main figure, gross as secondary
+  const grossIncome = incomes.length > 0 ? currentMonthData.gross : totalIncome;
+  const netIncome = incomes.length > 0 ? currentMonthData.net : totalIncome;
   const hasCpfDeductions = incomes.length > 0 && currentMonthData.cpfDeduction > 0;
 
   return (
@@ -256,7 +257,7 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Total Income
+            Total Nett Income
           </CardTitle>
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950">
             <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -274,12 +275,12 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
                   : ""
               }`}
             >
-              ${displayAmount.toLocaleString()}
+              ${netIncome.toLocaleString()}
             </div>
           </div>
-          {hasCpfDeductions && netIncomeAfterCpf !== null && (
+          {hasCpfDeductions && (
             <p className="text-xs text-muted-foreground mt-1">
-              After CPF: ${netIncomeAfterCpf.toLocaleString()}
+              Gross Income: ${grossIncome.toLocaleString()}
             </p>
           )}
           {incomes.length > 0 && monthChange.amount !== 0 && (

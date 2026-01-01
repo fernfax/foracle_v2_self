@@ -61,7 +61,7 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
     return new Date(year, month - 1, day);
   }, []);
 
-  // Calculate income for a given month
+  // Calculate NET income for a given month (after CPF deductions)
   const calculateIncomeForMonth = useCallback((targetMonth: Date) => {
     const targetYear = targetMonth.getFullYear();
     const targetMonthNum = targetMonth.getMonth() + 1;
@@ -69,6 +69,7 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
     const monthEnd = new Date(targetYear, targetMonth.getMonth() + 1, 0);
 
     let totalMonthlyIncome = 0;
+    let totalCpfDeduction = 0;
 
     incomes.forEach((income) => {
       if (!income.isActive) return;
@@ -139,10 +140,16 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
           monthlyAmount = (effectiveAmount * 26) / 12;
         }
         totalMonthlyIncome += monthlyAmount;
+
+        // Deduct CPF contribution if applicable
+        if (income.subjectToCpf && income.employeeCpfContribution) {
+          totalCpfDeduction += parseFloat(income.employeeCpfContribution);
+        }
       }
     });
 
-    return totalMonthlyIncome;
+    // Return NET income (after CPF deductions)
+    return totalMonthlyIncome - totalCpfDeduction;
   }, [incomes, parseLocalDate]);
 
   // Calculate expenses for a given month
