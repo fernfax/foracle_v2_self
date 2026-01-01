@@ -1,16 +1,24 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { TrendingUp } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { MobileNav } from "@/components/mobile-nav";
 import { HeaderQuickLinks } from "@/components/header/header-quick-links";
 import { ClerkUserButton } from "@/components/clerk-user-button";
+import { checkOnboardingStatus } from "@/lib/actions/onboarding";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Check if user has completed onboarding
+  const isOnboarded = await checkOnboardingStatus();
+  if (!isOnboarded) {
+    redirect("/onboarding");
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}

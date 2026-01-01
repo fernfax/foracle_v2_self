@@ -13,12 +13,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/dashboard/user", label: "User Homepage", icon: User },
-  { href: "/dashboard/user/expenses", label: "Expenses", icon: Wallet },
-  { href: "/dashboard/user/assets", label: "Assets", icon: TrendingUp },
-  { href: "/dashboard/policies", label: "Insurance", icon: Shield },
-  { href: "/dashboard/goals", label: "Goals", icon: Target },
+  { href: "/dashboard", label: "Dashboard", icon: Home, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+  { href: "/dashboard/user", label: "User Homepage", icon: User, bgColor: "bg-purple-100", iconColor: "text-purple-600" },
+  { href: "/dashboard/user/expenses", label: "Expenses", icon: Wallet, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+  { href: "/dashboard/user/assets", label: "Assets", icon: TrendingUp, bgColor: "bg-amber-100", iconColor: "text-amber-600" },
+  { href: "/dashboard/policies", label: "Insurance", icon: Shield, bgColor: "bg-rose-100", iconColor: "text-rose-600" },
+  { href: "/dashboard/goals", label: "Goals", icon: Target, bgColor: "bg-cyan-100", iconColor: "text-cyan-600" },
 ];
 
 export function DashboardNav() {
@@ -45,9 +45,9 @@ export function DashboardNav() {
               "p-2 rounded-lg transition-colors",
               isActive
                 ? "bg-white/20"
-                : "bg-slate-100 group-hover:bg-indigo-50"
+                : item.bgColor
             )}>
-              <Icon className="h-5 w-5" />
+              <Icon className={cn("h-5 w-5", !isActive && item.iconColor)} />
             </div>
             <span className="font-semibold text-sm">{item.label}</span>
           </Link>

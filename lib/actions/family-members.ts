@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { familyMembers, users, incomes } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -16,6 +16,33 @@ async function getCurrentUserId() {
     throw new Error("Unauthorized");
   }
   return userId;
+}
+
+/**
+ * Ensure user exists in database (creates if missing)
+ * This handles cases where Clerk webhook didn't fire
+ */
+async function ensureUserExists(userId: string) {
+  const existingUser = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+
+  if (!existingUser) {
+    // Get user info from Clerk
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      throw new Error("Unable to get user information");
+    }
+
+    // Create user record
+    await db.insert(users).values({
+      id: userId,
+      email: clerkUser.emailAddresses[0]?.emailAddress || "",
+      firstName: clerkUser.firstName || null,
+      lastName: clerkUser.lastName || null,
+      imageUrl: clerkUser.imageUrl || null,
+    });
+  }
 }
 
 /**
@@ -151,6 +178,58 @@ export async function deleteFamilyMember(id: string) {
     success: true,
     deletedIncomes: existing.incomes || [],
   };
+}
+
+/**
+ * Get or create the "Self" family member for onboarding
+ * Returns existing Self member if found, otherwise creates one
+ */
+export async function getOrCreateSelfMember(data: {
+  name: string;
+  dateOfBirth: string;
+}) {
+  const userId = await getCurrentUserId();
+
+  // Ensure user exists in database (handles webhook miss)
+  await ensureUserExists(userId);
+
+  // Check if a "Self" member already exists
+  const existingSelf = await db.query.familyMembers.findFirst({
+    where: and(
+      eq(familyMembers.userId, userId),
+      eq(familyMembers.relationship, "Self")
+    ),
+  });
+
+  if (existingSelf) {
+    // Update existing Self member
+    const updated = await db
+      .update(familyMembers)
+      .set({
+        name: data.name,
+        dateOfBirth: data.dateOfBirth,
+        isContributing: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(familyMembers.id, existingSelf.id))
+      .returning();
+
+    revalidatePath("/dashboard/user");
+    return updated[0];
+  }
+
+  // Create new Self member
+  const newMember = await db.insert(familyMembers).values({
+    id: nanoid(),
+    userId,
+    name: data.name,
+    relationship: "Self",
+    dateOfBirth: data.dateOfBirth,
+    isContributing: true,
+  }).returning();
+
+  revalidatePath("/dashboard/user");
+  return newMember[0];
 }
 
 /**
