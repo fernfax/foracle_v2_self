@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { WizardNavigation } from "../WizardNavigation";
 import { completeOnboarding } from "@/lib/actions/onboarding";
 import { getCurrentHoldings } from "@/lib/actions/current-holdings";
+import { getExpenses } from "@/lib/actions/expenses";
 import type { OnboardingData, HoldingData } from "@/app/onboarding/OnboardingWizard";
 import {
   User,
   DollarSign,
   PiggyBank,
   Building2,
+  Receipt,
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
@@ -20,15 +22,26 @@ interface ConfirmationStepProps {
   onBack: () => void;
 }
 
+interface ExpenseData {
+  id: string;
+  name: string;
+  category: string;
+  amount: string;
+}
+
 export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dbHoldings, setDbHoldings] = useState<HoldingData[]>([]);
+  const [dbExpenses, setDbExpenses] = useState<ExpenseData[]>([]);
 
-  // Fetch holdings from database to ensure accurate display
+  // Fetch holdings and expenses from database to ensure accurate display
   useEffect(() => {
-    async function fetchHoldings() {
+    async function fetchData() {
       try {
-        const holdings = await getCurrentHoldings();
+        const [holdings, expenses] = await Promise.all([
+          getCurrentHoldings(),
+          getExpenses(),
+        ]);
         setDbHoldings(
           holdings.map((h) => ({
             id: h.id,
@@ -36,11 +49,19 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
             holdingAmount: h.holdingAmount,
           }))
         );
+        setDbExpenses(
+          expenses.map((e) => ({
+            id: e.id,
+            name: e.name,
+            category: e.category,
+            amount: e.amount,
+          }))
+        );
       } catch (error) {
-        console.error("Failed to fetch holdings:", error);
+        console.error("Failed to fetch data:", error);
       }
     }
-    fetchHoldings();
+    fetchData();
   }, []);
 
   const handleComplete = async () => {
@@ -103,6 +124,23 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
       isSet: dbHoldings.length > 0,
       bgColor: "bg-amber-100",
       iconColor: "text-amber-600",
+    },
+    {
+      icon: Receipt,
+      label: "Expenses",
+      value:
+        dbExpenses.length > 0
+          ? `${dbExpenses.length} categor${dbExpenses.length > 1 ? "ies" : "y"}`
+          : "Skipped",
+      subValue:
+        dbExpenses.length > 0
+          ? `Total: $${dbExpenses
+              .reduce((sum, e) => sum + parseFloat(e.amount), 0)
+              .toLocaleString("en-SG")} / monthly`
+          : undefined,
+      isSet: dbExpenses.length > 0,
+      bgColor: "bg-rose-100",
+      iconColor: "text-rose-600",
     },
   ];
 

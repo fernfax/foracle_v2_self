@@ -21,28 +21,45 @@ async function getCurrentUserId() {
 /**
  * Ensure user exists in database (creates if missing)
  * This handles cases where Clerk webhook didn't fire
+ * Handles email conflicts from old Clerk accounts by deleting and recreating
  */
 async function ensureUserExists(userId: string) {
+  // First check if user exists by ID
   const existingUser = await db.query.users.findFirst({
     where: eq(users.id, userId),
   });
 
-  if (!existingUser) {
-    // Get user info from Clerk
-    const clerkUser = await currentUser();
-    if (!clerkUser) {
-      throw new Error("Unable to get user information");
-    }
-
-    // Create user record
-    await db.insert(users).values({
-      id: userId,
-      email: clerkUser.emailAddresses[0]?.emailAddress || "",
-      firstName: clerkUser.firstName || null,
-      lastName: clerkUser.lastName || null,
-      imageUrl: clerkUser.imageUrl || null,
-    });
+  if (existingUser) {
+    return; // User already exists, nothing to do
   }
+
+  // Get user info from Clerk
+  const clerkUser = await currentUser();
+  if (!clerkUser) {
+    throw new Error("Unable to get user information");
+  }
+
+  const email = clerkUser.emailAddresses[0]?.emailAddress || "";
+
+  // Check if email exists with a different user ID (old Clerk account)
+  const existingByEmail = await db.query.users.findFirst({
+    where: eq(users.email, email),
+  });
+
+  if (existingByEmail && existingByEmail.id !== userId) {
+    // Email exists with old user ID - delete old account (cascade deletes related data)
+    // This happens when user re-registers with same email but new Clerk account
+    await db.delete(users).where(eq(users.id, existingByEmail.id));
+  }
+
+  // Create new user record
+  await db.insert(users).values({
+    id: userId,
+    email,
+    firstName: clerkUser.firstName || null,
+    lastName: clerkUser.lastName || null,
+    imageUrl: clerkUser.imageUrl || null,
+  });
 }
 
 /**

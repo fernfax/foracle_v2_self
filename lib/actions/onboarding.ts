@@ -103,18 +103,18 @@ export async function createOnboardingExpenses(data: {
 
   const { categories, percentageOfIncome, monthlyIncome, categoryAmounts } = data;
 
-  if (categories.length === 0) {
-    return; // Nothing to create if no categories selected
-  }
-
-  // Delete existing expenses for these categories to prevent duplicates
-  // This handles cases where user goes back and re-submits
+  // Delete ALL existing onboarding expenses to ensure step 7 reflects step 6
+  // This handles cases where user goes back and changes their selections
   await db.delete(expenses).where(
     and(
       eq(expenses.userId, userId),
-      inArray(expenses.category, categories)
+      eq(expenses.expenseCategory, "current-recurring")
     )
   );
+
+  if (categories.length === 0) {
+    return; // Nothing to create if no categories selected
+  }
 
   // Generate expense records using custom amounts
   const expenseRecords = categories.map((category) => {
