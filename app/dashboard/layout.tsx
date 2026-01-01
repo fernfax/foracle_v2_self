@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { TrendingUp } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardNav } from "@/components/dashboard-nav";
@@ -13,7 +14,14 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Check if user has completed onboarding
+  // First check if user is authenticated
+  const { userId } = await auth();
+  if (!userId) {
+    // Let Clerk handle the redirect to sign-in
+    redirect("/sign-in");
+  }
+
+  // Then check if user has completed onboarding
   const isOnboarded = await checkOnboardingStatus();
   if (!isOnboarded) {
     redirect("/onboarding");
