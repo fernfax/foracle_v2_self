@@ -231,7 +231,10 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Insurance Policies</h1>
+          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
+            Profile
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight">Insurance Policies</h1>
           <p className="text-muted-foreground mt-1">
             Manage your insurance policies and coverage
           </p>
