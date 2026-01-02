@@ -89,7 +89,7 @@ export function FloatingIcons() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [icons, setIcons] = useState<FloatingIcon[]>([]);
   const mousePos = useRef({ x: -1000, y: -1000 });
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
 
   // Track container dimensions
