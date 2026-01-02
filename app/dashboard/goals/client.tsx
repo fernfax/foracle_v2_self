@@ -72,8 +72,11 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="active" className="flex items-center gap-2">
+          <TabsList className="h-auto p-0 bg-transparent border-b border-border rounded-none flex gap-0 justify-start">
+            <TabsTrigger
+              value="active"
+              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
+            >
               <Target className="h-4 w-4" />
               <span>Active Goals</span>
               {activeGoals.length > 0 && (
@@ -82,7 +85,10 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="achieved" className="flex items-center gap-2">
+            <TabsTrigger
+              value="achieved"
+              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
+            >
               <Trophy className="h-4 w-4" />
               <span>Achieved</span>
               {achievedGoals.length > 0 && (
