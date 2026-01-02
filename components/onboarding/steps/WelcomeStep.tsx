@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, PiggyBank, Target, BarChart3, ChevronRight } from "lucide-react";
 
@@ -35,9 +36,13 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
       {/* Hero Section */}
       <div className="mb-12">
-        <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-foreground mb-6 mx-auto">
-          <TrendingUp className="h-10 w-10 text-background" />
-        </div>
+        <Image
+          src="/logo-128.png"
+          alt="Foracle Logo"
+          width={80}
+          height={80}
+          className="mx-auto mb-6"
+        />
         <h1 className="text-4xl font-bold tracking-tight mb-4">
           Welcome to Foracle
         </h1>

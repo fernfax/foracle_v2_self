@@ -1,7 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { TrendingUp } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { MobileNav } from "@/components/mobile-nav";
@@ -32,10 +32,14 @@ export default async function DashboardLayout({
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-16 flex justify-between items-center">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-foreground">
-              <TrendingUp className="h-5 w-5 text-background" />
-            </div>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image
+              src="/logo-64.png"
+              alt="Foracle Logo"
+              width={36}
+              height={36}
+              className="object-contain"
+            />
             <span className="text-xl font-semibold tracking-tight">
               Foracle
             </span>

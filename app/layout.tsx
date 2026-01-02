@@ -13,6 +13,15 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Foracle - Personal Finance Management",
   description: "Take control of your financial future with Foracle",
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo-64.png", sizes: "64x64", type: "image/png" },
+    ],
+    apple: [
+      { url: "/logo-256.png", sizes: "256x256", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({

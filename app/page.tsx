@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,7 +17,6 @@ import {
   PiggyBank,
   BarChart3,
   ArrowRight,
-  Play,
 } from "lucide-react";
 
 export default function Home() {
@@ -25,10 +25,14 @@ export default function Home() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-foreground">
-              <TrendingUp className="h-5 w-5 text-background" />
-            </div>
+          <div className="flex items-center gap-2">
+            <Image
+              src="/logo-64.png"
+              alt="Foracle Logo"
+              width={36}
+              height={36}
+              className="object-contain"
+            />
             <span className="text-xl font-semibold tracking-tight">
               Foracle
             </span>
@@ -72,17 +76,11 @@ export default function Home() {
             platform.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link href="/sign-up">
               <Button size="lg" className="px-10">
                 Start Your Journey
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="#features">
-              <Button size="lg" variant="outline" className="px-10">
-                Watch Demo
-                <Play className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
