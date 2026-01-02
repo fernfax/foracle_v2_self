@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { expenseCategories } from "@/db/schema";
+import { expenseCategories, expenses } from "@/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -46,26 +46,10 @@ export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
       .where(eq(expenseCategories.userId, userId))
       .orderBy(asc(expenseCategories.name));
 
-    // If no categories exist, create default ones
+    // If no categories exist, create default ones (only for new users)
     if (categories.length === 0) {
       await initializeDefaultCategories(userId);
       return getExpenseCategories();
-    }
-
-    // Check for missing default categories and add them
-    const existingNames = new Set(categories.map((c) => c.name));
-    const missingCategories = DEFAULT_CATEGORIES.filter(
-      (name) => !existingNames.has(name)
-    );
-
-    if (missingCategories.length > 0) {
-      await addMissingCategories(userId, missingCategories);
-      // Re-fetch to include the newly added categories
-      categories = await db
-        .select()
-        .from(expenseCategories)
-        .where(eq(expenseCategories.userId, userId))
-        .orderBy(asc(expenseCategories.name));
     }
 
     return categories;
@@ -89,22 +73,6 @@ async function initializeDefaultCategories(userId: string): Promise<void> {
   await db.insert(expenseCategories).values(defaultCategories);
 }
 
-/**
- * Add missing default categories for existing users
- */
-async function addMissingCategories(
-  userId: string,
-  missingNames: string[]
-): Promise<void> {
-  const newCategories = missingNames.map((name) => ({
-    id: randomUUID(),
-    userId,
-    name,
-    isDefault: true,
-  }));
-
-  await db.insert(expenseCategories).values(newCategories);
-}
 
 /**
  * Add a new expense category
@@ -175,4 +143,29 @@ export async function deleteExpenseCategory(id: string): Promise<void> {
   await db
     .delete(expenseCategories)
     .where(and(eq(expenseCategories.id, id), eq(expenseCategories.userId, userId)));
+}
+
+/**
+ * Get expenses by category name
+ */
+export async function getExpensesByCategory(categoryName: string): Promise<{
+  id: string;
+  name: string;
+  amount: string;
+}[]> {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const categoryExpenses = await db
+    .select({
+      id: expenses.id,
+      name: expenses.name,
+      amount: expenses.amount,
+    })
+    .from(expenses)
+    .where(and(eq(expenses.userId, userId), eq(expenses.category, categoryName)));
+
+  return categoryExpenses;
 }

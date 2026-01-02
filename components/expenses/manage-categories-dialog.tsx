@@ -10,12 +10,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Search, Trash2, Pencil, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Search, Trash2, Pencil, X, AlertTriangle } from "lucide-react";
 import {
   getExpenseCategories,
   addExpenseCategory,
   updateExpenseCategory,
   deleteExpenseCategory,
+  getExpensesByCategory,
   type ExpenseCategory,
 } from "@/lib/actions/expense-categories";
 
@@ -36,6 +47,12 @@ export function ManageCategoriesDialog({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<ExpenseCategory | null>(null);
+  const [linkedExpenses, setLinkedExpenses] = useState<{ id: string; name: string; amount: string }[]>([]);
+  const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -78,14 +95,47 @@ export function ManageCategoriesDialog({
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = async (category: ExpenseCategory) => {
+    setCategoryToDelete(category);
+    setIsLoadingExpenses(true);
+    setDeleteDialogOpen(true);
+
     try {
-      await deleteExpenseCategory(id);
+      const expenses = await getExpensesByCategory(category.name);
+      setLinkedExpenses(expenses);
+    } catch (error) {
+      console.error("Failed to fetch linked expenses:", error);
+      setLinkedExpenses([]);
+    } finally {
+      setIsLoadingExpenses(false);
+    }
+  };
+
+  const handleDeleteConfirm = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!categoryToDelete || linkedExpenses.length > 0) return;
+
+    try {
+      await deleteExpenseCategory(categoryToDelete.id);
+      setDeleteDialogOpen(false);
+      setCategoryToDelete(null);
+      setLinkedExpenses([]);
       await loadCategories();
       onCategoriesUpdated?.();
     } catch (error) {
       console.error("Failed to delete category:", error);
+      setDeleteDialogOpen(false);
+      setCategoryToDelete(null);
+      setLinkedExpenses([]);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setCategoryToDelete(null);
+    setLinkedExpenses([]);
   };
 
   const startEdit = (category: ExpenseCategory) => {
@@ -103,6 +153,7 @@ export function ManageCategoriesDialog({
   );
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
         <DialogHeader>
@@ -200,7 +251,7 @@ export function ManageCategoriesDialog({
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleDelete(category.id)}
+                          onClick={() => handleDeleteClick(category)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -215,5 +266,71 @@ export function ManageCategoriesDialog({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Delete Confirmation Dialog */}
+    <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => !open && handleDeleteCancel()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {linkedExpenses.length > 0 ? (
+              <span className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                Cannot Delete Category
+              </span>
+            ) : (
+              "Delete Category"
+            )}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {isLoadingExpenses ? (
+              "Checking for linked expenses..."
+            ) : linkedExpenses.length > 0 ? (
+              <span>
+                This category has <strong>{linkedExpenses.length}</strong> expense{linkedExpenses.length > 1 ? "s" : ""} linked to it.
+                Please reassign or delete these expenses before removing the category.
+              </span>
+            ) : (
+              `Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        {/* Show linked expenses if any */}
+        {!isLoadingExpenses && linkedExpenses.length > 0 && (
+          <div className="my-4">
+            <div className="text-sm font-medium mb-2">Linked Expenses:</div>
+            <div className="max-h-[200px] overflow-y-auto space-y-2">
+              {linkedExpenses.map((expense) => (
+                <div
+                  key={expense.id}
+                  className="flex items-center justify-between p-2 rounded-md bg-muted text-sm"
+                >
+                  <span className="font-medium truncate flex-1 mr-2">{expense.name}</span>
+                  <span className="text-muted-foreground flex-shrink-0">
+                    ${parseFloat(expense.amount).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleDeleteCancel}>
+            {linkedExpenses.length > 0 ? "Close" : "Cancel"}
+          </AlertDialogCancel>
+          {linkedExpenses.length === 0 && !isLoadingExpenses && (
+            <Button
+              type="button"
+              onClick={(e) => handleDeleteConfirm(e)}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </Button>
+          )}
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
