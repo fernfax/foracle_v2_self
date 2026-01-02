@@ -54,13 +54,18 @@ interface FloatingIcon {
 
 function generateIcons(width: number, height: number): FloatingIcon[] {
   const icons: FloatingIcon[] = [];
-  const padding = 60;
 
   // Create 12 unique icons (one of each type)
+  // Spread them across the full area, some starting off-screen
   for (let i = 0; i < ICON_CONFIGS.length; i++) {
     const config = ICON_CONFIGS[i];
-    const x = padding + Math.random() * (width - padding * 2);
-    const y = padding + Math.random() * (height - padding * 2);
+    // Allow icons to start anywhere, including slightly off-screen
+    const x = -50 + Math.random() * (width + 100);
+    const y = -50 + Math.random() * (height + 100);
+
+    // Give each icon a random drift velocity
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.3 + Math.random() * 0.5;
 
     icons.push({
       id: i,
@@ -69,8 +74,8 @@ function generateIcons(width: number, height: number): FloatingIcon[] {
       y,
       baseX: x,
       baseY: y,
-      vx: 0,
-      vy: 0,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
       size: 52 + Math.random() * 16, // 52-68px
       offset: Math.random() * Math.PI * 2,
       opacity: 0.7 + Math.random() * 0.2, // 0.7-0.9
@@ -166,26 +171,18 @@ export function FloatingIcons() {
     }
 
     const rect = containerRef.current.getBoundingClientRect();
-    const padding = 40;
+    const buffer = 80; // How far off-screen before wrapping
 
     setIcons((prevIcons) =>
       prevIcons.map((icon) => {
-        // Base floating motion (sine wave)
-        const floatX = Math.sin(time * 0.0008 + icon.offset) * 25;
-        const floatY = Math.cos(time * 0.001 + icon.offset) * 20;
-
-        // Calculate target position (base + float)
-        let targetX = icon.baseX + floatX;
-        let targetY = icon.baseY + floatY;
-
         // Cursor repulsion
         const dx = icon.x - mousePos.current.x;
         const dy = icon.y - mousePos.current.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         const repulsionRadius = 200;
 
-        let newVx = icon.vx * 0.92; // Less friction for snappier movement
-        let newVy = icon.vy * 0.92;
+        let newVx = icon.vx;
+        let newVy = icon.vy;
 
         if (distance < repulsionRadius && distance > 0) {
           const force = ((repulsionRadius - distance) / repulsionRadius) * 8;
@@ -194,30 +191,45 @@ export function FloatingIcons() {
           newVy += Math.sin(angle) * force;
         }
 
-        // Move toward target with spring physics
-        const springStrength = 0.02;
-        newVx += (targetX - icon.x) * springStrength;
-        newVy += (targetY - icon.y) * springStrength;
+        // Apply gentle friction but maintain minimum drift speed
+        newVx *= 0.98;
+        newVy *= 0.98;
+
+        // Add subtle wandering force (changes direction slowly)
+        const wanderAngle = Math.sin(time * 0.0003 + icon.offset * 10) * 0.02;
+        newVx += Math.cos(icon.offset + time * 0.0001) * 0.015;
+        newVy += Math.sin(icon.offset + time * 0.0001) * 0.015;
+
+        // Ensure minimum speed so icons keep moving
+        const speed = Math.sqrt(newVx * newVx + newVy * newVy);
+        const minSpeed = 0.3;
+        const maxSpeed = 4;
+
+        if (speed < minSpeed) {
+          const scale = minSpeed / (speed || 0.1);
+          newVx *= scale;
+          newVy *= scale;
+        } else if (speed > maxSpeed) {
+          const scale = maxSpeed / speed;
+          newVx *= scale;
+          newVy *= scale;
+        }
 
         // Apply velocity
         let newX = icon.x + newVx;
         let newY = icon.y + newVy;
 
-        // Boundary constraints with soft bounce
-        if (newX < padding) {
-          newX = padding;
-          newVx = Math.abs(newVx) * 0.5;
-        } else if (newX > rect.width - padding) {
-          newX = rect.width - padding;
-          newVx = -Math.abs(newVx) * 0.5;
+        // Wrap around edges (disappear and reappear from opposite side)
+        if (newX < -buffer) {
+          newX = rect.width + buffer - 10;
+        } else if (newX > rect.width + buffer) {
+          newX = -buffer + 10;
         }
 
-        if (newY < padding) {
-          newY = padding;
-          newVy = Math.abs(newVy) * 0.5;
-        } else if (newY > rect.height - padding) {
-          newY = rect.height - padding;
-          newVy = -Math.abs(newVy) * 0.5;
+        if (newY < -buffer) {
+          newY = rect.height + buffer - 10;
+        } else if (newY > rect.height + buffer) {
+          newY = -buffer + 10;
         }
 
         return {
