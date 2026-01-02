@@ -34,6 +34,7 @@ export async function createPropertyAsset(data: {
   accruedInterestToDate?: number;
   addToExpenditures?: boolean;
   expenseName?: string; // Customizable expense name
+  expenditureAmount?: number; // Customizable expenditure amount
 }) {
   const userId = await getCurrentUserId();
 
@@ -41,7 +42,8 @@ export async function createPropertyAsset(data: {
   let linkedExpenseId: string | null = null;
 
   // If addToExpenditures is true, create an expense record
-  if (data.addToExpenditures && data.monthlyLoanPayment > 0) {
+  const expenseAmount = data.expenditureAmount ?? data.monthlyLoanPayment;
+  if (data.addToExpenditures && expenseAmount > 0) {
     const expenseId = nanoid();
     await db.insert(expenses).values({
       id: expenseId,
@@ -50,7 +52,7 @@ export async function createPropertyAsset(data: {
       name: data.expenseName || `${data.propertyName} - Loan Payment`,
       category: "Housing",
       expenseCategory: "current-recurring",
-      amount: data.monthlyLoanPayment.toString(),
+      amount: expenseAmount.toString(),
       frequency: "Monthly",
       startDate: data.purchaseDate,
       description: `Auto-generated from property asset: ${data.propertyName}`,
@@ -114,6 +116,7 @@ export async function updatePropertyAsset(
     accruedInterestToDate?: number;
     addToExpenditures?: boolean;
     expenseName?: string; // Customizable expense name
+    expenditureAmount?: number; // Customizable expenditure amount
   }
 ) {
   const userId = await getCurrentUserId();
@@ -133,13 +136,14 @@ export async function updatePropertyAsset(
   let linkedExpenseId = existingProperty.linkedExpenseId;
 
   // Handle expense integration
-  if (data.addToExpenditures && data.monthlyLoanPayment > 0) {
+  const expenseAmount = data.expenditureAmount ?? data.monthlyLoanPayment;
+  if (data.addToExpenditures && expenseAmount > 0) {
     if (linkedExpenseId) {
       // Update existing expense
       await db.update(expenses)
         .set({
           name: data.expenseName || `${data.propertyName} - Loan Payment`,
-          amount: data.monthlyLoanPayment.toString(),
+          amount: expenseAmount.toString(),
           startDate: data.purchaseDate,
           updatedAt: new Date(),
         })
@@ -154,7 +158,7 @@ export async function updatePropertyAsset(
         name: data.expenseName || `${data.propertyName} - Loan Payment`,
         category: "Housing",
         expenseCategory: "current-recurring",
-        amount: data.monthlyLoanPayment.toString(),
+        amount: expenseAmount.toString(),
         frequency: "Monthly",
         startDate: data.purchaseDate,
         description: `Auto-generated from property asset: ${data.propertyName}`,

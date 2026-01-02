@@ -101,6 +101,7 @@ export function AddPropertyDialog({
   );
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const [expenseName, setExpenseName] = useState("");
+  const [expenditureAmount, setExpenditureAmount] = useState("");
   const [validationError, setValidationError] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -144,6 +145,7 @@ export function AddPropertyDialog({
     setAddToExpenditures(false);
     setConfirmationModalOpen(false);
     setExpenseName("");
+    setExpenditureAmount("");
     setValidationError("");
   };
 
@@ -156,12 +158,14 @@ export function AddPropertyDialog({
         return;
       }
       setValidationError("");
-      // Generate default expense name
+      // Generate default expense name and set initial expenditure amount
       setExpenseName(propertyName ? `${propertyName} - Loan Payment` : "Property Loan Payment");
+      setExpenditureAmount(monthlyLoanPayment);
       setConfirmationModalOpen(true);
     } else {
       setAddToExpenditures(false);
       setExpenseName("");
+      setExpenditureAmount("");
     }
   };
 
@@ -222,6 +226,7 @@ export function AddPropertyDialog({
         accruedInterestToDate: accruedInterestToDate ? parseFloat(accruedInterestToDate) : undefined,
         addToExpenditures,
         expenseName: addToExpenditures ? expenseName : undefined,
+        expenditureAmount: addToExpenditures && expenditureAmount ? parseFloat(expenditureAmount) : undefined,
       };
 
       if (property) {
@@ -628,15 +633,33 @@ export function AddPropertyDialog({
             />
           </div>
 
+          {/* Monthly Payment Input - Editable */}
+          <div className="space-y-2">
+            <Label htmlFor="expenditureAmount" className="text-sm font-medium">
+              Monthly Payment
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="expenditureAmount"
+                type="number"
+                value={expenditureAmount}
+                onChange={(e) => setExpenditureAmount(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                className="w-full pl-7"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Defaults to your monthly loan payment. Adjust if needed.
+            </p>
+          </div>
+
           {/* Display-only Details */}
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="text-gray-600">Property:</div>
             <div className="font-medium">{propertyName || "-"}</div>
-
-            <div className="text-gray-600">Monthly Payment:</div>
-            <div className="font-medium">
-              ${monthlyLoanPayment ? parseFloat(monthlyLoanPayment).toLocaleString() : "0"}
-            </div>
 
             <div className="text-gray-600">Frequency:</div>
             <div className="font-medium">Monthly</div>

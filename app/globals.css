@@ -71,6 +71,13 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
+    scrollbar-gutter: stable;
+  }
+  /* Prevent layout shift when Radix UI modals/dropdowns add overflow:hidden to body */
+  body[data-scroll-locked] {
+    scrollbar-gutter: stable;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
   }
 }
 
