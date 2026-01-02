@@ -77,6 +77,13 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
     }
   }, [open]);
 
+  // Auto-set frequency to "one-time" when expense type is "one-off"
+  useEffect(() => {
+    if (expenseCategory === "one-off") {
+      setFrequency("one-time");
+    }
+  }, [expenseCategory]);
+
   const loadCategories = async () => {
     const data = await getExpenseCategories();
     setCategories(data);
@@ -194,7 +201,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                 <SelectTrigger className="bg-white">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[400px] overflow-y-auto">
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.name}>
                       {cat.name}
@@ -227,7 +234,11 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
               <Label htmlFor="frequency">
                 Expense Frequency <span className="text-red-500">*</span>
               </Label>
-              <Select value={frequency} onValueChange={setFrequency}>
+              <Select
+                value={frequency}
+                onValueChange={setFrequency}
+                disabled={expenseCategory === "one-off"}
+              >
                 <SelectTrigger className="bg-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -284,10 +295,10 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
 
           {/* Row 3: Start Date and End Date - Only show for non-recurring expenses */}
           {expenseCategory !== "current-recurring" && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className={cn("grid gap-4", expenseCategory === "one-off" ? "grid-cols-1" : "grid-cols-2")}>
               <div className="space-y-2">
                 <Label>
-                  Start Date <span className="text-red-500">*</span>
+                  {expenseCategory === "one-off" ? "Expense Date" : "Start Date"} <span className="text-red-500">*</span>
                 </Label>
                 <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                   <PopoverTrigger asChild>
@@ -316,36 +327,38 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                   </PopoverContent>
                 </Popover>
               </div>
-              <div className="space-y-2">
-                <Label>End Date</Label>
-                <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => {
-                        setEndDate(date);
-                        setEndDateOpen(false);
-                      }}
-                      initialFocus
-                      fixedWeeks
-                    />
-                  </PopoverContent>
-                </Popover>
-                <p className="text-xs text-muted-foreground">Leave empty for ongoing expense</p>
-              </div>
+              {expenseCategory !== "one-off" && (
+                <div className="space-y-2">
+                  <Label>End Date</Label>
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(date) => {
+                          setEndDate(date);
+                          setEndDateOpen(false);
+                        }}
+                        initialFocus
+                        fixedWeeks
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">Leave empty for ongoing expense</p>
+                </div>
+              )}
             </div>
           )}
 

@@ -197,6 +197,13 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
     }
   }, [expense]);
 
+  // Auto-set frequency to "one-time" when expense type is "one-off"
+  useEffect(() => {
+    if (expenseCategory === "one-off") {
+      setFrequency("one-time");
+    }
+  }, [expenseCategory]);
+
   const selectedFrequency = FREQUENCIES.find((f) => f.value === frequency);
 
   const toggleMonth = (month: number) => {
@@ -348,7 +355,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 <SelectTrigger className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[400px] overflow-y-auto">
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.name}>
                       {cat.name}
@@ -391,8 +398,12 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 Expense Frequency <span className="text-red-500">*</span>
                 {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
-              <Select value={frequency} onValueChange={isLinked ? undefined : setFrequency} disabled={isLinked}>
-                <SelectTrigger className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}>
+              <Select
+                value={frequency}
+                onValueChange={isLinked || expenseCategory === "one-off" ? undefined : setFrequency}
+                disabled={isLinked || expenseCategory === "one-off"}
+              >
+                <SelectTrigger className={cn("bg-white", (isLinked || expenseCategory === "one-off") && "bg-gray-100 cursor-not-allowed")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -458,10 +469,10 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
 
           {/* Row 3: Start Date and End Date - Only show for non-recurring expenses */}
           {expenseCategory !== "current-recurring" && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className={cn("grid gap-4", expenseCategory === "one-off" ? "grid-cols-1" : "grid-cols-2")}>
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
-                  Start Date <span className="text-red-500">*</span>
+                  {expenseCategory === "one-off" ? "Expense Date" : "Start Date"} <span className="text-red-500">*</span>
                   {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </Label>
                 {isLinked ? (
@@ -505,54 +516,56 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                   <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1">
-                  End Date
-                  {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-                </Label>
-                {isLinked ? (
-                  <Button
-                    variant="outline"
-                    disabled
-                    className="w-full justify-start text-left font-normal bg-gray-100 cursor-not-allowed"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "MMMM do, yyyy") : "No end date"}
-                  </Button>
-                ) : (
-                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !endDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={(date) => {
-                          setEndDate(date);
-                          setEndDateOpen(false);
-                        }}
-                        initialFocus
-                        fixedWeeks
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-                {isLinked ? (
-                  <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Leave empty for ongoing expense</p>
-                )}
-              </div>
+              {expenseCategory !== "one-off" && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    End Date
+                    {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                  </Label>
+                  {isLinked ? (
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full justify-start text-left font-normal bg-gray-100 cursor-not-allowed"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "MMMM do, yyyy") : "No end date"}
+                    </Button>
+                  ) : (
+                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={(date) => {
+                            setEndDate(date);
+                            setEndDateOpen(false);
+                          }}
+                          initialFocus
+                          fixedWeeks
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                  {isLinked ? (
+                    <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Leave empty for ongoing expense</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
