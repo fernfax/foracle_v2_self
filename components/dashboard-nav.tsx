@@ -25,7 +25,7 @@ export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-24 space-y-2">
+    <nav className="sticky top-28 space-y-2">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         const Icon = item.icon;

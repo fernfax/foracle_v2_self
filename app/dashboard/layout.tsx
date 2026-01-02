@@ -31,7 +31,7 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-16 flex justify-between items-center">
+        <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-20 flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center">
             <Image
               src="/wordmark-168.png"

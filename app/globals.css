@@ -129,4 +129,13 @@
   .animate-slide-right {
     animation: slideInFromRight 0.36s ease-out;
   }
+
+  /* Hide scrollbar for horizontal swipe nav */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
