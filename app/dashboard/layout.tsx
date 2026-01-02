@@ -34,15 +34,19 @@ export default async function DashboardLayout({
         <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-16 flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Image
-              src="/logo-64.png"
+              src="/logo-108.png"
               alt="Foracle Logo"
               width={36}
               height={36}
               className="object-contain"
             />
-            <span className="text-xl font-semibold tracking-tight">
-              Foracle
-            </span>
+            <Image
+              src="/wordmark-168.png"
+              alt="Foracle"
+              width={97}
+              height={28}
+              className="object-contain"
+            />
           </Link>
 
           {/* Quick Links - Center */}

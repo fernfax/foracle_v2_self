@@ -16,10 +16,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo-64.png", sizes: "64x64", type: "image/png" },
+      { url: "/logo-72.png", sizes: "72x72", type: "image/png" },
     ],
     apple: [
-      { url: "/logo-256.png", sizes: "256x256", type: "image/png" },
+      { url: "/logo-144.png", sizes: "144x144", type: "image/png" },
     ],
   },
 };

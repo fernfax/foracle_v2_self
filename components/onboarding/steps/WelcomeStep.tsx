@@ -37,7 +37,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       {/* Hero Section */}
       <div className="mb-12">
         <Image
-          src="/logo-128.png"
+          src="/logo-144.png"
           alt="Foracle Logo"
           width={80}
           height={80}

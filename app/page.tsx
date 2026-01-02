@@ -25,17 +25,14 @@ export default function Home() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             <Image
-              src="/logo-64.png"
-              alt="Foracle Logo"
-              width={36}
-              height={36}
+              src="/wordmark-168.png"
+              alt="Foracle"
+              width={97}
+              height={28}
               className="object-contain"
             />
-            <span className="text-xl font-semibold tracking-tight">
-              Foracle
-            </span>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
