@@ -505,6 +505,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative"
             onClick={() => setIsBreakdownModalOpen(true)}
+            data-tour="income-summary-card"
           >
             <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -575,7 +576,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
         {/* Card 2: CPF Contributions */}
         {incomes.length > 0 ? (
-          <Card>
+          <Card data-tour="cpf-summary-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Monthly CPF Contributions
@@ -651,7 +652,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
       {/* Frequency Filters and Add Button */}
       <div className="flex items-center justify-between gap-2 pb-2">
-        <div className="flex items-center gap-2 overflow-x-auto">
+        <div className="flex items-center gap-2 overflow-x-auto" data-tour="income-frequency-filter">
           <Button
             variant={selectedFrequency === "All" ? "default" : "outline"}
             size="sm"
@@ -697,6 +698,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           size="sm"
           onClick={() => setIsAddDialogOpen(true)}
           className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+          data-tour="add-income-btn"
         >
           <Plus className="h-4 w-4 mr-1.5" />
           Add Income
@@ -704,7 +706,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border" data-tour="income-table">
         <Table>
           <TableHeader>
             <TableRow>
