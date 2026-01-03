@@ -10,6 +10,7 @@ import {
 } from "react";
 import { driver, type Driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import "@/app/driver-theme.css";
 import { type TourName, TOUR_CONFIGS } from "@/lib/tour/tour-config";
 import {
   getTourStatus,
@@ -53,25 +54,42 @@ export function TourProvider({ children, userId }: TourProviderProps) {
     loadStatus();
   }, [userId]);
 
-  const startTour = useCallback((tourName: TourName) => {
+  const startTourWithRetry = useCallback((tourName: TourName, retryCount: number = 0) => {
     const config = TOUR_CONFIGS[tourName];
     if (!config) return;
 
-    // Small delay to ensure elements are rendered
-    setTimeout(() => {
-      // Filter steps to only include those with existing elements
-      const validSteps = config.steps.filter((step) => {
-        if (!step.element) return true;
-        const element = document.querySelector(step.element as string);
-        return element !== null;
-      });
+    const maxRetries = 15;
+    const retryDelay = 400;
 
-      if (validSteps.length === 0) {
-        console.warn(`No valid elements found for tour: ${tourName}`);
+    // Filter steps to only include those with existing elements
+    const validSteps = config.steps.filter((step) => {
+      if (!step.element) return true;
+      const element = document.querySelector(step.element as string);
+      return element !== null;
+    });
+
+    // Log which elements were found/not found
+    if (retryCount === 0 || validSteps.length === 0) {
+      const allTourElements = document.querySelectorAll('[data-tour]');
+      console.log(`[Tour] Found ${allTourElements.length} data-tour elements on page:`,
+        Array.from(allTourElements).map(el => el.getAttribute('data-tour'))
+      );
+      console.log(`[Tour] Looking for:`, config.steps.map(s => s.element));
+    }
+
+    if (validSteps.length === 0) {
+      if (retryCount < maxRetries) {
+        console.log(`[Tour] Waiting for elements, retry ${retryCount + 1}/${maxRetries}...`);
+        setTimeout(() => startTourWithRetry(tourName, retryCount + 1), retryDelay);
         return;
       }
+      console.warn(`No valid elements found for tour: ${tourName} after ${maxRetries} retries`);
+      return;
+    }
 
-      const instance = driver({
+    console.log(`[Tour] Starting ${tourName} with ${validSteps.length} steps`);
+
+    const instance = driver({
         showProgress: true,
         animate: true,
         smoothScroll: true,
@@ -113,12 +131,16 @@ export function TourProvider({ children, userId }: TourProviderProps) {
         },
       });
 
-      setDriverInstance(instance);
-      setIsRunning(true);
-      setCurrentTour(tourName);
-      instance.drive();
-    }, 100);
+    setDriverInstance(instance);
+    setIsRunning(true);
+    setCurrentTour(tourName);
+    instance.drive();
   }, []);
+
+  const startTour = useCallback((tourName: TourName) => {
+    // Start with a small initial delay, then retry if elements not found
+    setTimeout(() => startTourWithRetry(tourName, 0), 100);
+  }, [startTourWithRetry]);
 
   const checkAndStartTour = useCallback(
     (tourName: TourName) => {

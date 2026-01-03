@@ -128,25 +128,25 @@ const incomesSteps: DriveStep[] = [
   {
     element: '[data-tour="income-table"]',
     popover: {
-      title: "Income Details",
+      title: "Income List",
       description:
         "Your full list of incomes. Click the arrow to expand and see CPF breakdowns, timelines, and future milestones.",
-      side: "top",
-      align: "center",
+      side: "left",
+      align: "start",
     },
   },
 ];
 
-// Expenses Tour - 5 steps
+// Expenses Tour - 5 steps (ordered top to bottom for natural flow)
 const expensesSteps: DriveStep[] = [
   {
-    element: '[data-tour="add-expense-btn"]',
+    element: '[data-tour="expected-expenses-card"]',
     popover: {
-      title: "Add New Expense",
+      title: "Expected Expenses",
       description:
-        "Add recurring expenses, one-time purchases, or custom payment schedules.",
+        "Your total expected spending for the selected month. Use the arrows to navigate months. Click for full breakdown.",
       side: "bottom",
-      align: "end",
+      align: "start",
     },
   },
   {
@@ -160,13 +160,22 @@ const expensesSteps: DriveStep[] = [
     },
   },
   {
-    element: '[data-tour="expected-expenses-card"]',
+    element: '[data-tour="manage-categories-btn"]',
     popover: {
-      title: "Expected Expenses",
+      title: "Manage Categories",
+      description: "Customize expense categories to match your budgeting style.",
+      side: "bottom",
+      align: "end",
+    },
+  },
+  {
+    element: '[data-tour="add-expense-btn"]',
+    popover: {
+      title: "Add New Expense",
       description:
-        "Your total expected spending for the selected month. Use the arrows to navigate months. Click for full breakdown.",
-      side: "right",
-      align: "start",
+        "Add recurring expenses, one-time purchases, or custom payment schedules.",
+      side: "bottom",
+      align: "end",
     },
   },
   {
@@ -175,16 +184,7 @@ const expensesSteps: DriveStep[] = [
       title: "Expense List",
       description:
         "All your tracked expenses. Edit, delete, or view details from the action menu.",
-      side: "top",
-      align: "center",
-    },
-  },
-  {
-    element: '[data-tour="manage-categories-btn"]',
-    popover: {
-      title: "Manage Categories",
-      description: "Customize expense categories to match your budgeting style.",
-      side: "bottom",
+      side: "left",
       align: "start",
     },
   },

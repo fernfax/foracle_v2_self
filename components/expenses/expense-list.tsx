@@ -468,7 +468,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       <div className="grid gap-4 sm:grid-cols-3">
         {/* Card 1: Expected Expenses */}
         {expenses.length > 0 ? (
-          <Card className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative" onClick={() => setIsBreakdownModalOpen(true)}>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative" onClick={() => setIsBreakdownModalOpen(true)} data-tour="expected-expenses-card">
             <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -711,7 +711,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
       {/* Filter Dropdowns and Add Button */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3" data-tour="expense-filters">
         {/* Category Filter */}
         <Select
           value={selectedCategory || "all"}
@@ -786,6 +786,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             size="sm"
             onClick={() => setManageCategoriesOpen(true)}
             className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            data-tour="manage-categories-btn"
           >
             <Settings2 className="h-4 w-4 mr-1.5" />
             Manage Categories
@@ -795,6 +796,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             size="sm"
             onClick={() => setAddDialogOpen(true)}
             className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            data-tour="add-expense-btn"
           >
             <Plus className="h-4 w-4 mr-1.5" />
             Add Expense
@@ -822,7 +824,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           <p className="text-muted-foreground">No results found for "{search}"</p>
         </div>
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-lg border bg-card" data-tour="expense-table">
           <Table>
             <TableHeader>
               <TableRow>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { HelpCircle, LayoutDashboard, DollarSign, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,10 +27,17 @@ import { type TourName } from "@/lib/tour/tour-config";
 
 const PENDING_TOUR_KEY = "foracle_pending_tour";
 
-// Map tours to their target pages
-const TOUR_ROUTES: Record<TourName, string> = {
+// Map tours to their target pages (pathname only, no query params)
+const TOUR_PATHNAMES: Record<TourName, string> = {
   dashboard: "/dashboard",
   incomes: "/dashboard/user",
+  expenses: "/dashboard/user/expenses",
+};
+
+// Full URLs including query params for navigation
+const TOUR_ROUTES: Record<TourName, string> = {
+  dashboard: "/dashboard",
+  incomes: "/dashboard/user?tab=incomes",
   expenses: "/dashboard/user/expenses",
 };
 
@@ -43,29 +50,76 @@ const TOUR_PAGE_NAMES: Record<TourName, string> = {
 export function HelpButton() {
   const { startTour } = useTourContext();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const startTourRef = useRef(startTour);
+  const hasStartedPendingTour = useRef(false);
 
   const [pendingTour, setPendingTour] = useState<TourName | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
+  // Check if user is on the correct page for a specific tour
+  const isOnCorrectPage = (tourName: TourName): boolean => {
+    const targetPathname = TOUR_PATHNAMES[tourName];
+    if (pathname !== targetPathname) return false;
+
+    // For incomes tour, also check the tab param
+    if (tourName === "incomes") {
+      const currentTab = searchParams.get("tab");
+      return currentTab === "incomes";
+    }
+
+    return true;
+  };
+
+  // Keep ref updated
+  useEffect(() => {
+    startTourRef.current = startTour;
+  }, [startTour]);
+
   // Check for pending tour after navigation
   useEffect(() => {
-    const storedTour = sessionStorage.getItem(PENDING_TOUR_KEY) as TourName | null;
-    if (storedTour && TOUR_ROUTES[storedTour] === pathname) {
-      // Clear the stored tour
-      sessionStorage.removeItem(PENDING_TOUR_KEY);
-      // Start the tour after a short delay for page to render
-      setTimeout(() => {
-        startTour(storedTour);
-      }, 600);
-    }
-  }, [pathname, startTour]);
+    // Reset the flag when pathname or searchParams change
+    hasStartedPendingTour.current = false;
+
+    const checkAndStartTour = () => {
+      if (hasStartedPendingTour.current) return;
+
+      const storedTour = sessionStorage.getItem(PENDING_TOUR_KEY) as TourName | null;
+      const targetPathname = storedTour ? TOUR_PATHNAMES[storedTour] : null;
+      const currentTab = searchParams.get("tab");
+      console.log("[Tour] Checking pending tour:", { storedTour, pathname, targetPathname, currentTab });
+
+      if (storedTour && pathname === targetPathname) {
+        // For incomes tour, also verify we're on the incomes tab
+        if (storedTour === "incomes" && currentTab !== "incomes") {
+          console.log("[Tour] On correct path but wrong tab, waiting...");
+          return;
+        }
+
+        console.log("[Tour] Starting tour:", storedTour);
+        // Clear the stored tour
+        sessionStorage.removeItem(PENDING_TOUR_KEY);
+        hasStartedPendingTour.current = true;
+        // Start the tour
+        startTourRef.current(storedTour);
+      }
+    };
+
+    // Try multiple times to ensure page is ready
+    const timers = [
+      setTimeout(checkAndStartTour, 500),
+      setTimeout(checkAndStartTour, 1000),
+      setTimeout(checkAndStartTour, 1500),
+    ];
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [pathname, searchParams]);
 
   const handleTourClick = (tourName: TourName) => {
-    const targetRoute = TOUR_ROUTES[tourName];
-    const isOnTargetPage = pathname === targetRoute;
-
-    if (isOnTargetPage) {
+    if (isOnCorrectPage(tourName)) {
       // User is already on the target page, start tour directly
       startTour(tourName);
     } else {
@@ -78,6 +132,7 @@ export function HelpButton() {
   const handleConfirmNavigation = () => {
     if (pendingTour) {
       // Store the pending tour in sessionStorage to survive navigation
+      console.log("[Tour] Storing pending tour:", pendingTour, "navigating to:", TOUR_ROUTES[pendingTour]);
       sessionStorage.setItem(PENDING_TOUR_KEY, pendingTour);
       const targetRoute = TOUR_ROUTES[pendingTour];
       router.push(targetRoute);
