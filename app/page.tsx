@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FloatingIcons } from "@/components/landing/floating-icons";
+import { HeroBlurMask } from "@/components/landing/hero-blur-mask";
 import {
   TrendingUp,
   Shield,
@@ -51,31 +52,43 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-muted/30" />
         <FloatingIcons />
+        <HeroBlurMask />
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:py-40 text-center">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight mb-6">
+          <h1
+            data-blur-target="heading"
+            className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight mb-6 inline-block"
+          >
             Take Control of Your
             <br />
-            <span className="text-foreground/70">
-              Finances
-            </span>
+            <span className="text-foreground/70">Finances</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
+          <p
+            data-blur-target="description"
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed"
+          >
             Foracle empowers you to manage your finances with confidence. Track
             income, expenses, assets, and goals all in one beautiful, intuitive
             platform.
           </p>
 
           {/* Trust badge */}
-          <div className="inline-flex items-center rounded-full bg-muted px-4 py-1.5 mb-8">
+          <div
+            data-blur-target="badge"
+            className="inline-flex items-center rounded-full bg-muted px-4 py-1.5 mb-8"
+          >
             <span className="text-xs font-medium text-muted-foreground">
               Made for Singapore, by Singaporeans
             </span>
           </div>
 
           <div className="flex justify-center">
-            <Link href="/sign-up">
-              <Button size="lg" variant="outline" className="px-10 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
+            <Link href="/sign-up" data-blur-target="cta">
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-10 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+              >
                 Start Your Journey
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

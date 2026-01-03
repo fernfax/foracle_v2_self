@@ -14,6 +14,11 @@ import {
   Coins,
   Calculator,
   CircleDollarSign,
+  Receipt,
+  Banknote,
+  BadgeDollarSign,
+  ChartLine,
+  HandCoins,
   LucideIcon,
 } from "lucide-react";
 
@@ -36,6 +41,11 @@ const ICON_CONFIGS: IconConfig[] = [
   { Icon: Coins, bgClass: "bg-orange-100", textClass: "text-orange-600" },
   { Icon: Calculator, bgClass: "bg-lime-100", textClass: "text-lime-600" },
   { Icon: CircleDollarSign, bgClass: "bg-violet-100", textClass: "text-violet-600" },
+  { Icon: Receipt, bgClass: "bg-teal-100", textClass: "text-teal-600" },
+  { Icon: Banknote, bgClass: "bg-green-100", textClass: "text-green-600" },
+  { Icon: BadgeDollarSign, bgClass: "bg-yellow-100", textClass: "text-yellow-600" },
+  { Icon: ChartLine, bgClass: "bg-sky-100", textClass: "text-sky-600" },
+  { Icon: HandCoins, bgClass: "bg-fuchsia-100", textClass: "text-fuchsia-600" },
 ];
 
 interface FloatingIcon {
