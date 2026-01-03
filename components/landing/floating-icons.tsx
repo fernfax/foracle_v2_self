@@ -65,17 +65,16 @@ interface FloatingIcon {
 function generateIcons(width: number, height: number): FloatingIcon[] {
   const icons: FloatingIcon[] = [];
 
-  // Create 12 unique icons (one of each type)
-  // Spread them across the full area, some starting off-screen
+  // Create icons that fall from the top on page load
   for (let i = 0; i < ICON_CONFIGS.length; i++) {
     const config = ICON_CONFIGS[i];
-    // Allow icons to start anywhere, including slightly off-screen
-    const x = -50 + Math.random() * (width + 100);
-    const y = -50 + Math.random() * (height + 100);
+    // Start icons spread across the top, slightly off-screen
+    const x = Math.random() * width;
+    const y = -100 - Math.random() * 200; // Start above viewport (-100 to -300)
 
-    // Give each icon a random drift velocity
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 0.3 + Math.random() * 0.5;
+    // Give each icon a slight horizontal drift and downward fall velocity
+    const vx = (Math.random() - 0.5) * 0.8; // Slight left/right drift
+    const vy = 1.5 + Math.random() * 1.5; // Fall speed (1.5 to 3.0)
 
     icons.push({
       id: i,
@@ -84,8 +83,8 @@ function generateIcons(width: number, height: number): FloatingIcon[] {
       y,
       baseX: x,
       baseY: y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
+      vx,
+      vy,
       size: 52 + Math.random() * 16, // 52-68px
       offset: Math.random() * Math.PI * 2,
       opacity: 0.7 + Math.random() * 0.2, // 0.7-0.9
