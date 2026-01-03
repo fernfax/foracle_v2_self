@@ -96,6 +96,7 @@ export function TotalAssetsCard({ totalAssets }: TotalAssetsCardProps) {
       <Card
         className="relative overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
         onClick={() => setIsModalOpen(true)}
+        data-tour="assets-card"
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">

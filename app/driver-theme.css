@@ -1,0 +1,175 @@
+/* Driver.js Theme Overrides for Foracle Design System */
+
+/* Main popover container */
+.driver-popover {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  color: hsl(var(--foreground)) !important;
+  font-family: inherit !important;
+  max-width: 320px !important;
+  padding: 1rem !important;
+}
+
+/* Popover arrow - sharper speech bubble style */
+.driver-popover-arrow {
+  border: 10px solid transparent !important;
+}
+
+.driver-popover-arrow-side-top {
+  border-top-color: hsl(var(--card)) !important;
+  border-bottom: 0 !important;
+}
+
+.driver-popover-arrow-side-bottom {
+  border-bottom-color: hsl(var(--card)) !important;
+  border-top: 0 !important;
+}
+
+.driver-popover-arrow-side-left {
+  border-left-color: hsl(var(--card)) !important;
+  border-right: 0 !important;
+}
+
+.driver-popover-arrow-side-right {
+  border-right-color: hsl(var(--card)) !important;
+  border-left: 0 !important;
+}
+
+/* Title */
+.driver-popover-title {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: hsl(var(--foreground)) !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.4 !important;
+}
+
+/* Description */
+.driver-popover-description {
+  font-size: 0.875rem !important;
+  color: hsl(var(--muted-foreground)) !important;
+  line-height: 1.6 !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Progress text */
+.driver-popover-progress-text {
+  font-size: 0.75rem !important;
+  color: hsl(var(--muted-foreground)) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Footer with navigation buttons */
+.driver-popover-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin-top: 0.5rem !important;
+}
+
+/* Navigation buttons container */
+.driver-popover-navigation-btns {
+  display: flex !important;
+  gap: 0.5rem !important;
+}
+
+/* Button base styles */
+.driver-popover-prev-btn,
+.driver-popover-next-btn {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: calc(var(--radius) - 2px) !important;
+  transition: all 150ms !important;
+  border: none !important;
+  cursor: pointer !important;
+  text-shadow: none !important;
+}
+
+/* Remove pseudo-elements that cause duplicate text */
+.driver-popover-prev-btn::before,
+.driver-popover-prev-btn::after,
+.driver-popover-next-btn::before,
+.driver-popover-next-btn::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Previous/Skip button */
+.driver-popover-prev-btn {
+  background: hsl(var(--secondary)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background: hsl(var(--accent)) !important;
+}
+
+/* Next/Done button */
+.driver-popover-next-btn {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.driver-popover-next-btn:hover {
+  opacity: 0.9 !important;
+}
+
+/* Close button */
+.driver-popover-close-btn {
+  position: absolute !important;
+  top: 0.75rem !important;
+  right: 0.75rem !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: hsl(var(--muted-foreground)) !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: calc(var(--radius) - 4px) !important;
+  cursor: pointer !important;
+  transition: all 150ms !important;
+  font-size: 1.25rem !important;
+  line-height: 1 !important;
+}
+
+.driver-popover-close-btn:hover {
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Overlay/backdrop */
+.driver-overlay {
+  background: none !important;
+}
+
+/* SVG overlay - the dark backdrop with transparent cutout */
+.driver-overlay svg {
+  filter: none !important;
+}
+
+/* Highlighted element - no extra styling, just show true colors */
+.driver-active-element {
+  box-shadow: none !important;
+  outline: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .driver-popover {
+    max-width: calc(100vw - 2rem) !important;
+    margin: 0 1rem !important;
+  }
+}
+
+/* Dark mode - uses CSS variables so automatic */
+.dark .driver-popover {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}

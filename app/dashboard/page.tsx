@@ -44,7 +44,7 @@ export default async function DashboardPage() {
         <TotalAssetsCard totalAssets={metrics.totalAssets} />
 
         {/* Active Goals */}
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden" data-tour="goals-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Active Goals
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card data-tour="quick-actions">
         <CardHeader>
           <CardTitle className="text-xl">Quick Actions</CardTitle>
           <CardDescription>

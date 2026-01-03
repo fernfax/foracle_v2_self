@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Driver.js tour styling */
+@import "driver.js/dist/driver.css";
+@import "./driver-theme.css";
+
 @layer base {
   :root {
     /* Sophisticated neutral palette */

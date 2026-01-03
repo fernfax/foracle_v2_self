@@ -249,7 +249,7 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
     : netSavings;
 
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden" data-tour="savings-card">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           Net Savings

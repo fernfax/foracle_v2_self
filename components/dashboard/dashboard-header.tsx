@@ -83,7 +83,7 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
 
         {/* Universal Month Toggle */}
         <div className="flex flex-col items-end gap-1 sm:mt-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-tour="month-nav">
             <Button
               variant="outline"
               size="icon"

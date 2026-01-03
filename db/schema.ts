@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name", { length: 255 }),
   imageUrl: text("image_url"),
   onboardingCompleted: boolean("onboarding_completed").default(false),
+  tourCompletedAt: text("tour_completed_at"), // JSON: {"dashboard":"2024-01-15T...","incomes":null,"expenses":null}
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
