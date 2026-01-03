@@ -159,7 +159,7 @@ export function CpfList({ initialCpfData }: CpfListProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold tracking-tight">CPF List</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">CPF Account Balances</h2>
       </div>
 
       {/* Search Bar and Results Counter */}
@@ -634,6 +634,7 @@ export function CpfList({ initialCpfData }: CpfListProps) {
           initialOA={currentCpfValues.oa}
           initialSA={currentCpfValues.sa}
           initialMA={currentCpfValues.ma}
+          isStandalone={true}
         />
       )}
     </div>

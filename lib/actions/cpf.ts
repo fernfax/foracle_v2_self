@@ -161,35 +161,35 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       if (income.bonusGroups) {
         try {
           let bonusGroups;
+          let validBonusData = true;
 
           // Handle different formats of bonusGroups
           if (typeof income.bonusGroups === 'string') {
-            // Skip if it's the string "[object Object]" (corrupted data)
+            // Skip bonus calculation if it's corrupted data like "[object Object]"
             if (income.bonusGroups.startsWith('[object')) {
               console.warn('Skipping corrupted bonusGroups data for income:', income.id);
-              continue;
+              validBonusData = false;
+            } else {
+              bonusGroups = JSON.parse(income.bonusGroups);
             }
-            bonusGroups = JSON.parse(income.bonusGroups);
           } else if (Array.isArray(income.bonusGroups)) {
             bonusGroups = income.bonusGroups;
           } else {
-            // Skip invalid data
-            continue;
+            // Invalid bonus data format
+            validBonusData = false;
           }
 
-          // Ensure bonusGroups is an array
-          if (!Array.isArray(bonusGroups)) {
-            continue;
+          // Only process bonus if we have valid array data
+          if (validBonusData && Array.isArray(bonusGroups)) {
+            // Sum all bonus months from all bonus groups
+            const totalBonusMonths = bonusGroups.reduce((sum: number, group: { month: number; amount: string }) => {
+              return sum + (parseFloat(group.amount) || 0);
+            }, 0);
+
+            // Calculate actual bonus amount
+            const actualBonusAmount = monthlyGross * totalBonusMonths;
+            totalBonusAmount += actualBonusAmount;
           }
-
-          // Sum all bonus months from all bonus groups
-          const totalBonusMonths = bonusGroups.reduce((sum: number, group: { month: number; amount: string }) => {
-            return sum + (parseFloat(group.amount) || 0);
-          }, 0);
-
-          // Calculate actual bonus amount
-          const actualBonusAmount = monthlyGross * totalBonusMonths;
-          totalBonusAmount += actualBonusAmount;
         } catch (error) {
           console.error('Error parsing bonusGroups for income', income.id, ':', error);
         }
