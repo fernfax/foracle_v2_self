@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { DashboardNav } from "@/components/dashboard-nav";
+import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileNav } from "@/components/mobile-nav";
 import { HeaderQuickLinks } from "@/components/header/header-quick-links";
 import { ClerkUserButton } from "@/components/clerk-user-button";
@@ -31,8 +31,11 @@ export default async function DashboardLayout({
   return (
     <TourProvider userId={userId}>
       <div className="min-h-screen bg-background">
+        {/* Fixed Sidebar - Hidden on mobile, visible on md+ */}
+        <Sidebar />
+
         {/* Top Navigation */}
-        <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl md:pl-[72px]">
           <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-20 flex justify-between items-center">
             <Link href="/dashboard" className="flex items-center">
               <Image
@@ -55,15 +58,10 @@ export default async function DashboardLayout({
           </div>
         </header>
 
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-8">
-            {/* Sidebar Navigation - Hidden on mobile, visible on md+ */}
-            <aside className="sidebar-nav w-64 shrink-0 pr-8 border-r border-border/60 py-6 sm:py-8">
-              <DashboardNav />
-            </aside>
-
-            {/* Main Content */}
-            <main className="flex-1 min-w-0 py-6 sm:py-8">{children}</main>
+        {/* Main Content - Add left margin for sidebar on desktop */}
+        <div className="md:ml-[72px]">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <main className="py-6 sm:py-8">{children}</main>
           </div>
         </div>
 
