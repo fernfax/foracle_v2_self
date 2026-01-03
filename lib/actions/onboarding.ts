@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users, expenses } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
@@ -21,7 +21,9 @@ const CATEGORY_WEIGHTS: Record<string, number> = {
 };
 
 /**
- * Check if the current user has completed onboarding
+ * Check if the current user has completed onboarding.
+ * If the user doesn't exist in the database (e.g., Clerk webhook didn't fire in local dev),
+ * create them on-demand.
  */
 export async function checkOnboardingStatus(): Promise<boolean> {
   const { userId } = await auth();
@@ -29,10 +31,39 @@ export async function checkOnboardingStatus(): Promise<boolean> {
     return false;
   }
 
-  const user = await db.query.users.findFirst({
+  let user = await db.query.users.findFirst({
     where: eq(users.id, userId),
     columns: { onboardingCompleted: true },
   });
+
+  // If user doesn't exist in database, create them on-demand
+  // This handles the case where Clerk webhook didn't fire (e.g., local development)
+  if (!user) {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return false;
+    }
+
+    // Create the user in the database (use onConflictDoNothing for race condition safety)
+    await db.insert(users).values({
+      id: clerkUser.id,
+      email: clerkUser.emailAddresses[0]?.emailAddress || "",
+      firstName: clerkUser.firstName,
+      lastName: clerkUser.lastName,
+      imageUrl: clerkUser.imageUrl,
+      onboardingCompleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).onConflictDoNothing();
+
+    // Re-fetch to get actual onboarding status (in case user already existed)
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.id, clerkUser.id),
+      columns: { onboardingCompleted: true },
+    });
+
+    return existingUser?.onboardingCompleted ?? false;
+  }
 
   return user?.onboardingCompleted ?? false;
 }

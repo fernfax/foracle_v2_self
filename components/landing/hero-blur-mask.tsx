@@ -30,6 +30,8 @@ export function HeroBlurMask() {
         "[data-blur-target='description']",
         "[data-blur-target='badge']",
         "[data-blur-target='cta']",
+        "[data-blur-target='features']",
+        "[data-blur-target='subtext']",
       ];
 
       const zones: BlurZone[] = [];

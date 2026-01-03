@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { checkOnboardingStatus } from "@/lib/actions/onboarding";
+import { FloatingIcons } from "@/components/landing/floating-icons";
+import { HeroBlurMask } from "@/components/landing/hero-blur-mask";
 
 export default async function OnboardingLayout({
   children,
@@ -21,8 +23,13 @@ export default async function OnboardingLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {children}
+    <div className="relative min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="absolute inset-0 bg-muted/30" />
+      <FloatingIcons />
+      <HeroBlurMask />
+      <div className="relative z-10">
+        {children}
+      </div>
     </div>
   );
 }
