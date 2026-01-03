@@ -169,8 +169,8 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
-                        <Car className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100">
+                        <Car className="h-5 w-5 text-amber-600" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{vehicle.vehicleName}</h3>

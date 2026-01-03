@@ -474,8 +474,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Expected Expenses
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
-                <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
+                <DollarSign className="h-5 w-5 text-emerald-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -597,8 +597,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Expected Expenses
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
-                <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
+                <DollarSign className="h-5 w-5 text-emerald-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -625,8 +625,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Top Category ({formatMonthDisplay(selectedMonth)})
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950">
-                <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
+                <TrendingDown className="h-5 w-5 text-rose-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -682,8 +682,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Top Category
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950">
-                <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
+                <TrendingDown className="h-5 w-5 text-rose-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">

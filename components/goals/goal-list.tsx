@@ -220,14 +220,14 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                       <div
                         className={`flex items-center justify-center w-10 h-10 rounded-xl ${
                           isAchievedView
-                            ? "bg-emerald-50 dark:bg-emerald-950"
-                            : "bg-violet-50 dark:bg-violet-950"
+                            ? "bg-emerald-100"
+                            : "bg-cyan-100"
                         }`}
                       >
                         {isAchievedView ? (
-                          <Trophy className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          <Trophy className="h-5 w-5 text-emerald-600" />
                         ) : (
-                          <Target className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                          <Target className="h-5 w-5 text-cyan-600" />
                         )}
                       </div>
                       <div>

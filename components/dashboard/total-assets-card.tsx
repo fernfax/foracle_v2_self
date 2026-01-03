@@ -102,8 +102,8 @@ export function TotalAssetsCard({ totalAssets }: TotalAssetsCardProps) {
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Total Assets
           </CardTitle>
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950">
-            <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100">
+            <TrendingUp className="h-5 w-5 text-amber-600" />
           </div>
         </CardHeader>
         <CardContent>

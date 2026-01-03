@@ -163,8 +163,8 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950">
-                        <Home className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100">
+                        <Home className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{property.propertyName}</h3>

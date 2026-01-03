@@ -62,8 +62,8 @@ export function PropertyDetailsModal({
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950">
-              <Home className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100">
+              <Home className="h-6 w-6 text-blue-600" />
             </div>
             <div>
               <DialogTitle className="text-xl">{property.propertyName}</DialogTitle>

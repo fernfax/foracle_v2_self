@@ -260,8 +260,8 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Total Nett Income
           </CardTitle>
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950">
-            <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
+            <DollarSign className="h-5 w-5 text-emerald-600" />
           </div>
         </CardHeader>
         <CardContent>

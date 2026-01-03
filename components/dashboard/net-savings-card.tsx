@@ -254,8 +254,8 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
         <CardTitle className="text-sm font-medium text-muted-foreground">
           Net Savings
         </CardTitle>
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950">
-          <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100">
+          <Wallet className="h-5 w-5 text-blue-600" />
         </div>
       </CardHeader>
       <CardContent>

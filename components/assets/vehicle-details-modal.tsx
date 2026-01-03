@@ -83,8 +83,8 @@ export function VehicleDetailsModal({
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950">
-              <Car className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-100">
+              <Car className="h-6 w-6 text-amber-600" />
             </div>
             <div>
               <DialogTitle className="text-xl">{vehicle.vehicleName}</DialogTitle>

@@ -191,8 +191,8 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Holdings
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950">
-                <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
+                <Wallet className="h-5 w-5 text-emerald-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -228,8 +228,8 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Holdings
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950">
-                <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
+                <Wallet className="h-5 w-5 text-emerald-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -256,8 +256,8 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Top Bank
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950">
-                <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100">
+                <Building2 className="h-5 w-5 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -279,8 +279,8 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Top Bank
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950">
-                <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100">
+                <Building2 className="h-5 w-5 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">

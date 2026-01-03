@@ -602,8 +602,8 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Family Financial Overview
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950">
-                <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-100">
+                <Users className="h-5 w-5 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -662,8 +662,8 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Family Financial Overview
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950">
-                <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-100">
+                <Users className="h-5 w-5 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -690,8 +690,8 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Quick Stats
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950">
-                <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
+                <Shield className="h-5 w-5 text-rose-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -737,8 +737,8 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Quick Stats
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950">
-                <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
+                <Shield className="h-5 w-5 text-rose-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">

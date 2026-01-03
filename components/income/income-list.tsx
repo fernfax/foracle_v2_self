@@ -512,8 +512,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Annual Income
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950">
-                <DollarSign className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-100">
+                <DollarSign className="h-5 w-5 text-teal-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -553,8 +553,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Annual Income
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950">
-                <DollarSign className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-100">
+                <DollarSign className="h-5 w-5 text-teal-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -581,8 +581,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Monthly CPF Contributions
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950">
-                <Briefcase className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-100">
+                <Briefcase className="h-5 w-5 text-orange-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -620,8 +620,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Monthly CPF Contributions
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950">
-                <Briefcase className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-100">
+                <Briefcase className="h-5 w-5 text-orange-600" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
