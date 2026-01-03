@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { MobileNav } from "@/components/mobile-nav";
 import { HeaderQuickLinks } from "@/components/header/header-quick-links";
@@ -51,7 +50,6 @@ export default async function DashboardLayout({
             </div>
 
             <div className="flex items-center gap-4">
-              <ThemeToggle />
               <ClerkUserButton />
             </div>
           </div>

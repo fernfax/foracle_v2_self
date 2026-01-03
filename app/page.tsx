@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { FloatingIcons } from "@/components/landing/floating-icons";
 import {
   TrendingUp,
@@ -36,7 +35,6 @@ export default function Home() {
             />
           </div>
           <div className="flex items-center gap-3">
-            <ThemeToggle />
             <Link href="/sign-in">
               <Button variant="ghost" size="sm">
                 Sign In
