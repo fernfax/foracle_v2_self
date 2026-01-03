@@ -88,6 +88,7 @@ function generateIcons(width: number, height: number): FloatingIcon[] {
 export function FloatingIcons() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [icons, setIcons] = useState<FloatingIcon[]>([]);
+  const [mounted, setMounted] = useState(false);
   const mousePos = useRef({ x: -1000, y: -1000 });
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
@@ -97,6 +98,7 @@ export function FloatingIcons() {
 
   // Initialize icons on mount
   useEffect(() => {
+    setMounted(true);
     if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -134,7 +136,7 @@ export function FloatingIcons() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Mouse tracking
+  // Mouse tracking - use window-level events so icons react everywhere on screen
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
@@ -145,21 +147,11 @@ export function FloatingIcons() {
       };
     };
 
-    const handleMouseLeave = () => {
-      mousePos.current = { x: -1000, y: -1000 };
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener("mousemove", handleMouseMove);
-      container.addEventListener("mouseleave", handleMouseLeave);
-    }
+    // Track mouse on window so it works even over text/buttons
+    window.addEventListener("mousemove", handleMouseMove);
 
     return () => {
-      if (container) {
-        container.removeEventListener("mousemove", handleMouseMove);
-        container.removeEventListener("mouseleave", handleMouseLeave);
-      }
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 
@@ -255,18 +247,19 @@ export function FloatingIcons() {
     };
   }, [animate]);
 
+  // Don't render icons until mounted to prevent hydration mismatch
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 overflow-hidden pointer-events-none"
+      className="absolute inset-0 overflow-hidden"
       style={{ zIndex: 1 }}
     >
-      {icons.map((icon) => {
+      {mounted && icons.map((icon) => {
         const { Icon } = icon.config;
         return (
           <div
             key={icon.id}
-            className={`absolute rounded-2xl ${icon.config.bgClass} flex items-center justify-center will-change-transform`}
+            className={`absolute rounded-2xl ${icon.config.bgClass} flex items-center justify-center will-change-transform pointer-events-none`}
             style={{
               width: icon.size,
               height: icon.size,
