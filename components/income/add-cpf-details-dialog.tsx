@@ -27,13 +27,14 @@ import {
 interface AddCpfDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onBack: (cpfData?: { oa: number; sa: number; ma: number }) => void;
+  onBack?: (cpfData?: { oa: number; sa: number; ma: number }) => void;
   onComplete: (cpfDetails: { oa: number; sa: number; ma: number }) => void;
   totalCpfContribution: number;
   familyMemberName?: string;
   initialOA?: number;
   initialSA?: number;
   initialMA?: number;
+  isStandalone?: boolean; // When true, hides Back button and step indicator
 }
 
 export function AddCpfDetailsDialog({
@@ -46,6 +47,7 @@ export function AddCpfDetailsDialog({
   initialOA,
   initialSA,
   initialMA,
+  isStandalone = false,
 }: AddCpfDetailsDialogProps) {
   const [ordinaryAccount, setOrdinaryAccount] = useState("");
   const [specialAccount, setSpecialAccount] = useState("");
@@ -55,12 +57,26 @@ export function AddCpfDetailsDialog({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [initialValues, setInitialValues] = useState<{oa: string; sa: string; ma: string} | null>(null);
 
+  // Format number to 2 decimal places
+  const formatDecimal = (value: number | undefined): string => {
+    if (value === undefined || value === 0) return "";
+    return value.toFixed(2);
+  };
+
+  // Format on blur to show 2 decimal places
+  const handleBlur = (value: string, setter: (v: string) => void) => {
+    const num = parseFloat(value);
+    if (!isNaN(num) && num > 0) {
+      setter(num.toFixed(2));
+    }
+  };
+
   // Pre-populate fields when initial values are provided
   useEffect(() => {
     if (open) {
-      const oa = initialOA !== undefined ? initialOA.toString() : "";
-      const sa = initialSA !== undefined ? initialSA.toString() : "";
-      const ma = initialMA !== undefined ? initialMA.toString() : "";
+      const oa = formatDecimal(initialOA);
+      const sa = formatDecimal(initialSA);
+      const ma = formatDecimal(initialMA);
 
       setOrdinaryAccount(oa);
       setSpecialAccount(sa);
@@ -150,16 +166,20 @@ export function AddCpfDetailsDialog({
           {/* Ordinary Account (OA) */}
           <div className="space-y-2">
             <Label htmlFor="oa">Ordinary Account (OA)</Label>
-            <Input
-              id="oa"
-              type="number"
-              placeholder="0.00"
-              value={ordinaryAccount}
-              onChange={(e) => setOrdinaryAccount(e.target.value)}
-              min="0"
-              step="0.01"
-              className="bg-white"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="oa"
+                type="number"
+                placeholder="0.00"
+                value={ordinaryAccount}
+                onChange={(e) => setOrdinaryAccount(e.target.value)}
+                onBlur={() => handleBlur(ordinaryAccount, setOrdinaryAccount)}
+                min="0"
+                step="0.01"
+                className="bg-white pl-7"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               For housing, insurance, investment, and education
             </p>
@@ -168,16 +188,20 @@ export function AddCpfDetailsDialog({
           {/* Special Account (SA) */}
           <div className="space-y-2">
             <Label htmlFor="sa">Special Account (SA)</Label>
-            <Input
-              id="sa"
-              type="number"
-              placeholder="0.00"
-              value={specialAccount}
-              onChange={(e) => setSpecialAccount(e.target.value)}
-              min="0"
-              step="0.01"
-              className="bg-white"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="sa"
+                type="number"
+                placeholder="0.00"
+                value={specialAccount}
+                onChange={(e) => setSpecialAccount(e.target.value)}
+                onBlur={() => handleBlur(specialAccount, setSpecialAccount)}
+                min="0"
+                step="0.01"
+                className="bg-white pl-7"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               For retirement and investment in approved assets
             </p>
@@ -186,16 +210,20 @@ export function AddCpfDetailsDialog({
           {/* Medisave Account (MA) */}
           <div className="space-y-2">
             <Label htmlFor="ma">Medisave Account (MA)</Label>
-            <Input
-              id="ma"
-              type="number"
-              placeholder="0.00"
-              value={medisaveAccount}
-              onChange={(e) => setMedisaveAccount(e.target.value)}
-              min="0"
-              step="0.01"
-              className="bg-white"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="ma"
+                type="number"
+                placeholder="0.00"
+                value={medisaveAccount}
+                onChange={(e) => setMedisaveAccount(e.target.value)}
+                onBlur={() => handleBlur(medisaveAccount, setMedisaveAccount)}
+                min="0"
+                step="0.01"
+                className="bg-white pl-7"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               For hospitalization expenses and approved medical insurance
             </p>
@@ -204,12 +232,14 @@ export function AddCpfDetailsDialog({
 
         {/* Footer */}
         <div className="space-y-4">
-          <StepIndicator currentStep={3} totalSteps={3} />
-          <div className="flex justify-between gap-3">
-            <Button variant="ghost" onClick={handleBack} disabled={isSubmitting}>
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
+          {!isStandalone && <StepIndicator currentStep={3} totalSteps={3} />}
+          <div className={`flex gap-3 ${isStandalone ? 'justify-end' : 'justify-between'}`}>
+            {!isStandalone && (
+              <Button variant="ghost" onClick={handleBack} disabled={isSubmitting}>
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+            )}
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
                 Cancel
@@ -218,7 +248,7 @@ export function AddCpfDetailsDialog({
                 onClick={handleSubmit}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Saving..." : "Save & Finish"}
+                {isSubmitting ? "Saving..." : isStandalone ? "Save" : "Save & Finish"}
               </Button>
             </div>
           </div>
