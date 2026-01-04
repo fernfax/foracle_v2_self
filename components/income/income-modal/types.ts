@@ -52,6 +52,7 @@ export interface Income {
   endDate: string | null;
   pastIncomeHistory: string | null;  // JSON string
   futureMilestones: string | null;   // JSON string
+  accountForFutureChange: boolean | null;
   isActive: boolean | null;
   createdAt: Date;
   updatedAt: Date;
@@ -79,6 +80,7 @@ export interface IncomeFormData {
 
   // Future tab fields
   futureMilestones: FutureMilestone[];
+  accountForFutureChange: boolean;
 
   // CPF fields (populated in CPF step)
   cpfOrdinaryAccount?: number;

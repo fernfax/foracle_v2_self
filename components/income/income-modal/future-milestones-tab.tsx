@@ -22,7 +22,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Slider } from "@/components/ui/slider";
-import { Trash2, Plus, TrendingUp, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Trash2, Plus, TrendingUp, Sparkles, Info } from "lucide-react";
 import { FutureMilestone, MILESTONE_REASONS, MONTHS } from "./types";
 import { nanoid } from "nanoid";
 
@@ -30,16 +37,34 @@ interface FutureMilestonesTabProps {
   futureMilestones: FutureMilestone[];
   setFutureMilestones: (value: FutureMilestone[]) => void;
   currentAmount: string; // Current income amount for projection
+  accountForFutureChange: boolean;
+  setAccountForFutureChange: (value: boolean) => void;
 }
 
 export function FutureMilestonesTab({
   futureMilestones,
   setFutureMilestones,
   currentAmount,
+  accountForFutureChange,
+  setAccountForFutureChange,
 }: FutureMilestonesTabProps) {
   const [growthRate, setGrowthRate] = useState(5); // For visualization only
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [showFutureChangeConfirm, setShowFutureChangeConfirm] = useState(false);
+
+  const handleToggleFutureChange = (checked: boolean) => {
+    if (checked) {
+      setShowFutureChangeConfirm(true);
+    } else {
+      setAccountForFutureChange(false);
+    }
+  };
+
+  const confirmFutureChange = () => {
+    setAccountForFutureChange(true);
+    setShowFutureChangeConfirm(false);
+  };
   const [newMilestone, setNewMilestone] = useState<FutureMilestone>({
     id: "",
     targetMonth: "",
@@ -196,6 +221,29 @@ export function FutureMilestonesTab({
           <h3 className="font-semibold text-gray-900">Future Income Milestones</h3>
           <p className="text-sm text-gray-500">Plan for expected income changes and growth</p>
         </div>
+      </div>
+
+      {/* Account for Future Change Toggle */}
+      <div className="flex items-center justify-between py-3 px-4 bg-blue-50 rounded-lg border border-blue-100">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">Account for Future Change</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-blue-500 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-[280px]">
+                <p className="text-sm">
+                  When enabled, your planned future income milestones will be included in the monthly balance projection graph on the dashboard.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <Switch
+          checked={accountForFutureChange}
+          onCheckedChange={handleToggleFutureChange}
+        />
       </div>
 
       {/* New Milestone Form */}
@@ -535,6 +583,24 @@ export function FutureMilestonesTab({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={removeMilestone} className="bg-red-600 hover:bg-red-700">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Account for Future Change Confirmation Dialog */}
+      <AlertDialog open={showFutureChangeConfirm} onOpenChange={setShowFutureChangeConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Include Future Milestones in Projections</AlertDialogTitle>
+            <AlertDialogDescription>
+              When enabled, your planned future income milestones will be included in the monthly balance projection graph on the dashboard. This helps you visualize how expected income changes will impact your financial outlook.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmFutureChange}>
+              Enable
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
