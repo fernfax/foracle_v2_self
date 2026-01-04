@@ -108,28 +108,43 @@ export function SidebarNavItem({
         )}
       </Link>
 
-      {/* Submenu - shows on hover when expanded */}
-      {hasSubItems && isExpanded && isHovered && (
-        <div className="pl-12 mt-1 space-y-0.5">
-          {subItems.map((subItem) => {
-            const isSubActive = getSubItemActive(subItem.href);
-            const SubIcon = subItem.icon;
-            return (
-              <Link
-                key={subItem.href}
-                href={subItem.href}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors",
-                  isSubActive
-                    ? "bg-blue-50 text-[#387DF5] font-medium"
-                    : "text-slate-600 hover:bg-slate-100"
-                )}
-              >
-                {SubIcon && <SubIcon className="h-4 w-4" />}
-                {subItem.label}
-              </Link>
-            );
-          })}
+      {/* Submenu - animated expand/collapse */}
+      {hasSubItems && isExpanded && (
+        <div
+          className={cn(
+            "grid transition-all duration-300 ease-in-out",
+            isHovered ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          )}
+        >
+          <div className="overflow-hidden">
+            <div className="pl-12 mt-1 space-y-0.5">
+              {subItems.map((subItem, index) => {
+                const isSubActive = getSubItemActive(subItem.href);
+                const SubIcon = subItem.icon;
+                return (
+                  <Link
+                    key={subItem.href}
+                    href={subItem.href}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-all duration-200",
+                      isSubActive
+                        ? "bg-blue-50 text-[#387DF5] font-medium"
+                        : "text-slate-600 hover:bg-slate-100",
+                      isHovered
+                        ? "translate-x-0 opacity-100"
+                        : "-translate-x-2 opacity-0"
+                    )}
+                    style={{
+                      transitionDelay: isHovered ? `${index * 50}ms` : "0ms",
+                    }}
+                  >
+                    {SubIcon && <SubIcon className="h-4 w-4" />}
+                    {subItem.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>
