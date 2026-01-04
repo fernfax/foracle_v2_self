@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
+import { Smartphone } from "lucide-react";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileNav } from "@/components/mobile-nav";
 import { HeaderQuickLinks } from "@/components/header/header-quick-links";
@@ -53,6 +54,13 @@ export default async function DashboardLayout({
             </div>
 
             <div className="flex items-center gap-4">
+              <Link
+                href="/dashboard/mobile-guide"
+                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                title="Add to Home Screen Guide"
+              >
+                <Smartphone className="h-5 w-5 text-slate-600" />
+              </Link>
               <ClerkUserButton />
             </div>
           </div>
