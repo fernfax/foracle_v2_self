@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogBody, DialogFooterSticky, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,7 +106,8 @@ export function AddCurrentHoldingDialog({
           <DialogTitle>{holding ? "Edit Current Holding" : "Add Current Holding"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <DialogBody>
+        <form id="current-holding-form" onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Account Holder */}
           <div className="space-y-2">
             <Label htmlFor="familyMember">Account Holder</Label>
@@ -157,22 +158,23 @@ export function AddCurrentHoldingDialog({
               />
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : holding ? "Update" : "Add"}
-            </Button>
-          </div>
         </form>
+        </DialogBody>
+
+        {/* Actions */}
+        <DialogFooterSticky>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" form="current-holding-form" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : holding ? "Update" : "Add"}
+          </Button>
+        </DialogFooterSticky>
       </DialogContent>
     </Dialog>
   );

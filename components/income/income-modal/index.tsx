@@ -19,6 +19,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -333,7 +335,7 @@ export function IncomeModal({
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" ref={containerRef}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh]" ref={containerRef}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {income ? "Edit Income" : familyMember ? `Add Income for ${familyMember.name}` : "Add New Income"}
@@ -356,6 +358,7 @@ export function IncomeModal({
             </DialogDescription>
           </DialogHeader>
 
+          <DialogBody>
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
             <TabsList className="w-full h-auto p-0 bg-transparent border-b border-gray-200 rounded-none grid grid-cols-3">
@@ -431,11 +434,12 @@ export function IncomeModal({
               </TabsContent>
             </div>
           </Tabs>
+          </DialogBody>
 
           {/* Footer */}
-          <div className="space-y-4 pt-4 border-t">
+          <DialogFooterSticky className="flex-col gap-4">
             {familyMember && <StepIndicator currentStep={2} totalSteps={3} />}
-            <div className="flex justify-between gap-3">
+            <div className="flex justify-between gap-3 w-full">
               {familyMember && onBack ? (
                 <Button variant="ghost" onClick={onBack} disabled={isSubmitting}>
                   <ChevronLeft className="h-4 w-4 mr-1" />
@@ -459,7 +463,7 @@ export function IncomeModal({
                 </Button>
               </div>
             </div>
-          </div>
+          </DialogFooterSticky>
         </DialogContent>
       </Dialog>
 

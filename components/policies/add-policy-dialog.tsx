@@ -8,6 +8,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -342,7 +344,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Add Insurance Policy</DialogTitle>
           <DialogDescription>
@@ -350,7 +352,8 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <DialogBody>
+        <form id="add-policy-form" onSubmit={handleSubmit} className="space-y-6">
           {/* Policy Holder */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-4">
             <div className="pb-3 border-b border-gray-200">
@@ -864,22 +867,23 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
               </div>
             )}
           </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Policy"}
-            </Button>
-          </div>
         </form>
+        </DialogBody>
+
+        {/* Actions */}
+        <DialogFooterSticky>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" form="add-policy-form" disabled={isLoading}>
+            {isLoading ? "Adding..." : "Add Policy"}
+          </Button>
+        </DialogFooterSticky>
       </DialogContent>
 
       {/* Confirmation Modal */}

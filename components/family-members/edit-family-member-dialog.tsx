@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -165,7 +167,7 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Edit Family Member
@@ -174,6 +176,7 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
           <DialogDescription>Update the family member details.</DialogDescription>
         </DialogHeader>
 
+        <DialogBody>
         <div className="grid gap-6 py-4">
           {/* Row 1: Full Name */}
           <div className="space-y-2">
@@ -276,11 +279,12 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
             <p className="text-xs text-muted-foreground">Add any additional notes about this family member</p>
           </div>
         </div>
+        </DialogBody>
 
         {/* Footer */}
-        <div className="space-y-4">
+        <DialogFooterSticky className="flex-col gap-4">
           {isContributing && <StepIndicator currentStep={1} totalSteps={3} />}
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-3 w-full">
             <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
               Cancel
             </Button>
@@ -291,7 +295,7 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
               {isSubmitting ? "Saving..." : (isContributing ? "Next" : "Save Changes")}
             </Button>
           </div>
-        </div>
+        </DialogFooterSticky>
       </DialogContent>
     </Dialog>
 

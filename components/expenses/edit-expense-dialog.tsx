@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -249,7 +251,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isLinked && config ? (
@@ -271,6 +273,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
           </DialogDescription>
         </DialogHeader>
 
+        <DialogBody>
         {/* Linked Integration Alert */}
         {isLinked && config && expense && (
           <div className={`flex gap-3 p-4 rounded-lg ${config.bgColor} border ${config.borderColor}`}>
@@ -583,9 +586,10 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             <p className="text-xs text-muted-foreground">Add any additional details about this expense</p>
           </div>
         </div>
+        </DialogBody>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3">
+        <DialogFooterSticky>
           {isLinked && config && expense ? (
             <>
               <Button asChild variant="outline">
@@ -617,7 +621,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
               </Button>
             </>
           )}
-        </div>
+        </DialogFooterSticky>
       </DialogContent>
     </Dialog>
   );

@@ -5,6 +5,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -237,11 +239,12 @@ export function AddGoalDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>{goal ? "Edit Goal" : "Add Goal"}</DialogTitle>
           </DialogHeader>
 
+          <DialogBody>
           <div className="space-y-6 py-4">
             {/* Basic Details */}
             <div className="space-y-4">
@@ -462,9 +465,10 @@ export function AddGoalDialog({
               </div>
             </div>
           </div>
+          </DialogBody>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <DialogFooterSticky>
             <Button
               variant="ghost"
               onClick={() => handleClose(false)}
@@ -475,7 +479,7 @@ export function AddGoalDialog({
             <Button onClick={handleSubmit} disabled={!isFormValid || isSubmitting}>
               {isSubmitting ? "Saving..." : goal ? "Update Goal" : "Add Goal"}
             </Button>
-          </div>
+          </DialogFooterSticky>
         </DialogContent>
       </Dialog>
 
