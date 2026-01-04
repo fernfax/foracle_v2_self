@@ -11,11 +11,10 @@ import {
   Target,
   Users,
   DollarSign,
-  Building,
-  Coins,
+  Building2,
+  Briefcase,
   Receipt,
-  BarChart3,
-  FileText,
+  PieChart,
   Home as PropertyIcon,
   Car,
   Package,
@@ -41,8 +40,8 @@ const navItems = [
     subItems: [
       { href: "/dashboard/user?tab=family", label: "Family", icon: Users },
       { href: "/dashboard/user?tab=incomes", label: "Incomes", icon: DollarSign },
-      { href: "/dashboard/user?tab=cpf", label: "CPF", icon: Building },
-      { href: "/dashboard/user?tab=current", label: "Holdings", icon: Coins },
+      { href: "/dashboard/user?tab=cpf", label: "CPF", icon: Building2 },
+      { href: "/dashboard/user?tab=current", label: "Holdings", icon: Briefcase },
     ],
   },
   {
@@ -53,8 +52,8 @@ const navItems = [
     iconColor: "text-emerald-600",
     subItems: [
       { href: "/dashboard/user/expenses?tab=expenses", label: "Expenses", icon: Receipt },
-      { href: "/dashboard/user/expenses?tab=graph", label: "Graph", icon: BarChart3 },
-      { href: "/dashboard/user/expenses?tab=reports", label: "Reports", icon: FileText },
+      { href: "/dashboard/user/expenses?tab=graph", label: "Graph", icon: TrendingUp },
+      { href: "/dashboard/user/expenses?tab=reports", label: "Reports", icon: PieChart },
     ],
   },
   {
