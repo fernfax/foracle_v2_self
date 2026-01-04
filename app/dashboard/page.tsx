@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
@@ -94,33 +95,33 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="group rounded-2xl border border-dashed border-border p-8 hover:border-foreground/30 hover:bg-muted/50 cursor-pointer transition-all duration-200">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-muted mb-4 group-hover:bg-muted/80 transition-colors">
-                <DollarSign className="h-6 w-6 text-foreground" />
+            <Link href="/dashboard/user?tab=incomes" className="group rounded-2xl border border-dashed border-border p-8 hover:border-purple-300 hover:bg-purple-50/50 cursor-pointer transition-all duration-200">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-100 mb-4 group-hover:bg-purple-200 transition-colors">
+                <DollarSign className="h-6 w-6 text-purple-600" />
               </div>
               <h3 className="font-semibold mb-1">Add Income</h3>
               <p className="text-sm text-muted-foreground">
                 Track your income sources
               </p>
-            </div>
-            <div className="group rounded-2xl border border-dashed border-border p-8 hover:border-foreground/30 hover:bg-muted/50 cursor-pointer transition-all duration-200">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-muted mb-4 group-hover:bg-muted/80 transition-colors">
-                <Wallet className="h-6 w-6 text-foreground" />
+            </Link>
+            <Link href="/dashboard/user/expenses" className="group rounded-2xl border border-dashed border-border p-8 hover:border-emerald-300 hover:bg-emerald-50/50 cursor-pointer transition-all duration-200">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-100 mb-4 group-hover:bg-emerald-200 transition-colors">
+                <Wallet className="h-6 w-6 text-emerald-600" />
               </div>
               <h3 className="font-semibold mb-1">Add Expense</h3>
               <p className="text-sm text-muted-foreground">
                 Record your expenses
               </p>
-            </div>
-            <div className="group rounded-2xl border border-dashed border-border p-8 hover:border-foreground/30 hover:bg-muted/50 cursor-pointer transition-all duration-200">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-muted mb-4 group-hover:bg-muted/80 transition-colors">
-                <Target className="h-6 w-6 text-foreground" />
+            </Link>
+            <Link href="/dashboard/goals" className="group rounded-2xl border border-dashed border-border p-8 hover:border-cyan-300 hover:bg-cyan-50/50 cursor-pointer transition-all duration-200">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-cyan-100 mb-4 group-hover:bg-cyan-200 transition-colors">
+                <Target className="h-6 w-6 text-cyan-600" />
               </div>
               <h3 className="font-semibold mb-1">Set a Goal</h3>
               <p className="text-sm text-muted-foreground">
                 Define your financial goals
               </p>
-            </div>
+            </Link>
           </div>
         </CardContent>
       </Card>
