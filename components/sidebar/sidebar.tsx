@@ -89,7 +89,7 @@ export function Sidebar() {
     <aside
       data-tour="sidebar-nav"
       className={cn(
-        "sidebar-nav fixed left-0 top-20 h-[calc(100vh-5rem)] bg-white border-r border-slate-200/60",
+        "sidebar-nav fixed left-0 top-14 h-[calc(100vh-3.5rem)] bg-white border-r border-slate-200/60",
         "flex flex-col z-40 overflow-hidden",
         "transition-all duration-300 ease-in-out",
         "shadow-sm",
