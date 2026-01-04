@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
@@ -48,7 +47,6 @@ export function FutureMilestonesTab({
   accountForFutureChange,
   setAccountForFutureChange,
 }: FutureMilestonesTabProps) {
-  const [growthRate, setGrowthRate] = useState(5); // For visualization only
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [showFutureChangeConfirm, setShowFutureChangeConfirm] = useState(false);
@@ -161,47 +159,6 @@ export function FutureMilestonesTab({
   const isUsedPeriod = (period: string, currentId?: string) => {
     return futureMilestones.some((m) => (currentId === undefined || m.id !== currentId) && m.targetMonth === period);
   };
-
-  // Calculate projected income based on growth rate (for visualization)
-  const projections = useMemo(() => {
-    const baseAmount = parseFloat(currentAmount) || 0;
-    if (baseAmount === 0) return [];
-
-    const monthlyGrowthRate = growthRate / 100 / 12;
-    const projectedMonths: { month: string; amount: number; isMilestone: boolean }[] = [];
-
-    for (let i = 1; i <= 60; i++) { // 5 years
-      const year = currentYear + Math.floor((currentMonth + i - 1) / 12);
-      const month = ((currentMonth + i - 1) % 12) + 1;
-      const period = `${year}-${String(month).padStart(2, "0")}`;
-
-      // Check if there's a milestone for this month
-      const milestone = sortedMilestones.find((m) => m.targetMonth <= period);
-      const applicableMilestone = sortedMilestones
-        .filter((m) => m.targetMonth <= period)
-        .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth))[0];
-
-      let amount: number;
-      if (applicableMilestone) {
-        // Calculate growth from milestone
-        const milestoneDate = new Date(applicableMilestone.targetMonth + "-01");
-        const currentDate = new Date(`${year}-${String(month).padStart(2, "0")}-01`);
-        const monthsSinceMilestone = (currentDate.getTime() - milestoneDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
-        amount = applicableMilestone.amount * Math.pow(1 + monthlyGrowthRate, monthsSinceMilestone);
-      } else {
-        // Calculate growth from base
-        amount = baseAmount * Math.pow(1 + monthlyGrowthRate, i);
-      }
-
-      projectedMonths.push({
-        month: period,
-        amount,
-        isMilestone: sortedMilestones.some((m) => m.targetMonth === period),
-      });
-    }
-
-    return projectedMonths;
-  }, [currentAmount, growthRate, sortedMilestones, currentMonth, currentYear]);
 
   // Format month for display
   const formatMonth = (period: string) => {
@@ -486,60 +443,6 @@ export function FutureMilestonesTab({
         <Plus className="h-4 w-4 mr-2" />
         Add Milestone
       </Button>
-
-      {/* Growth Rate Visualization */}
-      <div className="bg-purple-50 rounded-lg p-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-purple-600" />
-          <Label className="text-sm font-medium text-purple-900">Expected Annual Growth Rate</Label>
-          <span className="text-xs text-purple-600">(Visualization only)</span>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center gap-4">
-            <Slider
-              value={[growthRate]}
-              onValueChange={(value) => setGrowthRate(value[0])}
-              max={20}
-              min={0}
-              step={0.5}
-              className="flex-1"
-            />
-            <span className="text-lg font-semibold text-purple-700 w-16 text-right">
-              {growthRate.toFixed(1)}%
-            </span>
-          </div>
-
-          <div className="flex justify-between text-xs text-purple-600">
-            <span>Conservative</span>
-            <span>Moderate</span>
-            <span>Aggressive</span>
-          </div>
-        </div>
-
-        {/* Simple Projection Preview */}
-        {parseFloat(currentAmount) > 0 && (
-          <div className="pt-3 border-t border-purple-200">
-            <div className="text-sm text-purple-800 space-y-1">
-              <div className="font-medium mb-2">Projected Income (at {growthRate}% annual growth)</div>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="bg-white rounded p-2 text-center">
-                  <div className="text-purple-600">Year 1</div>
-                  <div className="font-bold">${(parseFloat(currentAmount) * (1 + growthRate / 100)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
-                </div>
-                <div className="bg-white rounded p-2 text-center">
-                  <div className="text-purple-600">Year 3</div>
-                  <div className="font-bold">${(parseFloat(currentAmount) * Math.pow(1 + growthRate / 100, 3)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
-                </div>
-                <div className="bg-white rounded p-2 text-center">
-                  <div className="text-purple-600">Year 5</div>
-                  <div className="font-bold">${(parseFloat(currentAmount) * Math.pow(1 + growthRate / 100, 5)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Milestones Timeline Preview */}
       {sortedMilestones.length > 0 && (
