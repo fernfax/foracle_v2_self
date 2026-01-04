@@ -2,7 +2,24 @@
 
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Home, User, Wallet, TrendingUp, Shield, Target } from "lucide-react";
+import {
+  Home,
+  User,
+  Wallet,
+  TrendingUp,
+  Shield,
+  Target,
+  Users,
+  DollarSign,
+  Building,
+  Coins,
+  Receipt,
+  BarChart3,
+  FileText,
+  Home as PropertyIcon,
+  Car,
+  Package,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SidebarNavItem } from "./sidebar-nav-item";
 import { SidebarUserCard } from "./sidebar-user-card";
@@ -21,6 +38,12 @@ const navItems = [
     icon: User,
     bgColor: "bg-purple-100",
     iconColor: "text-purple-600",
+    subItems: [
+      { href: "/dashboard/user?tab=family", label: "Family", icon: Users },
+      { href: "/dashboard/user?tab=incomes", label: "Incomes", icon: DollarSign },
+      { href: "/dashboard/user?tab=cpf", label: "CPF", icon: Building },
+      { href: "/dashboard/user?tab=current", label: "Holdings", icon: Coins },
+    ],
   },
   {
     href: "/dashboard/user/expenses",
@@ -28,6 +51,11 @@ const navItems = [
     icon: Wallet,
     bgColor: "bg-emerald-100",
     iconColor: "text-emerald-600",
+    subItems: [
+      { href: "/dashboard/user/expenses?tab=expenses", label: "Expenses", icon: Receipt },
+      { href: "/dashboard/user/expenses?tab=graph", label: "Graph", icon: BarChart3 },
+      { href: "/dashboard/user/expenses?tab=reports", label: "Reports", icon: FileText },
+    ],
   },
   {
     href: "/dashboard/user/assets",
@@ -35,6 +63,11 @@ const navItems = [
     icon: TrendingUp,
     bgColor: "bg-amber-100",
     iconColor: "text-amber-600",
+    subItems: [
+      { href: "/dashboard/user/assets?tab=property", label: "Property", icon: PropertyIcon },
+      { href: "/dashboard/user/assets?tab=vehicle", label: "Vehicle", icon: Car },
+      { href: "/dashboard/user/assets?tab=others", label: "Others", icon: Package },
+    ],
   },
   {
     href: "/dashboard/policies",
