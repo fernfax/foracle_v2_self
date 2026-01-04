@@ -16,9 +16,9 @@ const mobileNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { href: "/dashboard/user", label: "User", icon: User, bgColor: "bg-purple-100", iconColor: "text-purple-600" },
   { href: "/dashboard/user/expenses", label: "Expenses", icon: Wallet, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
-  { href: "/dashboard/goals", label: "Goals", icon: Target, bgColor: "bg-cyan-100", iconColor: "text-cyan-600" },
   { href: "/dashboard/user/assets", label: "Assets", icon: TrendingUp, bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   { href: "/dashboard/policies", label: "Insurance", icon: Shield, bgColor: "bg-rose-100", iconColor: "text-rose-600" },
+  { href: "/dashboard/goals", label: "Goals", icon: Target, bgColor: "bg-cyan-100", iconColor: "text-cyan-600" },
 ];
 
 export function MobileNav() {
