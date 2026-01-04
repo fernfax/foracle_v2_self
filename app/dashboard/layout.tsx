@@ -58,6 +58,7 @@ export default async function DashboardLayout({
                 href="/dashboard/mobile-guide"
                 className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
                 title="Add to Home Screen Guide"
+                data-tour="mobile-guide-btn"
               >
                 <Smartphone className="h-5 w-5 text-slate-600" />
               </Link>

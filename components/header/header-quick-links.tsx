@@ -82,7 +82,7 @@ export function HeaderQuickLinks() {
   }
 
   return (
-    <>
+    <div data-tour="header-quick-links">
       <QuickLinksDisplay
         links={links}
         onReorder={handleReorder}
@@ -95,6 +95,6 @@ export function HeaderQuickLinks() {
         onSave={handleSave}
         isSaving={isSaving}
       />
-    </>
+    </div>
   );
 }

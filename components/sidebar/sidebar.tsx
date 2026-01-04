@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
 import {
   Home,
   User,
@@ -21,7 +20,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SidebarNavItem } from "./sidebar-nav-item";
-import { SidebarUserCard } from "./sidebar-user-card";
 
 const navItems = [
   {
@@ -86,12 +84,12 @@ const navItems = [
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { user, isLoaded } = useUser();
 
   return (
     <aside
+      data-tour="sidebar-nav"
       className={cn(
-        "sidebar-nav fixed left-0 top-0 h-screen bg-white border-r border-slate-200/60",
+        "sidebar-nav fixed left-0 top-20 h-[calc(100vh-5rem)] bg-white border-r border-slate-200/60",
         "flex flex-col z-40 overflow-hidden",
         "transition-all duration-300 ease-in-out",
         "shadow-sm",
@@ -100,12 +98,6 @@ export function Sidebar() {
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >
-      {/* User profile card */}
-      <SidebarUserCard user={user} isLoaded={isLoaded} isExpanded={isExpanded} />
-
-      {/* Divider */}
-      <div className="mx-3 border-t border-slate-200/60" />
-
       {/* Navigation items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
