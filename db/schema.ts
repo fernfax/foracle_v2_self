@@ -52,6 +52,7 @@ export const incomes = pgTable("incomes", {
   endDate: date("end_date"), // Optional - leave empty for ongoing income
   pastIncomeHistory: text("past_income_history"), // JSON: historical income data [{period, granularity, amount, notes}]
   futureMilestones: text("future_milestones"), // JSON: planned income changes [{id, targetMonth, amount, reason, notes}]
+  accountForFutureChange: boolean("account_for_future_change").default(false), // Include future milestones in balance projections
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

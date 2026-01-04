@@ -52,6 +52,7 @@ export async function createIncome(data: {
   endDate?: string;
   pastIncomeHistory?: string | null;
   futureMilestones?: string | null;
+  accountForFutureChange?: boolean;
   description?: string;
   familyMemberId?: string;
   familyMemberAge?: number;
@@ -98,6 +99,7 @@ export async function createIncome(data: {
     endDate: data.endDate || null,
     pastIncomeHistory: data.pastIncomeHistory || null,
     futureMilestones: data.futureMilestones || null,
+    accountForFutureChange: data.accountForFutureChange || false,
     description: data.description || null,
     isActive: true,
   }).returning();
@@ -125,6 +127,7 @@ export async function updateIncome(
     endDate?: string | null;
     pastIncomeHistory?: string | null;
     futureMilestones?: string | null;
+    accountForFutureChange?: boolean;
     description?: string;
     isActive?: boolean;
     familyMemberAge?: number;
@@ -161,6 +164,7 @@ export async function updateIncome(
   if (data.endDate !== undefined) updateData.endDate = data.endDate;
   if (data.pastIncomeHistory !== undefined) updateData.pastIncomeHistory = data.pastIncomeHistory;
   if (data.futureMilestones !== undefined) updateData.futureMilestones = data.futureMilestones;
+  if (data.accountForFutureChange !== undefined) updateData.accountForFutureChange = data.accountForFutureChange;
   if (data.description !== undefined) updateData.description = data.description;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
   if (data.cpfOrdinaryAccount !== undefined) updateData.cpfOrdinaryAccount = data.cpfOrdinaryAccount.toString();

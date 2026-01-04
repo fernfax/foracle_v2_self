@@ -93,6 +93,7 @@ export function IncomeModal({
 
   // Future tab state
   const [futureMilestones, setFutureMilestones] = useState<FutureMilestone[]>([]);
+  const [accountForFutureChange, setAccountForFutureChange] = useState(false);
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,6 +123,7 @@ export function IncomeModal({
     setNotes("");
     setPastIncomeHistory([]);
     setFutureMilestones([]);
+    setAccountForFutureChange(false);
     setActiveTab("present");
   };
 
@@ -154,6 +156,7 @@ export function IncomeModal({
         setNotes(pendingFormData.description || "");
         setPastIncomeHistory(pendingFormData.pastIncomeHistory || []);
         setFutureMilestones(pendingFormData.futureMilestones || []);
+        setAccountForFutureChange(pendingFormData.accountForFutureChange || false);
       }
       // Priority 2: Existing income (editing mode)
       else if (income) {
@@ -172,6 +175,7 @@ export function IncomeModal({
         setNotes(income.description || "");
         setPastIncomeHistory(safeJsonParse(income.pastIncomeHistory, []));
         setFutureMilestones(safeJsonParse(income.futureMilestones, []));
+        setAccountForFutureChange(income.accountForFutureChange || false);
       }
       // Priority 3: Reset form for new income
       else {
@@ -268,6 +272,7 @@ export function IncomeModal({
         familyMemberAge,
         pastIncomeHistory,
         futureMilestones,
+        accountForFutureChange,
       };
       setHasUnsavedChanges(false);
       onCpfDetailsNeeded(incomeData);
@@ -296,6 +301,7 @@ export function IncomeModal({
         familyMemberAge,
         pastIncomeHistory: pastIncomeHistory.length > 0 ? JSON.stringify(pastIncomeHistory) : null,
         futureMilestones: futureMilestones.length > 0 ? JSON.stringify(futureMilestones) : null,
+        accountForFutureChange,
       };
 
       if (income && income.id) {
@@ -419,6 +425,8 @@ export function IncomeModal({
                   futureMilestones={futureMilestones}
                   setFutureMilestones={setFutureMilestones}
                   currentAmount={amount}
+                  accountForFutureChange={accountForFutureChange}
+                  setAccountForFutureChange={setAccountForFutureChange}
                 />
               </TabsContent>
             </div>

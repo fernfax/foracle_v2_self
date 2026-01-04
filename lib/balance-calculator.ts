@@ -21,6 +21,7 @@ interface Income {
   netTakeHome: string | null;
   subjectToCpf: boolean | null;
   futureMilestones: string | null;  // JSON string of FutureMilestone[]
+  accountForFutureChange: boolean | null;  // Whether to include future milestones in projections
 }
 
 interface Expense {
@@ -225,8 +226,8 @@ export function calculateMonthlyBalance(
       let effectiveEndDate = income.endDate;
       let isUsingMilestone = false;
 
-      // Check if this income has future milestones
-      if (income.futureMilestones) {
+      // Check if this income has future milestones AND accountForFutureChange is enabled
+      if (income.futureMilestones && income.accountForFutureChange) {
         try {
           const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
           const targetPeriod = format(targetMonth, "yyyy-MM");

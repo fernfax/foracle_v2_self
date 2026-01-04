@@ -20,6 +20,7 @@ interface Income {
   netTakeHome: string | null;
   subjectToCpf: boolean | null;
   futureMilestones: string | null;
+  accountForFutureChange: boolean | null;
 }
 
 interface Expense {
@@ -434,10 +435,10 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
 
         {/* Info Message */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-808">
-            <strong>Note:</strong> This projection includes <strong>All Active Income</strong> (including one-time income and future income changes) and{" "}
-            <strong>All Active Expenses</strong> (including one-time expenses). One-time items appear in their respective months.
-            Starting balance is based on the sum of all current holdings for the current month.
+          <p className="text-sm text-blue-800">
+            <strong>Note:</strong> This projection includes <strong>All Active Income</strong> (including one-time income) and{" "}
+            <strong>All Active Expenses</strong> (including one-time expenses). Future income milestones are only included for incomes with "Account for Future Change" enabled.
+            Starting balance is based on the sum of all current holdings.
           </p>
         </div>
       </CardContent>
