@@ -63,8 +63,7 @@ export function SidebarNavItem({
       <Link
         href={href}
         className={cn(
-          "group flex items-center rounded-xl transition-all duration-200 py-1.5",
-          isExpanded ? "gap-3 px-3" : "px-1.5 justify-center",
+          "group flex items-center rounded-xl transition-all duration-200 py-1.5 px-1.5 gap-3",
           isActive
             ? "bg-[#387DF5] text-white shadow-lg shadow-blue-200/50"
             : "text-slate-600 hover:bg-slate-100"
@@ -159,8 +158,7 @@ export function SidebarNavItem({
             <Link
               href={href}
               className={cn(
-                "group flex items-center rounded-xl transition-all duration-200 py-1.5",
-                "px-1.5 justify-center",
+                "group flex items-center rounded-xl transition-all duration-200 py-1.5 px-1.5 gap-3",
                 isActive
                   ? "bg-[#387DF5] text-white shadow-lg shadow-blue-200/50"
                   : "text-slate-600 hover:bg-slate-100"

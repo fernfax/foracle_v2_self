@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { HelpCircle, LayoutDashboard, DollarSign, Receipt } from "lucide-react";
+import { HelpCircle, Compass, LayoutDashboard, DollarSign, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,12 +23,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useTourContext } from "./tour-provider";
+import { WelcomeHeroModal } from "./welcome-hero-modal";
 import { type TourName } from "@/lib/tour/tour-config";
 
 const PENDING_TOUR_KEY = "foracle_pending_tour";
 
 // Map tours to their target pages (pathname only, no query params)
 const TOUR_PATHNAMES: Record<TourName, string> = {
+  overall: "/dashboard",
   dashboard: "/dashboard",
   incomes: "/dashboard/user",
   expenses: "/dashboard/user/expenses",
@@ -36,12 +38,14 @@ const TOUR_PATHNAMES: Record<TourName, string> = {
 
 // Full URLs including query params for navigation
 const TOUR_ROUTES: Record<TourName, string> = {
+  overall: "/dashboard",
   dashboard: "/dashboard",
   incomes: "/dashboard/user?tab=incomes",
   expenses: "/dashboard/user/expenses",
 };
 
 const TOUR_PAGE_NAMES: Record<TourName, string> = {
+  overall: "Dashboard",
   dashboard: "Dashboard",
   incomes: "Incomes",
   expenses: "Expenses",
@@ -57,6 +61,7 @@ export function HelpButton() {
 
   const [pendingTour, setPendingTour] = useState<TourName | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   // Check if user is on the correct page for a specific tour
   const isOnCorrectPage = (tourName: TourName): boolean => {
@@ -119,6 +124,17 @@ export function HelpButton() {
   }, [pathname, searchParams]);
 
   const handleTourClick = (tourName: TourName) => {
+    // For the overall tour, show welcome modal first
+    if (tourName === "overall") {
+      if (isOnCorrectPage(tourName)) {
+        setShowWelcomeModal(true);
+      } else {
+        setPendingTour(tourName);
+        setShowConfirmDialog(true);
+      }
+      return;
+    }
+
     if (isOnCorrectPage(tourName)) {
       // User is already on the target page, start tour directly
       startTour(tourName);
@@ -129,13 +145,32 @@ export function HelpButton() {
     }
   };
 
+  const handleWelcomeGetStarted = () => {
+    setShowWelcomeModal(false);
+    // Small delay to let modal close animation finish
+    setTimeout(() => {
+      startTour("overall");
+    }, 150);
+  };
+
   const handleConfirmNavigation = () => {
     if (pendingTour) {
-      // Store the pending tour in sessionStorage to survive navigation
-      console.log("[Tour] Storing pending tour:", pendingTour, "navigating to:", TOUR_ROUTES[pendingTour]);
-      sessionStorage.setItem(PENDING_TOUR_KEY, pendingTour);
-      const targetRoute = TOUR_ROUTES[pendingTour];
-      router.push(targetRoute);
+      // For overall tour, show welcome modal after navigation instead of starting tour directly
+      if (pendingTour === "overall") {
+        console.log("[Tour] Navigating to dashboard for overall tour");
+        const targetRoute = TOUR_ROUTES[pendingTour];
+        router.push(targetRoute);
+        // Show welcome modal after navigation
+        setTimeout(() => {
+          setShowWelcomeModal(true);
+        }, 500);
+      } else {
+        // Store the pending tour in sessionStorage to survive navigation
+        console.log("[Tour] Storing pending tour:", pendingTour, "navigating to:", TOUR_ROUTES[pendingTour]);
+        sessionStorage.setItem(PENDING_TOUR_KEY, pendingTour);
+        const targetRoute = TOUR_ROUTES[pendingTour];
+        router.push(targetRoute);
+      }
     }
     setShowConfirmDialog(false);
     setPendingTour(null);
@@ -155,6 +190,7 @@ export function HelpButton() {
             size="icon"
             className="fixed bottom-24 right-6 z-40 rounded-full shadow-lg bg-background/95 backdrop-blur-sm hover:bg-accent md:bottom-6"
             aria-label="Help & Tours"
+            data-tour="help-button"
           >
             <HelpCircle className="h-5 w-5" />
           </Button>
@@ -162,6 +198,13 @@ export function HelpButton() {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>Guided Tours</DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => handleTourClick("overall")}
+            className="cursor-pointer transition-colors hover:bg-accent focus:bg-accent"
+          >
+            <Compass className="mr-2 h-4 w-4" />
+            App Overview
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleTourClick("dashboard")}
             className="cursor-pointer transition-colors hover:bg-accent focus:bg-accent"
@@ -203,6 +246,12 @@ export function HelpButton() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <WelcomeHeroModal
+        open={showWelcomeModal}
+        onOpenChange={setShowWelcomeModal}
+        onGetStarted={handleWelcomeGetStarted}
+      />
     </>
   );
 }

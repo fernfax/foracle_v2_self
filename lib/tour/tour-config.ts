@@ -1,6 +1,6 @@
 import type { DriveStep } from "driver.js";
 
-export type TourName = "dashboard" | "incomes" | "expenses";
+export type TourName = "overall" | "dashboard" | "incomes" | "expenses";
 
 export interface TourConfig {
   name: TourName;
@@ -8,6 +8,50 @@ export interface TourConfig {
   description: string;
   steps: DriveStep[];
 }
+
+// Overall Tour - 3 steps (app navigation overview)
+const overallSteps: DriveStep[] = [
+  {
+    element: '[data-tour="sidebar-nav"]',
+    popover: {
+      title: "Navigation Sidebar",
+      description:
+        "Access all sections of Foracle from here. Hover to expand and see labels. Navigate to Dashboard, User Profile, Expenses, Assets, Insurance, and Goals.",
+      side: "right",
+      align: "start",
+    },
+  },
+  {
+    element: '[data-tour="header-quick-links"]',
+    popover: {
+      title: "Quick Links",
+      description:
+        "Pin your most-used pages here for instant access. Click the settings icon to customize which pages appear.",
+      side: "bottom",
+      align: "center",
+    },
+  },
+  {
+    element: '[data-tour="mobile-guide-btn"]',
+    popover: {
+      title: "Add to Home Screen",
+      description:
+        "Install Foracle as an app on your phone! Tap here for step-by-step instructions to add it to your home screen.",
+      side: "bottom",
+      align: "end",
+    },
+  },
+  {
+    element: '[data-tour="help-button"]',
+    popover: {
+      title: "Guided Tours",
+      description:
+        "Need help anytime? Click this button to access guided tours for different sections of the app.",
+      side: "top",
+      align: "end",
+    },
+  },
+];
 
 // Dashboard Tour - 7 steps
 const dashboardSteps: DriveStep[] = [
@@ -191,6 +235,12 @@ const expensesSteps: DriveStep[] = [
 ];
 
 export const TOUR_CONFIGS: Record<TourName, TourConfig> = {
+  overall: {
+    name: "overall",
+    title: "App Overview",
+    description: "Get familiar with Foracle's navigation and key features",
+    steps: overallSteps,
+  },
   dashboard: {
     name: "dashboard",
     title: "Dashboard Tour",
