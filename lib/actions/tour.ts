@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-export type TourName = "dashboard" | "incomes" | "expenses";
+export type TourName = "overall" | "dashboard" | "incomes" | "expenses";
 
 export type TourStatus = Record<TourName, string | null>;
 
@@ -15,7 +15,7 @@ export type TourStatus = Record<TourName, string | null>;
 export async function getTourStatus(): Promise<TourStatus> {
   const { userId } = await auth();
   if (!userId) {
-    return { dashboard: null, incomes: null, expenses: null };
+    return { overall: null, dashboard: null, incomes: null, expenses: null };
   }
 
   const user = await db.query.users.findFirst({
@@ -24,13 +24,13 @@ export async function getTourStatus(): Promise<TourStatus> {
   });
 
   if (!user?.tourCompletedAt) {
-    return { dashboard: null, incomes: null, expenses: null };
+    return { overall: null, dashboard: null, incomes: null, expenses: null };
   }
 
   try {
     return JSON.parse(user.tourCompletedAt);
   } catch {
-    return { dashboard: null, incomes: null, expenses: null };
+    return { overall: null, dashboard: null, incomes: null, expenses: null };
   }
 }
 
