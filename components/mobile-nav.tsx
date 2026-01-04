@@ -13,12 +13,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/dashboard/user", label: "User", icon: User },
-  { href: "/dashboard/user/expenses", label: "Expenses", icon: Wallet },
-  { href: "/dashboard/goals", label: "Goals", icon: Target },
-  { href: "/dashboard/user/assets", label: "Assets", icon: TrendingUp },
-  { href: "/dashboard/policies", label: "Insurance", icon: Shield },
+  { href: "/dashboard", label: "Dashboard", icon: Home, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+  { href: "/dashboard/user", label: "User", icon: User, bgColor: "bg-purple-100", iconColor: "text-purple-600" },
+  { href: "/dashboard/user/expenses", label: "Expenses", icon: Wallet, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+  { href: "/dashboard/goals", label: "Goals", icon: Target, bgColor: "bg-cyan-100", iconColor: "text-cyan-600" },
+  { href: "/dashboard/user/assets", label: "Assets", icon: TrendingUp, bgColor: "bg-amber-100", iconColor: "text-amber-600" },
+  { href: "/dashboard/policies", label: "Insurance", icon: Shield, bgColor: "bg-rose-100", iconColor: "text-rose-600" },
 ];
 
 export function MobileNav() {
@@ -36,12 +36,24 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1.5 py-3 px-2 transition-colors shrink-0 w-[20%]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-1 transition-colors shrink-0 w-[16.666%]",
                 isActive ? "text-foreground" : "text-muted-foreground"
               )}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs">{item.label}</span>
+              <div
+                className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  isActive ? "bg-[#387DF5]" : item.bgColor
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "h-5 w-5 transition-colors",
+                    isActive ? "text-white" : item.iconColor
+                  )}
+                />
+              </div>
+              <span className="text-[10px]">{item.label}</span>
             </Link>
           );
         })}
