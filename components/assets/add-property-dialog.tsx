@@ -5,6 +5,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -249,13 +251,14 @@ export function AddPropertyDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>
             {property ? "Edit Property" : "Add Property"}
           </DialogTitle>
         </DialogHeader>
 
+        <DialogBody>
         <div className="space-y-6 py-4">
           {/* Property Information */}
           <div className="space-y-4">
@@ -595,16 +598,17 @@ export function AddPropertyDialog({
             </div>
           </div>
         </div>
+        </DialogBody>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <DialogFooterSticky>
           <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!isFormValid || isSubmitting}>
             {isSubmitting ? "Saving..." : property ? "Update Property" : "Add Property"}
           </Button>
-        </div>
+        </DialogFooterSticky>
       </DialogContent>
     </Dialog>
 

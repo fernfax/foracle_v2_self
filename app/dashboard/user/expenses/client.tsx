@@ -39,6 +39,7 @@ interface Income {
   netTakeHome: string | null;
   subjectToCpf: boolean | null;
   futureMilestones: string | null;
+  accountForFutureChange: boolean | null;
 }
 
 interface CurrentHolding {

@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -102,7 +104,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Add Family Member
@@ -111,6 +113,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
           <DialogDescription>Add a new family member to your profile.</DialogDescription>
         </DialogHeader>
 
+        <DialogBody>
         <div className="grid gap-6 py-4">
           {/* Row 1: Full Name */}
           <div className="space-y-2">
@@ -213,9 +216,10 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
             <p className="text-xs text-muted-foreground">Add any additional notes about this family member</p>
           </div>
         </div>
+        </DialogBody>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3">
+        <DialogFooterSticky>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
@@ -225,7 +229,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
           >
             {isSubmitting ? (isContributing ? "Saving..." : "Adding...") : (isContributing ? "Next" : "Add Member")}
           </Button>
-        </div>
+        </DialogFooterSticky>
       </DialogContent>
     </Dialog>
   );

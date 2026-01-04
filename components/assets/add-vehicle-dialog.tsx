@@ -5,6 +5,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -214,13 +216,14 @@ export function AddVehicleDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>
             {vehicle ? "Edit Vehicle" : "Add Vehicle"}
           </DialogTitle>
         </DialogHeader>
 
+        <DialogBody>
         <div className="space-y-6 py-4">
           {/* Vehicle Information */}
           <div className="space-y-4">
@@ -444,16 +447,17 @@ export function AddVehicleDialog({
             </div>
           </div>
         </div>
+        </DialogBody>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <DialogFooterSticky>
           <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!isFormValid || isSubmitting}>
             {isSubmitting ? "Saving..." : vehicle ? "Update Vehicle" : "Add Vehicle"}
           </Button>
-        </div>
+        </DialogFooterSticky>
       </DialogContent>
     </Dialog>
 

@@ -9,6 +9,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ChevronLeft, Info } from "lucide-react";
@@ -162,6 +164,7 @@ export function AddCpfDetailsDialog({
           </DialogDescription>
         </DialogHeader>
 
+        <DialogBody>
         <div className="grid gap-6 py-4">
           {/* Ordinary Account (OA) */}
           <div className="space-y-2">
@@ -229,11 +232,12 @@ export function AddCpfDetailsDialog({
             </p>
           </div>
         </div>
+        </DialogBody>
 
         {/* Footer */}
-        <div className="space-y-4">
+        <DialogFooterSticky className="flex-col gap-4">
           {!isStandalone && <StepIndicator currentStep={3} totalSteps={3} />}
-          <div className={`flex gap-3 ${isStandalone ? 'justify-end' : 'justify-between'}`}>
+          <div className={`flex gap-3 w-full ${isStandalone ? 'justify-end' : 'justify-between'}`}>
             {!isStandalone && (
               <Button variant="ghost" onClick={handleBack} disabled={isSubmitting}>
                 <ChevronLeft className="h-4 w-4 mr-1" />
@@ -252,7 +256,7 @@ export function AddCpfDetailsDialog({
               </Button>
             </div>
           </div>
-        </div>
+        </DialogFooterSticky>
       </DialogContent>
     </Dialog>
 

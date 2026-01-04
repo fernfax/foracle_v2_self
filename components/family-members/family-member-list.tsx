@@ -118,6 +118,7 @@ type Income = {
   endDate: string | null;
   pastIncomeHistory: string | null;
   futureMilestones: string | null;
+  accountForFutureChange: boolean | null;
   isActive: boolean | null;
   familyMemberId: string | null;
   familyMember?: {

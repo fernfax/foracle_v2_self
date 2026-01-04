@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogBody,
+  DialogFooterSticky,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -145,7 +147,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Add Expense
@@ -154,6 +156,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
           <DialogDescription>Add a new expense to track your spending.</DialogDescription>
         </DialogHeader>
 
+        <DialogBody>
         {/* Expense Type Selector */}
         <div className="space-y-2">
           <Label htmlFor="expense-type">Expense Type</Label>
@@ -376,9 +379,10 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
             <p className="text-xs text-muted-foreground">Add any additional details about this expense</p>
           </div>
         </div>
+        </DialogBody>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3">
+        <DialogFooterSticky>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
@@ -395,7 +399,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
           >
             {isSubmitting ? "Adding..." : "Add Expense"}
           </Button>
-        </div>
+        </DialogFooterSticky>
       </DialogContent>
     </Dialog>
   );
