@@ -35,6 +35,7 @@ interface TourProviderProps {
 
 export function TourProvider({ children, userId }: TourProviderProps) {
   const [tourStatus, setTourStatus] = useState<TourStatus>({
+    overall: null,
     dashboard: null,
     incomes: null,
     expenses: null,
