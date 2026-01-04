@@ -145,7 +145,7 @@ export function AddCpfDetailsDialog({
       sa: parseFloat(specialAccount) || 0,
       ma: parseFloat(medisaveAccount) || 0,
     };
-    onBack(currentValues);
+    onBack?.(currentValues);
   };
 
   return (
