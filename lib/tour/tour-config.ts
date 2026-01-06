@@ -9,13 +9,31 @@ export interface TourConfig {
   steps: DriveStep[];
 }
 
+// Falling icons HTML for intro hero steps
+const fallingIconsHtml = `
+<div class="falling-icons">
+  <span class="falling-icon">💰</span>
+  <span class="falling-icon">📊</span>
+  <span class="falling-icon">🎯</span>
+  <span class="falling-icon">💵</span>
+  <span class="falling-icon">📈</span>
+  <span class="falling-icon">🏦</span>
+</div>`;
+
+const createIntroDescription = (text: string) => `
+<div class="tour-intro-hero">
+  ${fallingIconsHtml}
+  <div class="tour-description">${text}</div>
+</div>`;
+
 // Overall Tour - app navigation overview
 const overallSteps: DriveStep[] = [
   {
     popover: {
       title: "Welcome to Foracle! 👋",
-      description:
-        "Let's take a quick tour of the app. We'll show you how to navigate, access quick links, and get help when you need it.",
+      description: createIntroDescription(
+        "Let's take a quick tour of the app. We'll show you how to navigate, access quick links, and get help when you need it."
+      ),
     },
   },
   {
@@ -65,8 +83,9 @@ const dashboardSteps: DriveStep[] = [
   {
     popover: {
       title: "Dashboard Tour",
-      description:
-        "Your financial command center! This tour will walk you through the key metrics, quick actions, and the monthly balance projection graph.",
+      description: createIntroDescription(
+        "Your financial command center! This tour will walk you through the key metrics, quick actions, and the monthly balance projection graph."
+      ),
     },
   },
   {
@@ -155,8 +174,9 @@ const incomesSteps: DriveStep[] = [
   {
     popover: {
       title: "Incomes Tour",
-      description:
-        "Learn how to manage your income sources. We'll cover adding incomes, filtering by frequency, and understanding your CPF contributions.",
+      description: createIntroDescription(
+        "Learn how to manage your income sources. We'll cover adding incomes, filtering by frequency, and understanding your CPF contributions."
+      ),
     },
   },
   {
@@ -216,8 +236,9 @@ const expensesSteps: DriveStep[] = [
   {
     popover: {
       title: "Expenses Tour",
-      description:
-        "Master your expense tracking! We'll show you how to view monthly totals, filter by category, manage custom categories, and add new expenses.",
+      description: createIntroDescription(
+        "Master your expense tracking! We'll show you how to view monthly totals, filter by category, manage custom categories, and add new expenses."
+      ),
     },
   },
   {
