@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { SidebarNavItem } from "./sidebar-nav-item";
 
-const navItems = [
+const mainNavItems = [
   {
     href: "/dashboard",
     label: "Dashboard",
@@ -81,6 +81,9 @@ const navItems = [
     bgColor: "bg-cyan-100",
     iconColor: "text-cyan-600",
   },
+];
+
+const comingSoonItems = [
   {
     href: "/dashboard/budget",
     label: "Budget",
@@ -114,7 +117,21 @@ export function Sidebar() {
     >
       {/* Navigation items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
+        {mainNavItems.map((item) => (
+          <SidebarNavItem
+            key={item.href}
+            {...item}
+            isExpanded={isExpanded}
+            isSubmenuOpen={openSubmenu === item.href}
+            onToggleSubmenu={() => handleToggleSubmenu(item.href)}
+          />
+        ))}
+
+        {/* Divider */}
+        <div className="my-3 mx-1.5 border-t border-slate-200" />
+
+        {/* Coming Soon items */}
+        {comingSoonItems.map((item) => (
           <SidebarNavItem
             key={item.href}
             {...item}
