@@ -27,6 +27,7 @@ interface SidebarNavItemProps {
   subItems?: SubItem[];
   isSubmenuOpen?: boolean;
   onToggleSubmenu?: () => void;
+  comingSoon?: boolean;
 }
 
 export function SidebarNavItem({
@@ -39,6 +40,7 @@ export function SidebarNavItem({
   subItems,
   isSubmenuOpen = false,
   onToggleSubmenu,
+  comingSoon = false,
 }: SidebarNavItemProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -93,13 +95,18 @@ export function SidebarNavItem({
         {/* Label - animated visibility */}
         <span
           className={cn(
-            "font-medium text-sm whitespace-nowrap transition-all duration-300 flex-1",
+            "font-medium text-sm whitespace-nowrap transition-all duration-300 flex-1 flex items-center gap-2",
             isExpanded
               ? "opacity-100 translate-x-0"
               : "opacity-0 w-0 -translate-x-2 overflow-hidden"
           )}
         >
           {label}
+          {comingSoon && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+              Soon
+            </span>
+          )}
         </span>
 
         {/* Chevron for items with subitems */}
@@ -186,7 +193,14 @@ export function SidebarNavItem({
             </Link>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={12}>
-            <p>{label}</p>
+            <p className="flex items-center gap-2">
+              {label}
+              {comingSoon && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                  Soon
+                </span>
+              )}
+            </p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
