@@ -234,12 +234,13 @@ export function BudgetClient() {
 // Dashboard Screen Component
 function DashboardScreen({ monthlyLimit, spent }: { monthlyLimit: string; spent: string }) {
   return (
-    <div className="pt-12 p-4 sm:p-5 space-y-4 sm:space-y-5 h-full flex flex-col">
-      <div className="flex justify-between items-center">
-        <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+    <div className="pt-9 p-4 sm:p-5 space-y-3 sm:space-y-4 h-full flex flex-col">
+      {/* Header - positioned below the island */}
+      <div className="flex items-center gap-3 mt-3">
+        <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
           <Wallet size={18} />
         </div>
-        <div className="text-right">
+        <div>
           <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Monthly Budget</p>
           <p className="text-base font-bold text-slate-900">{monthlyLimit}</p>
         </div>
