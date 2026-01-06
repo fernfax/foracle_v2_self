@@ -53,7 +53,7 @@ const overallSteps: DriveStep[] = [
   },
 ];
 
-// Dashboard Tour - 7 steps
+// Dashboard Tour - 8 steps
 const dashboardSteps: DriveStep[] = [
   {
     element: '[data-tour="month-nav"]',
@@ -123,6 +123,16 @@ const dashboardSteps: DriveStep[] = [
         "Shortcuts to add income, expenses, or set new financial goals quickly.",
       side: "top",
       align: "center",
+    },
+  },
+  {
+    element: '[data-tour="projection-tab"]',
+    popover: {
+      title: "Monthly Balance Projection",
+      description:
+        "View a 12-month projection of your cash balance. See how your income and expenses will affect your savings over time.",
+      side: "bottom",
+      align: "start",
     },
   },
 ];
