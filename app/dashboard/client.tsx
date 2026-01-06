@@ -106,6 +106,16 @@ export function DashboardClient({ metrics, incomes, expenses, holdings }: Dashbo
     router.push(`/dashboard?tab=${value}`, { scroll: false });
   };
 
+  // Expose tab switch function for guided tours
+  useEffect(() => {
+    (window as any).switchDashboardTab = (tab: string) => {
+      handleTabChange(tab);
+    };
+    return () => {
+      delete (window as any).switchDashboardTab;
+    };
+  }, []);
+
   if (!mounted) {
     return <div className="h-[500px] animate-pulse bg-muted rounded-lg" />;
   }
