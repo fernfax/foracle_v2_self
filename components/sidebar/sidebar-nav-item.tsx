@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LucideIcon, ChevronRight } from "lucide-react";
@@ -26,6 +25,8 @@ interface SidebarNavItemProps {
   iconColor: string;
   isExpanded: boolean;
   subItems?: SubItem[];
+  isSubmenuOpen?: boolean;
+  onToggleSubmenu?: () => void;
 }
 
 export function SidebarNavItem({
@@ -36,10 +37,11 @@ export function SidebarNavItem({
   iconColor,
   isExpanded,
   subItems,
+  isSubmenuOpen = false,
+  onToggleSubmenu,
 }: SidebarNavItemProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isHovered, setIsHovered] = useState(false);
 
   // Check if this nav item is active (exact match only for parent items)
   const isActive = pathname === href;
@@ -54,14 +56,18 @@ export function SidebarNavItem({
 
   const hasSubItems = subItems && subItems.length > 0;
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (hasSubItems && onToggleSubmenu) {
+      e.preventDefault();
+      onToggleSubmenu();
+    }
+  };
+
   const linkContent = (
-    <div
-      className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="relative">
       <Link
         href={href}
+        onClick={handleClick}
         className={cn(
           "group flex items-center rounded-xl transition-all duration-200 py-1.5 px-1.5 gap-3",
           isActive
@@ -101,7 +107,7 @@ export function SidebarNavItem({
           <ChevronRight
             className={cn(
               "h-4 w-4 transition-transform duration-200",
-              isHovered ? "rotate-90" : ""
+              isSubmenuOpen ? "rotate-90" : ""
             )}
           />
         )}
@@ -112,7 +118,7 @@ export function SidebarNavItem({
         <div
           className={cn(
             "grid transition-all duration-300 ease-in-out",
-            isHovered ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            isSubmenuOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
           )}
         >
           <div className="overflow-hidden">
@@ -129,12 +135,12 @@ export function SidebarNavItem({
                       isSubActive
                         ? "bg-blue-50 text-[#387DF5] font-medium"
                         : "text-slate-600 hover:bg-slate-100",
-                      isHovered
+                      isSubmenuOpen
                         ? "translate-x-0 opacity-100"
                         : "-translate-x-2 opacity-0"
                     )}
                     style={{
-                      transitionDelay: isHovered ? `${index * 50}ms` : "0ms",
+                      transitionDelay: isSubmenuOpen ? `${index * 50}ms` : "0ms",
                     }}
                   >
                     {SubIcon && <SubIcon className="h-4 w-4" />}

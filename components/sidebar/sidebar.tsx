@@ -84,12 +84,17 @@ const navItems = [
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+
+  const handleToggleSubmenu = (href: string) => {
+    setOpenSubmenu(openSubmenu === href ? null : href);
+  };
 
   return (
     <aside
       data-tour="sidebar-nav"
       className={cn(
-        "sidebar-nav fixed left-0 top-14 h-[calc(100vh-3.5rem)] bg-white border-r border-slate-200/60",
+        "sidebar-nav fixed left-0 top-[70px] h-[calc(100vh-70px)] bg-white border-r border-slate-200/60",
         "flex flex-col z-40 overflow-hidden",
         "transition-all duration-300 ease-in-out",
         "shadow-sm",
@@ -105,6 +110,8 @@ export function Sidebar() {
             key={item.href}
             {...item}
             isExpanded={isExpanded}
+            isSubmenuOpen={openSubmenu === item.href}
+            onToggleSubmenu={() => handleToggleSubmenu(item.href)}
           />
         ))}
       </nav>
