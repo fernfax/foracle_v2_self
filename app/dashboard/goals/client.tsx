@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
 import { Target, Trophy } from "lucide-react";
 import { GoalList } from "@/components/goals/goal-list";
 
@@ -71,42 +72,26 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="h-auto p-0 bg-transparent border-b border-border rounded-none flex gap-0 justify-start">
-            <TabsTrigger
-              value="active"
-              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-            >
-              <Target className="h-4 w-4" />
-              <span>Active Goals</span>
-              {activeGoals.length > 0 && (
-                <span className="ml-1 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
-                  {activeGoals.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger
-              value="achieved"
-              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-            >
-              <Trophy className="h-4 w-4" />
-              <span>Achieved</span>
-              {achievedGoals.length > 0 && (
-                <span className="ml-1 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
-                  {achievedGoals.length}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
+        <>
+          <SlidingTabs
+            tabs={[
+              { value: "active", label: "Active Goals", icon: Target, badge: activeGoals.length },
+              { value: "achieved", label: "Achieved", icon: Trophy, badge: achievedGoals.length, badgeVariant: "success" },
+            ]}
+            value={activeTab}
+            onValueChange={handleTabChange}
+          />
 
-          <TabsContent value="active" className="mt-6">
-            <GoalList initialGoals={activeGoals} showAddButton />
-          </TabsContent>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsContent value="active" className="mt-4">
+              <GoalList initialGoals={activeGoals} showAddButton />
+            </TabsContent>
 
-          <TabsContent value="achieved" className="mt-6">
-            <GoalList initialGoals={achievedGoals} isAchievedView />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="achieved" className="mt-4">
+              <GoalList initialGoals={achievedGoals} isAchievedView />
+            </TabsContent>
+          </Tabs>
+        </>
       )}
     </div>
   );

@@ -69,20 +69,9 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
 
   return (
     <>
-      {/* Header with universal date toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-            Overview
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Welcome back! Here's your financial snapshot.
-          </p>
-        </div>
-
-        {/* Universal Month Toggle */}
-        <div className="flex flex-col items-end gap-1 sm:mt-6">
+      {/* Universal Month Toggle */}
+      <div className="flex justify-end mb-2">
+        <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2" data-tour="month-nav">
             <Button
               variant="outline"

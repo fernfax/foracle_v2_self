@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
 import { Button } from "@/components/ui/button";
 import { Home, Car, Package, Plus } from "lucide-react";
 import { PropertyList } from "@/components/assets/property-list";
@@ -84,40 +85,27 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="h-auto p-0 bg-transparent border-b border-border rounded-none flex gap-0 justify-start">
-            <TabsTrigger
-              value="property"
-              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-            >
-              <Home className="h-4 w-4" />
-              <span>Property</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="vehicle"
-              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-            >
-              <Car className="h-4 w-4" />
-              <span>Vehicle</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="others"
-              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-            >
-              <Package className="h-4 w-4" />
-              <span>Others</span>
-            </TabsTrigger>
-          </TabsList>
+        <>
+          <SlidingTabs
+            tabs={[
+              { value: "property", label: "Property", icon: Home },
+              { value: "vehicle", label: "Vehicle", icon: Car },
+              { value: "others", label: "Others", icon: Package },
+            ]}
+            value={activeTab}
+            onValueChange={handleTabChange}
+          />
 
-          <TabsContent value="property" className="mt-6">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsContent value="property" className="mt-4">
             <PropertyList initialProperties={initialPropertyAssets} />
           </TabsContent>
 
-          <TabsContent value="vehicle" className="mt-6">
+          <TabsContent value="vehicle" className="mt-4">
             <VehicleList initialVehicles={initialVehicleAssets} />
           </TabsContent>
 
-          <TabsContent value="others" className="mt-6">
+          <TabsContent value="others" className="mt-4">
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                 <Package className="h-8 w-8 text-gray-400" />
@@ -133,6 +121,7 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
             </div>
           </TabsContent>
         </Tabs>
+        </>
       )}
     </div>
   );

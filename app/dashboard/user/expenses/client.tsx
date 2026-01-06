@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
 import { Receipt, TrendingUp, PieChart } from "lucide-react";
 import { ExpenseList } from "@/components/expenses/expense-list";
 import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
@@ -97,43 +98,31 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="h-auto p-0 bg-transparent border-b border-border rounded-none flex gap-0 justify-start">
-            <TabsTrigger
-              value="expenses"
-              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-            >
-              <Receipt className="h-4 w-4" />
-              <span>Expenses</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="graph"
-              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-            >
-              <TrendingUp className="h-4 w-4" />
-              <span>Graph</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="reports"
-              className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-            >
-              <PieChart className="h-4 w-4" />
-              <span>Reports</span>
-            </TabsTrigger>
-          </TabsList>
+        <>
+          <SlidingTabs
+            tabs={[
+              { value: "expenses", label: "Expenses", icon: Receipt },
+              { value: "graph", label: "Graph", icon: TrendingUp },
+              { value: "reports", label: "Reports", icon: PieChart },
+            ]}
+            value={activeTab}
+            onValueChange={handleTabChange}
+          />
 
-          <TabsContent value="expenses" className="mt-6">
-            <ExpenseList initialExpenses={initialExpenses} />
-          </TabsContent>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsContent value="expenses" className="mt-4">
+              <ExpenseList initialExpenses={initialExpenses} />
+            </TabsContent>
 
-          <TabsContent value="graph" className="mt-6">
-            <MonthlyBalanceGraph incomes={initialIncomes} expenses={initialExpenses} holdings={initialHoldings} />
-          </TabsContent>
+            <TabsContent value="graph" className="mt-4">
+              <MonthlyBalanceGraph incomes={initialIncomes} expenses={initialExpenses} holdings={initialHoldings} />
+            </TabsContent>
 
-          <TabsContent value="reports" className="mt-6">
-            <ExpenseReports expenses={initialExpenses} />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="reports" className="mt-4">
+              <ExpenseReports expenses={initialExpenses} />
+            </TabsContent>
+          </Tabs>
+        </>
       )}
     </div>
   );

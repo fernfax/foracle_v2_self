@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
 import {
   Card,
   CardContent,
@@ -123,35 +124,24 @@ export function DashboardClient({ metrics, incomes, expenses, holdings }: Dashbo
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-          Home
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Financial Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          Your financial overview at a glance
+          Welcome back! Here's your financial snapshot.
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="h-auto p-0 bg-transparent border-b border-border rounded-none flex gap-0 justify-start">
-          <TabsTrigger
-            value="overview"
-            className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            <span>Overview</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="projection"
-            data-tour="projection-tab"
-            className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-          >
-            <TrendingUp className="h-4 w-4" />
-            <span>Monthly Balance Projection</span>
-          </TabsTrigger>
-        </TabsList>
+      <SlidingTabs
+        tabs={[
+          { value: "overview", label: "Overview", icon: LayoutDashboard },
+          { value: "projection", label: "Projection", icon: TrendingUp, dataTour: "projection-tab" },
+        ]}
+        value={activeTab}
+        onValueChange={handleTabChange}
+      />
 
-        <TabsContent value="overview" className="mt-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+
+        <TabsContent value="overview" className="mt-4">
           <div className="space-y-8">
             {/* Header with universal month toggle and metrics cards */}
             <DashboardHeader
@@ -249,7 +239,7 @@ export function DashboardClient({ metrics, incomes, expenses, holdings }: Dashbo
           </div>
         </TabsContent>
 
-        <TabsContent value="projection" className="mt-6">
+        <TabsContent value="projection" className="mt-4">
           <MonthlyBalanceGraph incomes={incomes} expenses={expenses} holdings={holdings} />
         </TabsContent>
       </Tabs>
