@@ -236,7 +236,7 @@ function DashboardScreen({ monthlyLimit, spent }: { monthlyLimit: string; spent:
   return (
     <div className="pt-9 p-4 sm:p-5 space-y-3 sm:space-y-4 h-full flex flex-col">
       {/* Header - positioned below the island */}
-      <div className="flex items-center gap-3 mt-3">
+      <div className="flex items-center gap-3 mt-5">
         <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
           <Wallet size={18} />
         </div>
