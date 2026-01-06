@@ -140,20 +140,34 @@ export function PresentIncomeTab({
     }
   }, [incomeCategory, setStartDate, setEndDate]);
 
+  // Lock frequency to "one-time" and clear irrelevant fields when income type is "one-off"
+  React.useEffect(() => {
+    if (incomeCategory === "one-off") {
+      setFrequency("one-time");
+      setEndDate(undefined); // One-off income has no end date
+      setAccountForBonus(false); // One-off income has no bonus
+    }
+  }, [incomeCategory, setFrequency, setEndDate, setAccountForBonus]);
+
   return (
     <div className="space-y-6">
       {/* Income Type Selector */}
       <div className="space-y-2">
-        <Label htmlFor="income-type">Income Type</Label>
+        <Label htmlFor="income-type">
+          Income Type <span className="text-red-500">*</span>
+        </Label>
         <Select value={incomeCategory} onValueChange={setIncomeCategory}>
           <SelectTrigger className="bg-white">
-            <SelectValue />
+            <SelectValue placeholder="Select income type" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="current-recurring">Recurring Income</SelectItem>
             <SelectItem value="one-off">One-off Income</SelectItem>
           </SelectContent>
         </Select>
+        {!incomeCategory && (
+          <p className="text-xs text-muted-foreground">Please select an income type to continue</p>
+        )}
         {incomeCategory === "current-recurring" && (
           <p className="text-xs text-muted-foreground">Income that repeats regularly (e.g., monthly salary)</p>
         )}
@@ -162,6 +176,9 @@ export function PresentIncomeTab({
         )}
       </div>
 
+      {/* Show remaining fields only when income type is selected */}
+      {incomeCategory && (
+      <>
       {/* Group 1: Basic Income Details */}
       <div className="bg-gray-50 rounded-lg p-4 space-y-4">
         <div className="pb-3 border-b border-gray-200">
@@ -226,7 +243,11 @@ export function PresentIncomeTab({
             <Label htmlFor="frequency">
               Income Frequency <span className="text-red-500">*</span>
             </Label>
-            <Select value={frequency} onValueChange={setFrequency}>
+            <Select
+              value={frequency}
+              onValueChange={setFrequency}
+              disabled={incomeCategory === "one-off"}
+            >
               <SelectTrigger className="bg-white">
                 <SelectValue />
               </SelectTrigger>
@@ -240,9 +261,11 @@ export function PresentIncomeTab({
                 ))}
               </SelectContent>
             </Select>
-            {selectedFrequency && (
+            {incomeCategory === "one-off" ? (
+              <p className="text-xs text-muted-foreground">Locked to one-time for one-off income</p>
+            ) : selectedFrequency ? (
               <p className="text-xs text-muted-foreground">{selectedFrequency.description}</p>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -279,12 +302,12 @@ export function PresentIncomeTab({
           </div>
         )}
 
-        {/* Start Date and End Date - Shown for One-off Income */}
+        {/* Start Date - Shown for non-recurring income */}
         {incomeCategory !== "current-recurring" && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className={cn("grid gap-4", incomeCategory === "one-off" ? "grid-cols-1" : "grid-cols-2")}>
             <div className="space-y-2">
               <Label>
-                Start Date <span className="text-red-500">*</span>
+                {incomeCategory === "one-off" ? "Income Date" : "Start Date"} <span className="text-red-500">*</span>
               </Label>
               <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                 <PopoverTrigger asChild>
@@ -312,37 +335,43 @@ export function PresentIncomeTab({
                   />
                 </PopoverContent>
               </Popover>
+              {incomeCategory === "one-off" && (
+                <p className="text-xs text-muted-foreground">The date when this one-time income will be received</p>
+              )}
             </div>
-            <div className="space-y-2">
-              <Label>End Date</Label>
-              <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={(date) => {
-                      setEndDate(date);
-                      setEndDateOpen(false);
-                    }}
-                    initialFocus
-                    fixedWeeks
-                  />
-                </PopoverContent>
-              </Popover>
-              <p className="text-xs text-muted-foreground">Leave empty for ongoing income</p>
-            </div>
+            {/* End Date - Hidden for one-off income */}
+            {incomeCategory !== "one-off" && (
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => {
+                        setEndDate(date);
+                        setEndDateOpen(false);
+                      }}
+                      initialFocus
+                      fixedWeeks
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">Leave empty for ongoing income</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -362,7 +391,8 @@ export function PresentIncomeTab({
         </div>
       </div>
 
-      {/* Group 2: Bonus Configuration */}
+      {/* Group 2: Bonus Configuration - Hidden for one-off income */}
+      {incomeCategory !== "one-off" && (
       <div className="bg-gray-50 rounded-lg p-4 space-y-4">
         <div className="pb-3 border-b border-gray-200">
           <h3 className="text-sm font-semibold text-gray-900">Income Bonus Details</h3>
@@ -463,6 +493,7 @@ export function PresentIncomeTab({
           </div>
         )}
       </div>
+      )}
 
       {/* Group 3: Additional Information */}
       <div className="bg-gray-50 rounded-lg p-4 space-y-4">
@@ -483,6 +514,8 @@ export function PresentIncomeTab({
           <p className="text-xs text-muted-foreground">Add any notes about this payment period</p>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

@@ -29,23 +29,23 @@ interface IconConfig {
 }
 
 const ICON_CONFIGS: IconConfig[] = [
-  { Icon: Wallet, bgClass: "bg-emerald-100", textClass: "text-emerald-600" },
-  { Icon: Target, bgClass: "bg-blue-100", textClass: "text-blue-600" },
-  { Icon: TrendingUp, bgClass: "bg-amber-100", textClass: "text-amber-600" },
-  { Icon: Shield, bgClass: "bg-pink-100", textClass: "text-pink-600" },
-  { Icon: Users, bgClass: "bg-purple-100", textClass: "text-purple-600" },
-  { Icon: BarChart3, bgClass: "bg-indigo-100", textClass: "text-indigo-600" },
-  { Icon: PiggyBank, bgClass: "bg-rose-100", textClass: "text-rose-600" },
-  { Icon: CreditCard, bgClass: "bg-cyan-100", textClass: "text-cyan-600" },
-  { Icon: Landmark, bgClass: "bg-slate-100", textClass: "text-slate-600" },
-  { Icon: Coins, bgClass: "bg-orange-100", textClass: "text-orange-600" },
-  { Icon: Calculator, bgClass: "bg-lime-100", textClass: "text-lime-600" },
-  { Icon: CircleDollarSign, bgClass: "bg-violet-100", textClass: "text-violet-600" },
-  { Icon: Receipt, bgClass: "bg-teal-100", textClass: "text-teal-600" },
-  { Icon: Banknote, bgClass: "bg-green-100", textClass: "text-green-600" },
-  { Icon: BadgeDollarSign, bgClass: "bg-yellow-100", textClass: "text-yellow-600" },
-  { Icon: ChartLine, bgClass: "bg-sky-100", textClass: "text-sky-600" },
-  { Icon: HandCoins, bgClass: "bg-fuchsia-100", textClass: "text-fuchsia-600" },
+  { Icon: Wallet, bgClass: "bg-emerald-100/60", textClass: "text-emerald-600" },
+  { Icon: Target, bgClass: "bg-blue-100/60", textClass: "text-blue-600" },
+  { Icon: TrendingUp, bgClass: "bg-amber-100/60", textClass: "text-amber-600" },
+  { Icon: Shield, bgClass: "bg-pink-100/60", textClass: "text-pink-600" },
+  { Icon: Users, bgClass: "bg-purple-100/60", textClass: "text-purple-600" },
+  { Icon: BarChart3, bgClass: "bg-indigo-100/60", textClass: "text-indigo-600" },
+  { Icon: PiggyBank, bgClass: "bg-rose-100/60", textClass: "text-rose-600" },
+  { Icon: CreditCard, bgClass: "bg-cyan-100/60", textClass: "text-cyan-600" },
+  { Icon: Landmark, bgClass: "bg-slate-100/60", textClass: "text-slate-600" },
+  { Icon: Coins, bgClass: "bg-orange-100/60", textClass: "text-orange-600" },
+  { Icon: Calculator, bgClass: "bg-lime-100/60", textClass: "text-lime-600" },
+  { Icon: CircleDollarSign, bgClass: "bg-violet-100/60", textClass: "text-violet-600" },
+  { Icon: Receipt, bgClass: "bg-teal-100/60", textClass: "text-teal-600" },
+  { Icon: Banknote, bgClass: "bg-green-100/60", textClass: "text-green-600" },
+  { Icon: BadgeDollarSign, bgClass: "bg-yellow-100/60", textClass: "text-yellow-600" },
+  { Icon: ChartLine, bgClass: "bg-sky-100/60", textClass: "text-sky-600" },
+  { Icon: HandCoins, bgClass: "bg-fuchsia-100/60", textClass: "text-fuchsia-600" },
 ];
 
 interface FloatingIcon {
@@ -85,7 +85,7 @@ function generateIcons(width: number, height: number): FloatingIcon[] {
       baseY: y,
       vx,
       vy,
-      size: 52 + Math.random() * 16, // 52-68px
+      size: 56 + Math.random() * 20, // 56-76px
       offset: Math.random() * Math.PI * 2,
       opacity: 0.7 + Math.random() * 0.2, // 0.7-0.9
     });
@@ -268,7 +268,7 @@ export function FloatingIcons() {
         return (
           <div
             key={icon.id}
-            className={`absolute rounded-2xl ${icon.config.bgClass} flex items-center justify-center will-change-transform pointer-events-none`}
+            className={`absolute rounded-2xl ${icon.config.bgClass} backdrop-blur-md flex items-center justify-center will-change-transform pointer-events-none border border-white/20`}
             style={{
               width: icon.size,
               height: icon.size,

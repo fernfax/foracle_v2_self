@@ -68,6 +68,8 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
     setIsSubmitting(true);
     try {
       await completeOnboarding();
+      // Set flag to trigger app overview tour after redirect to dashboard
+      sessionStorage.setItem("foracle_new_user_tour", "true");
       onComplete();
     } catch (error) {
       console.error("Failed to complete onboarding:", error);

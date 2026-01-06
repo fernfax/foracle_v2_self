@@ -82,7 +82,7 @@ export function IncomeModal({
   const [amount, setAmount] = useState("");
   const [frequency, setFrequency] = useState("monthly");
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [incomeCategory, setIncomeCategory] = useState("current-recurring");
+  const [incomeCategory, setIncomeCategory] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [subjectToCpf, setSubjectToCpf] = useState(false);
@@ -116,7 +116,7 @@ export function IncomeModal({
     setAmount("");
     setFrequency("monthly");
     setSelectedMonths([]);
-    setIncomeCategory("current-recurring");
+    setIncomeCategory("");
     setStartDate(undefined);
     setEndDate(undefined);
     setSubjectToCpf(false);
@@ -191,23 +191,42 @@ export function IncomeModal({
   }, [income, pendingFormData, open]);
 
   // Track changes to detect unsaved modifications
+  const familyMemberName = familyMember?.name;
   useEffect(() => {
     if (!open) {
       setHasUnsavedChanges(false);
       return;
     }
 
+    // For new income (no initialValues), only show warning if user has entered meaningful data
+    if (!initialValues) {
+      // Check if user has entered any meaningful data beyond defaults/pre-fills
+      const prefilledName = familyMemberName ? `${familyMemberName}'s Salary` : "";
+      const hasUserEnteredData =
+        category !== "" || // User selected a category
+        amount !== "" || // User entered an amount
+        (incomeCategory !== "" && name !== "" && name !== prefilledName) || // User changed pre-filled name
+        notes !== "" ||
+        pastIncomeHistory.length > 0 ||
+        futureMilestones.length > 0;
+
+      setHasUnsavedChanges(hasUserEnteredData);
+      return;
+    }
+
+    // For editing existing income, compare against initial values
     const hasChanges =
       name !== (initialValues?.name || "") ||
       category !== (initialValues?.category || "") ||
       amount !== (initialValues?.amount?.toString() || "") ||
       frequency !== (initialValues?.frequency || "monthly") ||
+      incomeCategory !== (initialValues?.incomeCategory || "current-recurring") ||
       subjectToCpf !== (initialValues?.subjectToCpf || false) ||
       accountForBonus !== (initialValues?.accountForBonus || false) ||
       JSON.stringify(bonusGroups) !== JSON.stringify(initialValues?.bonusGroups || []) ||
       notes !== (initialValues?.description || "") ||
-      pastIncomeHistory.length > 0 ||
-      futureMilestones.length > 0;
+      pastIncomeHistory.length !== (initialValues?.pastIncomeHistory?.length || 0) ||
+      futureMilestones.length !== (initialValues?.futureMilestones?.length || 0);
 
     setHasUnsavedChanges(hasChanges);
   }, [
@@ -216,6 +235,7 @@ export function IncomeModal({
     category,
     amount,
     frequency,
+    incomeCategory,
     subjectToCpf,
     accountForBonus,
     bonusGroups,
@@ -223,7 +243,15 @@ export function IncomeModal({
     open,
     pastIncomeHistory,
     futureMilestones,
+    familyMemberName,
   ]);
+
+  // Switch to present tab when income type is empty or one-off
+  useEffect(() => {
+    if ((!incomeCategory || incomeCategory === "one-off") && (activeTab === "past" || activeTab === "future")) {
+      setActiveTab("present");
+    }
+  }, [incomeCategory, activeTab]);
 
   const handleClose = (openState: boolean) => {
     if (!openState && hasUnsavedChanges) {
@@ -326,6 +354,7 @@ export function IncomeModal({
   };
 
   const isFormValid = () => {
+    if (!incomeCategory) return false; // Income type is required
     if (!name || !category || !amount) return false;
     if (frequency === "custom" && selectedMonths.length === 0) return false;
     if (incomeCategory !== "current-recurring" && !startDate) return false;
@@ -364,7 +393,8 @@ export function IncomeModal({
             <TabsList className="w-full h-auto p-0 bg-transparent border-b border-gray-200 rounded-none grid grid-cols-3">
               <TabsTrigger
                 value="past"
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 transition-colors"
+                disabled={!incomeCategory || incomeCategory === "one-off"}
+                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-gray-500"
               >
                 <History className="h-4 w-4" />
                 Past
@@ -378,7 +408,8 @@ export function IncomeModal({
               </TabsTrigger>
               <TabsTrigger
                 value="future"
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 transition-colors"
+                disabled={!incomeCategory || incomeCategory === "one-off"}
+                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-gray-500"
               >
                 <TrendingUp className="h-4 w-4" />
                 Future

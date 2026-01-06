@@ -64,7 +64,26 @@ export function WizardContainer({
 
       {/* Main content */}
       <main className="flex-1 flex flex-col">
-        <div className="max-w-4xl mx-auto w-full px-6 py-8 flex-1 flex flex-col">
+        <div className="max-w-4xl mx-auto w-full px-6 py-8 flex-1 flex flex-col relative isolate">
+          {/* Frost overlay with soft edges - sized to content only */}
+          <div
+            className="absolute top-0 left-0 right-0 backdrop-blur-md bg-white/50 pointer-events-none"
+            style={{
+              zIndex: -1,
+              height: "650px",
+              maxHeight: "70%",
+              maskImage: `
+                linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent),
+                linear-gradient(to bottom, transparent, black 40px, black calc(100% - 80px), transparent)
+              `,
+              WebkitMaskImage: `
+                linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent),
+                linear-gradient(to bottom, transparent, black 40px, black calc(100% - 80px), transparent)
+              `,
+              maskComposite: "intersect",
+              WebkitMaskComposite: "source-in",
+            }}
+          />
           {(title || subtitle) && (
             <div className="mb-8">
               <div className="flex items-center gap-4">

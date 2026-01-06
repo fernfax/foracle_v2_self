@@ -304,25 +304,27 @@ export function IncomeStep({ familyMember, data, onSave, onNext, onBack }: Incom
 
         {/* Bonus Section */}
         <div className="rounded-lg border border-border/60 p-4 bg-muted/30 space-y-4">
-          <div>
-            <h3 className="text-sm font-medium">Income Bonus Details</h3>
-            <p className="text-xs text-muted-foreground">
-              Set up bonus payments for specific months (e.g., 13th month bonus in December)
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-2">
+          <div
+            className="flex items-start space-x-3 cursor-pointer"
+            onClick={() => setAccountForBonus(!accountForBonus)}
+          >
             <Checkbox
               id="bonus"
               checked={accountForBonus}
               onCheckedChange={(checked) => setAccountForBonus(checked === true)}
+              className="mt-0.5"
             />
-            <Label
-              htmlFor="bonus"
-              className="text-sm font-medium leading-none cursor-pointer"
-            >
-              Account for Bonus
-            </Label>
+            <div className="space-y-1">
+              <Label
+                htmlFor="bonus"
+                className="text-sm font-medium leading-none cursor-pointer"
+              >
+                Income Bonus Details
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Set up bonus payments for specific months (e.g., 13th month bonus in December)
+              </p>
+            </div>
           </div>
 
           {accountForBonus && (
