@@ -102,19 +102,13 @@ const dashboardSteps: DriveStep[] = [
     },
   },
   {
-    element: '[data-tour="dashboard-tabs"]',
+    element: '[data-tour="projection-tab"]',
     popover: {
       title: "Monthly Balance Projection",
       description:
-        "Switch between Overview and Monthly Balance Projection tabs. The projection shows a 12-month forecast of your cash balance based on income and expenses.",
+        "View a 12-month projection of your cash balance. See how your income and expenses will affect your savings over time.",
       side: "bottom",
       align: "start",
-    },
-    onHighlightStarted: () => {
-      // Ensure we're on the projection tab
-      if ((window as any).switchDashboardTab && !window.location.search.includes('tab=projection')) {
-        (window as any).switchDashboardTab('projection');
-      }
     },
   },
   {
