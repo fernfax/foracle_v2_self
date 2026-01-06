@@ -94,6 +94,13 @@ const dashboardSteps: DriveStep[] = [
       side: "top",
       align: "center",
     },
+    onDeselected: () => {
+      // Switch to projection tab before the next step
+      const projectionTab = document.querySelector('[data-tour="projection-tab"]') as HTMLElement;
+      if (projectionTab) {
+        projectionTab.click();
+      }
+    },
   },
   {
     element: '[data-tour="projection-tab"]',
@@ -104,10 +111,10 @@ const dashboardSteps: DriveStep[] = [
       side: "bottom",
       align: "start",
     },
-    onHighlightStarted: (element, step, options) => {
-      // Click the projection tab to switch to it
+    onHighlightStarted: () => {
+      // Ensure tab is switched (backup in case onDeselected didn't fire)
       const projectionTab = document.querySelector('[data-tour="projection-tab"]') as HTMLElement;
-      if (projectionTab) {
+      if (projectionTab && projectionTab.getAttribute('data-state') !== 'active') {
         projectionTab.click();
       }
     },
@@ -121,17 +128,19 @@ const dashboardSteps: DriveStep[] = [
       side: "bottom",
       align: "end",
     },
-    onHighlightStarted: (element, step, options) => {
-      // Wait for graph controls to be visible after tab switch
-      const waitForElement = () => {
+    onHighlightStarted: () => {
+      // Ensure projection tab is active and scroll to controls
+      const projectionTab = document.querySelector('[data-tour="projection-tab"]') as HTMLElement;
+      if (projectionTab && projectionTab.getAttribute('data-state') !== 'active') {
+        projectionTab.click();
+      }
+      // Wait for content to render then scroll
+      setTimeout(() => {
         const graphControls = document.querySelector('[data-tour="graph-controls"]');
         if (graphControls) {
-          // Scroll into view if needed
           graphControls.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      };
-      // Small delay to ensure tab content is rendered
-      setTimeout(waitForElement, 100);
+      }, 150);
     },
   },
 ];
