@@ -234,7 +234,7 @@ export function BudgetClient() {
 // Dashboard Screen Component
 function DashboardScreen({ monthlyLimit, spent }: { monthlyLimit: string; spent: string }) {
   return (
-    <div className="pt-10 p-4 sm:p-5 space-y-4 sm:space-y-5 h-full flex flex-col">
+    <div className="pt-12 p-4 sm:p-5 space-y-4 sm:space-y-5 h-full flex flex-col">
       <div className="flex justify-between items-center">
         <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
           <Wallet size={18} />
@@ -305,7 +305,7 @@ function AddExpenseScreen({
   });
 
   return (
-    <div className="pt-10 p-4 h-full flex flex-col">
+    <div className="pt-12 p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <button
@@ -398,7 +398,7 @@ function GoalsScreen() {
   ];
 
   return (
-    <div className="pt-10 p-4 sm:p-5 h-full flex flex-col">
+    <div className="pt-12 p-4 sm:p-5 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
