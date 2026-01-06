@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
 import {
   Card,
   CardContent,
@@ -134,39 +135,20 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="h-auto p-0 bg-transparent border-b border-border rounded-none flex gap-0 justify-start">
-          <TabsTrigger
-            value="family"
-            className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-          >
-            <Users className="h-4 w-4" />
-            <span>Family</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="incomes"
-            className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-          >
-            <DollarSign className="h-4 w-4" />
-            <span>Incomes</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="cpf"
-            className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-          >
-            <Building2 className="h-4 w-4" />
-            <span>CPF</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="current"
-            className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
-          >
-            <Briefcase className="h-4 w-4" />
-            <span>Holdings</span>
-          </TabsTrigger>
-        </TabsList>
+        <>
+        <SlidingTabs
+          tabs={[
+            { value: "family", label: "Family", icon: Users },
+            { value: "incomes", label: "Incomes", icon: DollarSign },
+            { value: "cpf", label: "CPF", icon: Building2 },
+            { value: "current", label: "Holdings", icon: Briefcase },
+          ]}
+          value={activeTab}
+          onValueChange={handleTabChange}
+        />
 
-        <TabsContent value="family" className="mt-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsContent value="family" className="mt-4">
           <FamilyMemberList
             initialMembers={initialFamilyMembers}
             incomes={initialIncomes}
@@ -176,18 +158,19 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
           />
         </TabsContent>
 
-        <TabsContent value="incomes" className="mt-6">
+        <TabsContent value="incomes" className="mt-4">
           <IncomeList initialIncomes={initialIncomes} />
         </TabsContent>
 
-        <TabsContent value="cpf" className="mt-6">
+        <TabsContent value="cpf" className="mt-4">
           <CpfList initialCpfData={initialCpfData} />
         </TabsContent>
 
-        <TabsContent value="current" className="mt-6">
+        <TabsContent value="current" className="mt-4">
           <CurrentHoldingList initialHoldings={initialCurrentHoldings} />
         </TabsContent>
       </Tabs>
+        </>
       )}
     </div>
   );
