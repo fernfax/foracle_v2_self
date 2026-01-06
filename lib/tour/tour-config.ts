@@ -102,11 +102,11 @@ const dashboardSteps: DriveStep[] = [
     },
   },
   {
-    element: '[data-tour="projection-tab"]',
+    element: '[data-tour="dashboard-tabs"]',
     popover: {
       title: "Monthly Balance Projection",
       description:
-        "View a 12-month projection of your cash balance. See how your income and expenses will affect your savings over time.",
+        "Switch between Overview and Monthly Balance Projection tabs. The projection shows a 12-month forecast of your cash balance based on income and expenses.",
       side: "bottom",
       align: "start",
     },

@@ -133,7 +133,7 @@ export function DashboardClient({ metrics, incomes, expenses, holdings }: Dashbo
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="h-auto p-0 bg-transparent border-b border-border rounded-none flex gap-0 justify-start">
+        <TabsList className="h-auto p-0 bg-transparent border-b border-border rounded-none flex gap-0 justify-start" data-tour="dashboard-tabs">
           <TabsTrigger
             value="overview"
             className="relative flex items-center gap-2 py-2.5 px-4 rounded-t-lg border border-border transition-colors data-[state=active]:z-10 data-[state=active]:-mb-px data-[state=active]:border-t-2 data-[state=active]:border-t-[#5C98FF] data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=inactive]:border-b-0 data-[state=inactive]:bg-muted/50 data-[state=inactive]:text-muted-foreground"
