@@ -300,7 +300,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
               }
             </CardDescription>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4" data-tour="graph-controls">
             {/* View Mode Toggle */}
             <div className="space-y-2 min-w-[180px]">
               <Label htmlFor="viewMode" className="text-sm font-medium">
