@@ -9,8 +9,15 @@ export interface TourConfig {
   steps: DriveStep[];
 }
 
-// Overall Tour - 3 steps (app navigation overview)
+// Overall Tour - app navigation overview
 const overallSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Welcome to Foracle! 👋",
+      description:
+        "Let's take a quick tour of the app. We'll show you how to navigate, access quick links, and get help when you need it.",
+    },
+  },
   {
     element: '[data-tour="sidebar-nav"]',
     popover: {
@@ -53,8 +60,15 @@ const overallSteps: DriveStep[] = [
   },
 ];
 
-// Dashboard Tour - 6 steps
+// Dashboard Tour
 const dashboardSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Dashboard Tour",
+      description:
+        "Your financial command center! This tour will walk you through the key metrics, quick actions, and the monthly balance projection graph.",
+    },
+  },
   {
     element: '[data-tour="month-nav"]',
     popover: {
@@ -136,8 +150,15 @@ const dashboardSteps: DriveStep[] = [
   },
 ];
 
-// Incomes Tour - 5 steps
+// Incomes Tour
 const incomesSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Incomes Tour",
+      description:
+        "Learn how to manage your income sources. We'll cover adding incomes, filtering by frequency, and understanding your CPF contributions.",
+    },
+  },
   {
     element: '[data-tour="add-income-btn"]',
     popover: {
@@ -190,8 +211,15 @@ const incomesSteps: DriveStep[] = [
   },
 ];
 
-// Expenses Tour - 5 steps (ordered top to bottom for natural flow)
+// Expenses Tour
 const expensesSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Expenses Tour",
+      description:
+        "Master your expense tracking! We'll show you how to view monthly totals, filter by category, manage custom categories, and add new expenses.",
+    },
+  },
   {
     element: '[data-tour="expected-expenses-card"]',
     popover: {
