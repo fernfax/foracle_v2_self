@@ -62,6 +62,7 @@ export function HelpButton() {
   const [pendingTour, setPendingTour] = useState<TourName | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [welcomeModalTour, setWelcomeModalTour] = useState<TourName>("overall");
 
   // Check if user is on the correct page for a specific tour
   const isOnCorrectPage = (tourName: TourName): boolean => {
@@ -124,22 +125,12 @@ export function HelpButton() {
   }, [pathname, searchParams]);
 
   const handleTourClick = (tourName: TourName) => {
-    // For the overall tour, show welcome modal first
-    if (tourName === "overall") {
-      if (isOnCorrectPage(tourName)) {
-        setShowWelcomeModal(true);
-      } else {
-        setPendingTour(tourName);
-        setShowConfirmDialog(true);
-      }
-      return;
-    }
-
+    // Always show welcome modal first for all tours
     if (isOnCorrectPage(tourName)) {
-      // User is already on the target page, start tour directly
-      startTour(tourName);
+      setWelcomeModalTour(tourName);
+      setShowWelcomeModal(true);
     } else {
-      // User is on a different page, show confirmation
+      // User is on a different page, show navigation confirmation
       setPendingTour(tourName);
       setShowConfirmDialog(true);
     }
@@ -149,28 +140,22 @@ export function HelpButton() {
     setShowWelcomeModal(false);
     // Small delay to let modal close animation finish
     setTimeout(() => {
-      startTour("overall");
+      startTour(welcomeModalTour);
     }, 150);
   };
 
   const handleConfirmNavigation = () => {
     if (pendingTour) {
-      // For overall tour, show welcome modal after navigation instead of starting tour directly
-      if (pendingTour === "overall") {
-        console.log("[Tour] Navigating to dashboard for overall tour");
-        const targetRoute = TOUR_ROUTES[pendingTour];
-        router.push(targetRoute);
-        // Show welcome modal after navigation
-        setTimeout(() => {
-          setShowWelcomeModal(true);
-        }, 500);
-      } else {
-        // Store the pending tour in sessionStorage to survive navigation
-        console.log("[Tour] Storing pending tour:", pendingTour, "navigating to:", TOUR_ROUTES[pendingTour]);
-        sessionStorage.setItem(PENDING_TOUR_KEY, pendingTour);
-        const targetRoute = TOUR_ROUTES[pendingTour];
-        router.push(targetRoute);
-      }
+      // Navigate to the target page and show welcome modal after navigation
+      console.log("[Tour] Navigating to", TOUR_PAGE_NAMES[pendingTour], "for", pendingTour, "tour");
+      const targetRoute = TOUR_ROUTES[pendingTour];
+      const tourToShow = pendingTour;
+      router.push(targetRoute);
+      // Show welcome modal after navigation
+      setTimeout(() => {
+        setWelcomeModalTour(tourToShow);
+        setShowWelcomeModal(true);
+      }, 500);
     }
     setShowConfirmDialog(false);
     setPendingTour(null);
@@ -251,6 +236,7 @@ export function HelpButton() {
         open={showWelcomeModal}
         onOpenChange={setShowWelcomeModal}
         onGetStarted={handleWelcomeGetStarted}
+        tourName={welcomeModalTour}
       />
     </>
   );

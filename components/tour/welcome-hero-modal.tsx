@@ -196,21 +196,48 @@ function ModalFloatingIcons() {
   );
 }
 
+import { type TourName } from "@/lib/tour/tour-config";
+
+// Tour-specific content
+const TOUR_CONTENT: Record<TourName, { title: string; description: string }> = {
+  overall: {
+    title: "Welcome to Foracle",
+    description: "Let's take a quick tour to help you get familiar with the app and discover all the tools to manage your finances.",
+  },
+  dashboard: {
+    title: "Dashboard Tour",
+    description: "Explore your financial command center. We'll show you how to track your income, expenses, savings, and view your monthly balance projections.",
+  },
+  incomes: {
+    title: "Incomes Tour",
+    description: "Learn how to manage your income sources effectively. We'll cover adding incomes, filtering by frequency, and understanding your CPF contributions.",
+  },
+  expenses: {
+    title: "Expenses Tour",
+    description: "Master your expense tracking. We'll show you how to view monthly totals, filter by category, manage custom categories, and add new expenses.",
+  },
+};
+
 interface WelcomeHeroModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onGetStarted: () => void;
+  tourName?: TourName;
 }
 
 export function WelcomeHeroModal({
   open,
   onOpenChange,
   onGetStarted,
+  tourName = "overall",
 }: WelcomeHeroModalProps) {
+  const content = TOUR_CONTENT[tourName];
+  const isOverall = tourName === "overall";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl p-0 overflow-hidden border-0 gap-0">
-        <DialogTitle className="sr-only">Welcome to Foracle</DialogTitle>
+        <DialogTitle className="sr-only">{content.title}</DialogTitle>
         {/* Animated background section */}
         <div className="relative h-44 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30 overflow-hidden">
           <ModalFloatingIcons />
@@ -222,19 +249,24 @@ export function WelcomeHeroModal({
         <div className="relative px-8 pb-8 -mt-12 z-20">
           {/* Welcome text */}
           <div className="text-center space-y-3 mb-8">
-            <h2 className="text-3xl font-semibold text-slate-900 flex items-end justify-center gap-3">
-              Welcome to{" "}
-              <Image
-                src="/wordmark-168.png"
-                alt="Foracle"
-                width={120}
-                height={35}
-                className="object-contain inline-block mb-1"
-              />
-            </h2>
+            {isOverall ? (
+              <h2 className="text-3xl font-semibold text-slate-900 flex items-end justify-center gap-3">
+                Welcome to{" "}
+                <Image
+                  src="/wordmark-168.png"
+                  alt="Foracle"
+                  width={120}
+                  height={35}
+                  className="object-contain inline-block mb-1"
+                />
+              </h2>
+            ) : (
+              <h2 className="text-3xl font-semibold text-slate-900">
+                {content.title}
+              </h2>
+            )}
             <p className="text-slate-600 leading-relaxed">
-              Let's take a quick tour to help you get familiar with the app and
-              discover all the tools to manage your finances.
+              {content.description}
             </p>
           </div>
 
