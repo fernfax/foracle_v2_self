@@ -399,14 +399,13 @@ function GoalsScreen() {
   ];
 
   return (
-    <div className="pt-12 p-4 sm:p-5 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+    <div className="pt-9 p-4 sm:p-5 h-full flex flex-col">
+      {/* Header - positioned below the island */}
+      <div className="flex items-center gap-3 mt-5 mb-4">
+        <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
           <Target size={18} />
         </div>
         <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Savings Goals</p>
-        <div className="w-9" />
       </div>
 
       {/* Total Saved */}
