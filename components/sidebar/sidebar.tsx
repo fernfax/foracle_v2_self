@@ -17,6 +17,7 @@ import {
   Home as PropertyIcon,
   Car,
   Package,
+  Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SidebarNavItem } from "./sidebar-nav-item";
@@ -79,6 +80,14 @@ const navItems = [
     icon: Target,
     bgColor: "bg-cyan-100",
     iconColor: "text-cyan-600",
+  },
+  {
+    href: "/dashboard/budget",
+    label: "Budget",
+    icon: Calculator,
+    bgColor: "bg-indigo-100",
+    iconColor: "text-indigo-600",
+    comingSoon: true,
   },
 ];
 
