@@ -53,7 +53,7 @@ const overallSteps: DriveStep[] = [
   },
 ];
 
-// Dashboard Tour - 8 steps
+// Dashboard Tour - 7 steps
 const dashboardSteps: DriveStep[] = [
   {
     element: '[data-tour="month-nav"]',
@@ -96,21 +96,11 @@ const dashboardSteps: DriveStep[] = [
     },
   },
   {
-    element: '[data-tour="assets-card"]',
+    element: '[data-tour="secondary-metrics"]',
     popover: {
-      title: "Total Assets",
+      title: "Assets, Goals & Family",
       description:
-        "Your net equity in properties and vehicles. Click to see the full breakdown.",
-      side: "top",
-      align: "start",
-    },
-  },
-  {
-    element: '[data-tour="goals-card"]',
-    popover: {
-      title: "Active Goals",
-      description:
-        "Track your financial goals like emergency funds, retirement, or major purchases.",
+        "Track your total assets (property and vehicle equity), active financial goals, and family members in your household.",
       side: "top",
       align: "center",
     },
