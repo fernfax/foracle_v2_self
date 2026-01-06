@@ -15,6 +15,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -149,7 +159,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
   const [amount, setAmount] = useState("");
   const [frequency, setFrequency] = useState("monthly");
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,6 +167,20 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   const [expenseCategory, setExpenseCategory] = useState("current-recurring");
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+
+  // Track initial values to detect changes
+  const [initialValues, setInitialValues] = useState<{
+    name: string;
+    category: string;
+    expenseCategory: string;
+    amount: string;
+    frequency: string;
+    selectedMonths: number[];
+    startDate: Date | undefined;
+    endDate: Date | undefined;
+    notes: string;
+  } | null>(null);
 
   // Check if this expense is linked to any integration
   const integrationType = getIntegrationType(expense);
@@ -175,29 +199,44 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
     setCategories(data);
   };
 
-  // Populate form when expense changes
+  // Populate form when dialog opens or expense changes
   useEffect(() => {
-    if (expense) {
+    if (open && expense) {
+      const parsedStartDate = expense.startDate ? parse(expense.startDate, "yyyy-MM-dd", new Date()) : undefined;
+      const parsedEndDate = expense.endDate ? parse(expense.endDate, "yyyy-MM-dd", new Date()) : undefined;
+      const expenseCat = expense.expenseCategory || "current-recurring";
+      const parsedMonths = expense.customMonths ? (() => {
+        try {
+          return JSON.parse(expense.customMonths);
+        } catch {
+          return [];
+        }
+      })() : [];
+
       setName(expense.name);
       setCategory(expense.category);
-      setExpenseCategory(expense.expenseCategory || "current-recurring");
+      setExpenseCategory(expenseCat);
       setAmount(expense.amount);
       setFrequency(expense.frequency);
-      setStartDate(expense.startDate ? parse(expense.startDate, "yyyy-MM-dd", new Date()) : undefined);
-      setEndDate(expense.endDate ? parse(expense.endDate, "yyyy-MM-dd", new Date()) : undefined);
+      setStartDate(parsedStartDate);
+      setEndDate(parsedEndDate);
       setNotes(expense.description || "");
-      // Parse custom months if they exist
-      if (expense.customMonths) {
-        try {
-          setSelectedMonths(JSON.parse(expense.customMonths));
-        } catch {
-          setSelectedMonths([]);
-        }
-      } else {
-        setSelectedMonths([]);
-      }
+      setSelectedMonths(parsedMonths);
+
+      // Save initial values for change detection
+      setInitialValues({
+        name: expense.name,
+        category: expense.category,
+        expenseCategory: expenseCat,
+        amount: expense.amount,
+        frequency: expense.frequency,
+        selectedMonths: parsedMonths,
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+        notes: expense.description || "",
+      });
     }
-  }, [expense]);
+  }, [open, expense]);
 
   // Auto-set frequency to "one-time" when expense type is "one-off"
   useEffect(() => {
@@ -212,6 +251,44 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
     setSelectedMonths((prev) =>
       prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month].sort((a, b) => a - b)
     );
+  };
+
+  // Check if user has made any changes from initial values
+  const hasUnsavedChanges = initialValues
+    ? name !== initialValues.name ||
+      category !== initialValues.category ||
+      expenseCategory !== initialValues.expenseCategory ||
+      amount !== initialValues.amount ||
+      frequency !== initialValues.frequency ||
+      JSON.stringify(selectedMonths) !== JSON.stringify(initialValues.selectedMonths) ||
+      startDate?.getTime() !== initialValues.startDate?.getTime() ||
+      endDate?.getTime() !== initialValues.endDate?.getTime() ||
+      notes !== initialValues.notes
+    : false;
+
+  const handleClose = (openState: boolean) => {
+    if (!openState && hasUnsavedChanges && !isLinked) {
+      setShowUnsavedWarning(true);
+    } else {
+      onOpenChange(openState);
+    }
+  };
+
+  const handleConfirmClose = () => {
+    setShowUnsavedWarning(false);
+    // Reset form to initial values
+    if (initialValues) {
+      setName(initialValues.name);
+      setCategory(initialValues.category);
+      setExpenseCategory(initialValues.expenseCategory);
+      setAmount(initialValues.amount);
+      setFrequency(initialValues.frequency);
+      setSelectedMonths(initialValues.selectedMonths);
+      setStartDate(initialValues.startDate);
+      setEndDate(initialValues.endDate);
+      setNotes(initialValues.notes);
+    }
+    onOpenChange(false);
   };
 
   const handleSubmit = async () => {
@@ -250,7 +327,8 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -273,7 +351,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
           </DialogDescription>
         </DialogHeader>
 
-        <DialogBody>
+        <DialogBody className={!expenseCategory ? "min-h-[100px]" : ""}>
         {/* Linked Integration Alert */}
         {isLinked && config && expense && (
           <div className={`flex gap-3 p-4 rounded-lg ${config.bgColor} border ${config.borderColor}`}>
@@ -299,12 +377,12 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
         {/* Expense Type Selector */}
         <div className="space-y-2">
           <Label htmlFor="edit-expense-type" className="flex items-center gap-1">
-            Expense Type
+            Expense Type <span className="text-red-500">*</span>
             {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
           </Label>
           <Select value={expenseCategory} onValueChange={isLinked ? undefined : setExpenseCategory} disabled={isLinked}>
             <SelectTrigger className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}>
-              <SelectValue />
+              <SelectValue placeholder="Select expense type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="current-recurring">Recurring Expense</SelectItem>
@@ -316,6 +394,9 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
           ) : (
             <>
+              {!expenseCategory && (
+                <p className="text-xs text-muted-foreground">Please select an expense type to continue</p>
+              )}
               {expenseCategory === "current-recurring" && (
                 <p className="text-xs text-muted-foreground">Expense that repeats regularly (e.g., monthly rent)</p>
               )}
@@ -329,6 +410,8 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
           )}
         </div>
 
+        {/* Show remaining fields only when expense type is selected */}
+        {expenseCategory && (
         <div className="grid gap-6 py-4">
           {/* Row 1: Name and Category */}
           <div className="grid grid-cols-2 gap-4">
@@ -586,6 +669,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             <p className="text-xs text-muted-foreground">Add any additional details about this expense</p>
           </div>
         </div>
+        )}
         </DialogBody>
 
         {/* Footer */}
@@ -603,12 +687,13 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             </>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+              <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={
+                  !expenseCategory ||
                   !name ||
                   !category ||
                   !amount ||
@@ -624,5 +709,21 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
         </DialogFooterSticky>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+          <AlertDialogDescription>
+            You have unsaved changes. Are you sure you want to close? All your changes will be lost.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Continue Editing</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmClose}>Discard Changes</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

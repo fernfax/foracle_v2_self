@@ -15,6 +15,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -63,18 +73,59 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
   const [amount, setAmount] = useState("");
   const [frequency, setFrequency] = useState("monthly");
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
-  const [expenseCategory, setExpenseCategory] = useState("current-recurring");
+  const [expenseCategory, setExpenseCategory] = useState("");
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
 
-  // Load categories when dialog opens
+  // Track if user has entered any meaningful data (not just selecting expense type)
+  const hasUnsavedChanges =
+    name !== "" ||
+    category !== "" ||
+    amount !== "" ||
+    notes !== "";
+
+  const handleClose = (openState: boolean) => {
+    if (!openState && hasUnsavedChanges) {
+      setShowUnsavedWarning(true);
+    } else {
+      onOpenChange(openState);
+    }
+  };
+
+  const handleConfirmClose = () => {
+    setShowUnsavedWarning(false);
+    // Reset form
+    setName("");
+    setCategory("");
+    setExpenseCategory("");
+    setAmount("");
+    setFrequency("monthly");
+    setSelectedMonths([]);
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setNotes("");
+    onOpenChange(false);
+  };
+
+  // Reset form and load categories when dialog opens
   useEffect(() => {
     if (open) {
+      // Reset form to initial state
+      setName("");
+      setCategory("");
+      setExpenseCategory("");
+      setAmount("");
+      setFrequency("monthly");
+      setSelectedMonths([]);
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setNotes("");
       loadCategories();
     }
   }, [open]);
@@ -128,11 +179,11 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
       // Reset form
       setName("");
       setCategory("");
-      setExpenseCategory("current-recurring");
+      setExpenseCategory("");
       setAmount("");
       setFrequency("monthly");
       setSelectedMonths([]);
-      setStartDate(new Date());
+      setStartDate(undefined);
       setEndDate(undefined);
       setNotes("");
 
@@ -146,7 +197,8 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -156,13 +208,15 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
           <DialogDescription>Add a new expense to track your spending.</DialogDescription>
         </DialogHeader>
 
-        <DialogBody>
+        <DialogBody className={!expenseCategory ? "min-h-[100px]" : ""}>
         {/* Expense Type Selector */}
         <div className="space-y-2">
-          <Label htmlFor="expense-type">Expense Type</Label>
+          <Label htmlFor="expense-type">
+            Expense Type <span className="text-red-500">*</span>
+          </Label>
           <Select value={expenseCategory} onValueChange={setExpenseCategory}>
             <SelectTrigger className="bg-white">
-              <SelectValue />
+              <SelectValue placeholder="Select expense type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="current-recurring">Recurring Expense</SelectItem>
@@ -170,6 +224,9 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
               <SelectItem value="one-off">One-off Expense</SelectItem>
             </SelectContent>
           </Select>
+          {!expenseCategory && (
+            <p className="text-xs text-muted-foreground">Please select an expense type to continue</p>
+          )}
           {expenseCategory === "current-recurring" && (
             <p className="text-xs text-muted-foreground">Expense that repeats regularly (e.g., monthly rent)</p>
           )}
@@ -181,6 +238,8 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
           )}
         </div>
 
+        {/* Show remaining fields only when expense type is selected */}
+        {expenseCategory && (
         <div className="grid gap-6 py-4">
           {/* Row 1: Name and Category */}
           <div className="grid grid-cols-2 gap-4">
@@ -379,16 +438,18 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
             <p className="text-xs text-muted-foreground">Add any additional details about this expense</p>
           </div>
         </div>
+        )}
         </DialogBody>
 
         {/* Footer */}
         <DialogFooterSticky>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={
+              !expenseCategory ||
               !name ||
               !category ||
               !amount ||
@@ -402,5 +463,21 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
         </DialogFooterSticky>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+          <AlertDialogDescription>
+            You have unsaved changes. Are you sure you want to close? All your changes will be lost.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Continue Editing</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmClose}>Discard Changes</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

@@ -27,6 +27,7 @@ import { WelcomeHeroModal } from "./welcome-hero-modal";
 import { type TourName } from "@/lib/tour/tour-config";
 
 const PENDING_TOUR_KEY = "foracle_pending_tour";
+const NEW_USER_TOUR_KEY = "foracle_new_user_tour";
 
 // Map tours to their target pages (pathname only, no query params)
 const TOUR_PATHNAMES: Record<TourName, string> = {
@@ -82,6 +83,23 @@ export function HelpButton() {
   useEffect(() => {
     startTourRef.current = startTour;
   }, [startTour]);
+
+  // Check for new user tour (after onboarding completion)
+  useEffect(() => {
+    const checkNewUserTour = () => {
+      const isNewUser = sessionStorage.getItem(NEW_USER_TOUR_KEY);
+      if (isNewUser && pathname === "/dashboard") {
+        console.log("[Tour] New user detected, showing welcome modal");
+        sessionStorage.removeItem(NEW_USER_TOUR_KEY);
+        setWelcomeModalTour("overall");
+        setShowWelcomeModal(true);
+      }
+    };
+
+    // Small delay to ensure page is ready
+    const timer = setTimeout(checkNewUserTour, 300);
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
   // Check for pending tour after navigation
   useEffect(() => {
