@@ -53,7 +53,7 @@ const overallSteps: DriveStep[] = [
   },
 ];
 
-// Dashboard Tour - 5 steps
+// Dashboard Tour - 6 steps
 const dashboardSteps: DriveStep[] = [
   {
     element: '[data-tour="month-nav"]',
@@ -103,6 +103,23 @@ const dashboardSteps: DriveStep[] = [
         "View a 12-month projection of your cash balance. See how your income and expenses will affect your savings over time.",
       side: "bottom",
       align: "start",
+    },
+    onHighlightStarted: () => {
+      // Click the projection tab to switch to it
+      const projectionTab = document.querySelector('[data-tour="projection-tab"]') as HTMLElement;
+      if (projectionTab) {
+        projectionTab.click();
+      }
+    },
+  },
+  {
+    element: '[data-tour="graph-controls"]',
+    popover: {
+      title: "View Mode & Time Range",
+      description:
+        "Toggle between Cumulative (running balance) and Non-Cumulative (monthly breakdown) views. Adjust the time range from 12 months up to 10 years.",
+      side: "bottom",
+      align: "end",
     },
   },
 ];
