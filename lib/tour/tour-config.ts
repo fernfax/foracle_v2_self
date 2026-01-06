@@ -104,7 +104,7 @@ const dashboardSteps: DriveStep[] = [
       side: "bottom",
       align: "start",
     },
-    onHighlightStarted: () => {
+    onHighlightStarted: (element, step, options) => {
       // Click the projection tab to switch to it
       const projectionTab = document.querySelector('[data-tour="projection-tab"]') as HTMLElement;
       if (projectionTab) {
@@ -120,6 +120,18 @@ const dashboardSteps: DriveStep[] = [
         "Toggle between Cumulative (running balance) and Non-Cumulative (monthly breakdown) views. Adjust the time range from 12 months up to 10 years.",
       side: "bottom",
       align: "end",
+    },
+    onHighlightStarted: (element, step, options) => {
+      // Wait for graph controls to be visible after tab switch
+      const waitForElement = () => {
+        const graphControls = document.querySelector('[data-tour="graph-controls"]');
+        if (graphControls) {
+          // Scroll into view if needed
+          graphControls.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      };
+      // Small delay to ensure tab content is rendered
+      setTimeout(waitForElement, 100);
     },
   },
 ];

@@ -62,15 +62,19 @@ export function TourProvider({ children, userId }: TourProviderProps) {
     const maxRetries = 15;
     const retryDelay = 400;
 
-    // Filter steps to only include those with existing elements
-    const validSteps = config.steps.filter((step) => {
+    // Check which steps have existing elements (for initial validation only)
+    // We don't filter out steps - some elements may appear dynamically via onHighlightStarted
+    const initialElements = config.steps.filter((step) => {
       if (!step.element) return true;
       const element = document.querySelector(step.element as string);
       return element !== null;
     });
 
+    // Use all steps, not just initially visible ones
+    const validSteps = config.steps;
+
     // Log which elements were found/not found
-    if (retryCount === 0 || validSteps.length === 0) {
+    if (retryCount === 0 || initialElements.length === 0) {
       const allTourElements = document.querySelectorAll('[data-tour]');
       console.log(`[Tour] Found ${allTourElements.length} data-tour elements on page:`,
         Array.from(allTourElements).map(el => el.getAttribute('data-tour'))
@@ -78,7 +82,8 @@ export function TourProvider({ children, userId }: TourProviderProps) {
       console.log(`[Tour] Looking for:`, config.steps.map(s => s.element));
     }
 
-    if (validSteps.length === 0) {
+    // Wait for at least one element to exist before starting
+    if (initialElements.length === 0) {
       if (retryCount < maxRetries) {
         console.log(`[Tour] Waiting for elements, retry ${retryCount + 1}/${maxRetries}...`);
         setTimeout(() => startTourWithRetry(tourName, retryCount + 1), retryDelay);
@@ -88,7 +93,7 @@ export function TourProvider({ children, userId }: TourProviderProps) {
       return;
     }
 
-    console.log(`[Tour] Starting ${tourName} with ${validSteps.length} steps`);
+    console.log(`[Tour] Starting ${tourName} with ${validSteps.length} steps (${initialElements.length} initially visible)`);
 
     const instance = driver({
         showProgress: true,
