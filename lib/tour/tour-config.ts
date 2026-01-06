@@ -53,7 +53,7 @@ const overallSteps: DriveStep[] = [
   },
 ];
 
-// Dashboard Tour - 7 steps
+// Dashboard Tour - 5 steps
 const dashboardSteps: DriveStep[] = [
   {
     element: '[data-tour="month-nav"]',
@@ -66,33 +66,13 @@ const dashboardSteps: DriveStep[] = [
     },
   },
   {
-    element: '[data-tour="income-card"]',
+    element: '[data-tour="primary-metrics"]',
     popover: {
-      title: "Total Net Income",
+      title: "Income, Expenses & Savings",
       description:
-        "Your monthly take-home income after CPF deductions. Click to see a detailed breakdown by source.",
-      side: "bottom",
-      align: "start",
-    },
-  },
-  {
-    element: '[data-tour="expenses-card"]',
-    popover: {
-      title: "Total Expenses",
-      description:
-        "All your expected expenses for the selected month. Click to explore by category.",
+        "Your monthly financial snapshot: take-home income after CPF, total expenses, and net savings. Click any card for detailed breakdowns.",
       side: "bottom",
       align: "center",
-    },
-  },
-  {
-    element: '[data-tour="savings-card"]',
-    popover: {
-      title: "Net Savings",
-      description:
-        "The difference between your income and expenses. Green means you're saving, red means you're overspending.",
-      side: "bottom",
-      align: "end",
     },
   },
   {
