@@ -95,10 +95,9 @@ const dashboardSteps: DriveStep[] = [
       align: "center",
     },
     onDeselected: () => {
-      // Switch to projection tab before the next step
-      const projectionTab = document.querySelector('[data-tour="projection-tab"]') as HTMLElement;
-      if (projectionTab) {
-        projectionTab.click();
+      // Switch to projection tab before the next step using exposed function
+      if ((window as any).switchDashboardTab) {
+        (window as any).switchDashboardTab('projection');
       }
     },
   },
@@ -112,10 +111,9 @@ const dashboardSteps: DriveStep[] = [
       align: "start",
     },
     onHighlightStarted: () => {
-      // Ensure tab is switched (backup in case onDeselected didn't fire)
-      const projectionTab = document.querySelector('[data-tour="projection-tab"]') as HTMLElement;
-      if (projectionTab && projectionTab.getAttribute('data-state') !== 'active') {
-        projectionTab.click();
+      // Ensure we're on the projection tab
+      if ((window as any).switchDashboardTab && !window.location.search.includes('tab=projection')) {
+        (window as any).switchDashboardTab('projection');
       }
     },
   },
@@ -129,10 +127,9 @@ const dashboardSteps: DriveStep[] = [
       align: "end",
     },
     onHighlightStarted: () => {
-      // Ensure projection tab is active and scroll to controls
-      const projectionTab = document.querySelector('[data-tour="projection-tab"]') as HTMLElement;
-      if (projectionTab && projectionTab.getAttribute('data-state') !== 'active') {
-        projectionTab.click();
+      // Ensure we're on the projection tab
+      if ((window as any).switchDashboardTab && !window.location.search.includes('tab=projection')) {
+        (window as any).switchDashboardTab('projection');
       }
       // Wait for content to render then scroll
       setTimeout(() => {
@@ -140,7 +137,7 @@ const dashboardSteps: DriveStep[] = [
         if (graphControls) {
           graphControls.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 150);
+      }, 200);
     },
   },
 ];
