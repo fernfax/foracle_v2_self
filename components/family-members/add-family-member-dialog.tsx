@@ -151,7 +151,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
           {/* Row 3: Date of Birth */}
           <div className="space-y-2">
             <Label>Date of Birth <span className="text-red-500">*</span></Label>
-            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={false}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"

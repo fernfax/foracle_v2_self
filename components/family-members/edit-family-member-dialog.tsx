@@ -214,7 +214,7 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
           {/* Row 3: Date of Birth */}
           <div className="space-y-2">
             <Label>Date of Birth</Label>
-            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={false}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
