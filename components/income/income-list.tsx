@@ -783,7 +783,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                       </Button>
                     </TableCell>
                     <TableCell className="font-medium">{income.name}</TableCell>
-                    <TableCell>{income.category}</TableCell>
+                    <TableCell className="capitalize">{income.category}</TableCell>
                     <TableCell>${parseFloat(income.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</TableCell>
                     <TableCell className="capitalize">{income.frequency}</TableCell>
                     <TableCell>
