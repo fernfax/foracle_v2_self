@@ -78,6 +78,7 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
               size="icon"
               className="h-8 w-8"
               onClick={goToPreviousMonth}
+              disabled={isCurrentMonth()}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
