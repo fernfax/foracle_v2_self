@@ -152,12 +152,12 @@ export function IncomeModal({
         setIncomeCategory(pendingFormData.incomeCategory || "current-recurring");
         setSubjectToCpf(pendingFormData.subjectToCpf || false);
         setAccountForBonus(pendingFormData.accountForBonus || false);
-        setBonusGroups(pendingFormData.bonusGroups || []);
+        setBonusGroups(safeJsonParse(pendingFormData.bonusGroups, []));
         setStartDate(pendingFormData.startDate ? new Date(pendingFormData.startDate) : undefined);
         setEndDate(pendingFormData.endDate ? new Date(pendingFormData.endDate) : undefined);
         setNotes(pendingFormData.description || "");
-        setPastIncomeHistory(pendingFormData.pastIncomeHistory || []);
-        setFutureMilestones(pendingFormData.futureMilestones || []);
+        setPastIncomeHistory(safeJsonParse(pendingFormData.pastIncomeHistory, []));
+        setFutureMilestones(safeJsonParse(pendingFormData.futureMilestones, []));
         setAccountForFutureChange(pendingFormData.accountForFutureChange || false);
       }
       // Priority 2: Existing income (editing mode)
@@ -294,14 +294,14 @@ export function IncomeModal({
         customMonths: frequency === "custom" ? JSON.stringify(selectedMonths) : null,
         subjectToCpf,
         accountForBonus,
-        bonusGroups: accountForBonus ? bonusGroups : [],
+        bonusGroups: accountForBonus ? JSON.stringify(bonusGroups) : undefined,
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         description: notes || undefined,
         familyMemberId: familyMember.id,
         familyMemberAge,
-        pastIncomeHistory,
-        futureMilestones,
+        pastIncomeHistory: pastIncomeHistory.length > 0 ? JSON.stringify(pastIncomeHistory) : null,
+        futureMilestones: futureMilestones.length > 0 ? JSON.stringify(futureMilestones) : null,
         accountForFutureChange,
       };
       setHasUnsavedChanges(false);
