@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { expenses } from "@/db/schema";
+import { expenses, expenseCategories } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -181,6 +181,23 @@ export async function createExpenseFromPolicy(data: {
   }
 
   console.log("User ID:", userId);
+
+  // Ensure the Insurance category exists for this user
+  const existingCategory = await db.query.expenseCategories.findFirst({
+    where: and(
+      eq(expenseCategories.userId, userId),
+      eq(expenseCategories.name, "Insurance")
+    ),
+  });
+
+  if (!existingCategory) {
+    await db.insert(expenseCategories).values({
+      id: randomUUID(),
+      userId,
+      name: "Insurance",
+      isDefault: true,
+    });
+  }
 
   const id = randomUUID();
 

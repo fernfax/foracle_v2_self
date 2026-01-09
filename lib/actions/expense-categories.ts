@@ -23,6 +23,7 @@ const DEFAULT_CATEGORIES = [
   "Transportation",
   "Utilities",
   "Healthcare",
+  "Insurance",
   "Children",
   "Entertainment",
   "Allowances",
