@@ -41,9 +41,9 @@ export function BudgetOverview({
   const usageStatus = getBudgetUsageStatus(percentUsed);
 
   const statusColors = {
-    safe: "bg-primary",
+    safe: "bg-blue-500",
     warning: "bg-yellow-500",
-    danger: "bg-destructive",
+    danger: "bg-red-500",
   };
 
   const pacingConfig = {
@@ -110,7 +110,7 @@ export function BudgetOverview({
       </div>
 
       {/* Progress Bar */}
-      <div className="h-2.5 bg-muted rounded-full overflow-hidden mb-4">
+      <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden mb-4">
         <div
           className={cn(
             "h-full transition-all rounded-full",

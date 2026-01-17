@@ -10,6 +10,7 @@ import { ClerkUserButton } from "@/components/clerk-user-button";
 import { checkOnboardingStatus } from "@/lib/actions/onboarding";
 import { TourProvider } from "@/components/tour/tour-provider";
 import { HelpButton } from "@/components/tour/help-button";
+import { FloatingAddButton, AddExpenseProvider, GlobalAddExpenseModal } from "@/components/budget";
 
 export default async function DashboardLayout({
   children,
@@ -31,7 +32,8 @@ export default async function DashboardLayout({
 
   return (
     <TourProvider userId={userId}>
-      <div className="min-h-screen bg-background">
+      <AddExpenseProvider>
+      <div className="min-h-screen bg-background overflow-x-hidden">
         {/* Fixed Sidebar - Hidden on mobile, visible on md+ */}
         <Sidebar />
 
@@ -83,7 +85,14 @@ export default async function DashboardLayout({
 
         {/* Help button for guided tours */}
         <HelpButton />
+
+        {/* Floating add expense button (mobile only, non-budget pages) */}
+        <FloatingAddButton />
+
+        {/* Global add expense modal (for non-budget pages) */}
+        <GlobalAddExpenseModal />
       </div>
+      </AddExpenseProvider>
     </TourProvider>
   );
 }
