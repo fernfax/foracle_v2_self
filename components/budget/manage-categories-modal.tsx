@@ -191,20 +191,18 @@ export function ManageCategoriesModal({
                   {/* Category Row */}
                   <div
                     className={cn(
-                      "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
+                      "flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-pointer",
                       checkState === "checked"
                         ? "border-primary bg-primary/5"
                         : checkState === "indeterminate"
                         ? "border-primary/50 bg-primary/5"
                         : "border-transparent bg-muted/30 hover:bg-muted/50"
                     )}
+                    onClick={() => hasExpenses && handleToggleCategory(categoryExpenses)}
                   >
                     {/* Checkbox with indeterminate state */}
                     {hasExpenses ? (
-                      <div
-                        className="relative flex items-center justify-center cursor-pointer"
-                        onClick={() => handleToggleCategory(categoryExpenses)}
-                      >
+                      <div className="relative flex items-center justify-center">
                         {checkState === "indeterminate" ? (
                           <div className="h-4 w-4 rounded-sm border border-primary bg-primary flex items-center justify-center">
                             <Minus className="h-3 w-3 text-primary-foreground" />
@@ -212,8 +210,7 @@ export function ManageCategoriesModal({
                         ) : (
                           <Checkbox
                             checked={checkState === "checked"}
-                            onCheckedChange={() => handleToggleCategory(categoryExpenses)}
-                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
                           />
                         )}
                       </div>
@@ -227,10 +224,7 @@ export function ManageCategoriesModal({
                     </div>
 
                     {/* Category Name & Frequency */}
-                    <div
-                      className="flex-1 cursor-pointer"
-                      onClick={() => hasExpenses && handleToggleCategory(categoryExpenses)}
-                    >
+                    <div className="flex-1">
                       <div className="font-medium">{category.name}</div>
                       {frequencies && (
                         <div className="text-sm text-muted-foreground">{frequencies}</div>
@@ -284,8 +278,7 @@ export function ManageCategoriesModal({
                           >
                             <Checkbox
                               checked={isSelected}
-                              onCheckedChange={() => handleToggleExpense(expense.id)}
-                              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
                             />
                             <div className="flex-1">
                               <span className="font-medium">{expense.name}</span>
