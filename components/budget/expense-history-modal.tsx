@@ -20,12 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { X, Pencil, Trash2 } from "lucide-react";
+import { X } from "lucide-react";
 import { formatBudgetCurrency, getDefaultCategoryIcon, getCategoryIconColor, getCategoryBgColor } from "@/lib/budget-utils";
 import { deleteDailyExpense, type DailyExpense } from "@/lib/actions/daily-expenses";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
+import { SwipeableExpenseRow } from "./swipeable-expense-row";
 
 interface ExpenseHistoryModalProps {
   open: boolean;
@@ -73,6 +74,7 @@ export function ExpenseHistoryModal({
 }: ExpenseHistoryModalProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [swipedRowId, setSwipedRowId] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -157,60 +159,47 @@ export function ExpenseHistoryModal({
                           const createdAt = new Date(expense.createdAt);
 
                           return (
-                            <div
+                            <SwipeableExpenseRow
                               key={expense.id}
-                              className="flex items-center gap-3 py-3 px-2 hover:bg-muted/50 group"
+                              onDelete={() => setDeleteId(expense.id)}
+                              isOpen={swipedRowId === expense.id}
+                              onSwipeStart={() => setSwipedRowId(expense.id)}
                             >
-                              {/* Icon */}
-                              <div className={cn("w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0", bgColor)}>
-                                <Icon className={cn("h-5 w-5", iconColor)} />
-                              </div>
-
-                              {/* Details */}
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium">
-                                  {expense.categoryName}
-                                  {expense.note && (
-                                    <span className="text-muted-foreground font-normal">
-                                      {" "}- {expense.note}
-                                    </span>
-                                  )}
+                              <div
+                                className="flex items-center gap-3 py-3 px-2"
+                                onClick={() => {
+                                  onEdit?.(expense);
+                                  onOpenChange(false);
+                                }}
+                              >
+                                {/* Icon */}
+                                <div className={cn("w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0", bgColor)}>
+                                  <Icon className={cn("h-5 w-5", iconColor)} />
                                 </div>
-                                <div className="text-sm text-muted-foreground">
-                                  {format(createdAt, "h:mm a").toLowerCase()}
+
+                                {/* Details */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium">
+                                    {expense.categoryName}
+                                    {expense.note && (
+                                      <span className="text-muted-foreground font-normal">
+                                        {" "}- {expense.note}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {format(createdAt, "h:mm a").toLowerCase()}
+                                  </div>
+                                </div>
+
+                                {/* Amount - pushed to right */}
+                                <div className="ml-auto text-right flex-shrink-0 pr-2">
+                                  <span className="font-semibold text-red-500">
+                                    -{formatBudgetCurrency(parseFloat(expense.amount))}
+                                  </span>
                                 </div>
                               </div>
-
-                              {/* Amount */}
-                              <div className="text-right flex-shrink-0">
-                                <span className="font-semibold text-red-500">
-                                  -{formatBudgetCurrency(parseFloat(expense.amount))}
-                                </span>
-                              </div>
-
-                              {/* Actions (visible on hover) */}
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => {
-                                    onEdit?.(expense);
-                                    onOpenChange(false);
-                                  }}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive hover:text-destructive"
-                                  onClick={() => setDeleteId(expense.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
+                            </SwipeableExpenseRow>
                           );
                         })}
                       </div>
