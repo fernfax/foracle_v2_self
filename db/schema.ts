@@ -63,7 +63,9 @@ export const expenseCategories = pgTable("expense_categories", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
+  icon: varchar("icon", { length: 50 }), // lucide icon name (e.g., "utensils", "car", "home")
   isDefault: boolean("is_default").default(false), // System default categories
+  trackedInBudget: boolean("tracked_in_budget").default(true), // Whether to include in budget tracker
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -96,6 +98,19 @@ export const expenses = pgTable("expenses", {
   endDate: date("end_date"), // Optional - leave empty for ongoing expense
   description: text("description"), // Additional notes
   isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Daily expenses table - for tracking actual daily spending
+export const dailyExpenses = pgTable("daily_expenses", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  categoryId: varchar("category_id", { length: 255 }).references(() => expenseCategories.id, { onDelete: "set null" }),
+  categoryName: varchar("category_name", { length: 100 }).notNull(), // Store category name for historical reference
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  note: text("note"),
+  date: date("date").notNull(), // The date of the expense
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -256,6 +271,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   incomes: many(incomes),
   expenses: many(expenses),
   expenseCategories: many(expenseCategories),
+  dailyExpenses: many(dailyExpenses),
   assets: many(assets),
   propertyAssets: many(propertyAssets),
   vehicleAssets: many(vehicleAssets),
@@ -293,10 +309,22 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
   }),
 }));
 
-export const expenseCategoriesRelations = relations(expenseCategories, ({ one }) => ({
+export const expenseCategoriesRelations = relations(expenseCategories, ({ one, many }) => ({
   user: one(users, {
     fields: [expenseCategories.userId],
     references: [users.id],
+  }),
+  dailyExpenses: many(dailyExpenses),
+}));
+
+export const dailyExpensesRelations = relations(dailyExpenses, ({ one }) => ({
+  user: one(users, {
+    fields: [dailyExpenses.userId],
+    references: [users.id],
+  }),
+  category: one(expenseCategories, {
+    fields: [dailyExpenses.categoryId],
+    references: [expenseCategories.id],
   }),
 }));
 
