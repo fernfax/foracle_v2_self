@@ -29,7 +29,7 @@ function getIconComponent(iconName: string | null, categoryName: string) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join("");
 
-  const IconComponent = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[pascalCase];
+  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[pascalCase];
   return IconComponent || LucideIcons.CircleDollarSign;
 }
 
