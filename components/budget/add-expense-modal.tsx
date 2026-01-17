@@ -131,13 +131,13 @@ export function AddExpenseModal({
               <X className="h-4 w-4" />
             </Button>
           </DrawerClose>
-          <DrawerTitle className="flex-1 text-center">
+          <div className="flex-1 flex justify-center">
             <CategorySelector
               categories={categories}
               selectedCategory={selectedCategory}
               onSelect={setSelectedCategory}
             />
-          </DrawerTitle>
+          </div>
           <Button
             variant="ghost"
             size="icon"
