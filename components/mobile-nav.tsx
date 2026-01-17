@@ -33,8 +33,6 @@ export function MobileNav() {
           const isActive = pathname === item.href;
           const Icon = item.icon;
 
-          const comingSoon = 'comingSoon' in item && item.comingSoon;
-
           return (
             <Link
               key={item.href}
@@ -44,25 +42,18 @@ export function MobileNav() {
                 isActive ? "text-foreground" : "text-muted-foreground"
               )}
             >
-              <div className="relative">
-                <div
-                  className={cn(
-                    "p-2 rounded-lg transition-colors",
-                    isActive ? "bg-[#387DF5]" : item.bgColor
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "h-5 w-5 transition-colors",
-                      isActive ? "text-white" : item.iconColor
-                    )}
-                  />
-                </div>
-                {comingSoon && (
-                  <span className="absolute -top-1 -right-1 text-[6px] px-1 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">
-                    Soon
-                  </span>
+              <div
+                className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  isActive ? "bg-[#387DF5]" : item.bgColor
                 )}
+              >
+                <Icon
+                  className={cn(
+                    "h-5 w-5 transition-colors",
+                    isActive ? "text-white" : item.iconColor
+                  )}
+                />
               </div>
               <span className="text-[10px]">{item.label}</span>
             </Link>
