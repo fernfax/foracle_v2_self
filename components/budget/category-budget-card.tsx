@@ -63,7 +63,7 @@ export function CategoryBudgetCard({
       </div>
 
       {/* Spent / Budget */}
-      <div className="text-sm font-semibold">
+      <div className="text-sm font-semibold mb-2">
         <span
           className={cn(
             percentUsed > 90
@@ -78,6 +78,21 @@ export function CategoryBudgetCard({
         <span className="text-muted-foreground">
           /${budget.toLocaleString("en-SG", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
         </span>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-1">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all",
+            percentUsed > 90
+              ? "bg-red-500"
+              : percentUsed > 75
+              ? "bg-yellow-500"
+              : "bg-blue-500"
+          )}
+          style={{ width: `${Math.max(Math.min(percentUsed, 100), 0)}%` }}
+        />
       </div>
     </Card>
   );

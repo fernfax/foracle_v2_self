@@ -10,3 +10,6 @@ export { DailyExpenseHistory } from "./daily-expense-history";
 export { DailySpendingGraphModal } from "./daily-spending-graph-modal";
 export { ExpenseHistoryModal } from "./expense-history-modal";
 export { ManageCategoriesModal } from "./manage-categories-modal";
+export { FloatingAddButton } from "./floating-add-button";
+export { AddExpenseProvider, useAddExpense } from "./add-expense-context";
+export { GlobalAddExpenseModal } from "./global-add-expense-modal";

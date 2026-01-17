@@ -81,16 +81,12 @@ const mainNavItems = [
     bgColor: "bg-cyan-100",
     iconColor: "text-cyan-600",
   },
-];
-
-const comingSoonItems = [
   {
     href: "/dashboard/budget",
     label: "Budget",
     icon: Calculator,
     bgColor: "bg-indigo-100",
     iconColor: "text-indigo-600",
-    comingSoon: true,
   },
 ];
 
@@ -127,19 +123,6 @@ export function Sidebar() {
           />
         ))}
 
-        {/* Divider */}
-        <div className="my-3 mx-1.5 border-t border-slate-200" />
-
-        {/* Coming Soon items */}
-        {comingSoonItems.map((item) => (
-          <SidebarNavItem
-            key={item.href}
-            {...item}
-            isExpanded={isExpanded}
-            isSubmenuOpen={openSubmenu === item.href}
-            onToggleSubmenu={() => handleToggleSubmenu(item.href)}
-          />
-        ))}
       </nav>
     </aside>
   );

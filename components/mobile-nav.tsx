@@ -20,7 +20,7 @@ const mobileNavItems = [
   { href: "/dashboard/user/assets", label: "Assets", icon: TrendingUp, bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   { href: "/dashboard/policies", label: "Insurance", icon: Shield, bgColor: "bg-rose-100", iconColor: "text-rose-600" },
   { href: "/dashboard/goals", label: "Goals", icon: Target, bgColor: "bg-cyan-100", iconColor: "text-cyan-600" },
-  { href: "/dashboard/budget", label: "Budget", icon: Calculator, bgColor: "bg-indigo-100", iconColor: "text-indigo-600", comingSoon: true },
+  { href: "/dashboard/budget", label: "Budget", icon: Calculator, bgColor: "bg-indigo-100", iconColor: "text-indigo-600" },
 ];
 
 export function MobileNav() {
