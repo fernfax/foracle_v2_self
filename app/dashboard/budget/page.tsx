@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getExpenseCategories } from "@/lib/actions/expense-categories";
+import { getExpenseCategories, getAllExpensesGroupedByCategory } from "@/lib/actions/expense-categories";
 import { getBudgetVsActual, getBudgetSummary } from "@/lib/actions/budget-calculator";
 import { getDailyExpensesForMonth, getTodaySpending } from "@/lib/actions/daily-expenses";
 import { BudgetClient } from "./client";
@@ -22,13 +22,14 @@ export default async function BudgetPage() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
-  const [categories, budgetData, dailyExpenses, budgetSummary, todaySpent] =
+  const [categories, budgetData, dailyExpenses, budgetSummary, todaySpent, expensesByCategory] =
     await Promise.all([
       getExpenseCategories(),
       getBudgetVsActual(year, month),
       getDailyExpensesForMonth(year, month),
       getBudgetSummary(year, month),
       getTodaySpending(),
+      getAllExpensesGroupedByCategory(),
     ]);
 
   return (
@@ -36,6 +37,7 @@ export default async function BudgetPage() {
       initialCategories={categories}
       initialBudgetData={budgetData}
       initialDailyExpenses={dailyExpenses}
+      initialExpensesByCategory={expensesByCategory}
       initialBudgetSummary={budgetSummary}
       initialTodaySpent={todaySpent}
       initialYear={year}

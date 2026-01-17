@@ -273,3 +273,18 @@ export function getNextMonth(
 
   return next;
 }
+
+/**
+ * Format frequency for display
+ */
+export function formatFrequency(frequency: string): string {
+  const frequencyMap: Record<string, string> = {
+    monthly: "Monthly",
+    yearly: "Yearly",
+    weekly: "Weekly",
+    "bi-weekly": "Bi-weekly",
+    "one-time": "One-time",
+    custom: "Custom",
+  };
+  return frequencyMap[frequency] || frequency.charAt(0).toUpperCase() + frequency.slice(1);
+}

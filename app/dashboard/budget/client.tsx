@@ -16,13 +16,14 @@ import {
 import { getBudgetVsActual, getBudgetSummary } from "@/lib/actions/budget-calculator";
 import { getDailyExpensesForMonth, getTodaySpending, getDailySpendingByDay, type DailyExpense } from "@/lib/actions/daily-expenses";
 import { isCurrentMonth } from "@/lib/budget-utils";
-import { getExpenseCategories, type ExpenseCategory } from "@/lib/actions/expense-categories";
+import { getExpenseCategories, getAllExpensesGroupedByCategory, type ExpenseCategory, type ExpenseItem } from "@/lib/actions/expense-categories";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
 
 interface BudgetClientProps {
   initialCategories: ExpenseCategory[];
   initialBudgetData: BudgetVsActual[];
   initialDailyExpenses: DailyExpense[];
+  initialExpensesByCategory: Record<string, ExpenseItem[]>;
   initialBudgetSummary: {
     totalBudget: number;
     totalSpent: number;
@@ -43,6 +44,7 @@ export function BudgetClient({
   initialCategories,
   initialBudgetData,
   initialDailyExpenses,
+  initialExpensesByCategory,
   initialBudgetSummary,
   initialTodaySpent,
   initialYear,
@@ -56,6 +58,7 @@ export function BudgetClient({
   const [categories, setCategories] = useState(initialCategories);
   const [budgetData, setBudgetData] = useState(initialBudgetData);
   const [dailyExpenses, setDailyExpenses] = useState(initialDailyExpenses);
+  const [expensesByCategory, setExpensesByCategory] = useState(initialExpensesByCategory);
   const [budgetSummary, setBudgetSummary] = useState(initialBudgetSummary);
   const [todaySpent, setTodaySpent] = useState(initialTodaySpent);
   const [isLoading, setIsLoading] = useState(false);
@@ -151,14 +154,16 @@ export function BudgetClient({
 
   // Handle categories updated - refetch categories and budget data
   const handleCategoriesUpdated = useCallback(async () => {
-    const [newCategories, newBudgetData, newBudgetSummary] = await Promise.all([
+    const [newCategories, newBudgetData, newBudgetSummary, newExpensesByCategory] = await Promise.all([
       getExpenseCategories(),
       getBudgetVsActual(year, month),
       getBudgetSummary(year, month),
+      getAllExpensesGroupedByCategory(),
     ]);
     setCategories(newCategories);
     setBudgetData(newBudgetData);
     setBudgetSummary(newBudgetSummary);
+    setExpensesByCategory(newExpensesByCategory);
   }, [year, month]);
 
   const isViewingCurrentMonth = isCurrentMonth(year, month);
@@ -256,6 +261,7 @@ export function BudgetClient({
         open={manageCategoriesOpen}
         onOpenChange={setManageCategoriesOpen}
         categories={categories}
+        expensesByCategory={expensesByCategory}
         onSuccess={handleCategoriesUpdated}
       />
     </div>
