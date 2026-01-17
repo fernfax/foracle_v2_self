@@ -98,6 +98,7 @@ export const expenses = pgTable("expenses", {
   endDate: date("end_date"), // Optional - leave empty for ongoing expense
   description: text("description"), // Additional notes
   isActive: boolean("is_active").default(true),
+  trackedInBudget: boolean("tracked_in_budget").default(true), // Whether to include in budget tracker
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

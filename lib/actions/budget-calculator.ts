@@ -35,7 +35,7 @@ export interface BudgetVsActual {
 
 /**
  * Calculate monthly budget per category from recurring expenses
- * Only includes categories that are tracked in budget
+ * Only includes expenses that are tracked in budget
  */
 export async function calculateCategoryBudgets(): Promise<CategoryBudget[]> {
   try {
@@ -44,41 +44,35 @@ export async function calculateCategoryBudgets(): Promise<CategoryBudget[]> {
       throw new Error("Unauthorized");
     }
 
-    // Get all active recurring expenses
+    // Get all active recurring expenses that are tracked in budget
     const userExpenses = await db
       .select()
       .from(expenses)
-      .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+      .where(and(
+        eq(expenses.userId, userId),
+        eq(expenses.isActive, true),
+        eq(expenses.trackedInBudget, true)
+      ));
 
-    // Get all expense categories with icons - only those tracked in budget
+    // Get all expense categories with icons
     const categories = await db
       .select()
       .from(expenseCategories)
       .where(eq(expenseCategories.userId, userId));
 
-    // Filter to only tracked categories
-    const trackedCategories = categories.filter((cat) => cat.trackedInBudget !== false);
-
-    // Create a map of category names to icons (only tracked ones)
+    // Create a map of category names to icons
     const categoryIconMap: Record<string, { id: string; icon: string | null }> = {};
-    const trackedCategoryNames = new Set<string>();
-    trackedCategories.forEach((cat) => {
+    categories.forEach((cat) => {
       categoryIconMap[cat.name] = { id: cat.id, icon: cat.icon };
-      trackedCategoryNames.add(cat.name);
     });
 
-    // Calculate monthly budget per category
+    // Calculate monthly budget per category (only from tracked expenses)
     const categoryBudgets: Record<
       string,
       { categoryId: string | null; monthlyBudget: number; icon: string | null }
     > = {};
 
     userExpenses.forEach((expense) => {
-      // Only include expenses for tracked categories
-      if (!trackedCategoryNames.has(expense.category)) {
-        return;
-      }
-
       const amount = parseFloat(expense.amount);
       const monthlyAmount = calculateMonthlyAmount(
         amount,
@@ -98,17 +92,6 @@ export async function calculateCategoryBudgets(): Promise<CategoryBudget[]> {
       categoryBudgets[expense.category].monthlyBudget += monthlyAmount;
     });
 
-    // Also include tracked categories that have no expenses but exist in the system
-    trackedCategories.forEach((cat) => {
-      if (!categoryBudgets[cat.name]) {
-        categoryBudgets[cat.name] = {
-          categoryId: cat.id,
-          monthlyBudget: 0,
-          icon: cat.icon,
-        };
-      }
-    });
-
     return Object.entries(categoryBudgets).map(([categoryName, data]) => ({
       categoryName,
       categoryId: data.categoryId,
@@ -122,8 +105,7 @@ export async function calculateCategoryBudgets(): Promise<CategoryBudget[]> {
 }
 
 /**
- * Calculate total monthly budget from all recurring expenses
- * Only includes categories that are tracked in budget
+ * Calculate total monthly budget from all tracked recurring expenses
  */
 export async function getTotalMonthlyBudget(): Promise<number> {
   try {
@@ -132,29 +114,17 @@ export async function getTotalMonthlyBudget(): Promise<number> {
       throw new Error("Unauthorized");
     }
 
-    // Get tracked category names
-    const categories = await db
-      .select()
-      .from(expenseCategories)
-      .where(eq(expenseCategories.userId, userId));
-
-    const trackedCategoryNames = new Set(
-      categories
-        .filter((cat) => cat.trackedInBudget !== false)
-        .map((cat) => cat.name)
-    );
-
+    // Get only tracked expenses
     const userExpenses = await db
       .select()
       .from(expenses)
-      .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+      .where(and(
+        eq(expenses.userId, userId),
+        eq(expenses.isActive, true),
+        eq(expenses.trackedInBudget, true)
+      ));
 
     return userExpenses.reduce((total, expense) => {
-      // Only include expenses for tracked categories
-      if (!trackedCategoryNames.has(expense.category)) {
-        return total;
-      }
-
       const amount = parseFloat(expense.amount);
       const monthlyAmount = calculateMonthlyAmount(
         amount,
@@ -170,8 +140,24 @@ export async function getTotalMonthlyBudget(): Promise<number> {
 }
 
 /**
+ * Get the category names that have at least one tracked expense
+ */
+async function getTrackedCategoryNames(userId: string): Promise<Set<string>> {
+  const trackedExpenses = await db
+    .select({ category: expenses.category })
+    .from(expenses)
+    .where(and(
+      eq(expenses.userId, userId),
+      eq(expenses.isActive, true),
+      eq(expenses.trackedInBudget, true)
+    ));
+
+  return new Set(trackedExpenses.map((e) => e.category));
+}
+
+/**
  * Get budget vs actual for a specific month
- * Only includes tracked categories
+ * Only includes categories with tracked expenses
  */
 export async function getBudgetVsActual(
   year: number,
@@ -183,19 +169,16 @@ export async function getBudgetVsActual(
       throw new Error("Unauthorized");
     }
 
-    // Get tracked category names
+    // Get categories that have tracked expenses
+    const trackedCategoryNames = await getTrackedCategoryNames(userId);
+
+    // Get all expense categories with icons
     const categories = await db
       .select()
       .from(expenseCategories)
       .where(eq(expenseCategories.userId, userId));
 
-    const trackedCategoryNames = new Set(
-      categories
-        .filter((cat) => cat.trackedInBudget !== false)
-        .map((cat) => cat.name)
-    );
-
-    // Get category budgets (already filtered by tracked)
+    // Get category budgets (already filtered by tracked expenses)
     const categoryBudgets = await calculateCategoryBudgets();
 
     // Get actual spending for the month
@@ -276,7 +259,7 @@ export async function getBudgetVsActual(
 
 /**
  * Get overall budget summary for a month
- * Only includes tracked categories
+ * Only includes tracked expenses
  */
 export async function getBudgetSummary(year: number, month: number) {
   try {
@@ -285,15 +268,8 @@ export async function getBudgetSummary(year: number, month: number) {
       throw new Error("Unauthorized");
     }
 
-    // Get tracked category names
-    const categories = await db
-      .select()
-      .from(expenseCategories)
-      .where(eq(expenseCategories.userId, userId));
-
-    const trackedCategoryNames = categories
-      .filter((cat) => cat.trackedInBudget !== false)
-      .map((cat) => cat.name);
+    // Get category names that have tracked expenses
+    const trackedCategoryNames = await getTrackedCategoryNames(userId);
 
     const totalBudget = await getTotalMonthlyBudget();
 
@@ -316,7 +292,7 @@ export async function getBudgetSummary(year: number, month: number) {
 
     // Sum only tracked category expenses
     const totalSpent = allExpenses
-      .filter((exp) => trackedCategoryNames.includes(exp.categoryName))
+      .filter((exp) => trackedCategoryNames.has(exp.categoryName))
       .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
 
     const remaining = totalBudget - totalSpent;

@@ -174,6 +174,48 @@ export async function getExpensesByCategory(categoryName: string): Promise<{
   return categoryExpenses;
 }
 
+export type ExpenseItem = {
+  id: string;
+  name: string;
+  amount: string;
+  frequency: string;
+  category: string;
+  trackedInBudget: boolean | null;
+};
+
+/**
+ * Get all expenses grouped by category for the authenticated user
+ */
+export async function getAllExpensesGroupedByCategory(): Promise<Record<string, ExpenseItem[]>> {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const allExpenses = await db
+    .select({
+      id: expenses.id,
+      name: expenses.name,
+      amount: expenses.amount,
+      frequency: expenses.frequency,
+      category: expenses.category,
+      trackedInBudget: expenses.trackedInBudget,
+    })
+    .from(expenses)
+    .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+
+  // Group expenses by category
+  const grouped: Record<string, ExpenseItem[]> = {};
+  for (const expense of allExpenses) {
+    if (!grouped[expense.category]) {
+      grouped[expense.category] = [];
+    }
+    grouped[expense.category].push(expense);
+  }
+
+  return grouped;
+}
+
 /**
  * Update expense category icon
  */
@@ -234,6 +276,38 @@ export async function updateTrackedCategories(
         updatedAt: new Date(),
       })
       .where(and(eq(expenseCategories.id, category.id), eq(expenseCategories.userId, userId)));
+  }
+
+  revalidatePath("/dashboard/budget");
+}
+
+/**
+ * Update which individual expenses are tracked in budget
+ */
+export async function updateTrackedExpenses(
+  trackedExpenseIds: string[]
+): Promise<void> {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  // Get all user expenses
+  const allUserExpenses = await db
+    .select({ id: expenses.id })
+    .from(expenses)
+    .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+
+  // Update all expenses - set tracked to true if in list, false otherwise
+  for (const expense of allUserExpenses) {
+    const isTracked = trackedExpenseIds.includes(expense.id);
+    await db
+      .update(expenses)
+      .set({
+        trackedInBudget: isTracked,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(expenses.id, expense.id), eq(expenses.userId, userId)));
   }
 
   revalidatePath("/dashboard/budget");
