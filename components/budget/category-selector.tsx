@@ -52,7 +52,7 @@ export function CategorySelector({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground touch-manipulation"
         >
           {selectedCategory ? (
             <>
