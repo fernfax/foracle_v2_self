@@ -152,12 +152,13 @@ export function AddExpenseModal({
         <div className="px-6 py-6 flex-1 flex flex-col">
           {/* Date Selector */}
           <div className="flex justify-end mb-4">
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen} modal={false}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2 text-primary"
+                  className="gap-2 text-primary touch-manipulation"
+                  onClick={() => setCalendarOpen(!calendarOpen)}
                 >
                   <Calendar className="h-4 w-4" />
                   {isToday ? "Today" : format(date, "d MMM")}
