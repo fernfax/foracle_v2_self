@@ -72,7 +72,7 @@ export function ExpenseNumpad({
               <Button
                 key={btn}
                 variant="outline"
-                className="h-14 text-lg font-medium bg-muted/50"
+                className="h-14 text-lg font-medium bg-muted/50 touch-manipulation"
                 onClick={handleDelete}
               >
                 <Delete className="h-5 w-5" />
@@ -84,7 +84,7 @@ export function ExpenseNumpad({
             return (
               <Button
                 key={btn}
-                className="h-14 bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="h-14 bg-primary hover:bg-primary/90 text-primary-foreground touch-manipulation"
                 onClick={onSubmit}
                 disabled={submitDisabled || value === "0" || value === ""}
               >
@@ -110,7 +110,7 @@ export function ExpenseNumpad({
               <Button
                 key={btn}
                 variant="outline"
-                className="h-14 text-lg font-medium bg-muted/50"
+                className="h-14 text-lg font-medium bg-muted/50 touch-manipulation"
                 onClick={handleAdd}
                 disabled={submitDisabled || value === "0" || value === ""}
               >
@@ -123,7 +123,7 @@ export function ExpenseNumpad({
             <Button
               key={btn}
               variant="outline"
-              className="h-14 text-xl font-medium"
+              className="h-14 text-xl font-medium touch-manipulation"
               onClick={() => handleNumberPress(btn)}
             >
               {btn}
