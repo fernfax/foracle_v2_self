@@ -18,13 +18,9 @@ import { addDailyExpense, updateDailyExpense, type DailyExpense } from "@/lib/ac
 import { formatBudgetCurrency } from "@/lib/budget-utils";
 import type { ExpenseCategory } from "@/lib/actions/expense-categories";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AddExpenseModalProps {
   open: boolean;
@@ -150,21 +146,26 @@ export function AddExpenseModal({
 
         {/* Amount Display */}
         <div className="px-6 py-6 flex-1 flex flex-col">
-          {/* Date Selector */}
-          <div className="flex justify-end mb-4">
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen} modal={false}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 text-primary touch-manipulation"
-                  onClick={() => setCalendarOpen(!calendarOpen)}
-                >
-                  <Calendar className="h-4 w-4" />
-                  {isToday ? "Today" : format(date, "d MMM")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
+          {/* Date Selector - Inline expandable for mobile compatibility */}
+          <div className="flex flex-col items-end mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-primary touch-manipulation"
+              onClick={() => setCalendarOpen(!calendarOpen)}
+            >
+              <Calendar className="h-4 w-4" />
+              {isToday ? "Today" : format(date, "d MMM")}
+            </Button>
+
+            {/* Inline Calendar - expands below button */}
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-200 ease-in-out",
+                calendarOpen ? "max-h-[350px] mt-2" : "max-h-0"
+              )}
+            >
+              <div className="border rounded-md bg-background shadow-md">
                 <CalendarComponent
                   mode="single"
                   selected={date}
@@ -175,10 +176,9 @@ export function AddExpenseModal({
                     }
                   }}
                   disabled={(d) => d > new Date()}
-                  initialFocus
                 />
-              </PopoverContent>
-            </Popover>
+              </div>
+            </div>
           </div>
 
           {/* Amount - centered in available space */}
