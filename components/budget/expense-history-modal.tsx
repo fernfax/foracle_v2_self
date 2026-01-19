@@ -23,6 +23,7 @@ import {
 import { X } from "lucide-react";
 import { formatBudgetCurrency, getDefaultCategoryIcon, getCategoryIconColor, getCategoryBgColor } from "@/lib/budget-utils";
 import { deleteDailyExpense, type DailyExpense } from "@/lib/actions/daily-expenses";
+import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/currency-utils";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
@@ -194,9 +195,24 @@ export function ExpenseHistoryModal({
 
                                 {/* Amount - pushed to right */}
                                 <div className="ml-auto text-right flex-shrink-0 pr-2">
-                                  <span className="font-semibold text-red-500">
-                                    -{formatBudgetCurrency(parseFloat(expense.amount))}
-                                  </span>
+                                  {expense.originalCurrency && expense.originalAmount ? (
+                                    <>
+                                      <div className="font-semibold text-red-500">
+                                        -{formatBudgetCurrency(parseFloat(expense.amount))}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        ({SUPPORTED_CURRENCIES[expense.originalCurrency as CurrencyCode]?.symbol || ""}
+                                        {parseFloat(expense.originalAmount).toLocaleString("en-SG", {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })} {expense.originalCurrency})
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <span className="font-semibold text-red-500">
+                                      -{formatBudgetCurrency(parseFloat(expense.amount))}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </SwipeableExpenseRow>

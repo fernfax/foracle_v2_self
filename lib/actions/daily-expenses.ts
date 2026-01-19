@@ -12,9 +12,12 @@ export type DailyExpense = {
   userId: string;
   categoryId: string | null;
   categoryName: string;
-  amount: string;
+  amount: string; // SGD amount (converted if foreign currency)
   note: string | null;
   date: string;
+  originalCurrency: string | null; // Currency code if not SGD
+  originalAmount: string | null; // Amount in original currency
+  exchangeRate: string | null; // Rate used for conversion
   createdAt: Date;
   updatedAt: Date;
 };
@@ -94,9 +97,12 @@ export async function getDailyExpenses(
 export async function addDailyExpense(data: {
   categoryId?: string;
   categoryName: string;
-  amount: number;
+  amount: number; // SGD amount (already converted if foreign currency)
   note?: string;
   date: string;
+  originalCurrency?: string; // Currency code if not SGD
+  originalAmount?: number; // Amount in original currency
+  exchangeRate?: number; // Rate used for conversion
 }): Promise<DailyExpense> {
   const { userId } = await auth();
   if (!userId) {
@@ -115,6 +121,9 @@ export async function addDailyExpense(data: {
       amount: data.amount.toString(),
       note: data.note || null,
       date: data.date,
+      originalCurrency: data.originalCurrency || null,
+      originalAmount: data.originalAmount?.toString() || null,
+      exchangeRate: data.exchangeRate?.toString() || null,
     })
     .returning();
 
@@ -131,9 +140,12 @@ export async function updateDailyExpense(
   data: {
     categoryId?: string;
     categoryName?: string;
-    amount?: number;
+    amount?: number; // SGD amount
     note?: string | null;
     date?: string;
+    originalCurrency?: string | null;
+    originalAmount?: number | null;
+    exchangeRate?: number | null;
   }
 ): Promise<DailyExpense> {
   const { userId } = await auth();
@@ -159,6 +171,9 @@ export async function updateDailyExpense(
   if (data.amount !== undefined) updateData.amount = data.amount.toString();
   if (data.note !== undefined) updateData.note = data.note;
   if (data.date !== undefined) updateData.date = data.date;
+  if (data.originalCurrency !== undefined) updateData.originalCurrency = data.originalCurrency;
+  if (data.originalAmount !== undefined) updateData.originalAmount = data.originalAmount?.toString() || null;
+  if (data.exchangeRate !== undefined) updateData.exchangeRate = data.exchangeRate?.toString() || null;
 
   const [updatedExpense] = await db
     .update(dailyExpenses)

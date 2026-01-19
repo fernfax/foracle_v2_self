@@ -109,9 +109,12 @@ export const dailyExpenses = pgTable("daily_expenses", {
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   categoryId: varchar("category_id", { length: 255 }).references(() => expenseCategories.id, { onDelete: "set null" }),
   categoryName: varchar("category_name", { length: 100 }).notNull(), // Store category name for historical reference
-  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(), // Amount in SGD (converted if foreign currency)
   note: text("note"),
   date: date("date").notNull(), // The date of the expense
+  originalCurrency: varchar("original_currency", { length: 10 }), // Currency code if not SGD (e.g., "USD", "EUR")
+  originalAmount: decimal("original_amount", { precision: 12, scale: 2 }), // Amount in original currency
+  exchangeRate: decimal("exchange_rate", { precision: 12, scale: 6 }), // Exchange rate used (1 foreign = X SGD)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
