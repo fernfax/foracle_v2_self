@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Calendar, History } from "lucide-react";
-import { ExpenseNumpad } from "./expense-numpad";
+import { ExpenseNumpad, calculateExpressionTotal } from "./expense-numpad";
 import { CategorySelector } from "./category-selector";
 import { ExpenseHistoryModal } from "./expense-history-modal";
 import { addDailyExpense, updateDailyExpense, type DailyExpense } from "@/lib/actions/daily-expenses";
@@ -84,14 +84,15 @@ export function AddExpenseModal({
     : null;
 
   const handleSubmit = async () => {
-    if (!selectedCategory || amount === "0" || amount === "") return;
+    const total = calculateExpressionTotal(amount);
+    if (!selectedCategory || total === 0) return;
 
     setIsSubmitting(true);
     try {
       const expenseData = {
         categoryId: selectedCategory.id,
         categoryName: selectedCategory.name,
-        amount: parseFloat(amount),
+        amount: total,
         note: note || undefined,
         date: format(date, "yyyy-MM-dd"),
       };
@@ -183,10 +184,16 @@ export function AddExpenseModal({
 
           {/* Amount - centered in available space */}
           <div className="flex-1 flex flex-col items-center justify-center">
+            {/* Show expression breakdown when multiple numbers */}
+            {amount.includes("+") && (
+              <div className="text-sm text-muted-foreground mb-1">
+                {amount.replace(/\+/g, " + ")}
+              </div>
+            )}
             <div className="flex items-center justify-center gap-2">
               <span className="text-2xl text-muted-foreground">S$</span>
               <span className="text-5xl font-bold tracking-tight">
-                {parseFloat(amount || "0").toLocaleString("en-SG", {
+                {calculateExpressionTotal(amount).toLocaleString("en-SG", {
                   minimumFractionDigits: amount.includes(".") ? 2 : 0,
                   maximumFractionDigits: 2,
                 })}
@@ -198,7 +205,7 @@ export function AddExpenseModal({
           {categoryBudget && (
             <div className="mt-6 space-y-2">
               <div className="text-center text-sm text-muted-foreground">
-                {formatBudgetCurrency(categoryBudget.spent + parseFloat(amount || "0"))} /{" "}
+                {formatBudgetCurrency(categoryBudget.spent + calculateExpressionTotal(amount))} /{" "}
                 {formatBudgetCurrency(categoryBudget.monthlyBudget)}
               </div>
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -212,7 +219,7 @@ export function AddExpenseModal({
                   }`}
                   style={{
                     width: `${Math.min(
-                      ((categoryBudget.spent + parseFloat(amount || "0")) /
+                      ((categoryBudget.spent + calculateExpressionTotal(amount)) /
                         categoryBudget.monthlyBudget) *
                         100,
                       100
@@ -224,14 +231,14 @@ export function AddExpenseModal({
                 {formatBudgetCurrency(
                   Math.max(
                     0,
-                    categoryBudget.remaining - parseFloat(amount || "0")
+                    categoryBudget.remaining - calculateExpressionTotal(amount)
                   )
                 )}{" "}
                 remaining (
                 {Math.max(
                   0,
                   100 -
-                    ((categoryBudget.spent + parseFloat(amount || "0")) /
+                    ((categoryBudget.spent + calculateExpressionTotal(amount)) /
                       categoryBudget.monthlyBudget) *
                       100
                 ).toFixed(0)}
