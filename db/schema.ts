@@ -70,6 +70,16 @@ export const expenseCategories = pgTable("expense_categories", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Expense subcategories table - for more granular expense tracking
+export const expenseSubcategories = pgTable("expense_subcategories", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  categoryId: varchar("category_id", { length: 255 }).notNull().references(() => expenseCategories.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insurance providers table
 export const insuranceProviders = pgTable("insurance_providers", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -109,6 +119,8 @@ export const dailyExpenses = pgTable("daily_expenses", {
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   categoryId: varchar("category_id", { length: 255 }).references(() => expenseCategories.id, { onDelete: "set null" }),
   categoryName: varchar("category_name", { length: 100 }).notNull(), // Store category name for historical reference
+  subcategoryId: varchar("subcategory_id", { length: 255 }).references(() => expenseSubcategories.id, { onDelete: "set null" }),
+  subcategoryName: varchar("subcategory_name", { length: 100 }), // Store subcategory name for historical reference
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(), // Amount in SGD (converted if foreign currency)
   note: text("note"),
   date: date("date").notNull(), // The date of the expense
@@ -275,6 +287,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   incomes: many(incomes),
   expenses: many(expenses),
   expenseCategories: many(expenseCategories),
+  expenseSubcategories: many(expenseSubcategories),
   dailyExpenses: many(dailyExpenses),
   assets: many(assets),
   propertyAssets: many(propertyAssets),
@@ -318,6 +331,19 @@ export const expenseCategoriesRelations = relations(expenseCategories, ({ one, m
     fields: [expenseCategories.userId],
     references: [users.id],
   }),
+  subcategories: many(expenseSubcategories),
+  dailyExpenses: many(dailyExpenses),
+}));
+
+export const expenseSubcategoriesRelations = relations(expenseSubcategories, ({ one, many }) => ({
+  user: one(users, {
+    fields: [expenseSubcategories.userId],
+    references: [users.id],
+  }),
+  category: one(expenseCategories, {
+    fields: [expenseSubcategories.categoryId],
+    references: [expenseCategories.id],
+  }),
   dailyExpenses: many(dailyExpenses),
 }));
 
@@ -329,6 +355,10 @@ export const dailyExpensesRelations = relations(dailyExpenses, ({ one }) => ({
   category: one(expenseCategories, {
     fields: [dailyExpenses.categoryId],
     references: [expenseCategories.id],
+  }),
+  subcategory: one(expenseSubcategories, {
+    fields: [dailyExpenses.subcategoryId],
+    references: [expenseSubcategories.id],
   }),
 }));
 

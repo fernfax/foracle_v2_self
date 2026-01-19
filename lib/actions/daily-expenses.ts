@@ -12,6 +12,8 @@ export type DailyExpense = {
   userId: string;
   categoryId: string | null;
   categoryName: string;
+  subcategoryId: string | null;
+  subcategoryName: string | null;
   amount: string; // SGD amount (converted if foreign currency)
   note: string | null;
   date: string;
@@ -97,6 +99,8 @@ export async function getDailyExpenses(
 export async function addDailyExpense(data: {
   categoryId?: string;
   categoryName: string;
+  subcategoryId?: string;
+  subcategoryName?: string;
   amount: number; // SGD amount (already converted if foreign currency)
   note?: string;
   date: string;
@@ -118,6 +122,8 @@ export async function addDailyExpense(data: {
       userId,
       categoryId: data.categoryId || null,
       categoryName: data.categoryName,
+      subcategoryId: data.subcategoryId || null,
+      subcategoryName: data.subcategoryName || null,
       amount: data.amount.toString(),
       note: data.note || null,
       date: data.date,
@@ -140,6 +146,8 @@ export async function updateDailyExpense(
   data: {
     categoryId?: string;
     categoryName?: string;
+    subcategoryId?: string | null;
+    subcategoryName?: string | null;
     amount?: number; // SGD amount
     note?: string | null;
     date?: string;
@@ -168,6 +176,8 @@ export async function updateDailyExpense(
 
   if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
   if (data.categoryName !== undefined) updateData.categoryName = data.categoryName;
+  if (data.subcategoryId !== undefined) updateData.subcategoryId = data.subcategoryId;
+  if (data.subcategoryName !== undefined) updateData.subcategoryName = data.subcategoryName;
   if (data.amount !== undefined) updateData.amount = data.amount.toString();
   if (data.note !== undefined) updateData.note = data.note;
   if (data.date !== undefined) updateData.date = data.date;
