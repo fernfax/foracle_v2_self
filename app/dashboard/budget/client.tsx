@@ -211,19 +211,23 @@ export function BudgetClient({
         </Button>
       </div>
 
-      {/* Floating Add Button - Mobile: centered, Desktop: right side */}
-      <Button
-        size="lg"
-        variant="outline"
-        className="fixed bottom-28 left-1/2 -translate-x-1/2 rounded-full w-14 h-14 shadow-lg md:bottom-8 md:right-6 md:left-auto md:translate-x-0 z-40 bg-background/95 backdrop-blur-sm hover:bg-accent transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-right-4 md:slide-in-from-bottom-4"
-        onClick={() => {
-          setEditingExpense(null);
-          setPreselectedCategoryName(null);
-          setAddExpenseOpen(true);
-        }}
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {/* Floating Add Button - Centered relative to content */}
+      <div className="fixed bottom-28 md:bottom-8 left-0 md:left-[72px] right-0 z-40 pointer-events-none">
+        <div className="max-w-lg mx-auto flex justify-center">
+          <Button
+            size="lg"
+            variant="outline"
+            className="rounded-full w-14 h-14 shadow-lg pointer-events-auto bg-background/95 backdrop-blur-sm hover:bg-accent transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-bottom-4"
+            onClick={() => {
+              setEditingExpense(null);
+              setPreselectedCategoryName(null);
+              setAddExpenseOpen(true);
+            }}
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
+      </div>
 
       {/* Add Expense Modal */}
       <AddExpenseModal
