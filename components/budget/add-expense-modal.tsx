@@ -14,10 +14,13 @@ import { X, Calendar, History } from "lucide-react";
 import { ExpenseNumpad, calculateExpressionTotal } from "./expense-numpad";
 import { CategorySelector } from "./category-selector";
 import { CurrencySelector } from "./currency-selector";
+import { SubcategorySelector } from "./subcategory-selector";
 import { ExpenseHistoryModal } from "./expense-history-modal";
 import { addDailyExpense, updateDailyExpense, type DailyExpense } from "@/lib/actions/daily-expenses";
 import { formatBudgetCurrency } from "@/lib/budget-utils";
 import type { ExpenseCategory } from "@/lib/actions/expense-categories";
+import { getSubcategoriesByCategory, addSubcategory, updateSubcategory, deleteSubcategory, type ExpenseSubcategory } from "@/lib/actions/expense-subcategories";
+import { SubcategoryManageModal } from "./subcategory-manage-modal";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -51,11 +54,14 @@ export function AddExpenseModal({
 }: AddExpenseModalProps) {
   const [amount, setAmount] = useState("0");
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | null>(null);
+  const [subcategories, setSubcategories] = useState<ExpenseSubcategory[]>([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<ExpenseSubcategory | null>(null);
   const [note, setNote] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [subcategoryModalOpen, setSubcategoryModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("SGD");
   const [exchangeRate, setExchangeRate] = useState<number>(1);
   const [customRate, setCustomRate] = useState<number | undefined>(undefined);
@@ -82,11 +88,15 @@ export function AddExpenseModal({
           (c) => c.id === editingExpense.categoryId || c.name === editingExpense.categoryName
         );
         setSelectedCategory(category || null);
+        // Reset subcategory - will be set after fetching
+        setSelectedSubcategory(null);
       } else {
         setAmount("0");
         setNote("");
         setDate(new Date());
         setCustomRate(undefined);
+        setSelectedSubcategory(null);
+        setSubcategories([]);
         // Load saved currency preference from localStorage
         const savedCurrency = localStorage.getItem(CURRENCY_PREFERENCE_KEY);
         if (savedCurrency && savedCurrency in SUPPORTED_CURRENCIES) {
@@ -119,6 +129,23 @@ export function AddExpenseModal({
     }
   }, [open, editingExpense, categories, preselectedCategoryName]);
 
+  // Fetch subcategories when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      getSubcategoriesByCategory(selectedCategory.id).then((subs) => {
+        setSubcategories(subs);
+        // If editing and expense has a subcategory, select it
+        if (editingExpense?.subcategoryId) {
+          const matchingSub = subs.find((s) => s.id === editingExpense.subcategoryId);
+          setSelectedSubcategory(matchingSub || null);
+        }
+      });
+    } else {
+      setSubcategories([]);
+      setSelectedSubcategory(null);
+    }
+  }, [selectedCategory, editingExpense?.subcategoryId]);
+
   // Get budget info for selected category
   const categoryBudget = selectedCategory
     ? budgetData.find((b) => b.categoryName === selectedCategory.name)
@@ -136,6 +163,38 @@ export function AddExpenseModal({
   const enteredAmount = calculateExpressionTotal(amount);
   const sgdAmount = selectedCurrency === "SGD" ? enteredAmount : enteredAmount * exchangeRate;
 
+  // Handle adding a new subcategory
+  const handleAddSubcategory = async (name: string): Promise<ExpenseSubcategory> => {
+    if (!selectedCategory) {
+      throw new Error("No category selected");
+    }
+    const newSub = await addSubcategory(selectedCategory.id, name);
+    setSubcategories((prev) => [...prev, newSub].sort((a, b) => a.name.localeCompare(b.name)));
+    return newSub;
+  };
+
+  // Handle editing a subcategory
+  const handleEditSubcategory = async (id: string, name: string): Promise<void> => {
+    await updateSubcategory(id, name);
+    setSubcategories((prev) =>
+      prev.map((sub) => (sub.id === id ? { ...sub, name } : sub)).sort((a, b) => a.name.localeCompare(b.name))
+    );
+    // Update selected subcategory if it was the one being edited
+    if (selectedSubcategory?.id === id) {
+      setSelectedSubcategory((prev) => (prev ? { ...prev, name } : null));
+    }
+  };
+
+  // Handle deleting a subcategory
+  const handleDeleteSubcategory = async (id: string): Promise<void> => {
+    await deleteSubcategory(id);
+    setSubcategories((prev) => prev.filter((sub) => sub.id !== id));
+    // Clear selection if deleted subcategory was selected
+    if (selectedSubcategory?.id === id) {
+      setSelectedSubcategory(null);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedCategory || enteredAmount === 0) return;
 
@@ -144,6 +203,8 @@ export function AddExpenseModal({
       const expenseData = {
         categoryId: selectedCategory.id,
         categoryName: selectedCategory.name,
+        subcategoryId: selectedSubcategory?.id,
+        subcategoryName: selectedSubcategory?.name,
         amount: sgdAmount, // Always store SGD amount
         note: note || undefined,
         date: format(date, "yyyy-MM-dd"),
@@ -281,6 +342,19 @@ export function AddExpenseModal({
             )}
           </div>
 
+          {/* Subcategory Selector - only show when category is selected */}
+          {selectedCategory && (
+            <div className="mt-4">
+              <SubcategorySelector
+                subcategories={subcategories}
+                selectedSubcategory={selectedSubcategory}
+                onSelect={setSelectedSubcategory}
+                onManageClick={() => setSubcategoryModalOpen(true)}
+                disabled={isSubmitting}
+              />
+            </div>
+          )}
+
           {/* Budget Progress for Category */}
           {categoryBudget && (
             <div className="mt-6 space-y-2">
@@ -360,6 +434,21 @@ export function AddExpenseModal({
             : dailyExpenses
         }
       />
+
+      {/* Subcategory Manage Modal */}
+      {selectedCategory && (
+        <SubcategoryManageModal
+          open={subcategoryModalOpen}
+          onOpenChange={setSubcategoryModalOpen}
+          categoryName={selectedCategory.name}
+          subcategories={subcategories}
+          selectedSubcategory={selectedSubcategory}
+          onSelect={setSelectedSubcategory}
+          onAdd={handleAddSubcategory}
+          onEdit={handleEditSubcategory}
+          onDelete={handleDeleteSubcategory}
+        />
+      )}
     </Drawer>
   );
 }

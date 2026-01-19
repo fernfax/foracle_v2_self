@@ -182,6 +182,11 @@ export function ExpenseHistoryModal({
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium">
                                     {expense.categoryName}
+                                    {expense.subcategoryName && (
+                                      <span className="text-muted-foreground font-normal">
+                                        {" "}/ {expense.subcategoryName}
+                                      </span>
+                                    )}
                                     {expense.note && (
                                       <span className="text-muted-foreground font-normal">
                                         {" "}- {expense.note}
