@@ -211,14 +211,14 @@ export function AddExpenseModal({
                 {formatBudgetCurrency(categoryBudget.spent + calculateExpressionTotal(amount))} /{" "}
                 {formatBudgetCurrency(categoryBudget.monthlyBudget)}
               </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all ${
                     categoryBudget.percentUsed > 90
-                      ? "bg-destructive"
+                      ? "bg-red-500"
                       : categoryBudget.percentUsed > 75
                       ? "bg-yellow-500"
-                      : "bg-primary"
+                      : "bg-blue-500"
                   }`}
                   style={{
                     width: `${Math.min(
