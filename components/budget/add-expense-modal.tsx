@@ -119,6 +119,9 @@ export function AddExpenseModal({
       <DrawerContent>
         {/* Header */}
         <DrawerHeader>
+          <DrawerTitle className="sr-only">
+            {editingExpense ? "Edit Expense" : "Add Expense"}
+          </DrawerTitle>
           <DrawerClose asChild>
             <Button
               variant="ghost"
