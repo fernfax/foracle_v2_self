@@ -13,3 +13,4 @@ export { ManageCategoriesModal } from "./manage-categories-modal";
 export { FloatingAddButton } from "./floating-add-button";
 export { AddExpenseProvider, useAddExpense } from "./add-expense-context";
 export { GlobalAddExpenseModal } from "./global-add-expense-modal";
+export { CurrencySelector } from "./currency-selector";
