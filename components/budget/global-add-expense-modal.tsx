@@ -54,7 +54,7 @@ export function GlobalAddExpenseModal() {
       onOpenChange={(open) => {
         if (!open) closeModal();
       }}
-      categories={categories}
+      categories={categories.filter(c => c.trackedInBudget)}
       budgetData={budgetData}
       dailyExpenses={[]}
       onSuccess={handleSuccess}

@@ -233,7 +233,7 @@ export function BudgetClient({
       <AddExpenseModal
         open={addExpenseOpen}
         onOpenChange={setAddExpenseOpen}
-        categories={categories}
+        categories={categories.filter(c => c.trackedInBudget)}
         budgetData={budgetData}
         dailyExpenses={dailyExpenses}
         onSuccess={handleExpenseSuccess}
