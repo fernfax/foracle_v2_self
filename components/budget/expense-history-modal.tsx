@@ -194,7 +194,12 @@ export function ExpenseHistoryModal({
                                     )}
                                   </div>
                                   <div className="text-sm text-muted-foreground">
-                                    {format(createdAt, "h:mm a").toLowerCase()}
+                                    {createdAt.toLocaleTimeString("en-SG", {
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                      timeZone: "Asia/Singapore",
+                                    }).toLowerCase()}
                                   </div>
                                 </div>
 

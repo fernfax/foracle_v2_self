@@ -127,8 +127,8 @@ export const dailyExpenses = pgTable("daily_expenses", {
   originalCurrency: varchar("original_currency", { length: 10 }), // Currency code if not SGD (e.g., "USD", "EUR")
   originalAmount: decimal("original_amount", { precision: 12, scale: 2 }), // Amount in original currency
   exchangeRate: decimal("exchange_rate", { precision: 12, scale: 6 }), // Exchange rate used (1 foreign = X SGD)
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 // Assets table (generic)
