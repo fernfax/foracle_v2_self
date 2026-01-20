@@ -131,7 +131,7 @@ export function SubcategoryManageModal({
 
         <DrawerBody>
           {/* Add new subcategory */}
-          <div className="flex items-center gap-2 mb-6 mt-2">
+          <div className="flex items-center gap-2 mb-6 mt-2 relative z-10">
             <Input
               type="text"
               value={newName}
@@ -142,10 +142,10 @@ export function SubcategoryManageModal({
               disabled={isSubmitting}
             />
             <Button
+              type="button"
               onClick={handleAdd}
               disabled={isSubmitting || !newName.trim()}
-              size="sm"
-              className="touch-manipulation"
+              className="touch-manipulation min-h-[44px] min-w-[70px]"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add
