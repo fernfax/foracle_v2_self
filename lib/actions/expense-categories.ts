@@ -292,9 +292,9 @@ export async function updateTrackedExpenses(
     throw new Error("Unauthorized");
   }
 
-  // Get all user expenses
+  // Get all user expenses with their category
   const allUserExpenses = await db
-    .select({ id: expenses.id })
+    .select({ id: expenses.id, category: expenses.category })
     .from(expenses)
     .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
 
@@ -308,6 +308,34 @@ export async function updateTrackedExpenses(
         updatedAt: new Date(),
       })
       .where(and(eq(expenses.id, expense.id), eq(expenses.userId, userId)));
+  }
+
+  // Also update category.trackedInBudget based on whether any expenses in that category are tracked
+  const userCategories = await db
+    .select()
+    .from(expenseCategories)
+    .where(eq(expenseCategories.userId, userId));
+
+  // Build a map of category name -> has any tracked expenses
+  const trackedExpenseSet = new Set(trackedExpenseIds);
+  const categoryHasTracked: Record<string, boolean> = {};
+
+  for (const expense of allUserExpenses) {
+    if (trackedExpenseSet.has(expense.id)) {
+      categoryHasTracked[expense.category] = true;
+    }
+  }
+
+  // Update each category's trackedInBudget
+  for (const category of userCategories) {
+    const shouldTrack = categoryHasTracked[category.name] === true;
+    await db
+      .update(expenseCategories)
+      .set({
+        trackedInBudget: shouldTrack,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(expenseCategories.id, category.id), eq(expenseCategories.userId, userId)));
   }
 
   revalidatePath("/dashboard/budget");
