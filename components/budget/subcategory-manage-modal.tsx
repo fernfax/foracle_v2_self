@@ -119,7 +119,7 @@ export function SubcategoryManageModal({
       <DrawerContent>
         <DrawerHeader>
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8 touch-manipulation">
               <X className="h-4 w-4" />
             </Button>
           </DrawerClose>
@@ -145,6 +145,7 @@ export function SubcategoryManageModal({
               onClick={handleAdd}
               disabled={isSubmitting || !newName.trim()}
               size="sm"
+              className="touch-manipulation"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add
@@ -181,7 +182,7 @@ export function SubcategoryManageModal({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 touch-manipulation"
                         onClick={handleEdit}
                         disabled={isSubmitting || !editingName.trim()}
                       >
@@ -190,7 +191,7 @@ export function SubcategoryManageModal({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 touch-manipulation"
                         onClick={cancelEditing}
                         disabled={isSubmitting}
                       >
@@ -220,7 +221,7 @@ export function SubcategoryManageModal({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-8 w-8 touch-manipulation"
                       onClick={(e) => {
                         e.stopPropagation();
                         startEditing(subcategory);
@@ -234,7 +235,7 @@ export function SubcategoryManageModal({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-8 w-8 touch-manipulation"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(subcategory.id);
