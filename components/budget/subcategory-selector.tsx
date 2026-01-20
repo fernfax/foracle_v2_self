@@ -52,8 +52,10 @@ export function SubcategorySelector({
                 : "bg-muted/50"
             )}
             onClick={() => {
-              // Only allow selecting, not deselecting by clicking same button
-              if (!isSelected) {
+              // Toggle selection - click to select, click again to deselect
+              if (isSelected) {
+                onSelect(null);
+              } else {
                 onSelect(subcategory);
               }
             }}
