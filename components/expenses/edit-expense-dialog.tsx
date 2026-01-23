@@ -576,7 +576,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal touch-manipulation",
                           !startDate && "text-muted-foreground"
                         )}
                       >
@@ -623,7 +623,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal",
+                            "w-full justify-start text-left font-normal touch-manipulation",
                             !endDate && "text-muted-foreground"
                           )}
                         >
