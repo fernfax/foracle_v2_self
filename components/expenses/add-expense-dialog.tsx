@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Info } from "lucide-react";
 import { format } from "date-fns";
@@ -363,9 +363,11 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                   {expenseCategory === "one-off" ? "Expense Date" : "Start Date"} <span className="text-red-500">*</span>
                 </Label>
                 <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                  <PopoverTrigger asChild>
+                  <PopoverAnchor asChild>
                     <Button
                       variant="outline"
+                      type="button"
+                      onClick={() => setStartDateOpen(true)}
                       className={cn(
                         "w-full justify-start text-left font-normal touch-manipulation",
                         !startDate && "text-muted-foreground"
@@ -374,7 +376,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
                     </Button>
-                  </PopoverTrigger>
+                  </PopoverAnchor>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
@@ -383,7 +385,6 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                         setStartDate(date);
                         setStartDateOpen(false);
                       }}
-                      initialFocus
                       fixedWeeks
                     />
                   </PopoverContent>
@@ -393,9 +394,11 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                 <div className="space-y-2">
                   <Label>End Date</Label>
                   <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                    <PopoverTrigger asChild>
+                    <PopoverAnchor asChild>
                       <Button
                         variant="outline"
+                        type="button"
+                        onClick={() => setEndDateOpen(true)}
                         className={cn(
                           "w-full justify-start text-left font-normal touch-manipulation",
                           !endDate && "text-muted-foreground"
@@ -404,7 +407,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
                       </Button>
-                    </PopoverTrigger>
+                    </PopoverAnchor>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
@@ -413,7 +416,6 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                           setEndDate(date);
                           setEndDateOpen(false);
                         }}
-                        initialFocus
                         fixedWeeks
                       />
                     </PopoverContent>
