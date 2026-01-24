@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SidebarNavItem } from "./sidebar-nav-item";
+import { useSidebar } from "./sidebar-context";
 
 const mainNavItems = [
   {
@@ -96,12 +97,8 @@ const mainNavItems = [
 ];
 
 export function Sidebar() {
-  const [isPinned, setIsPinned] = useState(true); // Default to expanded/pinned
-  const [isHovered, setIsHovered] = useState(false);
+  const { isPinned, setIsPinned, isHovered, setIsHovered, isExpanded } = useSidebar();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
-
-  // Sidebar is expanded if pinned OR if hovered (when not pinned)
-  const isExpanded = isPinned || isHovered;
 
   const handleToggleSubmenu = (href: string) => {
     setOpenSubmenu(openSubmenu === href ? null : href);
