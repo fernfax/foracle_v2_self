@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +22,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export default function Home() {
+export default async function Home() {
+  // If user is already logged in, redirect to dashboard
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/dashboard");
+  }
   return (
     <main className="min-h-screen bg-background">
       {/* Navigation */}
