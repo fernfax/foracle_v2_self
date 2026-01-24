@@ -38,9 +38,10 @@ export default async function DashboardLayout({
         <Sidebar />
 
         {/* Top Navigation */}
-        <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl md:pl-[72px]">
-          <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-[70px] flex justify-between items-center">
-            <Link href="/dashboard" className="flex items-center">
+        <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl md:ml-[72px]">
+          <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-[70px] flex items-center">
+            {/* Logo - Only visible on mobile */}
+            <Link href="/dashboard" className="flex items-center md:hidden">
               <Image
                 src="/wordmark-400.png"
                 alt="Foracle"
@@ -52,11 +53,12 @@ export default async function DashboardLayout({
             </Link>
 
             {/* Quick Links - Center */}
-            <div className="flex items-center">
+            <div className="flex-1 flex justify-center">
               <HeaderQuickLinks />
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Right side icons */}
+            <div className="flex items-center gap-4 ml-auto">
               <Link
                 href="/dashboard/mobile-guide"
                 className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
