@@ -70,10 +70,12 @@ function DashboardContent({ children }: { children: ReactNode }) {
             />
           </Link>
 
-          {/* Quick Links - Center (hidden on mobile) */}
-          <div className="flex-1 hidden md:flex justify-center">
-            <HeaderQuickLinks />
-          </div>
+          {/* Quick Links - Center (only on desktop) */}
+          {isDesktop && (
+            <div className="flex-1 flex justify-center">
+              <HeaderQuickLinks />
+            </div>
+          )}
 
           {/* Right side icons */}
           <div className="flex items-center gap-4 ml-auto">
