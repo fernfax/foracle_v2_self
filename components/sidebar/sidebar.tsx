@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import {
   Home,
   User,
@@ -18,7 +20,10 @@ import {
   Car,
   Package,
   Calculator,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SidebarNavItem } from "./sidebar-nav-item";
 
@@ -91,8 +96,12 @@ const mainNavItems = [
 ];
 
 export function Sidebar() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isPinned, setIsPinned] = useState(true); // Default to expanded/pinned
+  const [isHovered, setIsHovered] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+
+  // Sidebar is expanded if pinned OR if hovered (when not pinned)
+  const isExpanded = isPinned || isHovered;
 
   const handleToggleSubmenu = (href: string) => {
     setOpenSubmenu(openSubmenu === href ? null : href);
@@ -102,15 +111,40 @@ export function Sidebar() {
     <aside
       data-tour="sidebar-nav"
       className={cn(
-        "sidebar-nav fixed left-0 top-[70px] h-[calc(100vh-70px)] bg-white border-r border-slate-200/60",
-        "flex flex-col z-40 overflow-hidden",
+        "sidebar-nav fixed left-0 top-0 h-screen bg-white border-r border-slate-200/60",
+        "flex flex-col z-50 overflow-hidden",
         "transition-all duration-300 ease-in-out",
         "shadow-sm",
         isExpanded ? "w-[260px]" : "w-[72px]"
       )}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
+      onMouseEnter={() => !isPinned && setIsHovered(true)}
+      onMouseLeave={() => !isPinned && setIsHovered(false)}
     >
+      {/* Logo */}
+      <div className="h-[70px] flex items-center px-3 flex-shrink-0">
+        <Link href="/dashboard" className="flex items-center">
+          {isExpanded ? (
+            <Image
+              src="/wordmark-400.png"
+              alt="Foracle"
+              width={112}
+              height={32}
+              className="object-contain"
+              priority
+            />
+          ) : (
+            <Image
+              src="/logo-72.png"
+              alt="Foracle"
+              width={40}
+              height={40}
+              className="object-contain"
+              priority
+            />
+          )}
+        </Link>
+      </div>
+
       {/* Navigation items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {mainNavItems.map((item) => (
@@ -122,8 +156,32 @@ export function Sidebar() {
             onToggleSubmenu={() => handleToggleSubmenu(item.href)}
           />
         ))}
-
       </nav>
+
+      {/* Pin/Minimize button */}
+      <div className="px-3 py-3 border-t border-slate-200/60">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsPinned(!isPinned)}
+          className={cn(
+            "w-full flex items-center gap-2 text-muted-foreground hover:text-foreground",
+            !isExpanded && "justify-center"
+          )}
+        >
+          {isPinned ? (
+            <>
+              <PanelLeftClose className="h-4 w-4 flex-shrink-0" />
+              {isExpanded && <span className="text-xs">Minimize</span>}
+            </>
+          ) : (
+            <>
+              <PanelLeft className="h-4 w-4 flex-shrink-0" />
+              {isExpanded && <span className="text-xs">Pin Open</span>}
+            </>
+          )}
+        </Button>
+      </div>
     </aside>
   );
 }
