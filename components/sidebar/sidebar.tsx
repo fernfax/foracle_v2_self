@@ -143,7 +143,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation items */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 pt-6 sm:pt-8 pb-4 space-y-1 overflow-y-auto">
         {mainNavItems.map((item) => (
           <SidebarNavItem
             key={item.href}
