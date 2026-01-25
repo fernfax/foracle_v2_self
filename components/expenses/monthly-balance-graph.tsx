@@ -290,24 +290,24 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="text-2xl">Monthly Balance Projection</CardTitle>
-            <CardDescription className="mt-1">
+            <CardTitle className="text-lg sm:text-2xl">Monthly Balance Projection</CardTitle>
+            <CardDescription className="mt-1 text-xs sm:text-sm">
               {viewMode === "cumulative"
                 ? "Cumulative balance projection based on current recurring income and expenses"
                 : "Monthly breakdown of income, expenses, and net balance"
               }
             </CardDescription>
           </div>
-          <div className="flex gap-4" data-tour="graph-controls">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-4" data-tour="graph-controls">
             {/* View Mode Toggle */}
-            <div className="space-y-2 min-w-[180px]">
-              <Label htmlFor="viewMode" className="text-sm font-medium">
+            <div className="space-y-1 sm:space-y-2 sm:min-w-[180px]">
+              <Label htmlFor="viewMode" className="text-xs sm:text-sm font-medium">
                 View Mode
               </Label>
               <Select value={viewMode} onValueChange={(value: "cumulative" | "non-cumulative") => setViewMode(value)}>
-                <SelectTrigger id="viewMode" className="bg-white">
+                <SelectTrigger id="viewMode" className="bg-white text-xs sm:text-sm h-9 sm:h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -318,12 +318,12 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
             </div>
 
             {/* Time Range Selector */}
-            <div className="space-y-2 min-w-[180px]">
-              <Label htmlFor="timeRange" className="text-sm font-medium">
+            <div className="space-y-1 sm:space-y-2 sm:min-w-[180px]">
+              <Label htmlFor="timeRange" className="text-xs sm:text-sm font-medium">
                 Time Range
               </Label>
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger id="timeRange" className="bg-white">
+                <SelectTrigger id="timeRange" className="bg-white text-xs sm:text-sm h-9 sm:h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -339,22 +339,22 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Starting Balance</p>
-            <p className="text-2xl font-semibold text-gray-900">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4 sm:mt-6">
+          <div className="bg-gray-50 rounded-lg p-2 sm:p-4">
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Starting Balance</p>
+            <p className="text-sm sm:text-2xl font-semibold text-gray-900">
               {formatCurrency(startingBalance)}
             </p>
           </div>
-          <div className={`rounded-lg p-4 ${isPositive ? "bg-green-50" : "bg-red-50"}`}>
-            <p className="text-sm text-gray-600 mb-1">Projected Balance</p>
-            <p className={`text-2xl font-semibold ${isPositive ? "text-green-700" : "text-red-700"}`}>
+          <div className={`rounded-lg p-2 sm:p-4 ${isPositive ? "bg-green-50" : "bg-red-50"}`}>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Projected Balance</p>
+            <p className={`text-sm sm:text-2xl font-semibold ${isPositive ? "text-green-700" : "text-red-700"}`}>
               {formatCurrency(finalBalance)}
             </p>
           </div>
-          <div className={`rounded-lg p-4 ${(finalBalance - startingBalance) >= 0 ? "bg-green-50" : "bg-red-50"}`}>
-            <p className="text-sm text-gray-600 mb-1">Net Change</p>
-            <p className={`text-2xl font-semibold ${(finalBalance - startingBalance) >= 0 ? "text-green-700" : "text-red-700"}`}>
+          <div className={`rounded-lg p-2 sm:p-4 ${(finalBalance - startingBalance) >= 0 ? "bg-green-50" : "bg-red-50"}`}>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Net Change</p>
+            <p className={`text-sm sm:text-2xl font-semibold ${(finalBalance - startingBalance) >= 0 ? "text-green-700" : "text-red-700"}`}>
               {(finalBalance - startingBalance) >= 0 ? "+" : ""}{formatCurrency(finalBalance - startingBalance)}
             </p>
           </div>
