@@ -171,7 +171,7 @@ export function SidebarNavItem({
             <Link
               href={href}
               className={cn(
-                "group flex items-center rounded-xl transition-all duration-200 py-1.5 px-1.5 gap-3",
+                "group flex items-center justify-center rounded-xl transition-all duration-200 py-1.5 px-1.5",
                 isActive
                   ? "bg-[#4E47DD] text-white shadow-lg shadow-blue-500/20"
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
