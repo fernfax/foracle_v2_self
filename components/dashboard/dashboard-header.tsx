@@ -307,31 +307,31 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
   return (
     <>
       <Card className="w-full" data-tour="primary-metrics">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <CardHeader className="pb-2 pt-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle className="text-lg sm:text-2xl">Monthly Overview</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Monthly Overview</CardTitle>
               <CardDescription className="mt-1 text-xs sm:text-sm">
                 Your income, expenses, and savings for the selected month
               </CardDescription>
             </div>
-            <div className="flex flex-col items-center sm:items-end gap-2" data-tour="month-nav">
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPreviousMonth} disabled={isCurrentMonth()}>
-                  <ChevronLeft className="h-4 w-4" />
+            <div className="flex flex-col items-center sm:items-end gap-1" data-tour="month-nav">
+              <div className="flex items-center gap-1.5">
+                <Button variant="outline" size="icon" className="h-7 w-7" onClick={goToPreviousMonth} disabled={isCurrentMonth()}>
+                  <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border min-w-[140px] sm:min-w-[160px] justify-center">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/50 border min-w-[130px] sm:min-w-[150px] justify-center">
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs sm:text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
                 </div>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextMonth}>
-                  <ChevronRight className="h-4 w-4" />
+                <Button variant="outline" size="icon" className="h-7 w-7" onClick={goToNextMonth}>
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
               {/* Fixed height container for Current Month button */}
-              <div className="h-8 flex items-center">
+              <div className="h-6 flex items-center">
                 {!isCurrentMonth() && (
-                  <Button variant="outline" size="sm" className="h-8 text-xs" onClick={goToCurrentMonth}>
+                  <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={goToCurrentMonth}>
                     Current Month
                   </Button>
                 )}
@@ -343,79 +343,77 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
           <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
             {/* Total Nett Income */}
             <div
-              className="py-4 sm:py-0 sm:px-4 first:pt-0 last:pb-0 sm:first:pl-0 sm:last:pr-0 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg min-h-[120px]"
+              className="py-3 sm:py-0 sm:px-4 first:pt-0 last:pb-0 sm:first:pl-0 sm:last:pr-0 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg h-[90px]"
               onClick={() => setIsIncomeModalOpen(true)}
               data-tour="income-card"
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Total Nett Income</span>
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-100">
-                  <DollarSign className="h-4 w-4 text-emerald-600" />
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground">Total Nett Income</span>
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-100">
+                  <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
                 </div>
               </div>
               <div className="overflow-hidden">
-                <p key={selectedMonth.toISOString() + '-income'} className={`text-2xl sm:text-3xl font-semibold tabular-nums transition-all duration-300 ${animationClass}`}>
+                <p key={selectedMonth.toISOString() + '-income'} className={`text-xl sm:text-2xl font-semibold tabular-nums transition-all duration-300 ${animationClass}`}>
                   ${displayIncome.toLocaleString()}
                 </p>
               </div>
-              {hasCpfDeductions && (
-                <p className="text-xs text-muted-foreground mt-1">Gross: ${displayGrossIncome.toLocaleString()}</p>
-              )}
-              {hasData && incomeChange !== 0 && (
-                <div className={`flex items-center gap-1 mt-1 text-xs ${incomeChange > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                  {incomeChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  <span>{incomeChange > 0 ? "+" : ""}${Math.abs(incomeChange).toLocaleString()}</span>
-                  <span className="text-muted-foreground">vs last month</span>
-                </div>
-              )}
+              <p className={`text-xs text-muted-foreground mt-1 ${hasCpfDeductions ? 'visible' : 'invisible'}`}>
+                Gross: ${displayGrossIncome.toLocaleString()}
+              </p>
+              <div className={`flex items-center gap-1 mt-1 text-xs ${hasData && incomeChange !== 0 ? 'visible' : 'invisible'} ${incomeChange > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                {incomeChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                <span>{incomeChange > 0 ? "+" : ""}${Math.abs(incomeChange).toLocaleString()}</span>
+                <span className="text-muted-foreground">vs last month</span>
+              </div>
             </div>
 
             {/* Total Expenses */}
             <div
-              className="py-4 sm:py-0 sm:px-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg min-h-[120px]"
+              className="py-3 sm:py-0 sm:px-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg h-[90px]"
               onClick={() => setIsExpenseModalOpen(true)}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Total Expenses</span>
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-100">
-                  <TrendingDown className="h-4 w-4 text-red-600" />
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground">Total Expenses</span>
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-red-100">
+                  <TrendingDown className="h-3.5 w-3.5 text-red-600" />
                 </div>
               </div>
               <div className="overflow-hidden">
-                <p key={selectedMonth.toISOString() + '-expenses'} className={`text-2xl sm:text-3xl font-semibold tabular-nums transition-all duration-300 ${animationClass}`}>
+                <p key={selectedMonth.toISOString() + '-expenses'} className={`text-xl sm:text-2xl font-semibold tabular-nums transition-all duration-300 ${animationClass}`}>
                   ${displayExpenses.toLocaleString()}
                 </p>
               </div>
-              {hasData && expenseChange !== 0 && (
-                <div className={`flex items-center gap-1 mt-1 text-xs ${expenseChange < 0 ? "text-emerald-600" : "text-red-500"}`}>
-                  {expenseChange < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                  <span>{expenseChange > 0 ? "+" : ""}${Math.abs(expenseChange).toLocaleString()}</span>
-                  <span className="text-muted-foreground">vs last month</span>
-                </div>
-              )}
+              {/* Placeholder to match income column height */}
+              <p className="text-xs text-muted-foreground mt-1 invisible">&nbsp;</p>
+              <div className={`flex items-center gap-1 mt-1 text-xs ${hasData && expenseChange !== 0 ? 'visible' : 'invisible'} ${expenseChange < 0 ? "text-emerald-600" : "text-red-500"}`}>
+                {expenseChange < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+                <span>{expenseChange > 0 ? "+" : ""}${Math.abs(expenseChange).toLocaleString()}</span>
+                <span className="text-muted-foreground">vs last month</span>
+              </div>
             </div>
 
             {/* Net Savings */}
-            <div className="py-4 sm:py-0 sm:px-4 last:pb-0 sm:last:pr-0 min-h-[120px]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Net Savings</span>
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-100">
-                  <Wallet className="h-4 w-4 text-blue-600" />
+            <div className="py-3 sm:py-0 sm:px-4 last:pb-0 sm:last:pr-0 h-[90px]">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground">Net Savings</span>
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-100">
+                  <Wallet className="h-3.5 w-3.5 text-blue-600" />
                 </div>
               </div>
               <div className="overflow-hidden">
-                <p key={selectedMonth.toISOString() + '-savings'} className={`text-2xl sm:text-3xl font-semibold tabular-nums transition-all duration-300 ${displaySavings >= 0 ? "text-emerald-600" : "text-red-600"} ${animationClass}`}>
+                <p key={selectedMonth.toISOString() + '-savings'} className={`text-xl sm:text-2xl font-semibold tabular-nums transition-all duration-300 ${displaySavings >= 0 ? "text-emerald-600" : "text-red-600"} ${animationClass}`}>
                   ${displaySavings.toLocaleString()}
                 </p>
               </div>
-              {hasData && savingsChange !== 0 && (
-                <div className={`flex items-center gap-1 mt-1 text-xs ${savingsChange > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                  {savingsChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  <span>{savingsChange > 0 ? "+" : ""}${Math.abs(savingsChange).toLocaleString()}</span>
-                  {savingsChangePercent !== 0 && <span>({savingsChangePercent > 0 ? "+" : ""}{savingsChangePercent.toFixed(1)}%)</span>}
-                  <span className="text-muted-foreground">vs last month</span>
-                </div>
-              )}
+              {/* Placeholder to match income column height */}
+              <p className="text-xs text-muted-foreground mt-1 invisible">&nbsp;</p>
+              <div className={`flex items-center gap-1 mt-1 text-xs ${hasData && savingsChange !== 0 ? 'visible' : 'invisible'} ${savingsChange > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                {savingsChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                <span>{savingsChange > 0 ? "+" : ""}${Math.abs(savingsChange).toLocaleString()}</span>
+                {savingsChangePercent !== 0 && <span>({savingsChangePercent > 0 ? "+" : ""}{savingsChangePercent.toFixed(1)}%)</span>}
+                <span className="text-muted-foreground">vs last month</span>
+              </div>
             </div>
           </div>
         </CardContent>

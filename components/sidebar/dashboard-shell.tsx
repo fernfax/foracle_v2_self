@@ -8,7 +8,6 @@ import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "@/components/mobile-nav";
 import { HeaderQuickLinks } from "@/components/header/header-quick-links";
-import { ClerkUserButton } from "@/components/clerk-user-button";
 import { HelpButton } from "@/components/tour/help-button";
 import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget";
 import { cn } from "@/lib/utils";
@@ -87,7 +86,6 @@ function DashboardContent({ children }: { children: ReactNode }) {
             >
               <Smartphone className="h-5 w-5 text-slate-600" />
             </Link>
-            <ClerkUserButton />
           </div>
         </div>
       </header>
