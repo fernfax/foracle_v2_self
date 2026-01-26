@@ -73,8 +73,8 @@ export function SidebarNavItem({
         className={cn(
           "group flex items-center rounded-xl transition-all duration-200 py-1.5 px-1.5 gap-3",
           isActive
-            ? "bg-[#387DF5] text-white shadow-lg shadow-blue-200/50"
-            : "text-slate-600 hover:bg-slate-100"
+            ? "bg-[#4E47DD] text-white shadow-lg shadow-blue-500/20"
+            : "text-slate-300 hover:bg-slate-800 hover:text-white"
         )}
       >
         {/* Icon container */}
@@ -140,8 +140,8 @@ export function SidebarNavItem({
                     className={cn(
                       "flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-all duration-200",
                       isSubActive
-                        ? "bg-blue-50 text-[#387DF5] font-medium"
-                        : "text-slate-600 hover:bg-slate-100",
+                        ? "bg-slate-800 text-[#4E47DD] font-medium"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white",
                       isSubmenuOpen
                         ? "translate-x-0 opacity-100"
                         : "-translate-x-2 opacity-0"
@@ -173,8 +173,8 @@ export function SidebarNavItem({
               className={cn(
                 "group flex items-center rounded-xl transition-all duration-200 py-1.5 px-1.5 gap-3",
                 isActive
-                  ? "bg-[#387DF5] text-white shadow-lg shadow-blue-200/50"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-[#4E47DD] text-white shadow-lg shadow-blue-500/20"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
               )}
             >
               <div

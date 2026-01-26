@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useUser, UserButton } from "@clerk/nextjs";
 import {
   Home,
   User,
@@ -99,6 +100,7 @@ const mainNavItems = [
 export function Sidebar() {
   const { isPinned, setIsPinned, isHovered, setIsHovered, isExpanded } = useSidebar();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const { user, isLoaded } = useUser();
 
   const handleToggleSubmenu = (href: string) => {
     setOpenSubmenu(openSubmenu === href ? null : href);
@@ -108,17 +110,17 @@ export function Sidebar() {
     <aside
       data-tour="sidebar-nav"
       className={cn(
-        "sidebar-nav fixed left-0 top-0 h-screen bg-white border-r border-slate-200/60",
+        "sidebar-nav fixed left-0 top-0 h-screen bg-slate-900 border-r border-slate-800",
         "flex flex-col z-50 overflow-hidden",
         "transition-all duration-300 ease-in-out",
-        "shadow-sm",
+        "shadow-lg",
         isExpanded ? "w-[260px]" : "w-[72px]"
       )}
       onMouseEnter={() => !isPinned && setIsHovered(true)}
       onMouseLeave={() => !isPinned && setIsHovered(false)}
     >
       {/* Logo */}
-      <div className="h-[70px] flex items-center px-3 flex-shrink-0">
+      <div className="h-[70px] flex items-center px-5 flex-shrink-0">
         <Link href="/dashboard" className="flex items-center">
           {isExpanded ? (
             <Image
@@ -126,7 +128,7 @@ export function Sidebar() {
               alt="Foracle"
               width={112}
               height={32}
-              className="object-contain"
+              className="object-contain brightness-0 invert"
               priority
             />
           ) : (
@@ -135,7 +137,7 @@ export function Sidebar() {
               alt="Foracle"
               width={40}
               height={40}
-              className="object-contain brightness-0"
+              className="object-contain brightness-0 invert"
               priority
             />
           )}
@@ -143,7 +145,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation items */}
-      <nav className="flex-1 px-3 pt-6 sm:pt-8 pb-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-5 pt-6 sm:pt-8 pb-4 space-y-1 overflow-y-auto">
         {mainNavItems.map((item) => (
           <SidebarNavItem
             key={item.href}
@@ -155,29 +157,63 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Pin/Minimize button */}
-      <div className="px-3 py-3 border-t border-slate-200/60">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsPinned(!isPinned)}
-          className={cn(
-            "w-full flex items-center gap-2 text-muted-foreground hover:text-foreground",
-            !isExpanded && "justify-center"
-          )}
-        >
-          {isPinned ? (
+      {/* Bottom section - pushed to bottom */}
+      <div className="flex-shrink-0 border-t border-slate-800">
+        {/* Pin/Minimize button */}
+        <div className="px-5 py-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsPinned(!isPinned)}
+            className={cn(
+              "w-full flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800",
+              !isExpanded && "justify-center"
+            )}
+          >
+            {isPinned ? (
+              <>
+                <PanelLeftClose className="h-4 w-4 flex-shrink-0" />
+                {isExpanded && <span className="text-xs">Minimize</span>}
+              </>
+            ) : (
+              <>
+                <PanelLeft className="h-4 w-4 flex-shrink-0" />
+                {isExpanded && <span className="text-xs">Pin Open</span>}
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* User profile section */}
+        <div className={cn(
+          "px-5 py-3 border-t border-slate-800",
+          isExpanded ? "flex items-center gap-3" : "flex justify-center"
+        )}>
+          {isLoaded && user ? (
             <>
-              <PanelLeftClose className="h-4 w-4 flex-shrink-0" />
-              {isExpanded && <span className="text-xs">Minimize</span>}
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "w-10 h-10"
+                  }
+                }}
+              />
+              {isExpanded && (
+                <div className="flex-1 min-w-0 transition-all duration-300">
+                  <p className="text-sm font-medium text-white truncate">
+                    {user.fullName || user.firstName || "User"}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">
+                    {user.primaryEmailAddress?.emailAddress || ""}
+                  </p>
+                </div>
+              )}
             </>
           ) : (
-            <>
-              <PanelLeft className="h-4 w-4 flex-shrink-0" />
-              {isExpanded && <span className="text-xs">Pin Open</span>}
-            </>
+            <div className="w-10 h-10 rounded-full bg-slate-700 animate-pulse" />
           )}
-        </Button>
+        </div>
       </div>
     </aside>
   );

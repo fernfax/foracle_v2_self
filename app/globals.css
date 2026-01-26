@@ -97,7 +97,7 @@
 
   @media (min-width: 768px) {
     .sidebar-nav {
-      display: block;
+      display: flex;
     }
 
     .bottom-nav {

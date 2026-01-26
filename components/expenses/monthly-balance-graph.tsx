@@ -289,11 +289,11 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <CardHeader className="pb-2 pt-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="text-lg sm:text-2xl">Monthly Balance Projection</CardTitle>
-            <CardDescription className="mt-1 text-xs sm:text-sm">
+            <CardTitle className="text-lg sm:text-xl">Monthly Balance Projection</CardTitle>
+            <CardDescription className="mt-0.5 text-xs sm:text-sm">
               {viewMode === "cumulative"
                 ? "Cumulative balance projection based on current recurring income and expenses"
                 : "Monthly breakdown of income, expenses, and net balance"
@@ -339,30 +339,30 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4 sm:mt-6">
-          <div className="bg-gray-50 rounded-lg p-2 sm:p-4">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Starting Balance</p>
-            <p className="text-sm sm:text-2xl font-semibold text-gray-900">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-4">
+          <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
+            <p className="text-xs text-gray-600 mb-0.5">Starting Balance</p>
+            <p className="text-sm sm:text-lg font-semibold text-gray-900">
               {formatCurrency(startingBalance)}
             </p>
           </div>
-          <div className={`rounded-lg p-2 sm:p-4 ${isPositive ? "bg-green-50" : "bg-red-50"}`}>
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Projected Balance</p>
-            <p className={`text-sm sm:text-2xl font-semibold ${isPositive ? "text-green-700" : "text-red-700"}`}>
+          <div className={`rounded-lg p-2 sm:p-3 ${isPositive ? "bg-green-50" : "bg-red-50"}`}>
+            <p className="text-xs text-gray-600 mb-0.5">Projected Balance</p>
+            <p className={`text-sm sm:text-lg font-semibold ${isPositive ? "text-green-700" : "text-red-700"}`}>
               {formatCurrency(finalBalance)}
             </p>
           </div>
-          <div className={`rounded-lg p-2 sm:p-4 ${(finalBalance - startingBalance) >= 0 ? "bg-green-50" : "bg-red-50"}`}>
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Net Change</p>
-            <p className={`text-sm sm:text-2xl font-semibold ${(finalBalance - startingBalance) >= 0 ? "text-green-700" : "text-red-700"}`}>
+          <div className={`rounded-lg p-2 sm:p-3 ${(finalBalance - startingBalance) >= 0 ? "bg-green-50" : "bg-red-50"}`}>
+            <p className="text-xs text-gray-600 mb-0.5">Net Change</p>
+            <p className={`text-sm sm:text-lg font-semibold ${(finalBalance - startingBalance) >= 0 ? "text-green-700" : "text-red-700"}`}>
               {(finalBalance - startingBalance) >= 0 ? "+" : ""}{formatCurrency(finalBalance - startingBalance)}
             </p>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="w-full h-[500px]">
+      <CardContent className="pt-2">
+        <div className="w-full h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={balanceData}
@@ -434,8 +434,8 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
         </div>
 
         {/* Info Message */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
+        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p className="text-xs text-blue-800">
             <strong>Note:</strong> This projection includes <strong>All Active Income</strong> (including one-time income) and{" "}
             <strong>All Active Expenses</strong> (including one-time expenses). Future income milestones are only included for incomes with "Account for Future Change" enabled.
             Starting balance is based on the sum of all current holdings.
