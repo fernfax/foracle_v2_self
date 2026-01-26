@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { getDefaultCategoryIcon, getCategoryIconColor, getCategoryBgColor } from "@/lib/budget-utils";
 import * as LucideIcons from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -28,11 +29,11 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-function getIconComponent(iconName: string | null): LucideIcon {
-  if (!iconName) return LucideIcons.Circle;
+function getIconComponent(iconName: string | null, categoryName: string): LucideIcon {
+  const name = iconName || getDefaultCategoryIcon(categoryName);
 
   // Convert kebab-case to PascalCase
-  const pascalCase = iconName
+  const pascalCase = name
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join("");
@@ -63,7 +64,9 @@ export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
         {hasCategories ? (
           <div className="space-y-4">
             {budgetData.map((category) => {
-              const Icon = getIconComponent(category.icon);
+              const Icon = getIconComponent(category.icon, category.categoryName);
+              const iconColor = getCategoryIconColor(category.categoryName);
+              const bgColor = getCategoryBgColor(category.categoryName);
               const progressColor = getProgressColor(category.percentUsed);
               const isOverBudget = category.percentUsed >= 100;
 
@@ -71,8 +74,8 @@ export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
                 <div key={category.categoryId || category.categoryName} className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-md bg-slate-100">
-                        <Icon className="h-3.5 w-3.5 text-slate-600" />
+                      <div className={cn("flex items-center justify-center w-6 h-6 rounded-md", bgColor)}>
+                        <Icon className={cn("h-3.5 w-3.5", iconColor)} />
                       </div>
                       <span className="text-sm font-medium truncate max-w-[100px]">
                         {category.categoryName}
