@@ -120,8 +120,11 @@ export function Sidebar() {
       onMouseLeave={() => !isPinned && setIsHovered(false)}
     >
       {/* Logo */}
-      <div className="h-[70px] flex items-center px-5 flex-shrink-0">
-        <Link href="/dashboard" className="flex items-center">
+      <div className={cn(
+        "h-[70px] flex items-center flex-shrink-0",
+        isExpanded ? "px-5" : "px-3 justify-center"
+      )}>
+        <Link href="/dashboard" className="flex items-center justify-center">
           {isExpanded ? (
             <Image
               src="/wordmark-400.png"
@@ -145,7 +148,10 @@ export function Sidebar() {
       </div>
 
       {/* Navigation items */}
-      <nav className="flex-1 px-5 pt-6 sm:pt-8 pb-4 space-y-1 overflow-y-auto">
+      <nav className={cn(
+        "flex-1 pt-6 sm:pt-8 pb-4 space-y-1 overflow-y-auto",
+        isExpanded ? "px-5" : "px-3"
+      )}>
         {mainNavItems.map((item) => (
           <SidebarNavItem
             key={item.href}
@@ -160,7 +166,7 @@ export function Sidebar() {
       {/* Bottom section - pushed to bottom */}
       <div className="flex-shrink-0 border-t border-slate-800">
         {/* Pin/Minimize button */}
-        <div className="px-5 py-2">
+        <div className={cn("py-2", isExpanded ? "px-5" : "px-3")}>
           <Button
             variant="ghost"
             size="sm"
@@ -186,8 +192,8 @@ export function Sidebar() {
 
         {/* User profile section */}
         <div className={cn(
-          "px-5 py-3 border-t border-slate-800",
-          isExpanded ? "flex items-center gap-3" : "flex justify-center"
+          "py-3 border-t border-slate-800",
+          isExpanded ? "px-5 flex items-center gap-3" : "px-3 flex justify-center"
         )}>
           {isLoaded && user ? (
             <>
