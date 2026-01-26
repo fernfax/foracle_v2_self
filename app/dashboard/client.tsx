@@ -93,6 +93,9 @@ export function DashboardClient({ metrics, incomes, expenses, holdings }: Dashbo
         netSavings={metrics.netSavings}
       />
 
+      {/* Monthly Balance Projection */}
+      <MonthlyBalanceGraph incomes={incomes} expenses={expenses} holdings={holdings} />
+
       {/* Secondary Metrics Grid */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" data-tour="secondary-metrics">
         {/* Total Assets */}
@@ -138,9 +141,6 @@ export function DashboardClient({ metrics, incomes, expenses, holdings }: Dashbo
           </CardContent>
         </Card>
       </div>
-
-      {/* Monthly Balance Projection */}
-      <MonthlyBalanceGraph incomes={incomes} expenses={expenses} holdings={holdings} />
     </div>
   );
 }
