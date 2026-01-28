@@ -4,7 +4,9 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import { calculateMonthlyBalance, timeRangeToMonths, type MonthlyBalanceData, type SpecialItem } from "@/lib/balance-calculator";
 
 interface Income {
@@ -264,35 +266,52 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
   const finalBalance = balanceData.length > 0 ? balanceData[balanceData.length - 1].balance : 0;
   const isPositive = finalBalance >= 0;
 
-  // Calculate min/max for Y-axis based on view mode
+  // Calculate min/max for Y-axis based on view mode (without forcing 0)
   const minBalance = viewMode === "cumulative"
-    ? Math.min(...balanceData.map((d) => d.balance), 0)
+    ? Math.min(...balanceData.map((d) => d.balance))
     : Math.min(
         ...balanceData.map((d) => d.income),
         ...balanceData.map((d) => d.expense),
-        ...balanceData.map((d) => d.monthlyBalance),
-        0
+        ...balanceData.map((d) => d.monthlyBalance)
       );
 
   const maxBalance = viewMode === "cumulative"
-    ? Math.max(...balanceData.map((d) => d.balance), 0)
+    ? Math.max(...balanceData.map((d) => d.balance))
     : Math.max(
         ...balanceData.map((d) => d.income),
         ...balanceData.map((d) => d.expense),
-        ...balanceData.map((d) => d.monthlyBalance),
-        0
+        ...balanceData.map((d) => d.monthlyBalance)
       );
 
-  // Add some padding to Y-axis range
-  const yAxisMin = Math.floor(minBalance * 1.1);
-  const yAxisMax = Math.ceil(maxBalance * 1.1);
+  // Add 10% padding to Y-axis range for better visualization
+  const padding = Math.max(Math.abs(maxBalance), Math.abs(minBalance)) * 0.1;
+  const yAxisMin = Math.floor((minBalance - padding) / 1000) * 1000;
+  const yAxisMax = Math.ceil((maxBalance + padding) / 1000) * 1000;
 
   return (
     <Card className="w-full">
       <CardHeader className="pb-2 pt-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="text-lg sm:text-xl">Monthly Balance Projection</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg sm:text-xl">Monthly Balance Projection</CardTitle>
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+                      <Info className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[300px] text-xs bg-white border shadow-lg">
+                    <p>
+                      This projection includes <strong>All Active Income</strong> (including one-time income) and{" "}
+                      <strong>All Active Expenses</strong> (including one-time expenses). Future income milestones are only included for incomes with &quot;Account for Future Change&quot; enabled.
+                      Starting balance is based on the sum of all current holdings.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <CardDescription className="mt-0.5 text-xs sm:text-sm">
               {viewMode === "cumulative"
                 ? "Cumulative balance projection based on current recurring income and expenses"
@@ -383,9 +402,42 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
                 tickFormatter={(value) => formatCurrency(value)}
                 domain={[yAxisMin, yAxisMax]}
               />
-              <Tooltip content={<CustomTooltip viewMode={viewMode} />} />
+              <RechartsTooltip content={<CustomTooltip viewMode={viewMode} />} />
               <Legend
                 wrapperStyle={{ paddingTop: "20px" }}
+                content={({ payload }) => (
+                  <div className="flex flex-wrap items-center justify-center gap-4 pt-4 text-sm">
+                    {/* Standard legend items */}
+                    {payload?.map((entry, index) => (
+                      <div key={index} className="flex items-center gap-1.5">
+                        <div
+                          className="w-3 h-3 rounded-sm"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-gray-600">{entry.value}</span>
+                      </div>
+                    ))}
+                    {/* Arrow legend items */}
+                    <div className="flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 12 12">
+                        <polygon points="6,1 2,10 10,10" fill="#10b981" />
+                      </svg>
+                      <span className="text-gray-600">One-off Income</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 12 12">
+                        <polygon points="6,11 2,2 10,2" fill="#ef4444" />
+                      </svg>
+                      <span className="text-gray-600">One-off Expense</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 12 12">
+                        <polygon points="6,11 2,2 10,2" fill="#f59e0b" />
+                      </svg>
+                      <span className="text-gray-600">Custom Expense</span>
+                    </div>
+                  </div>
+                )}
               />
 
               {viewMode === "cumulative" ? (
@@ -433,14 +485,6 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
           </ResponsiveContainer>
         </div>
 
-        {/* Info Message */}
-        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-xs text-blue-800">
-            <strong>Note:</strong> This projection includes <strong>All Active Income</strong> (including one-time income) and{" "}
-            <strong>All Active Expenses</strong> (including one-time expenses). Future income milestones are only included for incomes with "Account for Future Change" enabled.
-            Starting balance is based on the sum of all current holdings.
-          </p>
-        </div>
       </CardContent>
     </Card>
   );
