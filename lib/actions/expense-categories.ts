@@ -35,7 +35,8 @@ const DEFAULT_CATEGORIES = [
 ];
 
 /**
- * Get all expense categories for the authenticated user
+ * Get all expense categories for the authenticated user.
+ * Also auto-creates any categories that exist in the expenses table but not in expense_categories.
  */
 export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
   try {
@@ -54,6 +55,40 @@ export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
     if (categories.length === 0) {
       await initializeDefaultCategories(userId);
       return getExpenseCategories();
+    }
+
+    // Auto-create any categories that exist in expenses but not in expense_categories
+    const existingCategoryNames = new Set(categories.map((c) => c.name));
+
+    // Get unique category names from expenses table
+    const expenseCategoryNames = await db
+      .selectDistinct({ category: expenses.category })
+      .from(expenses)
+      .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+
+    // Find categories that exist in expenses but not in expense_categories
+    const missingCategories = expenseCategoryNames
+      .map((e) => e.category)
+      .filter((name) => !existingCategoryNames.has(name));
+
+    // Auto-create missing categories
+    if (missingCategories.length > 0) {
+      const newCategories = missingCategories.map((name) => ({
+        id: randomUUID(),
+        userId,
+        name,
+        isDefault: false,
+        trackedInBudget: true, // Auto-created categories should be tracked by default
+      }));
+
+      await db.insert(expenseCategories).values(newCategories);
+
+      // Re-fetch to get the newly created categories
+      categories = await db
+        .select()
+        .from(expenseCategories)
+        .where(eq(expenseCategories.userId, userId))
+        .orderBy(asc(expenseCategories.name));
     }
 
     return categories;
