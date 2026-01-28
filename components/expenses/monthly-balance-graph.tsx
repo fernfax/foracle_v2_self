@@ -90,44 +90,46 @@ const CustomBalanceDot = (props: any) => {
     <circle key="balance-dot" cx={cx} cy={cy} r={4} fill="#3b82f6" />
   );
 
-  // Render arrows for special items if present
+  // Render arrows for special items if present (one arrow per type per month)
   if (payload.specialItems && payload.specialItems.length > 0) {
-    let incomeOffset = 0;
-    let expenseOffset = 0;
+    // Get unique types for this month
+    const uniqueTypes = new Set(payload.specialItems.map((item: SpecialItem) => item.type));
+    const baseOffset = 20; // pixels from the dot
 
-    payload.specialItems.forEach((item: SpecialItem, idx: number) => {
-      const baseOffset = 20; // pixels from the dot
-      const stackOffset = 15; // pixels between stacked arrows
+    let incomeCount = 0;
+    let expenseCount = 0;
 
-      if (item.type === 'one-off-income') {
+    // Render one arrow per unique type
+    uniqueTypes.forEach((type) => {
+      if (type === 'one-off-income') {
         // Green up arrow above the line
-        const yPos = cy - baseOffset - (incomeOffset * stackOffset);
+        const yPos = cy - baseOffset;
         elements.push(
           <polygon
-            key={`arrow-income-${idx}`}
+            key={`arrow-income`}
             points={`${cx},${yPos - 10} ${cx - 7},${yPos + 5} ${cx + 7},${yPos + 5}`}
             fill={ARROW_COLORS['one-off-income']}
             stroke="white"
             strokeWidth={1}
           />
         );
-        incomeOffset++;
+        incomeCount++;
       } else {
         // Red or orange down arrow below the line
-        const color = item.type === 'one-off-expense'
+        const color = type === 'one-off-expense'
           ? ARROW_COLORS['one-off-expense']
           : ARROW_COLORS['custom-expense'];
-        const yPos = cy + baseOffset + (expenseOffset * stackOffset);
+        const yPos = cy + baseOffset + (expenseCount * 15);
         elements.push(
           <polygon
-            key={`arrow-expense-${idx}`}
+            key={`arrow-${type}`}
             points={`${cx},${yPos + 10} ${cx - 7},${yPos - 5} ${cx + 7},${yPos - 5}`}
             fill={color}
             stroke="white"
             strokeWidth={1}
           />
         );
-        expenseOffset++;
+        expenseCount++;
       }
     });
   }
