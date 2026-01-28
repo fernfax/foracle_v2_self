@@ -229,11 +229,13 @@ export function BudgetClient({
         </div>
       </div>
 
-      {/* Add Expense Modal */}
+      {/* Add Expense Modal - only show categories that are in the budget (have tracked expenses) */}
       <AddExpenseModal
         open={addExpenseOpen}
         onOpenChange={setAddExpenseOpen}
-        categories={categories.filter(c => c.trackedInBudget)}
+        categories={categories.filter(c =>
+          budgetData.some(b => b.categoryName === c.name)
+        )}
         budgetData={budgetData}
         dailyExpenses={dailyExpenses}
         onSuccess={handleExpenseSuccess}
