@@ -172,9 +172,11 @@ export function ManageCategoriesModal({
             Select expenses to track on your dashboard
           </p>
 
-          {/* Category List */}
+          {/* Category List - only show categories that have expenses */}
           <div className="space-y-2">
-            {categories.map((category) => {
+            {categories
+              .filter((category) => (expensesByCategory[category.name] || []).length > 0)
+              .map((category) => {
               const Icon = getIconComponent(category.icon, category.name);
               const iconColor = getCategoryIconColor(category.name);
               const bgColor = getCategoryBgColor(category.name);
