@@ -10,6 +10,13 @@ import {
   DrawerBody,
   DrawerFooter,
 } from "@/components/ui/drawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, ChevronDown, ChevronUp, Minus } from "lucide-react";
@@ -51,6 +58,23 @@ function getSelectedTotal(expenses: ExpenseItem[], selectedIds: Set<string>): nu
     .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
 }
 
+// Hook to detect desktop viewport
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+
+    checkIsDesktop();
+    window.addEventListener("resize", checkIsDesktop);
+    return () => window.removeEventListener("resize", checkIsDesktop);
+  }, []);
+
+  return isDesktop;
+}
+
 export function ManageCategoriesModal({
   open,
   onOpenChange,
@@ -58,6 +82,8 @@ export function ManageCategoriesModal({
   expensesByCategory,
   onSuccess,
 }: ManageCategoriesModalProps) {
+  const isDesktop = useIsDesktop();
+
   // Track selected expense IDs (not category IDs)
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<Set<string>>(new Set());
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -151,6 +177,194 @@ export function ManageCategoriesModal({
     return "indeterminate";
   };
 
+  // Shared category list content
+  const categoryListContent = (
+    <>
+      {/* Description */}
+      <p className="text-sm text-muted-foreground mb-4">
+        Select expenses to track on your dashboard
+      </p>
+
+      {/* Category List - only show categories that have expenses */}
+      <div className="space-y-2">
+        {categories
+          .filter((category) => (expensesByCategory[category.name] || []).length > 0)
+          .map((category) => {
+          const Icon = getIconComponent(category.icon, category.name);
+          const iconColor = getCategoryIconColor(category.name);
+          const bgColor = getCategoryBgColor(category.name);
+          const categoryExpenses = expensesByCategory[category.name] || [];
+          const hasExpenses = categoryExpenses.length > 0;
+          const hasMultipleExpenses = categoryExpenses.length > 1;
+          const isExpanded = expandedCategories.has(category.id);
+          const frequencies = hasExpenses ? getCategoryFrequencies(categoryExpenses) : "";
+          const checkState = getCategoryCheckState(categoryExpenses);
+          const selectedTotal = getSelectedTotal(categoryExpenses, selectedExpenseIds);
+
+          return (
+            <div key={category.id}>
+              {/* Category Row */}
+              <div
+                className={cn(
+                  "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
+                  checkState === "checked"
+                    ? "border-primary bg-primary/5"
+                    : checkState === "indeterminate"
+                    ? "border-primary/50 bg-primary/5"
+                    : "border-transparent bg-muted/30 hover:bg-muted/50"
+                )}
+              >
+                {/* Checkbox with indeterminate state */}
+                {hasExpenses ? (
+                  <div
+                    className="relative flex items-center justify-center cursor-pointer"
+                    onClick={() => handleToggleCategory(categoryExpenses)}
+                  >
+                    {checkState === "indeterminate" ? (
+                      <div className="h-4 w-4 rounded-sm border border-primary bg-primary flex items-center justify-center">
+                        <Minus className="h-3 w-3 text-primary-foreground" />
+                      </div>
+                    ) : (
+                      <Checkbox
+                        checked={checkState === "checked"}
+                        onCheckedChange={() => handleToggleCategory(categoryExpenses)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <Checkbox disabled className="opacity-50" />
+                )}
+
+                {/* Icon */}
+                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", bgColor)}>
+                  <Icon className={cn("h-5 w-5", iconColor)} />
+                </div>
+
+                {/* Category Name & Frequency */}
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => hasExpenses && handleToggleCategory(categoryExpenses)}
+                >
+                  <div className="font-medium">{category.name}</div>
+                  {frequencies && (
+                    <div className="text-sm text-muted-foreground">{frequencies}</div>
+                  )}
+                </div>
+
+                {/* Total Amount (only selected) */}
+                {hasExpenses && (
+                  <div className="text-right">
+                    <div className="font-semibold">
+                      ${selectedTotal.toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Expand/Collapse Button */}
+                {hasMultipleExpenses && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpanded(category.id);
+                    }}
+                  >
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
+
+              {/* Expanded Expense Sub-items */}
+              {hasMultipleExpenses && isExpanded && (
+                <div className="ml-6 mt-2 space-y-2">
+                  {categoryExpenses.map((expense) => {
+                    const isSelected = selectedExpenseIds.has(expense.id);
+                    return (
+                      <div
+                        key={expense.id}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-background hover:bg-muted/50"
+                        )}
+                        onClick={() => handleToggleExpense(expense.id)}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => handleToggleExpense(expense.id)}
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        <div className="flex-1">
+                          <span className="font-medium">{expense.name}</span>
+                          <span className="text-muted-foreground">
+                            {" "}${parseFloat(expense.amount).toLocaleString("en-SG", { minimumFractionDigits: 2 })} &bull; {formatFrequency(expense.frequency)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  // Shared footer buttons
+  const footerButtons = (
+    <div className="flex gap-3">
+      <Button
+        variant="outline"
+        className="flex-1"
+        onClick={handleCancel}
+        disabled={isSaving}
+      >
+        Cancel
+      </Button>
+      <Button
+        className="flex-1"
+        onClick={handleSave}
+        disabled={isSaving}
+      >
+        {isSaving ? "Saving..." : "Save"}
+      </Button>
+    </div>
+  );
+
+  // Desktop: Dialog (centered modal)
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">
+              Manage Categories
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-1 -mx-1">
+            {categoryListContent}
+          </div>
+
+          <DialogFooter className="pt-4">
+            {footerButtons}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Mobile: Drawer (bottom sheet)
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
@@ -167,164 +381,12 @@ export function ManageCategoriesModal({
         </DrawerHeader>
 
         <DrawerBody>
-          {/* Description */}
-          <p className="text-sm text-muted-foreground mb-4">
-            Select expenses to track on your dashboard
-          </p>
-
-          {/* Category List - only show categories that have expenses */}
-          <div className="space-y-2">
-            {categories
-              .filter((category) => (expensesByCategory[category.name] || []).length > 0)
-              .map((category) => {
-              const Icon = getIconComponent(category.icon, category.name);
-              const iconColor = getCategoryIconColor(category.name);
-              const bgColor = getCategoryBgColor(category.name);
-              const categoryExpenses = expensesByCategory[category.name] || [];
-              const hasExpenses = categoryExpenses.length > 0;
-              const hasMultipleExpenses = categoryExpenses.length > 1;
-              const isExpanded = expandedCategories.has(category.id);
-              const frequencies = hasExpenses ? getCategoryFrequencies(categoryExpenses) : "";
-              const checkState = getCategoryCheckState(categoryExpenses);
-              const selectedTotal = getSelectedTotal(categoryExpenses, selectedExpenseIds);
-
-              return (
-                <div key={category.id}>
-                  {/* Category Row */}
-                  <div
-                    className={cn(
-                      "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
-                      checkState === "checked"
-                        ? "border-primary bg-primary/5"
-                        : checkState === "indeterminate"
-                        ? "border-primary/50 bg-primary/5"
-                        : "border-transparent bg-muted/30 hover:bg-muted/50"
-                    )}
-                  >
-                    {/* Checkbox with indeterminate state */}
-                    {hasExpenses ? (
-                      <div
-                        className="relative flex items-center justify-center cursor-pointer"
-                        onClick={() => handleToggleCategory(categoryExpenses)}
-                      >
-                        {checkState === "indeterminate" ? (
-                          <div className="h-4 w-4 rounded-sm border border-primary bg-primary flex items-center justify-center">
-                            <Minus className="h-3 w-3 text-primary-foreground" />
-                          </div>
-                        ) : (
-                          <Checkbox
-                            checked={checkState === "checked"}
-                            onCheckedChange={() => handleToggleCategory(categoryExpenses)}
-                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                          />
-                        )}
-                      </div>
-                    ) : (
-                      <Checkbox disabled className="opacity-50" />
-                    )}
-
-                    {/* Icon */}
-                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", bgColor)}>
-                      <Icon className={cn("h-5 w-5", iconColor)} />
-                    </div>
-
-                    {/* Category Name & Frequency */}
-                    <div
-                      className="flex-1 cursor-pointer"
-                      onClick={() => hasExpenses && handleToggleCategory(categoryExpenses)}
-                    >
-                      <div className="font-medium">{category.name}</div>
-                      {frequencies && (
-                        <div className="text-sm text-muted-foreground">{frequencies}</div>
-                      )}
-                    </div>
-
-                    {/* Total Amount (only selected) */}
-                    {hasExpenses && (
-                      <div className="text-right">
-                        <div className="font-semibold">
-                          ${selectedTotal.toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Expand/Collapse Button */}
-                    {hasMultipleExpenses && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleExpanded(category.id);
-                        }}
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Expanded Expense Sub-items */}
-                  {hasMultipleExpenses && isExpanded && (
-                    <div className="ml-6 mt-2 space-y-2">
-                      {categoryExpenses.map((expense) => {
-                        const isSelected = selectedExpenseIds.has(expense.id);
-                        return (
-                          <div
-                            key={expense.id}
-                            className={cn(
-                              "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
-                              isSelected
-                                ? "border-primary bg-primary/5"
-                                : "border-border bg-background hover:bg-muted/50"
-                            )}
-                            onClick={() => handleToggleExpense(expense.id)}
-                          >
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => handleToggleExpense(expense.id)}
-                              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <div className="flex-1">
-                              <span className="font-medium">{expense.name}</span>
-                              <span className="text-muted-foreground">
-                                {" "}${parseFloat(expense.amount).toLocaleString("en-SG", { minimumFractionDigits: 2 })} &bull; {formatFrequency(expense.frequency)}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {categoryListContent}
         </DrawerBody>
 
         {/* Footer with buttons */}
         <DrawerFooter>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={handleCancel}
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
-          </div>
+          {footerButtons}
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

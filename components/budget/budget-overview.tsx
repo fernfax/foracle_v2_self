@@ -75,7 +75,7 @@ export function BudgetOverview({
   const monthName = getMonthName(month, "short");
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 h-full">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">

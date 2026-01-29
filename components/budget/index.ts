@@ -14,3 +14,6 @@ export { FloatingAddButton } from "./floating-add-button";
 export { AddExpenseProvider, useAddExpense } from "./add-expense-context";
 export { GlobalAddExpenseModal } from "./global-add-expense-modal";
 export { CurrencySelector } from "./currency-selector";
+export { DailySpendingChart } from "./daily-spending-chart";
+export { CategoryBudgetBarChart } from "./category-budget-bar-chart";
+export { RecentExpensesList } from "./recent-expenses-list";

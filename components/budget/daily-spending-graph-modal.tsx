@@ -114,7 +114,7 @@ export function DailySpendingGraphModal({
               margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
             >
               <defs>
-                <linearGradient id="spendingGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="spendingGradient-modal" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                 </linearGradient>
@@ -177,7 +177,7 @@ export function DailySpendingGraphModal({
                 dataKey="spending"
                 stroke="#3b82f6"
                 strokeWidth={2}
-                fill="url(#spendingGradient)"
+                fill="url(#spendingGradient-modal)"
                 dot={{ fill: "#3b82f6", strokeWidth: 0, r: 4 }}
                 activeDot={{ r: 6, stroke: "#3b82f6", strokeWidth: 2, fill: "white" }}
                 connectNulls
