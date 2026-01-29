@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,31 @@ import {
   ExpenseHistoryModal,
   ManageCategoriesModal,
 } from "@/components/budget";
+import { DailySpendingChart } from "@/components/budget/daily-spending-chart";
+import { CategoryBudgetBarChart } from "@/components/budget/category-budget-bar-chart";
+import { RecentExpensesList } from "@/components/budget/recent-expenses-list";
 import { getBudgetVsActual, getBudgetSummary } from "@/lib/actions/budget-calculator";
 import { getDailyExpensesForMonth, getTodaySpending, getDailySpendingByDay, type DailyExpense } from "@/lib/actions/daily-expenses";
 import { isCurrentMonth } from "@/lib/budget-utils";
 import { getExpenseCategories, getAllExpensesGroupedByCategory, type ExpenseCategory, type ExpenseItem } from "@/lib/actions/expense-categories";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
+
+// Hook to detect desktop viewport
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+
+    checkIsDesktop();
+    window.addEventListener("resize", checkIsDesktop);
+    return () => window.removeEventListener("resize", checkIsDesktop);
+  }, []);
+
+  return isDesktop;
+}
 
 interface BudgetClientProps {
   initialCategories: ExpenseCategory[];
@@ -51,6 +71,9 @@ export function BudgetClient({
   initialMonth,
 }: BudgetClientProps) {
   const router = useRouter();
+  const isDesktop = useIsDesktop();
+  const isDesktopRef = useRef(isDesktop);
+  isDesktopRef.current = isDesktop;
 
   // State
   const [year, setYear] = useState(initialYear);
@@ -78,19 +101,42 @@ export function BudgetClient({
   // Manage categories modal state
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
 
+  // Auto-fetch daily spending data for desktop inline chart
+  useEffect(() => {
+    if (isDesktop && dailySpendingData.length === 0) {
+      getDailySpendingByDay(year, month).then(setDailySpendingData);
+    }
+  }, [isDesktop, year, month, dailySpendingData.length]);
+
   // Fetch data for a specific month
   const fetchMonthData = useCallback(async (newYear: number, newMonth: number) => {
     setIsLoading(true);
     try {
-      const [newBudgetData, newDailyExpenses, newBudgetSummary] = await Promise.all([
+      const promises: [
+        ReturnType<typeof getBudgetVsActual>,
+        ReturnType<typeof getDailyExpensesForMonth>,
+        ReturnType<typeof getBudgetSummary>,
+        ...ReturnType<typeof getDailySpendingByDay>[]
+      ] = [
         getBudgetVsActual(newYear, newMonth),
         getDailyExpensesForMonth(newYear, newMonth),
         getBudgetSummary(newYear, newMonth),
-      ]);
+      ];
 
-      setBudgetData(newBudgetData);
-      setDailyExpenses(newDailyExpenses);
-      setBudgetSummary(newBudgetSummary);
+      // Also fetch daily spending data for desktop charts
+      if (isDesktopRef.current) {
+        promises.push(getDailySpendingByDay(newYear, newMonth));
+      }
+
+      const results = await Promise.all(promises);
+
+      setBudgetData(results[0] as BudgetVsActual[]);
+      setDailyExpenses(results[1] as DailyExpense[]);
+      setBudgetSummary(results[2] as typeof initialBudgetSummary);
+
+      if (results[3]) {
+        setDailySpendingData(results[3] as { day: number; date: string; amount: number }[]);
+      }
 
       // Only fetch today's spending if viewing current month
       if (isCurrentMonth(newYear, newMonth)) {
@@ -169,7 +215,7 @@ export function BudgetClient({
   const isViewingCurrentMonth = isCurrentMonth(year, month);
 
   return (
-    <div className="max-w-lg mx-auto pb-24 space-y-4">
+    <div className="max-w-lg mx-auto pb-24 space-y-4 md:max-w-none md:px-6 lg:px-8 md:pb-8">
       {/* Month Navigator */}
       <MonthNavigator
         year={year}
@@ -177,43 +223,89 @@ export function BudgetClient({
         onMonthChange={handleMonthChange}
       />
 
-      {/* Budget Overview with Pacing */}
-      <BudgetOverview
-        totalBudget={budgetSummary.totalBudget}
-        totalSpent={budgetSummary.totalSpent}
-        remaining={budgetSummary.remaining}
-        percentUsed={budgetSummary.percentUsed}
-        dailyBudget={budgetSummary.dailyBudget}
-        todaySpent={isViewingCurrentMonth ? todaySpent : 0}
-        expectedSpent={budgetSummary.expectedSpentByToday}
-        pacingStatus={budgetSummary.pacingStatus}
-        currentDay={budgetSummary.currentDay}
-        month={month}
-        showPacing={isViewingCurrentMonth}
-        onPacingClick={isViewingCurrentMonth ? handlePacingClick : undefined}
-        onHistoryClick={handleHistoryClick}
-      />
+      {/* Row 1: Spending Overview + Daily Spending Chart (equal height on desktop) */}
+      <div
+        className="space-y-4"
+        style={isDesktop ? {
+          display: "grid",
+          gridTemplateColumns: "1fr 420px",
+          gap: "1.5rem",
+        } : undefined}
+      >
+        <BudgetOverview
+          totalBudget={budgetSummary.totalBudget}
+          totalSpent={budgetSummary.totalSpent}
+          remaining={budgetSummary.remaining}
+          percentUsed={budgetSummary.percentUsed}
+          dailyBudget={budgetSummary.dailyBudget}
+          todaySpent={isViewingCurrentMonth ? todaySpent : 0}
+          expectedSpent={budgetSummary.expectedSpentByToday}
+          pacingStatus={budgetSummary.pacingStatus}
+          currentDay={budgetSummary.currentDay}
+          month={month}
+          showPacing={isViewingCurrentMonth}
+          onPacingClick={isViewingCurrentMonth ? handlePacingClick : undefined}
+          onHistoryClick={handleHistoryClick}
+        />
 
-      {/* Category Grid */}
-      <div className="pt-2">
-        <CategoryGrid budgetData={budgetData} onCategoryClick={handleCategoryClick} />
+        {isDesktop && (
+          <DailySpendingChart
+            dailySpendingData={dailySpendingData}
+            dailyBudget={budgetSummary.dailyBudget}
+            month={month}
+            year={year}
+            gradientId="spendingGradient-inline"
+          />
+        )}
       </div>
 
-      {/* Manage Categories Button */}
-      <div className="pt-4">
-        <Button
-          variant="outline"
-          className="w-full gap-2"
-          onClick={() => setManageCategoriesOpen(true)}
-        >
-          <Settings2 className="h-4 w-4" />
-          Manage Categories
-        </Button>
+      {/* Row 2+: Category Grid + Manage Categories | Bar Chart + Recent Expenses */}
+      <div
+        className="space-y-4"
+        style={isDesktop ? {
+          display: "grid",
+          gridTemplateColumns: "1fr 420px",
+          gap: "1.5rem",
+          alignItems: "start",
+        } : undefined}
+      >
+        {/* Left: Category Grid + Manage Categories */}
+        <div className="space-y-4">
+          <div className="pt-2">
+            <CategoryGrid budgetData={budgetData} onCategoryClick={handleCategoryClick} />
+          </div>
+
+          <div className="pt-4">
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => setManageCategoriesOpen(true)}
+            >
+              <Settings2 className="h-4 w-4" />
+              Manage Categories
+            </Button>
+          </div>
+        </div>
+
+        {/* Right: Bar Chart + Recent Expenses (desktop only) */}
+        {isDesktop && (
+          <div className="flex flex-col gap-4">
+            <CategoryBudgetBarChart budgetData={budgetData} />
+
+            <RecentExpensesList
+              expenses={dailyExpenses}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onViewAll={() => setHistoryModalOpen(true)}
+              maxItems={10}
+            />
+          </div>
+        )}
       </div>
 
       {/* Floating Add Button - Centered relative to content */}
       <div className="fixed bottom-28 md:bottom-8 left-0 md:left-[72px] right-0 z-40 pointer-events-none">
-        <div className="max-w-lg mx-auto flex justify-center">
+        <div className="max-w-lg mx-auto flex justify-center md:max-w-none md:px-8 md:justify-start">
           <Button
             size="lg"
             variant="outline"
