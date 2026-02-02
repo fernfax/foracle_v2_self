@@ -104,8 +104,10 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, budgetDa
         </div>
 
         {/* Right column - Budget Tracker (height constrained to left column) */}
-        <div className="lg:col-span-1 min-h-0 overflow-hidden">
-          <BudgetTrackerCard budgetData={budgetData} />
+        <div className="lg:col-span-1 relative">
+          <div className="lg:absolute lg:inset-0">
+            <BudgetTrackerCard budgetData={budgetData} />
+          </div>
         </div>
       </div>
 

@@ -296,7 +296,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <CardTitle className="text-lg sm:text-xl">Monthly Balance Projection</CardTitle>
+              <CardTitle className="text-2xl sm:text-3xl font-black">Monthly Balance Projection</CardTitle>
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
