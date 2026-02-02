@@ -103,8 +103,8 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, budgetDa
           <MonthlyBalanceGraph incomes={incomes} expenses={expenses} holdings={holdings} />
         </div>
 
-        {/* Right column - Budget Tracker */}
-        <div className="lg:col-span-1">
+        {/* Right column - Budget Tracker (height constrained to left column) */}
+        <div className="lg:col-span-1 min-h-0 overflow-hidden">
           <BudgetTrackerCard budgetData={budgetData} />
         </div>
       </div>
