@@ -55,7 +55,7 @@ export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-2 pt-4 flex-shrink-0">
-        <CardTitle className="text-lg sm:text-xl">Budget Tracker</CardTitle>
+        <CardTitle className="text-2xl sm:text-3xl font-black">Budget Tracker</CardTitle>
         <CardDescription className="mt-0.5 text-xs sm:text-sm">
           Monthly spending by category
         </CardDescription>

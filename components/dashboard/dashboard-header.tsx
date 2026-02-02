@@ -310,7 +310,7 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
         <CardHeader className="pb-2 pt-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle className="text-lg sm:text-xl">Monthly Overview</CardTitle>
+              <CardTitle className="text-2xl sm:text-3xl font-black">Monthly Overview</CardTitle>
               <CardDescription className="mt-1 text-xs sm:text-sm">
                 Your income, expenses, and savings for the selected month
               </CardDescription>

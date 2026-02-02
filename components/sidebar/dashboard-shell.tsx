@@ -121,7 +121,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
 export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background overflow-x-hidden">
+      <div className="min-h-screen bg-background">
         <DashboardContent>{children}</DashboardContent>
       </div>
     </SidebarProvider>
