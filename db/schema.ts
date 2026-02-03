@@ -281,6 +281,32 @@ export const quickLinks = pgTable("quick_links", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Investment Policies table - for tracking investment assets and contributions
+export const investmentPolicies = pgTable("investment_policies", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  // Core fields
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // stock, cash, bonds, etf, crypto, mutual_fund, reit
+
+  // Financial details
+  currentCapital: decimal("current_capital", { precision: 15, scale: 2 }).notNull(),
+  projectedYield: decimal("projected_yield", { precision: 5, scale: 2 }).notNull(), // Annual yield %
+
+  // Contribution details
+  contributionAmount: decimal("contribution_amount", { precision: 12, scale: 2 }).notNull(),
+  contributionFrequency: varchar("contribution_frequency", { length: 50 }).notNull(), // monthly, custom
+  customMonths: text("custom_months"), // JSON array of month numbers [1,3,6,9,12]
+
+  // Status
+  isActive: boolean("is_active").default(true),
+
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
@@ -296,6 +322,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   goals: many(goals),
   currentHoldings: many(currentHoldings),
   quickLinks: many(quickLinks),
+  investmentPolicies: many(investmentPolicies),
 }));
 
 export const familyMembersRelations = relations(familyMembers, ({ one, many }) => ({
@@ -415,6 +442,13 @@ export const currentHoldingsRelations = relations(currentHoldings, ({ one }) => 
 export const quickLinksRelations = relations(quickLinks, ({ one }) => ({
   user: one(users, {
     fields: [quickLinks.userId],
+    references: [users.id],
+  }),
+}));
+
+export const investmentPoliciesRelations = relations(investmentPolicies, ({ one }) => ({
+  user: one(users, {
+    fields: [investmentPolicies.userId],
     references: [users.id],
   }),
 }));

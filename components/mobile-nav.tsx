@@ -10,6 +10,7 @@ import {
   User,
   Shield,
   Calculator,
+  LineChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const mobileNavItems = [
   { href: "/dashboard/user/expenses", label: "Expenses", icon: Wallet, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
   { href: "/dashboard/user/assets", label: "Assets", icon: TrendingUp, bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   { href: "/dashboard/policies", label: "Insurance", icon: Shield, bgColor: "bg-rose-100", iconColor: "text-rose-600" },
+  { href: "/dashboard/investments", label: "Invest", icon: LineChart, bgColor: "bg-teal-100", iconColor: "text-teal-600" },
   { href: "/dashboard/goals", label: "Goals", icon: Target, bgColor: "bg-cyan-100", iconColor: "text-cyan-600" },
   { href: "/dashboard/budget", label: "Budget", icon: Calculator, bgColor: "bg-indigo-100", iconColor: "text-indigo-600" },
 ];
@@ -38,7 +40,7 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 transition-colors shrink-0 w-[14.285%]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-1 transition-colors shrink-0 w-[12.5%]",
                 isActive ? "text-foreground" : "text-muted-foreground"
               )}
             >
