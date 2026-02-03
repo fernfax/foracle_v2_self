@@ -23,6 +23,7 @@ import {
   Calculator,
   PanelLeftClose,
   PanelLeft,
+  LineChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -80,6 +81,13 @@ const mainNavItems = [
     icon: Shield,
     bgColor: "bg-rose-100",
     iconColor: "text-rose-600",
+  },
+  {
+    href: "/dashboard/investments",
+    label: "Investments",
+    icon: LineChart,
+    bgColor: "bg-teal-100",
+    iconColor: "text-teal-600",
   },
   {
     href: "/dashboard/goals",

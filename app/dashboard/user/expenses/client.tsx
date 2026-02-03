@@ -54,13 +54,26 @@ interface CurrentHolding {
   familyMemberName?: string | null;
 }
 
+interface Investment {
+  id: string;
+  name: string;
+  type: string;
+  currentCapital: string;
+  projectedYield: string;
+  contributionAmount: string;
+  contributionFrequency: string;
+  customMonths: string | null;
+  isActive: boolean | null;
+}
+
 interface ExpensesClientProps {
   initialExpenses: Expense[];
   initialIncomes: Income[];
   initialHoldings: CurrentHolding[];
+  initialInvestments: Investment[];
 }
 
-export function ExpensesClient({ initialExpenses, initialIncomes, initialHoldings }: ExpensesClientProps) {
+export function ExpensesClient({ initialExpenses, initialIncomes, initialHoldings, initialInvestments }: ExpensesClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -115,7 +128,7 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
             </TabsContent>
 
             <TabsContent value="graph" className="mt-4">
-              <MonthlyBalanceGraph incomes={initialIncomes} expenses={initialExpenses} holdings={initialHoldings} />
+              <MonthlyBalanceGraph incomes={initialIncomes} expenses={initialExpenses} holdings={initialHoldings} investments={initialInvestments} />
             </TabsContent>
 
             <TabsContent value="reports" className="mt-4">

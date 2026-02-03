@@ -67,15 +67,28 @@ interface CurrentHolding {
   familyMemberName?: string | null;
 }
 
+interface Investment {
+  id: string;
+  name: string;
+  type: string;
+  currentCapital: string;
+  projectedYield: string;
+  contributionAmount: string;
+  contributionFrequency: string;
+  customMonths: string | null;
+  isActive: boolean | null;
+}
+
 interface DashboardClientProps {
   metrics: DashboardMetrics;
   incomes: Income[];
   expenses: Expense[];
   holdings: CurrentHolding[];
+  investments: Investment[];
   budgetData: BudgetCategory[];
 }
 
-export function DashboardClient({ metrics, incomes, expenses, holdings, budgetData }: DashboardClientProps) {
+export function DashboardClient({ metrics, incomes, expenses, holdings, investments, budgetData }: DashboardClientProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -100,7 +113,7 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, budgetDa
           />
 
           {/* Monthly Balance Projection */}
-          <MonthlyBalanceGraph incomes={incomes} expenses={expenses} holdings={holdings} />
+          <MonthlyBalanceGraph incomes={incomes} expenses={expenses} holdings={holdings} investments={investments} />
         </div>
 
         {/* Right column - Budget Tracker (height constrained to left column) */}

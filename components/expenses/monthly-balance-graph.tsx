@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
-import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
+import { Switch } from "@/components/ui/switch";
+import { Info, TrendingUp } from "lucide-react";
+import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import { calculateMonthlyBalance, timeRangeToMonths, type MonthlyBalanceData, type SpecialItem } from "@/lib/balance-calculator";
 
 interface Income {
@@ -57,10 +58,23 @@ interface ArrowDataPoint {
   y: number;
 }
 
+interface Investment {
+  id: string;
+  name: string;
+  type: string;
+  currentCapital: string;
+  projectedYield: string;
+  contributionAmount: string;
+  contributionFrequency: string;
+  customMonths: string | null;
+  isActive: boolean | null;
+}
+
 interface MonthlyBalanceGraphProps {
   incomes: Income[];
   expenses: Expense[];
   holdings: CurrentHolding[];
+  investments?: Investment[];
 }
 
 const TIME_RANGES = [
@@ -188,11 +202,17 @@ function CustomTooltip({ active, payload, viewMode }: any) {
       );
     }
 
-    // Regular line tooltip
-    const data = payload[0].payload as MonthlyBalanceData;
+    // Regular line tooltip - extend type with investment fields
+    const data = payload[0].payload as MonthlyBalanceData & {
+      balanceWithInvestments?: number;
+      monthlyBalanceWithInvestments?: number;
+    };
 
     // Collect special items for this month
     const specialItems = data.specialItems || [];
+
+    // Check if we have combined investment data
+    const hasInvestmentData = data.balanceWithInvestments !== undefined;
 
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
@@ -209,6 +229,11 @@ function CustomTooltip({ active, payload, viewMode }: any) {
               <p className="font-semibold text-blue-600">
                 Cumulative Balance: {formatCurrency(data.balance)}
               </p>
+              {hasInvestmentData && data.balanceWithInvestments !== undefined && (
+                <p className="font-semibold text-teal-600">
+                  With Investments: {formatCurrency(data.balanceWithInvestments)}
+                </p>
+              )}
             </>
           ) : (
             <>
@@ -221,6 +246,11 @@ function CustomTooltip({ active, payload, viewMode }: any) {
               <p className={`font-semibold ${data.monthlyBalance >= 0 ? "text-blue-700" : "text-red-700"}`}>
                 Net Balance: {formatCurrency(data.monthlyBalance)}
               </p>
+              {hasInvestmentData && data.monthlyBalanceWithInvestments !== undefined && (
+                <p className={`font-semibold ${data.monthlyBalanceWithInvestments >= 0 ? "text-teal-600" : "text-red-600"}`}>
+                  Net + Investments: {formatCurrency(data.monthlyBalanceWithInvestments)}
+                </p>
+              )}
             </>
           )}
 
@@ -247,9 +277,13 @@ function CustomTooltip({ active, payload, viewMode }: any) {
   return null;
 }
 
-export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBalanceGraphProps) {
+export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments = [] }: MonthlyBalanceGraphProps) {
   const [timeRange, setTimeRange] = useState("12");
   const [viewMode, setViewMode] = useState<"cumulative" | "non-cumulative">("cumulative");
+  const [includeInvestments, setIncludeInvestments] = useState(false);
+
+  const activeInvestments = investments.filter((i) => i.isActive);
+  const hasInvestments = activeInvestments.length > 0;
 
   // Calculate starting balance from current holdings
   const startingBalance = useMemo(() => {
@@ -258,37 +292,137 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
     }, 0);
   }, [holdings]);
 
-  // Calculate balance data based on selected time range
-  const balanceData = useMemo(() => {
+  // Calculate investment starting capital
+  const investmentStartingCapital = useMemo(() => {
+    return activeInvestments.reduce((total, inv) => {
+      return total + parseFloat(inv.currentCapital);
+    }, 0);
+  }, [activeInvestments]);
+
+  // Calculate base balance data based on selected time range
+  const baseBalanceData = useMemo(() => {
     const months = timeRangeToMonths(timeRange);
     return calculateMonthlyBalance(incomes, expenses, months, startingBalance);
   }, [incomes, expenses, timeRange, startingBalance]);
 
+  // Calculate investment projections month-by-month
+  const investmentProjections = useMemo(() => {
+    if (activeInvestments.length === 0) {
+      return null;
+    }
+
+    const totalMonths = timeRangeToMonths(timeRange);
+
+    // Pre-calculate month-by-month values for each investment
+    const projectionsByInvestment = activeInvestments.map((inv) => {
+      const capital = parseFloat(inv.currentCapital);
+      const annualYield = parseFloat(inv.projectedYield) / 100;
+      const monthlyRate = annualYield / 12;
+      const contribution = parseFloat(inv.contributionAmount);
+
+      // Parse custom months (1-12 representing Jan-Dec)
+      let contributionMonths: number[] | null = null;
+      if (inv.contributionFrequency === "custom" && inv.customMonths) {
+        try {
+          contributionMonths = JSON.parse(inv.customMonths) as number[];
+        } catch {
+          contributionMonths = null;
+        }
+      }
+
+      // Calculate month-by-month
+      const monthlyValues: number[] = [];
+      let balance = capital;
+
+      // Month 0 is starting point
+      monthlyValues.push(balance);
+
+      for (let month = 1; month <= totalMonths; month++) {
+        // Apply monthly compound interest
+        balance *= (1 + monthlyRate);
+
+        // Add contribution based on frequency
+        if (inv.contributionFrequency === "monthly") {
+          balance += contribution;
+        } else if (contributionMonths) {
+          const calendarMonth = ((month - 1) % 12) + 1;
+          if (contributionMonths.includes(calendarMonth)) {
+            balance += contribution;
+          }
+        }
+
+        monthlyValues.push(balance);
+      }
+
+      return monthlyValues;
+    });
+
+    // Sum all investments for each month
+    const totalMonthlyValues: number[] = [];
+    for (let month = 0; month <= totalMonths; month++) {
+      let total = 0;
+      projectionsByInvestment.forEach((projection) => {
+        total += projection[month];
+      });
+      totalMonthlyValues.push(total);
+    }
+
+    return totalMonthlyValues;
+  }, [activeInvestments, timeRange]);
+
+  // Create balance data with optional combined investment values
+  const balanceData = useMemo(() => {
+    return baseBalanceData.map((data, index) => ({
+      ...data,
+      // Add combined balance field when investments are included
+      balanceWithInvestments: includeInvestments && investmentProjections
+        ? data.balance + (investmentProjections[index] || 0)
+        : undefined,
+      // For non-cumulative view, add monthly balance with investment growth
+      monthlyBalanceWithInvestments: includeInvestments && investmentProjections
+        ? data.monthlyBalance + (
+            index > 0
+              ? (investmentProjections[index] || 0) - (investmentProjections[index - 1] || 0)
+              : 0
+          )
+        : undefined,
+    }));
+  }, [baseBalanceData, includeInvestments, investmentProjections]);
+
   // Determine if balance is positive or negative for styling
   const finalBalance = balanceData.length > 0 ? balanceData[balanceData.length - 1].balance : 0;
+  const finalBalanceWithInvestments = includeInvestments && balanceData.length > 0
+    ? balanceData[balanceData.length - 1].balanceWithInvestments || 0
+    : 0;
   const isPositive = finalBalance >= 0;
+  const isCombinedPositive = finalBalanceWithInvestments >= 0;
 
-  // Calculate min/max for Y-axis based on view mode (without forcing 0)
-  const minBalance = viewMode === "cumulative"
-    ? Math.min(...balanceData.map((d) => d.balance))
-    : Math.min(
+  // Calculate min/max for Y-axis based on view mode (including combined values if shown)
+  const allBalanceValues = viewMode === "cumulative"
+    ? [
+        ...balanceData.map((d) => d.balance),
+        ...(includeInvestments ? balanceData.map((d) => d.balanceWithInvestments || d.balance) : []),
+      ]
+    : [
         ...balanceData.map((d) => d.income),
         ...balanceData.map((d) => d.expense),
-        ...balanceData.map((d) => d.monthlyBalance)
-      );
+        ...balanceData.map((d) => d.monthlyBalance),
+        ...(includeInvestments ? balanceData.map((d) => d.monthlyBalanceWithInvestments || d.monthlyBalance) : []),
+      ];
 
-  const maxBalance = viewMode === "cumulative"
-    ? Math.max(...balanceData.map((d) => d.balance))
-    : Math.max(
-        ...balanceData.map((d) => d.income),
-        ...balanceData.map((d) => d.expense),
-        ...balanceData.map((d) => d.monthlyBalance)
-      );
+  const minBalance = Math.min(...allBalanceValues);
+  const maxBalance = Math.max(...allBalanceValues);
 
   // Add 10% padding to Y-axis range for better visualization
   const padding = Math.max(Math.abs(maxBalance), Math.abs(minBalance)) * 0.1;
   const yAxisMin = Math.floor((minBalance - padding) / 1000) * 1000;
   const yAxisMax = Math.ceil((maxBalance + padding) / 1000) * 1000;
+
+  // Check if this is a long duration (5y or 10y) - hide dots and limit X axis ticks
+  const isLongDuration = timeRange === "60" || timeRange === "120";
+  const totalDataPoints = balanceData.length;
+  // For long durations, show ~10 ticks spread equally
+  const xAxisInterval = isLongDuration ? Math.floor(totalDataPoints / 10) : 0;
 
   return (
     <Card className="w-full">
@@ -359,6 +493,31 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
           </div>
         </div>
 
+        {/* Investment Toggle */}
+        {hasInvestments && (
+          <div className="flex items-center justify-between mt-3 sm:mt-4 p-3 bg-teal-50 rounded-lg border border-teal-100">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-teal-600" />
+              <div>
+                <Label
+                  htmlFor="includeInvestments"
+                  className="text-sm font-medium text-teal-900 cursor-pointer"
+                >
+                  Include Investment Projection
+                </Label>
+                <p className="text-xs text-teal-700">
+                  Add projected investment growth to your balance
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="includeInvestments"
+              checked={includeInvestments}
+              onCheckedChange={setIncludeInvestments}
+            />
+          </div>
+        )}
+
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-4">
           <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
@@ -366,18 +525,34 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
             <p className="text-sm sm:text-lg font-semibold text-gray-900">
               {formatCurrency(startingBalance)}
             </p>
+            {includeInvestments && (
+              <p className="text-[10px] text-teal-600">
+                + {formatCurrency(investmentStartingCapital)} investments
+              </p>
+            )}
           </div>
           <div className={`rounded-lg p-2 sm:p-3 ${isPositive ? "bg-green-50" : "bg-red-50"}`}>
             <p className="text-xs text-gray-600 mb-0.5">Projected Balance</p>
             <p className={`text-sm sm:text-lg font-semibold ${isPositive ? "text-green-700" : "text-red-700"}`}>
               {formatCurrency(finalBalance)}
             </p>
+            {includeInvestments && (
+              <p className={`text-[10px] ${isCombinedPositive ? "text-teal-600" : "text-red-600"}`}>
+                Combined: {formatCurrency(finalBalanceWithInvestments)}
+              </p>
+            )}
           </div>
           <div className={`rounded-lg p-2 sm:p-3 ${(finalBalance - startingBalance) >= 0 ? "bg-green-50" : "bg-red-50"}`}>
             <p className="text-xs text-gray-600 mb-0.5">Net Change</p>
             <p className={`text-sm sm:text-lg font-semibold ${(finalBalance - startingBalance) >= 0 ? "text-green-700" : "text-red-700"}`}>
               {(finalBalance - startingBalance) >= 0 ? "+" : ""}{formatCurrency(finalBalance - startingBalance)}
             </p>
+            {includeInvestments && (
+              <p className="text-[10px] text-teal-600">
+                Combined: {(finalBalanceWithInvestments - startingBalance - investmentStartingCapital) >= 0 ? "+" : ""}
+                {formatCurrency(finalBalanceWithInvestments - startingBalance - investmentStartingCapital)}
+              </p>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -389,6 +564,28 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
               data={balanceData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
+              <defs>
+                <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorNetBalance" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorCombined" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
                 dataKey="month"
@@ -397,12 +594,16 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
                 angle={-45}
                 textAnchor="end"
                 height={80}
+                tickLine={false}
+                interval={xAxisInterval}
               />
               <YAxis
                 stroke="#6b7280"
                 style={{ fontSize: "12px" }}
                 tickFormatter={(value) => formatCurrency(value)}
                 domain={[yAxisMin, yAxisMax]}
+                tickLine={false}
+                axisLine={false}
               />
               <RechartsTooltip content={<CustomTooltip viewMode={viewMode} />} />
               <Legend
@@ -443,44 +644,80 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings }: MonthlyBala
               />
 
               {viewMode === "cumulative" ? (
-                <Line
-                  type="monotone"
-                  dataKey="balance"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={<CustomBalanceDot />}
-                  activeDot={{ r: 6 }}
-                  name="Cumulative Balance"
-                />
+                <>
+                  <Area
+                    type="monotone"
+                    dataKey="balance"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={isLongDuration ? false : <CustomBalanceDot />}
+                    activeDot={{ r: 5 }}
+                    fillOpacity={1}
+                    fill="url(#colorBalance)"
+                    name="Cumulative Balance"
+                  />
+                  {includeInvestments && (
+                    <Area
+                      type="monotone"
+                      dataKey="balanceWithInvestments"
+                      stroke="#14b8a6"
+                      strokeWidth={2}
+                      dot={isLongDuration ? false : { fill: "#14b8a6", r: 3 }}
+                      activeDot={{ r: 5 }}
+                      fillOpacity={1}
+                      fill="url(#colorCombined)"
+                      name="With Investments"
+                    />
+                  )}
+                </>
               ) : (
                 <>
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="income"
                     stroke="#10b981"
                     strokeWidth={2}
-                    dot={{ fill: "#10b981", r: 3 }}
+                    dot={isLongDuration ? false : { fill: "#10b981", r: 3 }}
                     activeDot={{ r: 5 }}
+                    fillOpacity={1}
+                    fill="url(#colorIncome)"
                     name="Income"
                   />
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="expense"
                     stroke="#ef4444"
                     strokeWidth={2}
-                    dot={{ fill: "#ef4444", r: 3 }}
+                    dot={isLongDuration ? false : { fill: "#ef4444", r: 3 }}
                     activeDot={{ r: 5 }}
+                    fillOpacity={1}
+                    fill="url(#colorExpense)"
                     name="Expenses"
                   />
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="monthlyBalance"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    dot={{ fill: "#3b82f6", r: 3 }}
+                    dot={isLongDuration ? false : { fill: "#3b82f6", r: 3 }}
                     activeDot={{ r: 5 }}
+                    fillOpacity={1}
+                    fill="url(#colorNetBalance)"
                     name="Net Balance"
                   />
+                  {includeInvestments && (
+                    <Area
+                      type="monotone"
+                      dataKey="monthlyBalanceWithInvestments"
+                      stroke="#14b8a6"
+                      strokeWidth={2}
+                      dot={isLongDuration ? false : { fill: "#14b8a6", r: 3 }}
+                      activeDot={{ r: 5 }}
+                      fillOpacity={1}
+                      fill="url(#colorCombined)"
+                      name="Net Balance + Investments"
+                    />
+                  )}
                 </>
               )}
             </ComposedChart>
