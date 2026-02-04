@@ -83,6 +83,7 @@ const TIME_RANGES = [
   { value: "36", label: "3 Years" },
   { value: "60", label: "5 Years" },
   { value: "120", label: "10 Years" },
+  { value: "240", label: "20 Years" },
 ];
 
 // Arrow marker colors
@@ -108,7 +109,7 @@ const CustomBalanceDot = (props: any) => {
   if (payload.specialItems && payload.specialItems.length > 0) {
     // Get unique types for this month
     const uniqueTypes = new Set(payload.specialItems.map((item: SpecialItem) => item.type));
-    const baseOffset = 20; // pixels from the dot
+    const baseOffset = 12; // pixels from the dot
 
     let incomeCount = 0;
     let expenseCount = 0;
@@ -121,7 +122,7 @@ const CustomBalanceDot = (props: any) => {
         elements.push(
           <polygon
             key={`arrow-income`}
-            points={`${cx},${yPos - 10} ${cx - 7},${yPos + 5} ${cx + 7},${yPos + 5}`}
+            points={`${cx},${yPos - 7} ${cx - 5},${yPos + 4} ${cx + 5},${yPos + 4}`}
             fill={ARROW_COLORS['one-off-income']}
             stroke="white"
             strokeWidth={1}
@@ -133,11 +134,11 @@ const CustomBalanceDot = (props: any) => {
         const color = type === 'one-off-expense'
           ? ARROW_COLORS['one-off-expense']
           : ARROW_COLORS['custom-expense'];
-        const yPos = cy + baseOffset + (expenseCount * 15);
+        const yPos = cy + baseOffset + (expenseCount * 13);
         elements.push(
           <polygon
             key={`arrow-${type}`}
-            points={`${cx},${yPos + 10} ${cx - 7},${yPos - 5} ${cx + 7},${yPos - 5}`}
+            points={`${cx},${yPos + 7} ${cx - 5},${yPos - 4} ${cx + 5},${yPos - 4}`}
             fill={color}
             stroke="white"
             strokeWidth={1}
@@ -418,8 +419,8 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
   const yAxisMin = Math.floor((minBalance - padding) / 1000) * 1000;
   const yAxisMax = Math.ceil((maxBalance + padding) / 1000) * 1000;
 
-  // Check if this is a long duration (5y or 10y) - hide dots and limit X axis ticks
-  const isLongDuration = timeRange === "60" || timeRange === "120";
+  // Check if this is a long duration (5y, 10y, or 20y) - hide dots and limit X axis ticks
+  const isLongDuration = timeRange === "60" || timeRange === "120" || timeRange === "240";
   const totalDataPoints = balanceData.length;
   // For long durations, show ~10 ticks spread equally
   const xAxisInterval = isLongDuration ? Math.floor(totalDataPoints / 10) : 0;
