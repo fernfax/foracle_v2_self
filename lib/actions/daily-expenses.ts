@@ -276,7 +276,7 @@ export async function getCategorySpendingForMonth(
 }
 
 /**
- * Get spending for today
+ * Get spending for today (based on Singapore Time, resets at 0000hrs SGT)
  */
 export async function getTodaySpending(): Promise<number> {
   try {
@@ -285,7 +285,8 @@ export async function getTodaySpending(): Promise<number> {
       throw new Error("Unauthorized");
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    // Get today's date in Singapore Time (UTC+8)
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
 
     const result = await db
       .select({
