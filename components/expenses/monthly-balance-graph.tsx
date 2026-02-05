@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -278,10 +278,26 @@ function CustomTooltip({ active, payload, viewMode }: any) {
   return null;
 }
 
+const INCLUDE_INVESTMENTS_KEY = "foracle_include_investments";
+
 export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments = [] }: MonthlyBalanceGraphProps) {
   const [timeRange, setTimeRange] = useState("12");
   const [viewMode, setViewMode] = useState<"cumulative" | "non-cumulative">("cumulative");
   const [includeInvestments, setIncludeInvestments] = useState(false);
+
+  // Load saved preference from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(INCLUDE_INVESTMENTS_KEY);
+    if (saved !== null) {
+      setIncludeInvestments(saved === "true");
+    }
+  }, []);
+
+  // Save preference to localStorage when it changes
+  const handleIncludeInvestmentsChange = (checked: boolean) => {
+    setIncludeInvestments(checked);
+    localStorage.setItem(INCLUDE_INVESTMENTS_KEY, String(checked));
+  };
 
   const activeInvestments = investments.filter((i) => i.isActive);
   const hasInvestments = activeInvestments.length > 0;
@@ -514,7 +530,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
             <Switch
               id="includeInvestments"
               checked={includeInvestments}
-              onCheckedChange={setIncludeInvestments}
+              onCheckedChange={handleIncludeInvestmentsChange}
             />
           </div>
         )}
