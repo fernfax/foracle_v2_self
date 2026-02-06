@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,23 +21,6 @@ import { getDailyExpensesForMonth, getTodaySpending, getDailySpendingByDay, type
 import { isCurrentMonth } from "@/lib/budget-utils";
 import { getExpenseCategories, getAllExpensesGroupedByCategory, type ExpenseCategory, type ExpenseItem } from "@/lib/actions/expense-categories";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
-
-// Hook to detect desktop viewport
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(true);
-
-  useEffect(() => {
-    const checkIsDesktop = () => {
-      setIsDesktop(window.innerWidth >= 768);
-    };
-
-    checkIsDesktop();
-    window.addEventListener("resize", checkIsDesktop);
-    return () => window.removeEventListener("resize", checkIsDesktop);
-  }, []);
-
-  return isDesktop;
-}
 
 interface BudgetClientProps {
   initialCategories: ExpenseCategory[];
@@ -71,9 +54,6 @@ export function BudgetClient({
   initialMonth,
 }: BudgetClientProps) {
   const router = useRouter();
-  const isDesktop = useIsDesktop();
-  const isDesktopRef = useRef(isDesktop);
-  isDesktopRef.current = isDesktop;
 
   // State
   const [year, setYear] = useState(initialYear);
@@ -101,42 +81,28 @@ export function BudgetClient({
   // Manage categories modal state
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
 
-  // Auto-fetch daily spending data for desktop inline chart
+  // Auto-fetch daily spending data for inline chart
   useEffect(() => {
-    if (isDesktop && dailySpendingData.length === 0) {
+    if (dailySpendingData.length === 0) {
       getDailySpendingByDay(year, month).then(setDailySpendingData);
     }
-  }, [isDesktop, year, month, dailySpendingData.length]);
+  }, [year, month, dailySpendingData.length]);
 
   // Fetch data for a specific month
   const fetchMonthData = useCallback(async (newYear: number, newMonth: number) => {
     setIsLoading(true);
     try {
-      const promises: [
-        ReturnType<typeof getBudgetVsActual>,
-        ReturnType<typeof getDailyExpensesForMonth>,
-        ReturnType<typeof getBudgetSummary>,
-        ...ReturnType<typeof getDailySpendingByDay>[]
-      ] = [
+      const [budgetResults, expensesResults, summaryResults, spendingResults] = await Promise.all([
         getBudgetVsActual(newYear, newMonth),
         getDailyExpensesForMonth(newYear, newMonth),
         getBudgetSummary(newYear, newMonth),
-      ];
+        getDailySpendingByDay(newYear, newMonth),
+      ]);
 
-      // Also fetch daily spending data for desktop charts
-      if (isDesktopRef.current) {
-        promises.push(getDailySpendingByDay(newYear, newMonth));
-      }
-
-      const results = await Promise.all(promises);
-
-      setBudgetData(results[0] as BudgetVsActual[]);
-      setDailyExpenses(results[1] as DailyExpense[]);
-      setBudgetSummary(results[2] as typeof initialBudgetSummary);
-
-      if (results[3]) {
-        setDailySpendingData(results[3] as { day: number; date: string; amount: number }[]);
-      }
+      setBudgetData(budgetResults);
+      setDailyExpenses(expensesResults);
+      setBudgetSummary(summaryResults);
+      setDailySpendingData(spendingResults);
 
       // Only fetch today's spending if viewing current month
       if (isCurrentMonth(newYear, newMonth)) {
@@ -224,14 +190,7 @@ export function BudgetClient({
       />
 
       {/* Row 1: Spending Overview + Daily Spending Chart (equal height on desktop) */}
-      <div
-        className="space-y-4"
-        style={isDesktop ? {
-          display: "grid",
-          gridTemplateColumns: "1fr 420px",
-          gap: "1.5rem",
-        } : undefined}
-      >
+      <div className="space-y-4 md:grid md:grid-cols-[1fr_420px] md:gap-6 md:space-y-0">
         <BudgetOverview
           totalBudget={budgetSummary.totalBudget}
           totalSpent={budgetSummary.totalSpent}
@@ -248,7 +207,7 @@ export function BudgetClient({
           onHistoryClick={handleHistoryClick}
         />
 
-        {isDesktop && (
+        <div className="hidden md:block">
           <DailySpendingChart
             dailySpendingData={dailySpendingData}
             dailyBudget={budgetSummary.dailyBudget}
@@ -256,19 +215,11 @@ export function BudgetClient({
             year={year}
             gradientId="spendingGradient-inline"
           />
-        )}
+        </div>
       </div>
 
       {/* Row 2+: Category Grid + Manage Categories | Bar Chart + Recent Expenses */}
-      <div
-        className="space-y-4"
-        style={isDesktop ? {
-          display: "grid",
-          gridTemplateColumns: "1fr 420px",
-          gap: "1.5rem",
-          alignItems: "start",
-        } : undefined}
-      >
+      <div className="space-y-4 md:grid md:grid-cols-[1fr_420px] md:gap-6 md:space-y-0 md:items-start">
         {/* Left: Category Grid + Manage Categories */}
         <div className="space-y-4">
           <div className="pt-2">
@@ -288,19 +239,17 @@ export function BudgetClient({
         </div>
 
         {/* Right: Bar Chart + Recent Expenses (desktop only) */}
-        {isDesktop && (
-          <div className="flex flex-col gap-4">
-            <CategoryBudgetBarChart budgetData={budgetData} />
+        <div className="hidden md:flex md:flex-col md:gap-4">
+          <CategoryBudgetBarChart budgetData={budgetData} />
 
-            <RecentExpensesList
-              expenses={dailyExpenses}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onViewAll={() => setHistoryModalOpen(true)}
-              maxItems={10}
-            />
-          </div>
-        )}
+          <RecentExpensesList
+            expenses={dailyExpenses}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onViewAll={() => setHistoryModalOpen(true)}
+            maxItems={10}
+          />
+        </div>
       </div>
 
       {/* Floating Add Button - Centered relative to content */}

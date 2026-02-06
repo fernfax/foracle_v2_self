@@ -298,9 +298,10 @@ export async function getBudgetSummary(year: number, month: number) {
     const remaining = totalBudget - totalSpent;
     const percentUsed = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
-    // Calculate daily budget and pacing
+    // Calculate daily budget and pacing (using Singapore Time for day calculation)
     const daysInMonth = lastDay;
-    const currentDay = new Date().getDate();
+    const sgtDate = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
+    const currentDay = parseInt(sgtDate.split("-")[2], 10);
     const dailyBudget = totalBudget / daysInMonth;
     const expectedSpentByToday = dailyBudget * currentDay;
 
