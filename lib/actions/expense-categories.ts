@@ -313,7 +313,7 @@ export async function updateTrackedCategories(
       .where(and(eq(expenseCategories.id, category.id), eq(expenseCategories.userId, userId)));
   }
 
-  revalidatePath("/dashboard/budget");
+  revalidatePath("/budget");
 }
 
 /**
@@ -373,5 +373,5 @@ export async function updateTrackedExpenses(
       .where(and(eq(expenseCategories.id, category.id), eq(expenseCategories.userId, userId)));
   }
 
-  revalidatePath("/dashboard/budget");
+  revalidatePath("/budget");
 }

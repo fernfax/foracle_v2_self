@@ -85,7 +85,7 @@ export async function completeOnboarding(): Promise<void> {
     })
     .where(eq(users.id, userId));
 
-  revalidatePath("/dashboard");
+  revalidatePath("/overview");
 }
 
 /**
@@ -181,5 +181,5 @@ export async function createOnboardingExpenses(data: {
     await db.insert(expenses).values(expenseRecords);
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/overview");
 }

@@ -93,7 +93,7 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    router.push(`/dashboard/user/expenses?tab=${value}`, { scroll: false });
+    router.push(`/expenses?tab=${value}`, { scroll: false });
   };
 
   return (

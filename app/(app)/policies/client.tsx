@@ -88,7 +88,7 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
           setEditingPolicy(policyToEdit);
           setEditDialogOpen(true);
           // Clear the URL param after opening the dialog
-          router.replace("/dashboard/policies", { scroll: false });
+          router.replace("/policies", { scroll: false });
         }, 100);
         return () => clearTimeout(timeoutId);
       }

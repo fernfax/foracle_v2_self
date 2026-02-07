@@ -26,7 +26,7 @@ export default async function Home() {
   // If user is already logged in, redirect to dashboard
   const { userId } = await auth();
   if (userId) {
-    redirect("/dashboard");
+    redirect("/overview");
   }
   return (
     <main className="min-h-screen bg-background">

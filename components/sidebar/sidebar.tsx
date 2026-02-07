@@ -32,72 +32,72 @@ import { useSidebar } from "./sidebar-context";
 
 const mainNavItems = [
   {
-    href: "/dashboard",
-    label: "Dashboard",
+    href: "/overview",
+    label: "Overview",
     icon: Home,
     bgColor: "bg-blue-100",
     iconColor: "text-blue-600",
   },
   {
-    href: "/dashboard/user",
+    href: "/user",
     label: "User Homepage",
     icon: User,
     bgColor: "bg-purple-100",
     iconColor: "text-purple-600",
     subItems: [
-      { href: "/dashboard/user?tab=family", label: "Family", icon: Users },
-      { href: "/dashboard/user?tab=incomes", label: "Incomes", icon: DollarSign },
-      { href: "/dashboard/user?tab=cpf", label: "CPF", icon: Building2 },
-      { href: "/dashboard/user?tab=current", label: "Holdings", icon: Briefcase },
+      { href: "/user?tab=family", label: "Family", icon: Users },
+      { href: "/user?tab=incomes", label: "Incomes", icon: DollarSign },
+      { href: "/user?tab=cpf", label: "CPF", icon: Building2 },
+      { href: "/user?tab=current", label: "Holdings", icon: Briefcase },
     ],
   },
   {
-    href: "/dashboard/user/expenses",
+    href: "/expenses",
     label: "Expenses",
     icon: Wallet,
     bgColor: "bg-emerald-100",
     iconColor: "text-emerald-600",
     subItems: [
-      { href: "/dashboard/user/expenses?tab=expenses", label: "Expenses", icon: Receipt },
-      { href: "/dashboard/user/expenses?tab=graph", label: "Graph", icon: TrendingUp },
-      { href: "/dashboard/user/expenses?tab=reports", label: "Reports", icon: PieChart },
+      { href: "/expenses?tab=expenses", label: "Expenses", icon: Receipt },
+      { href: "/expenses?tab=graph", label: "Graph", icon: TrendingUp },
+      { href: "/expenses?tab=reports", label: "Reports", icon: PieChart },
     ],
   },
   {
-    href: "/dashboard/user/assets",
+    href: "/assets",
     label: "Assets",
     icon: TrendingUp,
     bgColor: "bg-amber-100",
     iconColor: "text-amber-600",
     subItems: [
-      { href: "/dashboard/user/assets?tab=property", label: "Property", icon: PropertyIcon },
-      { href: "/dashboard/user/assets?tab=vehicle", label: "Vehicle", icon: Car },
-      { href: "/dashboard/user/assets?tab=others", label: "Others", icon: Package },
+      { href: "/assets?tab=property", label: "Property", icon: PropertyIcon },
+      { href: "/assets?tab=vehicle", label: "Vehicle", icon: Car },
+      { href: "/assets?tab=others", label: "Others", icon: Package },
     ],
   },
   {
-    href: "/dashboard/policies",
+    href: "/policies",
     label: "Insurance",
     icon: Shield,
     bgColor: "bg-rose-100",
     iconColor: "text-rose-600",
   },
   {
-    href: "/dashboard/investments",
+    href: "/investments",
     label: "Investments",
     icon: LineChart,
     bgColor: "bg-teal-100",
     iconColor: "text-teal-600",
   },
   {
-    href: "/dashboard/goals",
+    href: "/goals",
     label: "Goals",
     icon: Target,
     bgColor: "bg-cyan-100",
     iconColor: "text-cyan-600",
   },
   {
-    href: "/dashboard/budget",
+    href: "/budget",
     label: "Budget",
     icon: Calculator,
     bgColor: "bg-indigo-100",
@@ -132,7 +132,7 @@ export function Sidebar() {
         "h-[70px] flex items-center flex-shrink-0",
         isExpanded ? "px-5" : "px-3 justify-center"
       )}>
-        <Link href="/dashboard" className="flex items-center justify-center">
+        <Link href="/overview" className="flex items-center justify-center">
           {isExpanded ? (
             <Image
               src="/wordmark-400.png"

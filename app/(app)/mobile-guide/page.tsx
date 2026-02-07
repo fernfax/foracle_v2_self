@@ -40,7 +40,7 @@ export default function MobileGuidePage() {
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <Link href="/dashboard">
+        <Link href="/overview">
           <Button variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard

@@ -133,7 +133,7 @@ export async function addDailyExpense(data: {
     })
     .returning();
 
-  revalidatePath("/dashboard/budget");
+  revalidatePath("/budget");
 
   return newExpense;
 }
@@ -191,7 +191,7 @@ export async function updateDailyExpense(
     .where(and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, userId)))
     .returning();
 
-  revalidatePath("/dashboard/budget");
+  revalidatePath("/budget");
 
   return updatedExpense;
 }
@@ -218,7 +218,7 @@ export async function deleteDailyExpense(id: string): Promise<void> {
     .delete(dailyExpenses)
     .where(and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, userId)));
 
-  revalidatePath("/dashboard/budget");
+  revalidatePath("/budget");
 }
 
 /**

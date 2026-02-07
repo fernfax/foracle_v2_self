@@ -91,7 +91,7 @@ export async function addSubcategory(
     })
     .returning();
 
-  revalidatePath("/dashboard/budget");
+  revalidatePath("/budget");
   return newSubcategory;
 }
 
@@ -133,7 +133,7 @@ export async function updateSubcategory(
     )
     .returning();
 
-  revalidatePath("/dashboard/budget");
+  revalidatePath("/budget");
   return updatedSubcategory;
 }
 
@@ -155,5 +155,5 @@ export async function deleteSubcategory(id: string): Promise<void> {
       )
     );
 
-  revalidatePath("/dashboard/budget");
+  revalidatePath("/budget");
 }

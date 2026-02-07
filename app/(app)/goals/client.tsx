@@ -48,7 +48,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    router.push(`/dashboard/goals?tab=${value}`, { scroll: false });
+    router.push(`/goals?tab=${value}`, { scroll: false });
   };
 
   // Filter goals by status

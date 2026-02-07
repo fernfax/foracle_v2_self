@@ -78,8 +78,8 @@ export async function createPropertyAsset(data: {
     isActive: true,
   }).returning();
 
-  revalidatePath("/dashboard/user/assets");
-  revalidatePath("/dashboard/user/expenses");
+  revalidatePath("/assets");
+  revalidatePath("/expenses");
   return newPropertyAsset[0];
 }
 
@@ -190,8 +190,8 @@ export async function updatePropertyAsset(
     .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, userId)))
     .returning();
 
-  revalidatePath("/dashboard/user/assets");
-  revalidatePath("/dashboard/user/expenses");
+  revalidatePath("/assets");
+  revalidatePath("/expenses");
   return updated[0];
 }
 
@@ -220,6 +220,6 @@ export async function deletePropertyAsset(id: string) {
   await db.delete(propertyAssets)
     .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, userId)));
 
-  revalidatePath("/dashboard/user/assets");
-  revalidatePath("/dashboard/user/expenses");
+  revalidatePath("/assets");
+  revalidatePath("/expenses");
 }

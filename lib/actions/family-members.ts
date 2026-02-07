@@ -84,7 +84,7 @@ export async function createFamilyMember(data: {
     ...(data.notes ? { notes: data.notes } : {}),
   }).returning();
 
-  revalidatePath("/dashboard/user");
+  revalidatePath("/user");
   return newMember[0];
 }
 
@@ -128,7 +128,7 @@ export async function updateFamilyMember(
     .where(and(eq(familyMembers.id, id), eq(familyMembers.userId, userId)))
     .returning();
 
-  revalidatePath("/dashboard/user");
+  revalidatePath("/user");
   return updated[0];
 }
 
@@ -190,7 +190,7 @@ export async function deleteFamilyMember(id: string) {
   // Delete the family member
   await db.delete(familyMembers).where(and(eq(familyMembers.id, id), eq(familyMembers.userId, userId)));
 
-  revalidatePath("/dashboard/user");
+  revalidatePath("/user");
   return {
     success: true,
     deletedIncomes: existing.incomes || [],
@@ -231,7 +231,7 @@ export async function getOrCreateSelfMember(data: {
       .where(eq(familyMembers.id, existingSelf.id))
       .returning();
 
-    revalidatePath("/dashboard/user");
+    revalidatePath("/user");
     return updated[0];
   }
 
@@ -245,7 +245,7 @@ export async function getOrCreateSelfMember(data: {
     isContributing: true,
   }).returning();
 
-  revalidatePath("/dashboard/user");
+  revalidatePath("/user");
   return newMember[0];
 }
 

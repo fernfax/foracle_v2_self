@@ -117,7 +117,7 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    router.push(`/dashboard/user?tab=${value}`, { scroll: false });
+    router.push(`/user?tab=${value}`, { scroll: false });
   };
 
   return (

@@ -16,7 +16,7 @@ export function GlobalAddExpenseModal() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Don't render on budget page - it has its own modal
-  const isBudgetPage = pathname === "/dashboard/budget";
+  const isBudgetPage = pathname === "/budget";
 
   // Fetch data when modal opens
   useEffect(() => {
@@ -45,7 +45,7 @@ export function GlobalAddExpenseModal() {
   const handleSuccess = () => {
     closeModal();
     // Navigate to budget tracking page after saving
-    router.push("/dashboard/budget");
+    router.push("/budget");
   };
 
   return (

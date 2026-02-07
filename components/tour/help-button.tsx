@@ -31,18 +31,18 @@ const NEW_USER_TOUR_KEY = "foracle_new_user_tour";
 
 // Map tours to their target pages (pathname only, no query params)
 const TOUR_PATHNAMES: Record<TourName, string> = {
-  overall: "/dashboard",
-  dashboard: "/dashboard",
-  incomes: "/dashboard/user",
-  expenses: "/dashboard/user/expenses",
+  overall: "/overview",
+  dashboard: "/overview",
+  incomes: "/user",
+  expenses: "/expenses",
 };
 
 // Full URLs including query params for navigation
 const TOUR_ROUTES: Record<TourName, string> = {
-  overall: "/dashboard",
-  dashboard: "/dashboard",
-  incomes: "/dashboard/user?tab=incomes",
-  expenses: "/dashboard/user/expenses",
+  overall: "/overview",
+  dashboard: "/overview",
+  incomes: "/user?tab=incomes",
+  expenses: "/expenses",
 };
 
 const TOUR_PAGE_NAMES: Record<TourName, string> = {
@@ -88,7 +88,7 @@ export function HelpButton() {
   useEffect(() => {
     const checkNewUserTour = () => {
       const isNewUser = sessionStorage.getItem(NEW_USER_TOUR_KEY);
-      if (isNewUser && pathname === "/dashboard") {
+      if (isNewUser && pathname === "/overview") {
         console.log("[Tour] New user detected, showing welcome modal");
         sessionStorage.removeItem(NEW_USER_TOUR_KEY);
         setWelcomeModalTour("overall");

@@ -70,8 +70,8 @@ export async function createVehicleAsset(data: {
     isActive: true,
   }).returning();
 
-  revalidatePath("/dashboard/user/assets");
-  revalidatePath("/dashboard/user/expenses");
+  revalidatePath("/assets");
+  revalidatePath("/expenses");
   return newVehicleAsset[0];
 }
 
@@ -174,8 +174,8 @@ export async function updateVehicleAsset(
     .where(and(eq(vehicleAssets.id, id), eq(vehicleAssets.userId, userId)))
     .returning();
 
-  revalidatePath("/dashboard/user/assets");
-  revalidatePath("/dashboard/user/expenses");
+  revalidatePath("/assets");
+  revalidatePath("/expenses");
   return updated[0];
 }
 
@@ -204,6 +204,6 @@ export async function deleteVehicleAsset(id: string) {
   await db.delete(vehicleAssets)
     .where(and(eq(vehicleAssets.id, id), eq(vehicleAssets.userId, userId)));
 
-  revalidatePath("/dashboard/user/assets");
-  revalidatePath("/dashboard/user/expenses");
+  revalidatePath("/assets");
+  revalidatePath("/expenses");
 }
