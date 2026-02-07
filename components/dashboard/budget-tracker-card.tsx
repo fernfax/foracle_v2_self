@@ -52,6 +52,12 @@ function getProgressColor(percentUsed: number): string {
 export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
   const hasCategories = budgetData.length > 0;
 
+  // Calculate totals
+  const totalSpent = budgetData.reduce((sum, cat) => sum + cat.spent, 0);
+  const totalBudget = budgetData.reduce((sum, cat) => sum + cat.monthlyBudget, 0);
+  const overallPercent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const overallProgressColor = getProgressColor(overallPercent);
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-2 pt-4 flex-shrink-0">
@@ -63,6 +69,27 @@ export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
       <CardContent className="flex-1 overflow-y-auto">
         {hasCategories ? (
           <div className="space-y-4">
+            {/* Overall Summary */}
+            <div className="pb-3 border-b border-border">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm font-semibold">Overall</span>
+                <span className={cn(
+                  "text-sm font-semibold",
+                  overallPercent >= 100 ? "text-red-600" : "text-muted-foreground"
+                )}>
+                  {formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}
+                </span>
+              </div>
+              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all", overallProgressColor)}
+                  style={{ width: `${Math.min(overallPercent, 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 text-right">
+                {Math.round(overallPercent)}% used
+              </p>
+            </div>
             {budgetData.map((category) => {
               const Icon = getIconComponent(category.icon, category.categoryName);
               const iconColor = getCategoryIconColor(category.categoryName);

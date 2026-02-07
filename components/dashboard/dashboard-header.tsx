@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, CalendarDays, DollarSign, TrendingUp, Trendi
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUserIncomes, getUserExpenses } from "@/lib/actions/user";
+import { getBudgetSummary } from "@/lib/actions/budget-calculator";
 import { IncomeBreakdownModal } from "@/components/income/income-breakdown-modal";
 import { ExpenseBreakdownModal } from "@/components/expenses/expense-breakdown-modal";
 
@@ -71,6 +72,7 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
   const [slideDirection, setSlideDirection] = useState<SlideDirection>(null);
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [budgetData, setBudgetData] = useState<{ totalBudget: number; totalSpent: number } | null>(null);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
@@ -79,6 +81,15 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
     getUserIncomes().then((data) => setIncomes(data as Income[])).catch(console.error);
     getUserExpenses().then((data) => setExpenses(data as Expense[])).catch(console.error);
   }, []);
+
+  // Fetch budget data when month changes
+  useEffect(() => {
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth() + 1;
+    getBudgetSummary(year, month)
+      .then((data) => setBudgetData({ totalBudget: data.totalBudget, totalSpent: data.totalSpent }))
+      .catch(console.error);
+  }, [selectedMonth]);
 
   // Helper to parse date strings as local dates
   const parseLocalDate = useCallback((dateStr: string) => {
@@ -90,6 +101,13 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
   const isCurrentMonth = useCallback(() => {
     const now = new Date();
     return selectedMonth.getFullYear() === now.getFullYear() && selectedMonth.getMonth() === now.getMonth();
+  }, [selectedMonth]);
+
+  // Check if selected month is in the future
+  const isFutureMonth = useMemo(() => {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    return selectedMonth > currentMonthStart;
   }, [selectedMonth]);
 
   // Handle month change with animation
@@ -308,42 +326,46 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
     <>
       <Card className="w-full" data-tour="primary-metrics">
         <CardHeader className="pb-2 pt-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle className="text-2xl sm:text-3xl font-black">Monthly Overview</CardTitle>
               <CardDescription className="mt-1 text-xs sm:text-sm">
                 Your income, expenses, and savings for the selected month
               </CardDescription>
             </div>
-            <div className="flex flex-col items-center sm:items-end gap-1" data-tour="month-nav">
-              <div className="flex items-center gap-1.5">
-                <Button variant="outline" size="icon" className="h-7 w-7" onClick={goToPreviousMonth} disabled={isCurrentMonth()}>
-                  <ChevronLeft className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-2" data-tour="month-nav">
+              {!isCurrentMonth() && (
+                <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={goToCurrentMonth}>
+                  Current Month
                 </Button>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/50 border min-w-[130px] sm:min-w-[150px] justify-center">
-                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs sm:text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
+              )}
+              <div className="flex items-center justify-between bg-slate-100 rounded-full px-1 py-1 w-[230px]">
+                <button
+                  onClick={goToPreviousMonth}
+                  disabled={isCurrentMonth()}
+                  className="p-1.5 hover:bg-muted rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </button>
+                <div className="flex items-center gap-1.5 px-3">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
                 </div>
-                <Button variant="outline" size="icon" className="h-7 w-7" onClick={goToNextMonth}>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              {/* Fixed height container for Current Month button */}
-              <div className="h-6 flex items-center">
-                {!isCurrentMonth() && (
-                  <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={goToCurrentMonth}>
-                    Current Month
-                  </Button>
-                )}
+                <button
+                  onClick={goToNextMonth}
+                  className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="border-t border-border pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
             {/* Total Nett Income */}
             <div
-              className="py-3 sm:py-0 sm:px-4 first:pt-0 last:pb-0 sm:first:pl-0 sm:last:pr-0 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg h-[90px]"
+              className="py-3 sm:py-0 sm:px-4 first:pt-0 last:pb-0 sm:first:pl-0 sm:last:pr-0 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg"
               onClick={() => setIsIncomeModalOpen(true)}
               data-tour="income-card"
             >
@@ -361,16 +383,15 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
               <p className={`text-xs text-muted-foreground mt-1 ${hasCpfDeductions ? 'visible' : 'invisible'}`}>
                 Gross: ${displayGrossIncome.toLocaleString()}
               </p>
-              <div className={`flex items-center gap-1 mt-1 text-xs ${hasData && incomeChange !== 0 ? 'visible' : 'invisible'} ${incomeChange > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                {incomeChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                <span>{incomeChange > 0 ? "+" : ""}${Math.abs(incomeChange).toLocaleString()}</span>
-                <span className="text-muted-foreground">vs last month</span>
-              </div>
+              {/* Placeholder to match expense column height when budget data is shown */}
+              {budgetData && !isFutureMonth && !hasCpfDeductions && (
+                <p className="text-xs text-muted-foreground invisible">&nbsp;</p>
+              )}
             </div>
 
             {/* Total Expenses */}
             <div
-              className="py-3 sm:py-0 sm:px-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg h-[90px]"
+              className="py-3 sm:py-0 sm:px-4 cursor-pointer hover:bg-muted/30 transition-colors rounded-lg"
               onClick={() => setIsExpenseModalOpen(true)}
             >
               <div className="flex items-center justify-between mb-1">
@@ -384,17 +405,16 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
                   ${displayExpenses.toLocaleString()}
                 </p>
               </div>
-              {/* Placeholder to match income column height */}
-              <p className="text-xs text-muted-foreground mt-1 invisible">&nbsp;</p>
-              <div className={`flex items-center gap-1 mt-1 text-xs ${hasData && expenseChange !== 0 ? 'visible' : 'invisible'} ${expenseChange < 0 ? "text-emerald-600" : "text-red-500"}`}>
-                {expenseChange < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                <span>{expenseChange > 0 ? "+" : ""}${Math.abs(expenseChange).toLocaleString()}</span>
-                <span className="text-muted-foreground">vs last month</span>
-              </div>
+              {/* Budget spent and budget total - hide for future months */}
+              {budgetData && !isFutureMonth && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Budget Tracking: ${budgetData.totalSpent.toLocaleString()}/${budgetData.totalBudget.toLocaleString()}
+                </p>
+              )}
             </div>
 
             {/* Net Savings */}
-            <div className="py-3 sm:py-0 sm:px-4 last:pb-0 sm:last:pr-0 h-[90px]">
+            <div className="py-3 sm:py-0 sm:px-4 last:pb-0 sm:last:pr-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs sm:text-sm font-medium text-muted-foreground">Net Savings</span>
                 <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-100">
@@ -406,14 +426,10 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
                   ${displaySavings.toLocaleString()}
                 </p>
               </div>
-              {/* Placeholder to match income column height */}
-              <p className="text-xs text-muted-foreground mt-1 invisible">&nbsp;</p>
-              <div className={`flex items-center gap-1 mt-1 text-xs ${hasData && savingsChange !== 0 ? 'visible' : 'invisible'} ${savingsChange > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                {savingsChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                <span>{savingsChange > 0 ? "+" : ""}${Math.abs(savingsChange).toLocaleString()}</span>
-                {savingsChangePercent !== 0 && <span>({savingsChangePercent > 0 ? "+" : ""}{savingsChangePercent.toFixed(1)}%)</span>}
-                <span className="text-muted-foreground">vs last month</span>
-              </div>
+              {/* Placeholder to match expense column height when budget data is shown */}
+              {budgetData && !isFutureMonth && (
+                <p className="text-xs text-muted-foreground mt-1 invisible">&nbsp;</p>
+              )}
             </div>
           </div>
         </CardContent>
