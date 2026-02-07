@@ -104,7 +104,7 @@ export async function createIncome(data: {
     isActive: true,
   }).returning();
 
-  revalidatePath("/dashboard/user");
+  revalidatePath("/user");
   return newIncome[0];
 }
 
@@ -207,7 +207,7 @@ export async function updateIncome(
     .where(and(eq(incomes.id, id), eq(incomes.userId, userId)))
     .returning();
 
-  revalidatePath("/dashboard/user");
+  revalidatePath("/user");
   return updated[0];
 }
 
@@ -241,7 +241,7 @@ export async function deleteIncome(id: string) {
 
   await db.delete(incomes).where(and(eq(incomes.id, id), eq(incomes.userId, userId)));
 
-  revalidatePath("/dashboard/user");
+  revalidatePath("/user");
   return { success: true };
 }
 
@@ -268,7 +268,7 @@ export async function toggleIncomeStatus(id: string) {
     .where(and(eq(incomes.id, id), eq(incomes.userId, userId)))
     .returning();
 
-  revalidatePath("/dashboard/user");
+  revalidatePath("/user");
   return updated[0];
 }
 

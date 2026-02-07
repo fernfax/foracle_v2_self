@@ -9,7 +9,7 @@ import { useAddExpense } from "./add-expense-context";
 export function FloatingAddButton() {
   const pathname = usePathname();
   const { openModal } = useAddExpense();
-  const isBudgetPage = pathname === "/dashboard/budget";
+  const isBudgetPage = pathname === "/budget";
 
   const handleClick = () => {
     openModal();

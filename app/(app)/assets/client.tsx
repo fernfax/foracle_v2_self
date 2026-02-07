@@ -67,7 +67,7 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    router.push(`/dashboard/user/assets?tab=${value}`, { scroll: false });
+    router.push(`/assets?tab=${value}`, { scroll: false });
   };
 
   return (

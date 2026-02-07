@@ -58,7 +58,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
       >
         <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-[70px] flex items-center">
           {/* Logo - Only visible on mobile */}
-          <Link href="/dashboard" className="flex items-center md:hidden">
+          <Link href="/overview" className="flex items-center md:hidden">
             <Image
               src="/wordmark-400.png"
               alt="Foracle"
@@ -79,7 +79,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
           {/* Right side icons */}
           <div className="flex items-center gap-4 ml-auto">
             <Link
-              href="/dashboard/mobile-guide"
+              href="/mobile-guide"
               className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
               title="Add to Home Screen Guide"
               data-tour="mobile-guide-btn"

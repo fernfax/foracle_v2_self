@@ -5,7 +5,7 @@ import { TourProvider } from "@/components/tour/tour-provider";
 import { AddExpenseProvider } from "@/components/budget";
 import { DashboardShell } from "@/components/sidebar/dashboard-shell";
 
-export default async function DashboardLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;

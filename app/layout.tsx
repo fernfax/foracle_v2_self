@@ -36,8 +36,8 @@ export default function RootLayout({
           colorPrimary: "#6366f1",
         },
       }}
-      signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
+      signInFallbackRedirectUrl="/overview"
+      signUpFallbackRedirectUrl="/overview"
     >
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} ${inter.variable} antialiased`}>

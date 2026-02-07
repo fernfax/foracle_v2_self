@@ -152,7 +152,7 @@ export function OnboardingWizard() {
   }, []);
 
   const handleComplete = useCallback(() => {
-    router.push("/dashboard");
+    router.push("/overview");
   }, [router]);
 
   const config = STEP_CONFIG[currentStep - 1];

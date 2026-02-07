@@ -70,9 +70,9 @@ export async function createGoal(data: {
     isActive: true,
   }).returning();
 
-  revalidatePath("/dashboard/goals");
-  revalidatePath("/dashboard/user/expenses");
-  revalidatePath("/dashboard");
+  revalidatePath("/goals");
+  revalidatePath("/expenses");
+  revalidatePath("/overview");
   return newGoal[0];
 }
 
@@ -216,9 +216,9 @@ export async function updateGoal(
     .where(and(eq(goals.id, id), eq(goals.userId, userId)))
     .returning();
 
-  revalidatePath("/dashboard/goals");
-  revalidatePath("/dashboard/user/expenses");
-  revalidatePath("/dashboard");
+  revalidatePath("/goals");
+  revalidatePath("/expenses");
+  revalidatePath("/overview");
   return updated[0];
 }
 
@@ -240,8 +240,8 @@ export async function markGoalAchieved(id: string) {
     throw new Error("Goal not found");
   }
 
-  revalidatePath("/dashboard/goals");
-  revalidatePath("/dashboard");
+  revalidatePath("/goals");
+  revalidatePath("/overview");
   return updated[0];
 }
 
@@ -270,7 +270,7 @@ export async function deleteGoal(id: string) {
   await db.delete(goals)
     .where(and(eq(goals.id, id), eq(goals.userId, userId)));
 
-  revalidatePath("/dashboard/goals");
-  revalidatePath("/dashboard/user/expenses");
-  revalidatePath("/dashboard");
+  revalidatePath("/goals");
+  revalidatePath("/expenses");
+  revalidatePath("/overview");
 }

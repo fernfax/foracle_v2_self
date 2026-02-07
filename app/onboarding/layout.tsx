@@ -19,7 +19,7 @@ export default async function OnboardingLayout({
   // Redirect to dashboard if already onboarded
   const isOnboarded = await checkOnboardingStatus();
   if (isOnboarded) {
-    redirect("/dashboard");
+    redirect("/overview");
   }
 
   return (
