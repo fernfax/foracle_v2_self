@@ -512,21 +512,14 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
 
         {/* Investment Toggle */}
         {hasInvestments && (
-          <div className="flex items-center justify-between mt-3 sm:mt-4 p-3 bg-teal-50 rounded-lg border border-teal-100">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-teal-600" />
-              <div>
-                <Label
-                  htmlFor="includeInvestments"
-                  className="text-sm font-medium text-teal-900 cursor-pointer"
-                >
-                  Include Investment Projection
-                </Label>
-                <p className="text-xs text-teal-700">
-                  Add projected investment growth to your balance
-                </p>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 mt-3 sm:mt-4 px-3 py-2 bg-teal-50 rounded-lg border border-teal-100 w-fit">
+            <TrendingUp className="h-4 w-4 text-teal-600 flex-shrink-0" />
+            <Label
+              htmlFor="includeInvestments"
+              className="text-sm font-medium text-teal-900 cursor-pointer whitespace-nowrap"
+            >
+              Include Investments
+            </Label>
             <Switch
               id="includeInvestments"
               checked={includeInvestments}
