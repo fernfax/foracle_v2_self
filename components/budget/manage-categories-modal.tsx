@@ -51,11 +51,9 @@ function getCategoryFrequencies(expenses: ExpenseItem[]): string {
   return Array.from(frequencies).map(formatFrequency).join(", ");
 }
 
-// Calculate total amount for selected expenses in a category
-function getSelectedTotal(expenses: ExpenseItem[], selectedIds: Set<string>): number {
-  return expenses
-    .filter((exp) => selectedIds.has(exp.id))
-    .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+// Calculate total amount for all expenses in a category
+function getCategoryTotal(expenses: ExpenseItem[]): number {
+  return expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
 }
 
 // Hook to detect desktop viewport
@@ -199,7 +197,7 @@ export function ManageCategoriesModal({
           const isExpanded = expandedCategories.has(category.id);
           const frequencies = hasExpenses ? getCategoryFrequencies(categoryExpenses) : "";
           const checkState = getCategoryCheckState(categoryExpenses);
-          const selectedTotal = getSelectedTotal(categoryExpenses, selectedExpenseIds);
+          const categoryTotal = getCategoryTotal(categoryExpenses);
 
           return (
             <div key={category.id}>
@@ -237,8 +235,14 @@ export function ManageCategoriesModal({
                 )}
 
                 {/* Icon */}
-                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", bgColor)}>
-                  <Icon className={cn("h-5 w-5", iconColor)} />
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center",
+                  checkState === "unchecked" ? "bg-muted" : bgColor
+                )}>
+                  <Icon className={cn(
+                    "h-5 w-5",
+                    checkState === "unchecked" ? "text-muted-foreground" : iconColor
+                  )} />
                 </div>
 
                 {/* Category Name & Frequency */}
@@ -246,17 +250,26 @@ export function ManageCategoriesModal({
                   className="flex-1 cursor-pointer"
                   onClick={() => hasExpenses && handleToggleCategory(categoryExpenses)}
                 >
-                  <div className="font-medium">{category.name}</div>
+                  <div className={cn(
+                    "font-medium",
+                    checkState === "unchecked" && "text-gray-400"
+                  )}>{category.name}</div>
                   {frequencies && (
-                    <div className="text-sm text-muted-foreground">{frequencies}</div>
+                    <div className={cn(
+                      "text-sm",
+                      checkState === "unchecked" ? "text-gray-400" : "text-muted-foreground"
+                    )}>{frequencies}</div>
                   )}
                 </div>
 
-                {/* Total Amount (only selected) */}
+                {/* Total Amount */}
                 {hasExpenses && (
                   <div className="text-right">
-                    <div className="font-semibold">
-                      ${selectedTotal.toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <div className={cn(
+                      "font-semibold",
+                      checkState === "unchecked" && "text-gray-400"
+                    )}>
+                      ${categoryTotal.toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                   </div>
                 )}

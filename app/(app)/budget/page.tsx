@@ -29,7 +29,7 @@ export default async function BudgetPage() {
       getDailyExpensesForMonth(year, month),
       getBudgetSummary(year, month),
       getTodaySpending(),
-      getAllExpensesGroupedByCategory(),
+      getAllExpensesGroupedByCategory(year, month),
     ]);
 
   return (

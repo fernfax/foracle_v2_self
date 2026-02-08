@@ -92,17 +92,19 @@ export function BudgetClient({
   const fetchMonthData = useCallback(async (newYear: number, newMonth: number) => {
     setIsLoading(true);
     try {
-      const [budgetResults, expensesResults, summaryResults, spendingResults] = await Promise.all([
+      const [budgetResults, expensesResults, summaryResults, spendingResults, expensesByCategoryResults] = await Promise.all([
         getBudgetVsActual(newYear, newMonth),
         getDailyExpensesForMonth(newYear, newMonth),
         getBudgetSummary(newYear, newMonth),
         getDailySpendingByDay(newYear, newMonth),
+        getAllExpensesGroupedByCategory(newYear, newMonth),
       ]);
 
       setBudgetData(budgetResults);
       setDailyExpenses(expensesResults);
       setBudgetSummary(summaryResults);
       setDailySpendingData(spendingResults);
+      setExpensesByCategory(expensesByCategoryResults);
 
       // Only fetch today's spending if viewing current month
       if (isCurrentMonth(newYear, newMonth)) {
@@ -170,7 +172,7 @@ export function BudgetClient({
       getExpenseCategories(),
       getBudgetVsActual(year, month),
       getBudgetSummary(year, month),
-      getAllExpensesGroupedByCategory(),
+      getAllExpensesGroupedByCategory(year, month),
     ]);
     setCategories(newCategories);
     setBudgetData(newBudgetData);
