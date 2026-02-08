@@ -220,8 +220,13 @@ export type ExpenseItem = {
 
 /**
  * Get all expenses grouped by category for the authenticated user
+ * When year/month are provided, one-time expenses are filtered to only show
+ * those occurring in that specific month
  */
-export async function getAllExpensesGroupedByCategory(): Promise<Record<string, ExpenseItem[]>> {
+export async function getAllExpensesGroupedByCategory(
+  year?: number,
+  month?: number
+): Promise<Record<string, ExpenseItem[]>> {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
@@ -235,17 +240,37 @@ export async function getAllExpensesGroupedByCategory(): Promise<Record<string, 
       frequency: expenses.frequency,
       category: expenses.category,
       trackedInBudget: expenses.trackedInBudget,
+      startDate: expenses.startDate,
     })
     .from(expenses)
     .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
 
-  // Group expenses by category
+  // Group expenses by category, filtering one-time expenses by month
   const grouped: Record<string, ExpenseItem[]> = {};
   for (const expense of allExpenses) {
+    // Filter one-time expenses: only include if they match the specified month
+    if (expense.frequency.toLowerCase() === "one-time") {
+      if (year && month && expense.startDate) {
+        const expenseDate = new Date(expense.startDate);
+        if (expenseDate.getFullYear() !== year || expenseDate.getMonth() + 1 !== month) {
+          continue; // Skip one-time expenses not in the current month
+        }
+      } else if (year && month) {
+        continue; // Skip one-time expenses without a start date when filtering by month
+      }
+    }
+
     if (!grouped[expense.category]) {
       grouped[expense.category] = [];
     }
-    grouped[expense.category].push(expense);
+    grouped[expense.category].push({
+      id: expense.id,
+      name: expense.name,
+      amount: expense.amount,
+      frequency: expense.frequency,
+      category: expense.category,
+      trackedInBudget: expense.trackedInBudget,
+    });
   }
 
   return grouped;

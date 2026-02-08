@@ -34,10 +34,27 @@ export interface BudgetVsActual {
 }
 
 /**
+ * Check if a one-time expense falls within a specific month
+ */
+function isOneTimeExpenseInMonth(
+  expenseStartDate: string | null,
+  year: number,
+  month: number
+): boolean {
+  if (!expenseStartDate) return false;
+  const date = new Date(expenseStartDate);
+  return date.getFullYear() === year && date.getMonth() + 1 === month;
+}
+
+/**
  * Calculate monthly budget per category from recurring expenses
  * Only includes expenses that are tracked in budget
+ * For a specific month, also includes one-time expenses that occur in that month
  */
-export async function calculateCategoryBudgets(): Promise<CategoryBudget[]> {
+export async function calculateCategoryBudgets(
+  year?: number,
+  month?: number
+): Promise<CategoryBudget[]> {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -74,22 +91,36 @@ export async function calculateCategoryBudgets(): Promise<CategoryBudget[]> {
 
     userExpenses.forEach((expense) => {
       const amount = parseFloat(expense.amount);
-      const monthlyAmount = calculateMonthlyAmount(
-        amount,
-        expense.frequency,
-        expense.customMonths
-      );
+      const isOneTime = expense.frequency.toLowerCase() === "one-time";
 
-      if (!categoryBudgets[expense.category]) {
-        const catInfo = categoryIconMap[expense.category];
-        categoryBudgets[expense.category] = {
-          categoryId: catInfo?.id || null,
-          monthlyBudget: 0,
-          icon: catInfo?.icon || null,
-        };
+      let monthlyAmount: number;
+      if (isOneTime) {
+        // One-time expenses: include full amount only if they fall in the specified month
+        if (year && month && isOneTimeExpenseInMonth(expense.startDate, year, month)) {
+          monthlyAmount = amount;
+        } else {
+          monthlyAmount = 0;
+        }
+      } else {
+        // Recurring expenses: calculate normal monthly amount
+        monthlyAmount = calculateMonthlyAmount(
+          amount,
+          expense.frequency,
+          expense.customMonths
+        );
       }
 
-      categoryBudgets[expense.category].monthlyBudget += monthlyAmount;
+      if (monthlyAmount > 0) {
+        if (!categoryBudgets[expense.category]) {
+          const catInfo = categoryIconMap[expense.category];
+          categoryBudgets[expense.category] = {
+            categoryId: catInfo?.id || null,
+            monthlyBudget: 0,
+            icon: catInfo?.icon || null,
+          };
+        }
+        categoryBudgets[expense.category].monthlyBudget += monthlyAmount;
+      }
     });
 
     return Object.entries(categoryBudgets).map(([categoryName, data]) => ({
@@ -106,8 +137,12 @@ export async function calculateCategoryBudgets(): Promise<CategoryBudget[]> {
 
 /**
  * Calculate total monthly budget from all tracked recurring expenses
+ * For a specific month, also includes one-time expenses that occur in that month
  */
-export async function getTotalMonthlyBudget(): Promise<number> {
+export async function getTotalMonthlyBudget(
+  year?: number,
+  month?: number
+): Promise<number> {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -126,11 +161,25 @@ export async function getTotalMonthlyBudget(): Promise<number> {
 
     return userExpenses.reduce((total, expense) => {
       const amount = parseFloat(expense.amount);
-      const monthlyAmount = calculateMonthlyAmount(
-        amount,
-        expense.frequency,
-        expense.customMonths
-      );
+      const isOneTime = expense.frequency.toLowerCase() === "one-time";
+
+      let monthlyAmount: number;
+      if (isOneTime) {
+        // One-time expenses: include full amount only if they fall in the specified month
+        if (year && month && isOneTimeExpenseInMonth(expense.startDate, year, month)) {
+          monthlyAmount = amount;
+        } else {
+          monthlyAmount = 0;
+        }
+      } else {
+        // Recurring expenses: calculate normal monthly amount
+        monthlyAmount = calculateMonthlyAmount(
+          amount,
+          expense.frequency,
+          expense.customMonths
+        );
+      }
+
       return total + monthlyAmount;
     }, 0);
   } catch (error) {
@@ -179,7 +228,8 @@ export async function getBudgetVsActual(
       .where(eq(expenseCategories.userId, userId));
 
     // Get category budgets (already filtered by tracked expenses)
-    const categoryBudgets = await calculateCategoryBudgets();
+    // Pass year/month to include one-time expenses for this specific month
+    const categoryBudgets = await calculateCategoryBudgets(year, month);
 
     // Get actual spending for the month
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
@@ -271,7 +321,8 @@ export async function getBudgetSummary(year: number, month: number) {
     // Get category names that have tracked expenses
     const trackedCategoryNames = await getTrackedCategoryNames(userId);
 
-    const totalBudget = await getTotalMonthlyBudget();
+    // Pass year/month to include one-time expenses for this specific month
+    const totalBudget = await getTotalMonthlyBudget(year, month);
 
     // Get total spending for the month - only for tracked categories
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
