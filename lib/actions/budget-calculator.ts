@@ -302,8 +302,13 @@ export async function getBudgetSummary(year: number, month: number) {
     const daysInMonth = lastDay;
     const sgtDate = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
     const currentDay = parseInt(sgtDate.split("-")[2], 10);
-    const dailyBudget = totalBudget / daysInMonth;
-    const expectedSpentByToday = dailyBudget * currentDay;
+
+    // Daily target = remaining budget / days left (including today)
+    const daysLeftIncludingToday = daysInMonth - currentDay + 1;
+    const dailyBudget = remaining > 0 ? remaining / daysLeftIncludingToday : 0;
+
+    // Expected spent by today uses the original pro-rata calculation for pacing
+    const expectedSpentByToday = (totalBudget / daysInMonth) * currentDay;
 
     // Determine pacing status
     let pacingStatus: "under" | "on-track" | "over" = "on-track";
