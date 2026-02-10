@@ -307,6 +307,19 @@ export const investmentPolicies = pgTable("investment_policies", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Budget Shifts table - for transferring budget between categories within a month
+export const budgetShifts = pgTable("budget_shifts", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(), // 1-12
+  fromCategoryName: varchar("from_category_name", { length: 100 }).notNull(), // Source category
+  toCategoryName: varchar("to_category_name", { length: 100 }).notNull(), // Destination category
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  note: text("note"), // Optional note explaining the shift
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
@@ -323,6 +336,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   currentHoldings: many(currentHoldings),
   quickLinks: many(quickLinks),
   investmentPolicies: many(investmentPolicies),
+  budgetShifts: many(budgetShifts),
 }));
 
 export const familyMembersRelations = relations(familyMembers, ({ one, many }) => ({
@@ -449,6 +463,13 @@ export const quickLinksRelations = relations(quickLinks, ({ one }) => ({
 export const investmentPoliciesRelations = relations(investmentPolicies, ({ one }) => ({
   user: one(users, {
     fields: [investmentPolicies.userId],
+    references: [users.id],
+  }),
+}));
+
+export const budgetShiftsRelations = relations(budgetShifts, ({ one }) => ({
+  user: one(users, {
+    fields: [budgetShifts.userId],
     references: [users.id],
   }),
 }));

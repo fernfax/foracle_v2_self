@@ -12,6 +12,7 @@ import {
   DailySpendingGraphModal,
   ExpenseHistoryModal,
   ManageCategoriesModal,
+  BudgetShiftHistory,
 } from "@/components/budget";
 import { DailySpendingChart } from "@/components/budget/daily-spending-chart";
 import { CategoryBudgetBarChart } from "@/components/budget/category-budget-bar-chart";
@@ -20,6 +21,7 @@ import { getBudgetVsActual, getBudgetSummary } from "@/lib/actions/budget-calcul
 import { getDailyExpensesForMonth, getTodaySpending, getDailySpendingByDay, type DailyExpense } from "@/lib/actions/daily-expenses";
 import { isCurrentMonth } from "@/lib/budget-utils";
 import { getExpenseCategories, getAllExpensesGroupedByCategory, type ExpenseCategory, type ExpenseItem } from "@/lib/actions/expense-categories";
+import { getBudgetShiftsForMonth, type BudgetShift } from "@/lib/actions/budget-shifts";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
 
 interface BudgetClientProps {
@@ -39,6 +41,7 @@ interface BudgetClientProps {
     currentDay: number;
   };
   initialTodaySpent: number;
+  initialBudgetShifts: BudgetShift[];
   initialYear: number;
   initialMonth: number;
 }
@@ -50,6 +53,7 @@ export function BudgetClient({
   initialExpensesByCategory,
   initialBudgetSummary,
   initialTodaySpent,
+  initialBudgetShifts,
   initialYear,
   initialMonth,
 }: BudgetClientProps) {
@@ -64,6 +68,7 @@ export function BudgetClient({
   const [expensesByCategory, setExpensesByCategory] = useState(initialExpensesByCategory);
   const [budgetSummary, setBudgetSummary] = useState(initialBudgetSummary);
   const [todaySpent, setTodaySpent] = useState(initialTodaySpent);
+  const [budgetShifts, setBudgetShifts] = useState(initialBudgetShifts);
   const [isLoading, setIsLoading] = useState(false);
 
   // Modal state
@@ -92,12 +97,13 @@ export function BudgetClient({
   const fetchMonthData = useCallback(async (newYear: number, newMonth: number) => {
     setIsLoading(true);
     try {
-      const [budgetResults, expensesResults, summaryResults, spendingResults, expensesByCategoryResults] = await Promise.all([
+      const [budgetResults, expensesResults, summaryResults, spendingResults, expensesByCategoryResults, shiftsResults] = await Promise.all([
         getBudgetVsActual(newYear, newMonth),
         getDailyExpensesForMonth(newYear, newMonth),
         getBudgetSummary(newYear, newMonth),
         getDailySpendingByDay(newYear, newMonth),
         getAllExpensesGroupedByCategory(newYear, newMonth),
+        getBudgetShiftsForMonth(newYear, newMonth),
       ]);
 
       setBudgetData(budgetResults);
@@ -105,6 +111,7 @@ export function BudgetClient({
       setBudgetSummary(summaryResults);
       setDailySpendingData(spendingResults);
       setExpensesByCategory(expensesByCategoryResults);
+      setBudgetShifts(shiftsResults);
 
       // Only fetch today's spending if viewing current month
       if (isCurrentMonth(newYear, newMonth)) {
@@ -238,6 +245,12 @@ export function BudgetClient({
               Manage Categories
             </Button>
           </div>
+
+          {/* Budget Shift History */}
+          <BudgetShiftHistory
+            shifts={budgetShifts}
+            onShiftDeleted={() => fetchMonthData(year, month)}
+          />
         </div>
 
         {/* Right: Bar Chart + Recent Expenses (desktop only) */}
@@ -284,6 +297,8 @@ export function BudgetClient({
         onSuccess={handleExpenseSuccess}
         editingExpense={editingExpense}
         preselectedCategoryName={preselectedCategoryName}
+        year={year}
+        month={month}
       />
 
       {/* Daily Spending Graph Modal */}

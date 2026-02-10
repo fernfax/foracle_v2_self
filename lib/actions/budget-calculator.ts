@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { expenses, expenseCategories, dailyExpenses } from "@/db/schema";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { calculateMonthlyAmount } from "@/lib/expense-calculator";
+import { getBudgetAdjustmentsForMonth } from "@/lib/actions/budget-shifts";
 
 // Frequency multipliers for converting to monthly
 const FREQUENCY_MULTIPLIERS: Record<string, number> = {
@@ -231,6 +232,9 @@ export async function getBudgetVsActual(
     // Pass year/month to include one-time expenses for this specific month
     const categoryBudgets = await calculateCategoryBudgets(year, month);
 
+    // Get budget shift adjustments for this month
+    const budgetAdjustments = await getBudgetAdjustmentsForMonth(year, month);
+
     // Get actual spending for the month
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
     const lastDay = new Date(year, month, 0).getDate();
@@ -259,18 +263,21 @@ export async function getBudgetVsActual(
       }
     });
 
-    // Combine budgets with actual spending
+    // Combine budgets with actual spending, applying budget shift adjustments
     const result: BudgetVsActual[] = categoryBudgets.map((budget) => {
       const spent = spendingMap[budget.categoryName] || 0;
-      const remaining = budget.monthlyBudget - spent;
+      // Apply budget shift adjustment (positive = increased budget, negative = decreased)
+      const adjustment = budgetAdjustments[budget.categoryName] || 0;
+      const adjustedBudget = budget.monthlyBudget + adjustment;
+      const remaining = adjustedBudget - spent;
       const percentUsed =
-        budget.monthlyBudget > 0 ? (spent / budget.monthlyBudget) * 100 : 0;
+        adjustedBudget > 0 ? (spent / adjustedBudget) * 100 : 0;
 
       return {
         categoryName: budget.categoryName,
         categoryId: budget.categoryId,
         icon: budget.icon,
-        monthlyBudget: budget.monthlyBudget,
+        monthlyBudget: adjustedBudget,
         spent,
         remaining,
         percentUsed,
@@ -282,14 +289,17 @@ export async function getBudgetVsActual(
       if (!result.find((r) => r.categoryName === categoryName)) {
         // Find the category info
         const cat = categories.find((c) => c.name === categoryName);
+        // Check if this category received budget through shifts
+        const adjustment = budgetAdjustments[categoryName] || 0;
+        const adjustedBudget = Math.max(0, adjustment); // Only positive adjustments create budget
         result.push({
           categoryName,
           categoryId: cat?.id || null,
           icon: cat?.icon || null,
-          monthlyBudget: 0,
+          monthlyBudget: adjustedBudget,
           spent,
-          remaining: -spent,
-          percentUsed: 100,
+          remaining: adjustedBudget - spent,
+          percentUsed: adjustedBudget > 0 ? (spent / adjustedBudget) * 100 : 100,
         });
       }
     });

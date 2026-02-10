@@ -21,6 +21,7 @@ import { formatBudgetCurrency } from "@/lib/budget-utils";
 import type { ExpenseCategory } from "@/lib/actions/expense-categories";
 import { getSubcategoriesByCategory, addSubcategory, updateSubcategory, deleteSubcategory, type ExpenseSubcategory } from "@/lib/actions/expense-subcategories";
 import { SubcategoryManageModal } from "./subcategory-manage-modal";
+import { AdjustBudgetModal } from "./adjust-budget-modal";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -40,6 +41,8 @@ interface AddExpenseModalProps {
   onSuccess?: () => void;
   editingExpense?: DailyExpense | null;
   preselectedCategoryName?: string | null;
+  year?: number;
+  month?: number;
 }
 
 export function AddExpenseModal({
@@ -51,6 +54,8 @@ export function AddExpenseModal({
   onSuccess,
   editingExpense,
   preselectedCategoryName,
+  year = new Date().getFullYear(),
+  month = new Date().getMonth() + 1,
 }: AddExpenseModalProps) {
   const [amount, setAmount] = useState("0");
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | null>(null);
@@ -62,6 +67,7 @@ export function AddExpenseModal({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [subcategoryModalOpen, setSubcategoryModalOpen] = useState(false);
+  const [adjustBudgetModalOpen, setAdjustBudgetModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("SGD");
   const [exchangeRate, setExchangeRate] = useState<number>(1);
   const [customRate, setCustomRate] = useState<number | undefined>(undefined);
@@ -398,6 +404,17 @@ export function AddExpenseModal({
                 ).toFixed(0)}
                 %)
               </div>
+              {/* Adjust Budget Button */}
+              <div className="text-center pt-1">
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-primary h-auto p-0"
+                  onClick={() => setAdjustBudgetModalOpen(true)}
+                >
+                  + Adjust Budget
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -447,6 +464,19 @@ export function AddExpenseModal({
           onAdd={handleAddSubcategory}
           onEdit={handleEditSubcategory}
           onDelete={handleDeleteSubcategory}
+        />
+      )}
+
+      {/* Adjust Budget Modal */}
+      {selectedCategory && (
+        <AdjustBudgetModal
+          open={adjustBudgetModalOpen}
+          onOpenChange={setAdjustBudgetModalOpen}
+          targetCategory={selectedCategory.name}
+          budgetData={budgetData}
+          year={year}
+          month={month}
+          onSuccess={onSuccess}
         />
       )}
     </Drawer>

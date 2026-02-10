@@ -17,3 +17,5 @@ export { CurrencySelector } from "./currency-selector";
 export { DailySpendingChart } from "./daily-spending-chart";
 export { CategoryBudgetBarChart } from "./category-budget-bar-chart";
 export { RecentExpensesList } from "./recent-expenses-list";
+export { AdjustBudgetModal } from "./adjust-budget-modal";
+export { BudgetShiftHistory } from "./budget-shift-history";
