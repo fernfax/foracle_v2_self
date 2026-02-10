@@ -312,12 +312,16 @@ export function ManageCategoriesModal({
                       >
                         <Checkbox
                           checked={isSelected}
-                          onCheckedChange={() => handleToggleExpense(expense.id)}
-                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
                         />
                         <div className="flex-1">
-                          <span className="font-medium">{expense.name}</span>
-                          <span className="text-muted-foreground">
+                          <span className={cn(
+                            "font-medium",
+                            !isSelected && "text-gray-400"
+                          )}>{expense.name}</span>
+                          <span className={cn(
+                            !isSelected ? "text-gray-400" : "text-muted-foreground"
+                          )}>
                             {" "}${parseFloat(expense.amount).toLocaleString("en-SG", { minimumFractionDigits: 2 })} &bull; {formatFrequency(expense.frequency)}
                           </span>
                         </div>
@@ -398,7 +402,7 @@ export function ManageCategoriesModal({
         </DrawerBody>
 
         {/* Footer with buttons */}
-        <DrawerFooter>
+        <DrawerFooter className="pb-8">
           {footerButtons}
         </DrawerFooter>
       </DrawerContent>
