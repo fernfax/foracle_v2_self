@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { budgetShifts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 
 export interface BudgetShift {
   id: string;
@@ -46,7 +46,7 @@ export async function createBudgetShift(data: {
       return { success: false, error: "Source and destination categories must be different" };
     }
 
-    const id = uuidv4();
+    const id = randomUUID();
     const [shift] = await db
       .insert(budgetShifts)
       .values({
