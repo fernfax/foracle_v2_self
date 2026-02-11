@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp, User, Bot, Database } from "lucide-react";
 
@@ -15,8 +17,6 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
   const [showDataUsed, setShowDataUsed] = useState(false);
   const isUser = role === "user";
 
-  // Extract "Data used" section from content if present
-  const dataUsedMatch = content.match(/\*\*Data used:\*\*\s*`([^`]+)`/);
   const hasDataUsed = toolsUsed && toolsUsed.length > 0;
 
   // Remove "Data used" section from displayed content (we'll show it separately)
@@ -27,7 +27,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
   return (
     <div
       className={cn(
-        "flex gap-3 px-4 py-3",
+        "flex gap-3 px-4 py-4",
         isUser ? "bg-muted/30" : "bg-background"
       )}
     >
@@ -42,7 +42,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
       </div>
 
       {/* Content */}
-      <div className="flex-1 space-y-2 overflow-hidden">
+      <div className="flex-1 min-w-0 space-y-3 overflow-hidden">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">
             {isUser ? "You" : "Foracle Assistant"}
@@ -54,17 +54,155 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
           )}
         </div>
 
-        {/* Message content with markdown-style formatting */}
-        <div className="prose prose-sm max-w-none text-foreground">
-          <MessageContent content={displayContent} />
+        {/* Message content with react-markdown */}
+        <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              // Headings
+              h1: ({ children }) => (
+                <h1 className="text-xl font-bold mt-6 mb-3 first:mt-0 text-foreground">
+                  {children}
+                </h1>
+              ),
+              h2: ({ children }) => (
+                <h2 className="text-lg font-semibold mt-5 mb-2 first:mt-0 text-foreground">
+                  {children}
+                </h2>
+              ),
+              h3: ({ children }) => (
+                <h3 className="text-base font-semibold mt-4 mb-2 first:mt-0 text-foreground">
+                  {children}
+                </h3>
+              ),
+              h4: ({ children }) => (
+                <h4 className="text-sm font-semibold mt-3 mb-1 text-muted-foreground">
+                  {children}
+                </h4>
+              ),
+
+              // Paragraphs
+              p: ({ children }) => (
+                <p className="text-sm leading-relaxed mb-3 last:mb-0 text-foreground">
+                  {children}
+                </p>
+              ),
+
+              // Lists
+              ul: ({ children }) => (
+                <ul className="my-3 ml-4 space-y-1.5 text-sm list-none">
+                  {children}
+                </ul>
+              ),
+              ol: ({ children }) => (
+                <ol className="my-3 ml-4 space-y-2 text-sm list-none counter-reset-item">
+                  {children}
+                </ol>
+              ),
+              li: ({ children }) => (
+                <li className="flex items-start gap-2 text-foreground">
+                  <span className="flex-shrink-0 h-1.5 w-1.5 rounded-full bg-foreground/50 mt-2" />
+                  <span className="flex-1">{children}</span>
+                </li>
+              ),
+
+              // Strong/Bold
+              strong: ({ children }) => (
+                <strong className="font-semibold text-foreground">{children}</strong>
+              ),
+
+              // Emphasis/Italic
+              em: ({ children }) => (
+                <em className="italic">{children}</em>
+              ),
+
+              // Code
+              code: ({ children, className }) => {
+                const isInline = !className;
+                if (isInline) {
+                  return (
+                    <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono text-foreground">
+                      {children}
+                    </code>
+                  );
+                }
+                return (
+                  <code className={cn("text-xs font-mono", className)}>
+                    {children}
+                  </code>
+                );
+              },
+
+              // Code blocks
+              pre: ({ children }) => (
+                <pre className="my-3 overflow-x-auto rounded-lg bg-muted p-3 text-xs">
+                  {children}
+                </pre>
+              ),
+
+              // Tables
+              table: ({ children }) => (
+                <div className="my-4 overflow-x-auto rounded-lg border">
+                  <table className="min-w-full text-sm divide-y divide-border">
+                    {children}
+                  </table>
+                </div>
+              ),
+              thead: ({ children }) => (
+                <thead className="bg-muted/50">{children}</thead>
+              ),
+              tbody: ({ children }) => (
+                <tbody className="divide-y divide-border">{children}</tbody>
+              ),
+              tr: ({ children }) => (
+                <tr className="hover:bg-muted/30 transition-colors">{children}</tr>
+              ),
+              th: ({ children }) => (
+                <th className="px-3 py-2 text-left text-xs font-semibold text-foreground whitespace-nowrap">
+                  {children}
+                </th>
+              ),
+              td: ({ children }) => (
+                <td className="px-3 py-2 text-sm text-foreground whitespace-nowrap">
+                  {children}
+                </td>
+              ),
+
+              // Horizontal rule
+              hr: () => (
+                <hr className="my-4 border-border" />
+              ),
+
+              // Blockquote
+              blockquote: ({ children }) => (
+                <blockquote className="my-3 border-l-4 border-emerald-500 pl-4 italic text-muted-foreground">
+                  {children}
+                </blockquote>
+              ),
+
+              // Links
+              a: ({ href, children }) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-600 hover:text-emerald-700 underline"
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {displayContent}
+          </ReactMarkdown>
         </div>
 
         {/* Data Used collapsible section */}
         {hasDataUsed && (
-          <div className="mt-3 rounded-md border bg-muted/50">
+          <div className="mt-4 rounded-lg border bg-muted/30">
             <button
               onClick={() => setShowDataUsed(!showDataUsed)}
-              className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <span className="flex items-center gap-2">
                 <Database className="h-3.5 w-3.5" />
@@ -78,13 +216,13 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
             </button>
 
             {showDataUsed && (
-              <div className="border-t px-3 py-2">
-                <ul className="space-y-1">
+              <div className="border-t px-3 py-2.5">
+                <ul className="space-y-1.5">
                   {toolsUsed.map((tool, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      <code className="rounded bg-muted px-1.5 py-0.5">{tool}</code>
-                      <span className="text-muted-foreground/60">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                      <code className="rounded bg-muted px-1.5 py-0.5 font-mono">{tool}</code>
+                      <span className="text-muted-foreground/70">
                         {getToolDescription(tool)}
                       </span>
                     </li>
@@ -95,212 +233,6 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// Simple markdown-like content renderer
-function MessageContent({ content }: { content: string }) {
-  // Split by double newlines for paragraphs
-  const paragraphs = content.split(/\n\n+/);
-
-  return (
-    <div className="space-y-3">
-      {paragraphs.map((paragraph, idx) => {
-        // Check for headers
-        if (paragraph.startsWith("## ")) {
-          return (
-            <h3 key={idx} className="text-base font-semibold mt-4 first:mt-0">
-              {paragraph.slice(3)}
-            </h3>
-          );
-        }
-        if (paragraph.startsWith("### ")) {
-          return (
-            <h4 key={idx} className="text-sm font-semibold mt-3 text-muted-foreground">
-              {paragraph.slice(4)}
-            </h4>
-          );
-        }
-
-        // Check for horizontal rule
-        if (paragraph.trim() === "---") {
-          return <hr key={idx} className="my-3 border-muted" />;
-        }
-
-        // Check for tables (simple markdown tables)
-        if (paragraph.includes("|") && paragraph.includes("-")) {
-          return <SimpleTable key={idx} content={paragraph} />;
-        }
-
-        // Check for numbered lists (1. 2. 3.)
-        if (paragraph.match(/^\d+\.\s/m)) {
-          return <NumberedList key={idx} content={paragraph} />;
-        }
-
-        // Check for bullet lists
-        if (paragraph.match(/^[-*]\s/m)) {
-          return <BulletList key={idx} content={paragraph} />;
-        }
-
-        // Regular paragraph
-        return (
-          <p key={idx} className="text-sm leading-relaxed">
-            <InlineFormatting text={paragraph} />
-          </p>
-        );
-      })}
-    </div>
-  );
-}
-
-// Bullet list with nested item support
-function BulletList({ content }: { content: string }) {
-  const lines = content.split(/\n/);
-  const items: { text: string; indent: number }[] = [];
-
-  for (const line of lines) {
-    const match = line.match(/^(\s*)[-*]\s(.+)/);
-    if (match) {
-      const indent = Math.floor(match[1].length / 2);
-      items.push({ text: match[2], indent });
-    }
-  }
-
-  return (
-    <ul className="space-y-1.5 text-sm">
-      {items.map((item, i) => (
-        <li
-          key={i}
-          className="flex items-start gap-2"
-          style={{ marginLeft: `${item.indent * 16}px` }}
-        >
-          <span className="mt-2 h-1 w-1 flex-shrink-0 rounded-full bg-foreground/60" />
-          <span><InlineFormatting text={item.text} /></span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-// Numbered list with nested item support
-function NumberedList({ content }: { content: string }) {
-  const lines = content.split(/\n/);
-  const items: { text: string; number: string; subItems: string[] }[] = [];
-
-  let currentItem: { text: string; number: string; subItems: string[] } | null = null;
-
-  for (const line of lines) {
-    // Main numbered item (1. 2. etc)
-    const mainMatch = line.match(/^(\d+)\.\s+(.+)/);
-    if (mainMatch) {
-      if (currentItem) items.push(currentItem);
-      currentItem = { number: mainMatch[1], text: mainMatch[2], subItems: [] };
-      continue;
-    }
-
-    // Sub-item (indented with - or *)
-    const subMatch = line.match(/^\s+[-*]\s+(.+)/);
-    if (subMatch && currentItem) {
-      currentItem.subItems.push(subMatch[1]);
-    }
-  }
-  if (currentItem) items.push(currentItem);
-
-  return (
-    <ol className="space-y-3 text-sm">
-      {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-3">
-          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-            {item.number}
-          </span>
-          <div className="flex-1 pt-0.5">
-            <div><InlineFormatting text={item.text} /></div>
-            {item.subItems.length > 0 && (
-              <ul className="mt-1.5 space-y-1 text-muted-foreground">
-                {item.subItems.map((sub, j) => (
-                  <li key={j} className="flex items-start gap-2">
-                    <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-muted-foreground/50" />
-                    <span><InlineFormatting text={sub} /></span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-// Handle inline formatting (bold, code, etc.)
-function InlineFormatting({ text }: { text: string }) {
-  // Replace **bold** with <strong>
-  // Replace `code` with <code>
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
-
-  return (
-    <>
-      {parts.map((part, idx) => {
-        if (part.startsWith("**") && part.endsWith("**")) {
-          return <strong key={idx}>{part.slice(2, -2)}</strong>;
-        }
-        if (part.startsWith("`") && part.endsWith("`")) {
-          return (
-            <code key={idx} className="rounded bg-muted px-1 py-0.5 text-xs">
-              {part.slice(1, -1)}
-            </code>
-          );
-        }
-        return <span key={idx}>{part}</span>;
-      })}
-    </>
-  );
-}
-
-// Simple markdown table renderer
-function SimpleTable({ content }: { content: string }) {
-  const lines = content.split("\n").filter((l) => l.trim());
-  if (lines.length < 2) return <p className="text-sm">{content}</p>;
-
-  const headerLine = lines[0];
-  const dataLines = lines.slice(2); // Skip header and separator
-
-  const headers = headerLine
-    .split("|")
-    .map((h) => h.trim())
-    .filter(Boolean);
-  const rows = dataLines.map((line) =>
-    line
-      .split("|")
-      .map((c) => c.trim())
-      .filter(Boolean)
-  );
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm">
-        <thead>
-          <tr className="border-b">
-            {headers.map((h, i) => (
-              <th key={i} className="px-2 py-1.5 text-left font-medium">
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b last:border-0">
-              {row.map((cell, j) => (
-                <td key={j} className="px-2 py-1.5">
-                  <InlineFormatting text={cell} />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
