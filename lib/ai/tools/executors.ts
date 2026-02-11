@@ -1,0 +1,1019 @@
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/db";
+import { expenses, dailyExpenses, incomes, familyMembers } from "@/db/schema";
+import { eq, and, gte, lte } from "drizzle-orm";
+import { getBudgetSummary, getBudgetVsActual } from "@/lib/actions/budget-calculator";
+import {
+  getToolRegistry,
+  type ToolName,
+  type MonthParams,
+  type DateRangeParams,
+  type TripBudgetParams,
+  type SummaryRangeParams,
+} from "./registry";
+
+// =============================================================================
+// Types
+// =============================================================================
+
+export interface ToolExecutionResult<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  toolName: ToolName;
+  durationMs: number;
+}
+
+export interface AuditRecord {
+  toolName: ToolName;
+  userId: string;
+  timestamp: Date;
+  durationMs: number;
+  status: "success" | "error" | "unauthorized" | "validation_error";
+  errorMessage?: string;
+}
+
+// In-memory audit log (in production, persist to database)
+const auditLog: AuditRecord[] = [];
+
+// =============================================================================
+// Audit Logger
+// =============================================================================
+
+function logAudit(record: AuditRecord): void {
+  auditLog.push(record);
+
+  // Safe console log (no sensitive data)
+  console.log(
+    `[AI Tool Audit] ${record.timestamp.toISOString()} | ${record.toolName} | ${record.status} | ${record.durationMs}ms | user:${record.userId.slice(0, 8)}...`
+  );
+}
+
+export function getAuditLog(): AuditRecord[] {
+  return [...auditLog];
+}
+
+export function clearAuditLog(): void {
+  auditLog.length = 0;
+}
+
+// =============================================================================
+// Tool Result Types
+// =============================================================================
+
+export interface MonthSummaryResult {
+  month: string;
+  // Income data
+  totalIncome: number;
+  // Budget/expense data
+  totalBudgetedExpenses: number;
+  totalSpent: number;
+  remainingBudget: number;
+  percentBudgetUsed: number;
+  // Net position
+  netSurplus: number;
+  // Pacing
+  dailyBudgetTarget: number;
+  pacingStatus: "under" | "on-track" | "over";
+  daysInMonth: number;
+  currentDay: number;
+}
+
+export interface CategoryBudgetItem {
+  category: string;
+  budget: number;
+  spent: number;
+  remaining: number;
+  percentUsed: number;
+}
+
+export interface RemainingBudgetResult {
+  month: string;
+  totalRemaining: number;
+  categories: CategoryBudgetItem[];
+}
+
+export interface UpcomingExpenseItem {
+  name: string;
+  category: string;
+  amount: number;
+  frequency: string;
+  nextOccurrence: string | null;
+}
+
+export interface UpcomingExpensesResult {
+  fromDate: string;
+  toDate: string;
+  totalExpected: number;
+  expenses: UpcomingExpenseItem[];
+}
+
+export interface TripBudgetResult {
+  month: string;
+  tripCost: number;
+  availableFunds: number;
+  canAfford: boolean;
+  shortfall: number;
+  monthlySavingsNeeded: number;
+  monthsToSave: number;
+  recommendation: string;
+}
+
+export interface SummaryRangeResult {
+  periodStart: string;
+  periodEnd: string;
+  periodDays: number;
+  periodMonthsApprox: number;
+  totalIncome: number;
+  totalExpenses: number;
+  netSavings: number;
+  averageMonthlyIncome: number;
+  averageMonthlyExpenses: number;
+}
+
+export interface CpfBreakdown {
+  subjectToCpf: boolean;
+  employeeContribution: number;
+  employerContribution: number;
+  totalContribution: number;
+  netTakeHome: number;
+  // CPF account allocations
+  ordinaryAccount: number;
+  specialAccount: number;
+  medisaveAccount: number;
+}
+
+export interface IncomeSourceItem {
+  name: string;
+  category: string;
+  grossAmount: number;
+  monthlyAmount: number;
+  frequency: string;
+  familyMember: string | null;
+  status: string;
+  // CPF details (null if not subject to CPF)
+  cpf: CpfBreakdown | null;
+}
+
+export interface IncomeSummaryResult {
+  month: string;
+  // Totals
+  totalGrossIncome: number;
+  totalNetIncome: number;
+  // CPF totals
+  totalEmployeeCpf: number;
+  totalEmployerCpf: number;
+  totalCpfContribution: number;
+  // CPF account totals
+  totalOrdinaryAccount: number;
+  totalSpecialAccount: number;
+  totalMedisaveAccount: number;
+  // Sources
+  incomeSources: IncomeSourceItem[];
+  incomeSourceCount: number;
+}
+
+export interface ExpenseCategoryBreakdown {
+  categoryName: string;
+  monthlyAmount: number;
+  expenseCount: number;
+  percentOfTotal: number;
+}
+
+export interface RecurringExpenseItem {
+  name: string;
+  category: string;
+  expenseType: string;
+  amount: number;
+  monthlyAmount: number;
+  frequency: string;
+  isActive: boolean;
+  trackedInBudget: boolean;
+}
+
+export interface ExpensesSummaryResult {
+  // Period info
+  month: string;
+  // Totals
+  totalMonthlyExpenses: number;
+  expenseCount: number;
+  // Category breakdown (sorted by amount, top 5)
+  categoryBreakdown: ExpenseCategoryBreakdown[];
+  categoryCount: number;
+  // All expense items
+  expenses: RecurringExpenseItem[];
+}
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+function parseMonth(monthStr: string): { year: number; month: number } {
+  const [yearStr, monthStr2] = monthStr.split("-");
+  return {
+    year: parseInt(yearStr, 10),
+    month: parseInt(monthStr2, 10),
+  };
+}
+
+async function getCurrentUserId(): Promise<string | null> {
+  try {
+    const { userId } = await auth();
+    return userId;
+  } catch {
+    return null;
+  }
+}
+
+// =============================================================================
+// Tool Executor: get_month_summary
+// =============================================================================
+
+async function executeGetMonthSummary(
+  params: MonthParams,
+  userId: string
+): Promise<MonthSummaryResult> {
+  const { year, month } = parseMonth(params.month);
+
+  // Get budget summary (expenses)
+  const summary = await getBudgetSummary(year, month);
+
+  // Get income for this month
+  const userIncomes = await db
+    .select()
+    .from(incomes)
+    .where(
+      and(
+        eq(incomes.userId, userId),
+        eq(incomes.isActive, true)
+      )
+    );
+
+  // Calculate total monthly income
+  let totalIncome = 0;
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0);
+
+  for (const income of userIncomes) {
+    const amount = parseFloat(income.amount);
+    const frequency = income.frequency.toLowerCase();
+    const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
+    const incomeEndDate = income.endDate ? new Date(income.endDate) : null;
+
+    // Check if income is active during this month
+    if (incomeStartDate && incomeStartDate > monthEnd) continue;
+    if (incomeEndDate && incomeEndDate < monthStart) continue;
+
+    // Calculate monthly income based on frequency
+    if (frequency === "monthly") {
+      totalIncome += amount;
+    } else if (frequency === "yearly") {
+      totalIncome += amount / 12;
+    } else if (frequency === "weekly") {
+      totalIncome += amount * 4.33;
+    } else if (frequency === "bi-weekly") {
+      totalIncome += amount * 2.17;
+    } else if (frequency === "one-time") {
+      // One-time income: include if it falls in this month
+      if (incomeStartDate &&
+          incomeStartDate.getFullYear() === year &&
+          incomeStartDate.getMonth() + 1 === month) {
+        totalIncome += amount;
+      }
+    } else {
+      // Default to monthly for other frequencies
+      totalIncome += amount;
+    }
+  }
+
+  const netSurplus = totalIncome - summary.totalBudget;
+
+  return {
+    month: params.month,
+    // Income
+    totalIncome: Math.round(totalIncome * 100) / 100,
+    // Budget/expenses
+    totalBudgetedExpenses: Math.round(summary.totalBudget * 100) / 100,
+    totalSpent: Math.round(summary.totalSpent * 100) / 100,
+    remainingBudget: Math.round(summary.remaining * 100) / 100,
+    percentBudgetUsed: Math.round(summary.percentUsed * 100) / 100,
+    // Net position
+    netSurplus: Math.round(netSurplus * 100) / 100,
+    // Pacing
+    dailyBudgetTarget: Math.round(summary.dailyBudget * 100) / 100,
+    pacingStatus: summary.pacingStatus,
+    daysInMonth: summary.daysInMonth,
+    currentDay: summary.currentDay,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_remaining_budget
+// =============================================================================
+
+async function executeGetRemainingBudget(
+  params: MonthParams,
+  userId: string
+): Promise<RemainingBudgetResult> {
+  const { year, month } = parseMonth(params.month);
+
+  const budgetVsActual = await getBudgetVsActual(year, month);
+
+  const categories: CategoryBudgetItem[] = budgetVsActual.map((item) => ({
+    category: item.categoryName,
+    budget: Math.round(item.monthlyBudget * 100) / 100,
+    spent: Math.round(item.spent * 100) / 100,
+    remaining: Math.round(item.remaining * 100) / 100,
+    percentUsed: Math.round(item.percentUsed * 100) / 100,
+  }));
+
+  const totalRemaining = categories.reduce((sum, cat) => sum + cat.remaining, 0);
+
+  return {
+    month: params.month,
+    totalRemaining: Math.round(totalRemaining * 100) / 100,
+    categories,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_upcoming_expenses
+// =============================================================================
+
+async function executeGetUpcomingExpenses(
+  params: DateRangeParams,
+  userId: string
+): Promise<UpcomingExpensesResult> {
+  // Get all active recurring expenses for the user
+  const userExpenses = await db
+    .select()
+    .from(expenses)
+    .where(
+      and(
+        eq(expenses.userId, userId),
+        eq(expenses.isActive, true)
+      )
+    );
+
+  // Filter expenses that occur within the date range
+  const fromDate = new Date(params.fromDate);
+  const toDate = new Date(params.toDate);
+
+  const upcomingExpenses: UpcomingExpenseItem[] = [];
+  let totalExpected = 0;
+
+  for (const expense of userExpenses) {
+    const amount = parseFloat(expense.amount);
+    const frequency = expense.frequency.toLowerCase();
+
+    // Check if expense occurs in the date range based on frequency
+    let occursInRange = false;
+    let nextOccurrence: string | null = null;
+
+    if (frequency === "one-time") {
+      // One-time expenses occur if their start date is in range
+      if (expense.startDate) {
+        const expenseDate = new Date(expense.startDate);
+        if (expenseDate >= fromDate && expenseDate <= toDate) {
+          occursInRange = true;
+          nextOccurrence = expense.startDate;
+        }
+      }
+    } else if (frequency === "monthly") {
+      // Monthly expenses always occur within any month span
+      occursInRange = true;
+      // Next occurrence is the first day of each month in range
+      nextOccurrence = params.fromDate;
+    } else if (frequency === "weekly" || frequency === "bi-weekly") {
+      // Weekly/bi-weekly expenses occur multiple times
+      occursInRange = true;
+      nextOccurrence = params.fromDate;
+    } else if (frequency === "yearly") {
+      // Yearly expenses - check if the annual date falls in range
+      if (expense.startDate) {
+        const startDate = new Date(expense.startDate);
+        const yearlyDate = new Date(
+          fromDate.getFullYear(),
+          startDate.getMonth(),
+          startDate.getDate()
+        );
+        if (yearlyDate >= fromDate && yearlyDate <= toDate) {
+          occursInRange = true;
+          nextOccurrence = yearlyDate.toISOString().split("T")[0];
+        }
+      } else {
+        occursInRange = true;
+        nextOccurrence = params.fromDate;
+      }
+    } else if (frequency === "quarterly") {
+      // Quarterly - simplified check
+      occursInRange = true;
+      nextOccurrence = params.fromDate;
+    } else {
+      // Other frequencies - assume they occur
+      occursInRange = true;
+      nextOccurrence = params.fromDate;
+    }
+
+    if (occursInRange) {
+      upcomingExpenses.push({
+        name: expense.name,
+        category: expense.category,
+        amount: Math.round(amount * 100) / 100,
+        frequency: expense.frequency,
+        nextOccurrence,
+      });
+      totalExpected += amount;
+    }
+  }
+
+  return {
+    fromDate: params.fromDate,
+    toDate: params.toDate,
+    totalExpected: Math.round(totalExpected * 100) / 100,
+    expenses: upcomingExpenses,
+  };
+}
+
+// =============================================================================
+// Tool Executor: compute_trip_budget
+// =============================================================================
+
+async function executeComputeTripBudget(
+  params: TripBudgetParams,
+  userId: string
+): Promise<TripBudgetResult> {
+  const { year, month } = parseMonth(params.month);
+  const tripCost = params.tripCost;
+
+  // Get the budget summary to understand available funds
+  const summary = await getBudgetSummary(year, month);
+
+  // Available funds = remaining budget after fixed expenses
+  const availableFunds = summary.remaining;
+  const canAfford = availableFunds >= tripCost;
+  const shortfall = canAfford ? 0 : tripCost - availableFunds;
+
+  // Calculate how long it would take to save up
+  const monthlyBudget = summary.totalBudget;
+  const monthlySavingsRate = monthlyBudget * 0.1; // Assume 10% savings rate
+  const monthsToSave = shortfall > 0 ? Math.ceil(shortfall / monthlySavingsRate) : 0;
+
+  // Generate recommendation
+  let recommendation: string;
+  if (canAfford) {
+    recommendation = `You can afford this trip! You have $${availableFunds.toFixed(2)} remaining this month, which covers the $${tripCost.toFixed(2)} trip cost.`;
+  } else if (monthsToSave <= 3) {
+    recommendation = `You're $${shortfall.toFixed(2)} short. If you save $${monthlySavingsRate.toFixed(2)}/month (10% of budget), you could afford this in ${monthsToSave} month${monthsToSave > 1 ? "s" : ""}.`;
+  } else {
+    recommendation = `This trip costs $${shortfall.toFixed(2)} more than your available funds. Consider saving $${Math.ceil(shortfall / 3).toFixed(2)}/month for 3 months, or look for ways to reduce the trip cost.`;
+  }
+
+  return {
+    month: params.month,
+    tripCost: Math.round(tripCost * 100) / 100,
+    availableFunds: Math.round(availableFunds * 100) / 100,
+    canAfford,
+    shortfall: Math.round(shortfall * 100) / 100,
+    monthlySavingsNeeded: Math.round(monthlySavingsRate * 100) / 100,
+    monthsToSave,
+    recommendation,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_summary_range
+// =============================================================================
+
+async function executeGetSummaryRange(
+  params: SummaryRangeParams,
+  userId: string
+): Promise<SummaryRangeResult> {
+  const fromDate = new Date(params.fromDate);
+  const toDate = new Date(params.toDate);
+
+  // Calculate period metrics
+  const periodDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const periodMonthsApprox = Math.round((periodDays / 30.44) * 100) / 100; // Average days per month
+
+  let totalIncome = 0;
+  let totalExpenses = 0;
+
+  // Calculate income if requested
+  if (params.includeIncome) {
+    // Fetch active incomes for the user
+    const userIncomes = await db
+      .select()
+      .from(incomes)
+      .where(
+        and(
+          eq(incomes.userId, userId),
+          eq(incomes.isActive, true)
+        )
+      );
+
+    // Calculate income for each month in the range
+    for (const income of userIncomes) {
+      const amount = parseFloat(income.amount);
+      const frequency = income.frequency.toLowerCase();
+      const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
+      const incomeEndDate = income.endDate ? new Date(income.endDate) : null;
+
+      // Check if income overlaps with the period
+      if (incomeStartDate && incomeStartDate > toDate) continue;
+      if (incomeEndDate && incomeEndDate < fromDate) continue;
+
+      // Calculate effective date range
+      const effectiveStart = incomeStartDate && incomeStartDate > fromDate ? incomeStartDate : fromDate;
+      const effectiveEnd = incomeEndDate && incomeEndDate < toDate ? incomeEndDate : toDate;
+
+      // Count months the income applies to
+      let monthsActive = 0;
+      const current = new Date(effectiveStart.getFullYear(), effectiveStart.getMonth(), 1);
+      const endMonth = new Date(effectiveEnd.getFullYear(), effectiveEnd.getMonth(), 1);
+
+      while (current <= endMonth) {
+        monthsActive++;
+        current.setMonth(current.getMonth() + 1);
+      }
+
+      // Calculate total income based on frequency
+      if (frequency === "monthly") {
+        totalIncome += amount * monthsActive;
+      } else if (frequency === "yearly") {
+        // Yearly income: add if the period includes the income month
+        totalIncome += amount * (monthsActive / 12);
+      } else if (frequency === "weekly") {
+        const weeksInPeriod = periodDays / 7;
+        totalIncome += amount * weeksInPeriod;
+      } else if (frequency === "bi-weekly") {
+        const biWeeksInPeriod = periodDays / 14;
+        totalIncome += amount * biWeeksInPeriod;
+      } else if (frequency === "one-time") {
+        // One-time income: add if it falls within the range
+        if (incomeStartDate && incomeStartDate >= fromDate && incomeStartDate <= toDate) {
+          totalIncome += amount;
+        }
+      } else {
+        // Default to monthly for other frequencies
+        totalIncome += amount * monthsActive;
+      }
+    }
+  }
+
+  // Calculate expenses if requested
+  if (params.includeExpenses) {
+    // Fetch actual daily expenses for the date range
+    const userDailyExpenses = await db
+      .select()
+      .from(dailyExpenses)
+      .where(
+        and(
+          eq(dailyExpenses.userId, userId),
+          gte(dailyExpenses.date, params.fromDate),
+          lte(dailyExpenses.date, params.toDate)
+        )
+      );
+
+    // Sum up daily expenses
+    for (const expense of userDailyExpenses) {
+      totalExpenses += parseFloat(expense.amount);
+    }
+  }
+
+  // Calculate net savings and averages
+  const netSavings = totalIncome - totalExpenses;
+  const averageMonthlyIncome = periodMonthsApprox > 0 ? totalIncome / periodMonthsApprox : 0;
+  const averageMonthlyExpenses = periodMonthsApprox > 0 ? totalExpenses / periodMonthsApprox : 0;
+
+  return {
+    periodStart: params.fromDate,
+    periodEnd: params.toDate,
+    periodDays,
+    periodMonthsApprox,
+    totalIncome: Math.round(totalIncome * 100) / 100,
+    totalExpenses: Math.round(totalExpenses * 100) / 100,
+    netSavings: Math.round(netSavings * 100) / 100,
+    averageMonthlyIncome: Math.round(averageMonthlyIncome * 100) / 100,
+    averageMonthlyExpenses: Math.round(averageMonthlyExpenses * 100) / 100,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_income_summary
+// =============================================================================
+
+async function executeGetIncomeSummary(
+  params: MonthParams,
+  userId: string
+): Promise<IncomeSummaryResult> {
+  const { year, month } = parseMonth(params.month);
+
+  // Get all active incomes for the user
+  const userIncomes = await db
+    .select()
+    .from(incomes)
+    .where(
+      and(
+        eq(incomes.userId, userId),
+        eq(incomes.isActive, true)
+      )
+    );
+
+  // Get family members to map IDs to names
+  const userFamilyMembers = await db
+    .select()
+    .from(familyMembers)
+    .where(eq(familyMembers.userId, userId));
+
+  const familyMemberMap: Record<string, string> = {};
+  userFamilyMembers.forEach((fm) => {
+    familyMemberMap[fm.id] = fm.name;
+  });
+
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0);
+
+  const incomeSources: IncomeSourceItem[] = [];
+
+  // Totals
+  let totalGrossIncome = 0;
+  let totalNetIncome = 0;
+  let totalEmployeeCpf = 0;
+  let totalEmployerCpf = 0;
+  let totalOrdinaryAccount = 0;
+  let totalSpecialAccount = 0;
+  let totalMedisaveAccount = 0;
+
+  for (const income of userIncomes) {
+    const grossAmount = parseFloat(income.amount);
+    const frequency = income.frequency.toLowerCase();
+    const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
+    const incomeEndDate = income.endDate ? new Date(income.endDate) : null;
+
+    // Check if income is active during this month
+    if (incomeStartDate && incomeStartDate > monthEnd) continue;
+    if (incomeEndDate && incomeEndDate < monthStart) continue;
+
+    // Calculate frequency multiplier for monthly amount
+    let frequencyMultiplier = 1;
+    if (frequency === "monthly") {
+      frequencyMultiplier = 1;
+    } else if (frequency === "yearly") {
+      frequencyMultiplier = 1 / 12;
+    } else if (frequency === "weekly") {
+      frequencyMultiplier = 4.33;
+    } else if (frequency === "bi-weekly") {
+      frequencyMultiplier = 2.17;
+    } else if (frequency === "one-time") {
+      // One-time income: include full amount only if it falls in this month
+      if (incomeStartDate &&
+          incomeStartDate.getFullYear() === year &&
+          incomeStartDate.getMonth() + 1 === month) {
+        frequencyMultiplier = 1;
+      } else {
+        continue; // Skip this income if one-time and not in this month
+      }
+    } else if (frequency === "quarterly") {
+      frequencyMultiplier = 1 / 3;
+    }
+
+    const monthlyGross = grossAmount * frequencyMultiplier;
+
+    // Get CPF data
+    const subjectToCpf = income.subjectToCpf || false;
+    const employeeCpf = income.employeeCpfContribution ? parseFloat(income.employeeCpfContribution) : 0;
+    const employerCpf = income.employerCpfContribution ? parseFloat(income.employerCpfContribution) : 0;
+    const netTakeHome = income.netTakeHome ? parseFloat(income.netTakeHome) : monthlyGross;
+    const cpfOA = income.cpfOrdinaryAccount ? parseFloat(income.cpfOrdinaryAccount) : 0;
+    const cpfSA = income.cpfSpecialAccount ? parseFloat(income.cpfSpecialAccount) : 0;
+    const cpfMA = income.cpfMedisaveAccount ? parseFloat(income.cpfMedisaveAccount) : 0;
+
+    // Add to totals
+    totalGrossIncome += monthlyGross;
+    totalNetIncome += subjectToCpf ? netTakeHome : monthlyGross;
+    totalEmployeeCpf += employeeCpf;
+    totalEmployerCpf += employerCpf;
+    totalOrdinaryAccount += cpfOA;
+    totalSpecialAccount += cpfSA;
+    totalMedisaveAccount += cpfMA;
+
+    // Get family member name if linked
+    const familyMemberName = income.familyMemberId
+      ? familyMemberMap[income.familyMemberId] || null
+      : null;
+
+    // Determine status based on incomeCategory
+    const status = income.incomeCategory || "current-recurring";
+
+    // Build CPF breakdown if subject to CPF
+    const cpfBreakdown: CpfBreakdown | null = subjectToCpf ? {
+      subjectToCpf: true,
+      employeeContribution: Math.round(employeeCpf * 100) / 100,
+      employerContribution: Math.round(employerCpf * 100) / 100,
+      totalContribution: Math.round((employeeCpf + employerCpf) * 100) / 100,
+      netTakeHome: Math.round(netTakeHome * 100) / 100,
+      ordinaryAccount: Math.round(cpfOA * 100) / 100,
+      specialAccount: Math.round(cpfSA * 100) / 100,
+      medisaveAccount: Math.round(cpfMA * 100) / 100,
+    } : null;
+
+    incomeSources.push({
+      name: income.name,
+      category: income.category,
+      grossAmount: Math.round(monthlyGross * 100) / 100,
+      monthlyAmount: Math.round((subjectToCpf ? netTakeHome : monthlyGross) * 100) / 100,
+      frequency: income.frequency,
+      familyMember: familyMemberName,
+      status,
+      cpf: cpfBreakdown,
+    });
+  }
+
+  // Sort by gross amount (highest first)
+  incomeSources.sort((a, b) => b.grossAmount - a.grossAmount);
+
+  return {
+    month: params.month,
+    // Totals
+    totalGrossIncome: Math.round(totalGrossIncome * 100) / 100,
+    totalNetIncome: Math.round(totalNetIncome * 100) / 100,
+    // CPF totals
+    totalEmployeeCpf: Math.round(totalEmployeeCpf * 100) / 100,
+    totalEmployerCpf: Math.round(totalEmployerCpf * 100) / 100,
+    totalCpfContribution: Math.round((totalEmployeeCpf + totalEmployerCpf) * 100) / 100,
+    // CPF account totals
+    totalOrdinaryAccount: Math.round(totalOrdinaryAccount * 100) / 100,
+    totalSpecialAccount: Math.round(totalSpecialAccount * 100) / 100,
+    totalMedisaveAccount: Math.round(totalMedisaveAccount * 100) / 100,
+    // Sources
+    incomeSources,
+    incomeSourceCount: incomeSources.length,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_expenses_summary
+// =============================================================================
+
+async function executeGetExpensesSummary(
+  params: MonthParams,
+  userId: string
+): Promise<ExpensesSummaryResult> {
+  const { year, month } = parseMonth(params.month);
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0);
+
+  // Fetch active expenses for the user
+  const userExpenses = await db
+    .select()
+    .from(expenses)
+    .where(
+      and(
+        eq(expenses.userId, userId),
+        eq(expenses.isActive, true)
+      )
+    );
+
+  // Process expenses and calculate monthly amounts
+  const expenseItems: RecurringExpenseItem[] = [];
+  const categoryTotals: Record<string, { amount: number; count: number }> = {};
+  let totalMonthlyExpenses = 0;
+
+  for (const expense of userExpenses) {
+    const amount = parseFloat(expense.amount);
+    const frequency = expense.frequency.toLowerCase();
+    const expenseStartDate = expense.startDate ? new Date(expense.startDate) : null;
+    const expenseEndDate = expense.endDate ? new Date(expense.endDate) : null;
+
+    // Check if expense is active during this month
+    if (expenseStartDate && expenseStartDate > monthEnd) continue;
+    if (expenseEndDate && expenseEndDate < monthStart) continue;
+
+    // Calculate monthly amount based on frequency
+    let monthlyAmount = 0;
+    if (frequency === "monthly") {
+      monthlyAmount = amount;
+    } else if (frequency === "yearly") {
+      monthlyAmount = amount / 12;
+    } else if (frequency === "weekly") {
+      monthlyAmount = amount * 4.33;
+    } else if (frequency === "bi-weekly") {
+      monthlyAmount = amount * 2.17;
+    } else if (frequency === "one-time") {
+      // One-time expense: include full amount only if it falls in this month
+      if (expenseStartDate &&
+          expenseStartDate.getFullYear() === year &&
+          expenseStartDate.getMonth() + 1 === month) {
+        monthlyAmount = amount;
+      } else {
+        continue; // Skip if one-time and not in this month
+      }
+    } else if (frequency === "quarterly") {
+      monthlyAmount = amount / 3;
+    } else {
+      // Default to the stated amount
+      monthlyAmount = amount;
+    }
+
+    if (monthlyAmount > 0) {
+      totalMonthlyExpenses += monthlyAmount;
+
+      // Category breakdown
+      const catName = expense.category;
+      if (!categoryTotals[catName]) {
+        categoryTotals[catName] = { amount: 0, count: 0 };
+      }
+      categoryTotals[catName].amount += monthlyAmount;
+      categoryTotals[catName].count += 1;
+
+      // Add to expense items
+      expenseItems.push({
+        name: expense.name,
+        category: expense.category,
+        expenseType: expense.expenseCategory || "current-recurring",
+        amount: Math.round(amount * 100) / 100,
+        monthlyAmount: Math.round(monthlyAmount * 100) / 100,
+        frequency: expense.frequency,
+        isActive: expense.isActive || false,
+        trackedInBudget: expense.trackedInBudget || false,
+      });
+    }
+  }
+
+  // Build category breakdown (sorted by amount, highest first)
+  const categoryBreakdown: ExpenseCategoryBreakdown[] = Object.entries(categoryTotals)
+    .map(([categoryName, data]) => ({
+      categoryName,
+      monthlyAmount: Math.round(data.amount * 100) / 100,
+      expenseCount: data.count,
+      percentOfTotal: totalMonthlyExpenses > 0
+        ? Math.round((data.amount / totalMonthlyExpenses) * 1000) / 10
+        : 0,
+    }))
+    .sort((a, b) => b.monthlyAmount - a.monthlyAmount);
+
+  // Sort expenses by monthly amount (highest first)
+  expenseItems.sort((a, b) => b.monthlyAmount - a.monthlyAmount);
+
+  return {
+    month: params.month,
+    totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100) / 100,
+    expenseCount: expenseItems.length,
+    categoryBreakdown,
+    categoryCount: categoryBreakdown.length,
+    expenses: expenseItems,
+  };
+}
+
+// =============================================================================
+// Main Executor Function
+// =============================================================================
+
+export async function executeTool(
+  toolName: string,
+  args: unknown
+): Promise<ToolExecutionResult> {
+  const startTime = Date.now();
+  const registry = getToolRegistry();
+
+  // Check if tool is allowed
+  if (!registry.isAllowed(toolName)) {
+    const duration = Date.now() - startTime;
+    const userId = (await getCurrentUserId()) || "unknown";
+
+    logAudit({
+      toolName: toolName as ToolName,
+      userId,
+      timestamp: new Date(),
+      durationMs: duration,
+      status: "error",
+      errorMessage: `Tool not allowed: ${toolName}`,
+    });
+
+    return {
+      success: false,
+      error: `Tool not allowed: ${toolName}`,
+      toolName: toolName as ToolName,
+      durationMs: duration,
+    };
+  }
+
+  // Authenticate user
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    const duration = Date.now() - startTime;
+
+    logAudit({
+      toolName: toolName as ToolName,
+      userId: "unauthenticated",
+      timestamp: new Date(),
+      durationMs: duration,
+      status: "unauthorized",
+      errorMessage: "User not authenticated",
+    });
+
+    return {
+      success: false,
+      error: "Unauthorized: User must be authenticated",
+      toolName: toolName as ToolName,
+      durationMs: duration,
+    };
+  }
+
+  // Validate arguments
+  const validationResult = registry.safeValidateArgs(toolName as ToolName, args);
+  if (!validationResult.success) {
+    const duration = Date.now() - startTime;
+
+    logAudit({
+      toolName: toolName as ToolName,
+      userId,
+      timestamp: new Date(),
+      durationMs: duration,
+      status: "validation_error",
+      errorMessage: validationResult.error,
+    });
+
+    return {
+      success: false,
+      error: `Invalid arguments: ${validationResult.error}`,
+      toolName: toolName as ToolName,
+      durationMs: duration,
+    };
+  }
+
+  // Execute the tool
+  try {
+    let data: unknown;
+
+    switch (toolName as ToolName) {
+      case "get_month_summary":
+        data = await executeGetMonthSummary(validationResult.data as MonthParams, userId);
+        break;
+
+      case "get_remaining_budget":
+        data = await executeGetRemainingBudget(validationResult.data as MonthParams, userId);
+        break;
+
+      case "get_upcoming_expenses":
+        data = await executeGetUpcomingExpenses(validationResult.data as DateRangeParams, userId);
+        break;
+
+      case "compute_trip_budget":
+        data = await executeComputeTripBudget(validationResult.data as TripBudgetParams, userId);
+        break;
+
+      case "get_summary_range":
+        data = await executeGetSummaryRange(validationResult.data as SummaryRangeParams, userId);
+        break;
+
+      case "get_income_summary":
+        data = await executeGetIncomeSummary(validationResult.data as MonthParams, userId);
+        break;
+
+      case "get_expenses_summary":
+        data = await executeGetExpensesSummary(validationResult.data as MonthParams, userId);
+        break;
+
+      default:
+        throw new Error(`No executor for tool: ${toolName}`);
+    }
+
+    const duration = Date.now() - startTime;
+
+    logAudit({
+      toolName: toolName as ToolName,
+      userId,
+      timestamp: new Date(),
+      durationMs: duration,
+      status: "success",
+    });
+
+    return {
+      success: true,
+      data,
+      toolName: toolName as ToolName,
+      durationMs: duration,
+    };
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    logAudit({
+      toolName: toolName as ToolName,
+      userId,
+      timestamp: new Date(),
+      durationMs: duration,
+      status: "error",
+      errorMessage,
+    });
+
+    return {
+      success: false,
+      error: errorMessage,
+      toolName: toolName as ToolName,
+      durationMs: duration,
+    };
+  }
+}

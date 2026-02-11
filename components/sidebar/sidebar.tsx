@@ -24,6 +24,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   LineChart,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -102,6 +103,13 @@ const mainNavItems = [
     icon: Calculator,
     bgColor: "bg-indigo-100",
     iconColor: "text-indigo-600",
+  },
+  {
+    href: "/assistant",
+    label: "AI Assistant",
+    icon: Sparkles,
+    bgColor: "bg-emerald-100",
+    iconColor: "text-emerald-600",
   },
 ];
 
