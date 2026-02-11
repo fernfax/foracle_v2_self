@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ThreadList, ChatView } from "@/components/assistant";
-import { Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ThreadSummary {
   id: string;
@@ -36,7 +34,6 @@ export function AssistantClient() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | undefined>();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Fetch threads on mount
   useEffect(() => {
@@ -95,13 +92,11 @@ export function AssistantClient() {
     setSelectedThreadId(undefined);
     setMessages([]);
     setError(null);
-    setSidebarOpen(false);
   }, []);
 
   const handleSelectThread = useCallback((threadId: string) => {
     setSelectedThreadId(threadId);
     setError(null);
-    setSidebarOpen(false);
   }, []);
 
   const handleDeleteThread = useCallback(async (threadId: string) => {
@@ -205,21 +200,8 @@ export function AssistantClient() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-      {/* Mobile sidebar toggle */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed bottom-20 left-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
-      >
-        {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </button>
-
-      {/* Sidebar - Thread list */}
-      <div
-        className={cn(
-          "absolute inset-y-0 left-0 z-40 w-72 transform bg-background transition-transform md:relative md:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
+      {/* Sidebar - Thread list (hidden on mobile) */}
+      <div className="hidden md:block w-72 border-r">
         <ThreadList
           threads={threads}
           selectedThreadId={selectedThreadId}
@@ -229,14 +211,6 @@ export function AssistantClient() {
           isLoading={isLoadingThreads}
         />
       </div>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
 
       {/* Main chat area */}
       <div className="flex-1 min-w-0">
