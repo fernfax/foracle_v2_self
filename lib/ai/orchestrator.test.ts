@@ -142,7 +142,7 @@ describe("AIOrchestrator", () => {
           daysInMonth: 28,
           currentDay: 15,
         },
-        toolName: "get_month_summary",
+        toolName: "get_remaining_budget",
         durationMs: 50,
       });
 
@@ -150,7 +150,7 @@ describe("AIOrchestrator", () => {
         createToolCallResponse([
           {
             id: "call_1",
-            name: "get_month_summary",
+            name: "get_remaining_budget",
             arguments: { month: "2025-02" },
           },
         ]),
@@ -162,10 +162,10 @@ describe("AIOrchestrator", () => {
       const orchestrator = new AIOrchestrator({ client: mockClient });
       const result = await orchestrator.chat("What's my budget summary?");
 
-      expect(mockExecuteTool).toHaveBeenCalledWith("get_month_summary", {
+      expect(mockExecuteTool).toHaveBeenCalledWith("get_remaining_budget", {
         month: "2025-02",
       });
-      expect(result.toolsUsed).toContain("get_month_summary");
+      expect(result.toolsUsed).toContain("get_remaining_budget");
       expect(result.response).toContain("$2,500");
     });
 
@@ -174,7 +174,7 @@ describe("AIOrchestrator", () => {
         .mockResolvedValueOnce({
           success: true,
           data: { month: "2025-02", totalBudget: 5000, totalSpent: 2500, remaining: 2500, percentUsed: 50, dailyBudgetTarget: 100, pacingStatus: "on-track", daysInMonth: 28, currentDay: 15 },
-          toolName: "get_month_summary",
+          toolName: "get_remaining_budget",
           durationMs: 50,
         })
         .mockResolvedValueOnce({
@@ -186,7 +186,7 @@ describe("AIOrchestrator", () => {
 
       const mockClient = createMockClient([
         createToolCallResponse([
-          { id: "call_1", name: "get_month_summary", arguments: { month: "2025-02" } },
+          { id: "call_1", name: "get_remaining_budget", arguments: { month: "2025-02" } },
           { id: "call_2", name: "get_remaining_budget", arguments: { month: "2025-02" } },
         ]),
         createTextResponse("Here's your complete budget overview..."),
@@ -196,7 +196,7 @@ describe("AIOrchestrator", () => {
       const result = await orchestrator.chat("Give me a full budget breakdown");
 
       expect(mockExecuteTool).toHaveBeenCalledTimes(2);
-      expect(result.toolsUsed).toContain("get_month_summary");
+      expect(result.toolsUsed).toContain("get_remaining_budget");
       expect(result.toolsUsed).toContain("get_remaining_budget");
     });
 
@@ -205,7 +205,7 @@ describe("AIOrchestrator", () => {
         .mockResolvedValueOnce({
           success: true,
           data: { month: "2025-02", totalBudget: 5000, totalSpent: 2500, remaining: 2500, percentUsed: 50, dailyBudgetTarget: 100, pacingStatus: "on-track", daysInMonth: 28, currentDay: 15 },
-          toolName: "get_month_summary",
+          toolName: "get_remaining_budget",
           durationMs: 50,
         })
         .mockResolvedValueOnce({
@@ -216,9 +216,9 @@ describe("AIOrchestrator", () => {
         });
 
       const mockClient = createMockClient([
-        // First response: calls get_month_summary
+        // First response: calls get_remaining_budget
         createToolCallResponse([
-          { id: "call_1", name: "get_month_summary", arguments: { month: "2025-02" } },
+          { id: "call_1", name: "get_remaining_budget", arguments: { month: "2025-02" } },
         ], "resp_1"),
         // Second response: calls compute_trip_budget based on first result
         createToolCallResponse([
@@ -232,7 +232,7 @@ describe("AIOrchestrator", () => {
       const result = await orchestrator.chat("Can I afford a $3000 trip this month?");
 
       expect(mockExecuteTool).toHaveBeenCalledTimes(2);
-      expect(result.toolsUsed).toContain("get_month_summary");
+      expect(result.toolsUsed).toContain("get_remaining_budget");
       expect(result.toolsUsed).toContain("compute_trip_budget");
     });
 
@@ -241,15 +241,15 @@ describe("AIOrchestrator", () => {
       mockExecuteTool.mockResolvedValue({
         success: true,
         data: { mock: "data" },
-        toolName: "get_month_summary",
+        toolName: "get_remaining_budget",
         durationMs: 30,
       });
 
       const mockClient = createMockClient([
-        createToolCallResponse([{ id: "call_1", name: "get_month_summary", arguments: { month: "2025-01" } }]),
-        createToolCallResponse([{ id: "call_2", name: "get_month_summary", arguments: { month: "2025-02" } }]),
-        createToolCallResponse([{ id: "call_3", name: "get_month_summary", arguments: { month: "2025-03" } }]),
-        createToolCallResponse([{ id: "call_4", name: "get_month_summary", arguments: { month: "2025-04" } }]),
+        createToolCallResponse([{ id: "call_1", name: "get_remaining_budget", arguments: { month: "2025-01" } }]),
+        createToolCallResponse([{ id: "call_2", name: "get_remaining_budget", arguments: { month: "2025-02" } }]),
+        createToolCallResponse([{ id: "call_3", name: "get_remaining_budget", arguments: { month: "2025-03" } }]),
+        createToolCallResponse([{ id: "call_4", name: "get_remaining_budget", arguments: { month: "2025-04" } }]),
         createTextResponse("Final response"),
       ]);
 
@@ -274,13 +274,13 @@ describe("AIOrchestrator", () => {
       mockExecuteTool.mockResolvedValueOnce({
         success: true,
         data: { month: "2025-02", totalBudget: 5000, totalSpent: 2500, remaining: 2500, percentUsed: 50, dailyBudgetTarget: 100, pacingStatus: "on-track", daysInMonth: 28, currentDay: 15 },
-        toolName: "get_month_summary",
+        toolName: "get_remaining_budget",
         durationMs: 50,
       });
 
       const mockClient = createMockClient([
         createToolCallResponse([
-          { id: "call_1", name: "get_month_summary", arguments: { month: "2025-02" } },
+          { id: "call_1", name: "get_remaining_budget", arguments: { month: "2025-02" } },
         ]),
         createTextResponse("Your budget summary looks good."),
       ]);
@@ -289,23 +289,23 @@ describe("AIOrchestrator", () => {
       const result = await orchestrator.chat("Budget summary please");
 
       expect(result.response).toContain("**Data used:**");
-      expect(result.response).toContain("get_month_summary");
+      expect(result.response).toContain("get_remaining_budget");
     });
 
     it("should not duplicate Data used section if already present", async () => {
       mockExecuteTool.mockResolvedValueOnce({
         success: true,
         data: { month: "2025-02", totalBudget: 5000, totalSpent: 2500, remaining: 2500, percentUsed: 50, dailyBudgetTarget: 100, pacingStatus: "on-track", daysInMonth: 28, currentDay: 15 },
-        toolName: "get_month_summary",
+        toolName: "get_remaining_budget",
         durationMs: 50,
       });
 
       const mockClient = createMockClient([
         createToolCallResponse([
-          { id: "call_1", name: "get_month_summary", arguments: { month: "2025-02" } },
+          { id: "call_1", name: "get_remaining_budget", arguments: { month: "2025-02" } },
         ]),
         // Response already includes Data used section
-        createTextResponse("Here's your summary.\n\n**Data used:** `get_month_summary`"),
+        createTextResponse("Here's your summary.\n\n**Data used:** `get_remaining_budget`"),
       ]);
 
       const orchestrator = new AIOrchestrator({ client: mockClient });
@@ -337,13 +337,13 @@ describe("AIOrchestrator", () => {
       mockExecuteTool.mockResolvedValueOnce({
         success: false,
         error: "Database connection failed",
-        toolName: "get_month_summary",
+        toolName: "get_remaining_budget",
         durationMs: 100,
       });
 
       const mockClient = createMockClient([
         createToolCallResponse([
-          { id: "call_1", name: "get_month_summary", arguments: { month: "2025-02" } },
+          { id: "call_1", name: "get_remaining_budget", arguments: { month: "2025-02" } },
         ]),
         createTextResponse("I encountered an issue fetching your data."),
       ]);
@@ -353,7 +353,7 @@ describe("AIOrchestrator", () => {
 
       // Should still return a response
       expect(result.response).toBeDefined();
-      expect(result.toolsUsed).toContain("get_month_summary");
+      expect(result.toolsUsed).toContain("get_remaining_budget");
     });
 
     it("should return fallback message when OpenAI returns no text", async () => {

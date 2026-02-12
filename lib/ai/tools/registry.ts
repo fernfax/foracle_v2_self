@@ -62,7 +62,6 @@ export type SummaryRangeParams = z.infer<typeof SummaryRangeParamSchema>;
 export type FamilySummaryParams = z.infer<typeof FamilySummaryParamSchema>;
 
 export type ToolName =
-  | "get_month_summary"
   | "get_remaining_budget"
   | "get_upcoming_expenses"
   | "compute_trip_budget"
@@ -83,23 +82,6 @@ export interface ToolDefinition {
 // =============================================================================
 
 const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
-  get_month_summary: {
-    name: "get_month_summary",
-    description:
-      "Get a comprehensive financial summary for a specific month including total income (earnings), total budgeted expenses, actual spending, remaining budget, net surplus (income minus expenses), and spending pace. Use this when the user asks about their income, earnings, how much they earn, their overall financial status, or budget summary for a month.",
-    schema: MonthParamSchema,
-    parameters: {
-      type: "object",
-      properties: {
-        month: {
-          type: "string",
-          description: "The month to get summary for in YYYY-MM format (e.g., '2025-02')",
-        },
-      },
-      required: ["month"],
-    },
-  },
-
   get_remaining_budget: {
     name: "get_remaining_budget",
     description:
@@ -258,7 +240,6 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
 // =============================================================================
 
 const ALLOWED_TOOLS: Set<ToolName> = new Set([
-  "get_month_summary",
   "get_remaining_budget",
   "get_upcoming_expenses",
   "compute_trip_budget",

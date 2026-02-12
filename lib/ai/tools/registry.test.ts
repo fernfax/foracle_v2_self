@@ -24,13 +24,13 @@ describe("ToolRegistry", () => {
       const registry = new ToolRegistry();
       const toolNames = registry.getToolNames();
 
-      expect(toolNames).toContain("get_month_summary");
       expect(toolNames).toContain("get_remaining_budget");
       expect(toolNames).toContain("get_upcoming_expenses");
       expect(toolNames).toContain("compute_trip_budget");
       expect(toolNames).toContain("get_summary_range");
       expect(toolNames).toContain("get_income_summary");
       expect(toolNames).toContain("get_expenses_summary");
+      expect(toolNames).toContain("get_family_summary");
       expect(toolNames).toHaveLength(7);
     });
 
@@ -58,13 +58,13 @@ describe("ToolRegistry", () => {
     it("should recognize allowed tools", () => {
       const registry = new ToolRegistry();
 
-      expect(registry.isAllowed("get_month_summary")).toBe(true);
       expect(registry.isAllowed("get_remaining_budget")).toBe(true);
       expect(registry.isAllowed("get_upcoming_expenses")).toBe(true);
       expect(registry.isAllowed("compute_trip_budget")).toBe(true);
       expect(registry.isAllowed("get_summary_range")).toBe(true);
       expect(registry.isAllowed("get_income_summary")).toBe(true);
       expect(registry.isAllowed("get_expenses_summary")).toBe(true);
+      expect(registry.isAllowed("get_family_summary")).toBe(true);
     });
 
     it("should reject unknown tools", () => {
@@ -83,11 +83,11 @@ describe("ToolRegistry", () => {
   describe("getDefinition", () => {
     it("should return definition for valid tool", () => {
       const registry = new ToolRegistry();
-      const def = registry.getDefinition("get_month_summary");
+      const def = registry.getDefinition("get_remaining_budget");
 
       expect(def).toBeDefined();
-      expect(def?.name).toBe("get_month_summary");
-      expect(def?.description).toContain("financial summary");
+      expect(def?.name).toBe("get_remaining_budget");
+      expect(def?.description).toContain("remaining budget");
       expect(def?.parameters).toHaveProperty("type", "object");
     });
 
@@ -110,15 +110,15 @@ describe("ToolRegistry", () => {
 
       expect(tools).toHaveLength(7);
 
-      const monthSummaryTool = tools.find(
-        (t) => t.function.name === "get_month_summary"
+      const budgetTool = tools.find(
+        (t) => t.function.name === "get_remaining_budget"
       );
-      expect(monthSummaryTool).toBeDefined();
-      expect(monthSummaryTool?.type).toBe("function");
-      expect(monthSummaryTool?.function.description).toBeDefined();
-      expect(monthSummaryTool?.function.parameters).toHaveProperty("type", "object");
-      expect(monthSummaryTool?.function.parameters).toHaveProperty("properties");
-      expect(monthSummaryTool?.function.parameters).toHaveProperty("required");
+      expect(budgetTool).toBeDefined();
+      expect(budgetTool?.type).toBe("function");
+      expect(budgetTool?.function.description).toBeDefined();
+      expect(budgetTool?.function.parameters).toHaveProperty("type", "object");
+      expect(budgetTool?.function.parameters).toHaveProperty("properties");
+      expect(budgetTool?.function.parameters).toHaveProperty("required");
     });
 
     it("should include all required parameters", () => {
@@ -140,7 +140,7 @@ describe("ToolRegistry", () => {
   describe("validateArgs", () => {
     it("should validate valid month params", () => {
       const registry = new ToolRegistry();
-      const result = registry.validateArgs("get_month_summary", {
+      const result = registry.validateArgs("get_remaining_budget", {
         month: "2025-02",
       });
 
@@ -151,11 +151,11 @@ describe("ToolRegistry", () => {
       const registry = new ToolRegistry();
 
       expect(() =>
-        registry.validateArgs("get_month_summary", { month: "2025-2" })
+        registry.validateArgs("get_remaining_budget", { month: "2025-2" })
       ).toThrow();
 
       expect(() =>
-        registry.validateArgs("get_month_summary", { month: "Feb 2025" })
+        registry.validateArgs("get_remaining_budget", { month: "Feb 2025" })
       ).toThrow();
     });
 
@@ -264,7 +264,7 @@ describe("ToolRegistry", () => {
   describe("safeValidateArgs", () => {
     it("should return success for valid args", () => {
       const registry = new ToolRegistry();
-      const result = registry.safeValidateArgs("get_month_summary", {
+      const result = registry.safeValidateArgs("get_remaining_budget", {
         month: "2025-02",
       });
 
@@ -276,7 +276,7 @@ describe("ToolRegistry", () => {
 
     it("should return error for invalid args", () => {
       const registry = new ToolRegistry();
-      const result = registry.safeValidateArgs("get_month_summary", {
+      const result = registry.safeValidateArgs("get_remaining_budget", {
         month: "invalid",
       });
 

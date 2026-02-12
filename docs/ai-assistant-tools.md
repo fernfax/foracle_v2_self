@@ -6,11 +6,10 @@ This document describes the tools available to the Foracle AI Assistant. These t
 
 ## Overview
 
-The AI Assistant has access to **8 tools** that help it understand and analyze your financial situation:
+The AI Assistant has access to **7 tools** that help it understand and analyze your financial situation:
 
 | Tool | Purpose | Data Source |
 |------|---------|-------------|
-| `get_month_summary` | Overall financial snapshot for a month | `incomes`, `expenses`, `daily_expenses` |
 | `get_remaining_budget` | Budget availability by category | `expenses`, `expense_categories`, `daily_expenses` |
 | `get_upcoming_expenses` | Future planned expenses | `expenses` |
 | `compute_trip_budget` | Affordability check for trips/purchases | `incomes`, `expenses`, `daily_expenses` |
@@ -23,37 +22,7 @@ The AI Assistant has access to **8 tools** that help it understand and analyze y
 
 ## Tool Details
 
-### 1. `get_month_summary`
-
-**What it does:**
-Gives you a complete financial picture for any month — how much you earned, how much you budgeted to spend, how much you actually spent, and whether you're on track.
-
-**When the assistant uses it:**
-- "How am I doing financially this month?"
-- "What's my financial status for February?"
-- "Am I saving money this month?"
-
-**What it returns:**
-- Total income for the month
-- Total budgeted expenses
-- Actual spending so far
-- Remaining budget
-- Net surplus (income minus expenses)
-- Whether you're spending too fast, too slow, or on track
-
-**Data Sources:**
-| Table | What it provides |
-|-------|------------------|
-| `incomes` | Monthly income calculation |
-| `expenses` | Budgeted recurring expenses |
-| `daily_expenses` | Actual spending tracked |
-| `expense_categories` | Budget limits per category |
-
-**Related App Pages:** `/overview`, `/budget`
-
----
-
-### 2. `get_remaining_budget`
+### 1. `get_remaining_budget`
 
 **What it does:**
 Shows how much budget you have left in each spending category. Useful for knowing if you can afford something in a specific category.
@@ -81,7 +50,7 @@ Shows how much budget you have left in each spending category. Useful for knowin
 
 ---
 
-### 3. `get_upcoming_expenses`
+### 2. `get_upcoming_expenses`
 
 **What it does:**
 Lists all your recurring bills and expenses that will come up within a date range. Helps you plan for upcoming financial obligations.
@@ -108,7 +77,7 @@ Lists all your recurring bills and expenses that will come up within a date rang
 
 ---
 
-### 4. `compute_trip_budget`
+### 3. `compute_trip_budget`
 
 **What it does:**
 Checks if you can afford a trip or large purchase by looking at your income and fixed expenses. If you can't afford it now, it tells you how long you'd need to save.
@@ -135,7 +104,7 @@ Checks if you can afford a trip or large purchase by looking at your income and 
 
 ---
 
-### 5. `get_summary_range`
+### 4. `get_summary_range`
 
 **What it does:**
 Provides a financial summary over a longer period (e.g., 3 months, 6 months, a year). Shows totals and monthly averages for income and expenses.
@@ -163,7 +132,7 @@ Provides a financial summary over a longer period (e.g., 3 months, 6 months, a y
 
 ---
 
-### 6. `get_income_summary`
+### 5. `get_income_summary`
 
 **What it does:**
 Gives a detailed breakdown of all your income for a specific month. In Singapore, this includes CPF (Central Provident Fund) calculations — how much goes to your retirement accounts.
@@ -197,7 +166,7 @@ Gives a detailed breakdown of all your income for a specific month. In Singapore
 
 ---
 
-### 7. `get_expenses_summary`
+### 6. `get_expenses_summary`
 
 **What it does:**
 Provides a detailed breakdown of all your recurring expenses for a specific month. Shows what you're spending money on and which categories cost the most.
@@ -232,7 +201,7 @@ Provides a detailed breakdown of all your recurring expenses for a specific mont
 
 ---
 
-### 8. `get_family_summary`
+### 7. `get_family_summary`
 
 **What it does:**
 Shows your household structure — who's in your family and whose income counts toward your household total. This is important for understanding combined household income.

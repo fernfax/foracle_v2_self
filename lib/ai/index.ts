@@ -26,7 +26,6 @@ export {
   type TripBudgetParams,
   type ToolExecutionResult,
   type AuditRecord,
-  type MonthSummaryResult,
   type RemainingBudgetResult,
   type UpcomingExpensesResult,
   type TripBudgetResult,
