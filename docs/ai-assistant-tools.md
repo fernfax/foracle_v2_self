@@ -6,17 +6,14 @@ This document describes the tools available to the Foracle AI Assistant. These t
 
 ## Overview
 
-The AI Assistant has access to **7 tools** that help it understand and analyze your financial situation:
+The AI Assistant has access to **4 tools** that help it understand and analyze your financial situation:
 
 | Tool | Purpose | Data Source |
 |------|---------|-------------|
 | `get_income_summary` | Detailed income and CPF breakdown | `incomes`, `family_members` |
-| `get_expenses_summary` | Detailed expense breakdown | `expenses` |
+| `get_expenses_summary` | Detailed expense breakdown | `expenses`, `expense_categories` |
 | `get_family_summary` | Household structure and income inclusion | `family_members`, `incomes` |
-| `get_remaining_budget` | Budget availability by category | `expenses`, `expense_categories`, `daily_expenses` |
-| `get_upcoming_expenses` | Future planned expenses | `expenses` |
-| `compute_trip_budget` | Affordability check for trips/purchases | `incomes`, `expenses`, `daily_expenses` |
-| `get_summary_range` | Financial summary over a date range | `incomes`, `daily_expenses` |
+| `get_balance_summary` | Projected savings over a date range | `current_holdings`, `incomes`, `expenses` |
 
 ---
 
@@ -81,11 +78,15 @@ Provides a detailed breakdown of all your recurring expenses for a specific mont
   - Amount
   - Frequency
   - Type (recurring, one-time, etc.)
+- Available expense categories with:
+  - Name and icon
+  - Whether tracked in budget
 
 **Data Sources:**
 | Table | What it provides |
 |-------|------------------|
 | `expenses` | All recurring expense records |
+| `expense_categories` | User's expense categories for context |
 
 **Related App Pages:** `/expenses`
 
@@ -125,113 +126,52 @@ Shows your household structure — who's in your family and whose income counts 
 
 ---
 
-### 4. `get_remaining_budget`
+### 4. `get_balance_summary`
 
 **What it does:**
-Shows how much budget you have left in each spending category. Useful for knowing if you can afford something in a specific category.
+Projects your cumulative savings/balance over a date range. Shows month-by-month income, expenses, net savings, and running balance. Starting balance comes from your current bank holdings. Supports "what-if" scenarios to see how hypothetical expenses or income would affect your balance.
 
 **When the assistant uses it:**
-- "How much can I still spend on dining out?"
-- "What's left in my entertainment budget?"
-- "Which categories am I overspending in?"
+- "How much will I have saved by December?"
+- "What will my balance be in 3 months?"
+- "How much will I save this year?"
+- "If I spend $5,000 on a trip in June, how does that affect my savings?"
+- "Can I afford a $3,000 purchase next month?"
 
 **What it returns:**
-- Each budget category with:
-  - Original budget amount
-  - Amount spent so far
-  - Remaining balance
-  - Percentage used
+- Starting balance (from current holdings)
+- Monthly projections with:
+  - Income for the month
+  - Expenses for the month
+  - Net balance (income - expenses)
+  - Cumulative balance (running total)
+- Period totals:
+  - Total income
+  - Total expenses
+  - Net savings
+- Final projected balance
+- Hypothetical impact (if what-if parameters provided):
+  - Balance with vs without the hypothetical
+  - Percentage of monthly balance affected
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `fromMonth` | Yes | Start month (YYYY-MM format) |
+| `toMonth` | Yes | End month (YYYY-MM format) |
+| `hypotheticalExpense` | No | One-time expense to simulate |
+| `hypotheticalExpenseMonth` | No | Month for the hypothetical expense |
+| `hypotheticalIncome` | No | One-time income to simulate |
+| `hypotheticalIncomeMonth` | No | Month for the hypothetical income |
 
 **Data Sources:**
 | Table | What it provides |
 |-------|------------------|
-| `expenses` | Recurring expenses per category |
-| `expense_categories` | Budget limits and category definitions |
-| `daily_expenses` | Actual spending per category |
+| `current_holdings` | Starting balance from bank accounts |
+| `incomes` | All active income sources |
+| `expenses` | All active expense records |
 
-**Related App Pages:** `/budget`
-
----
-
-### 5. `get_upcoming_expenses`
-
-**What it does:**
-Lists all your recurring bills and expenses that will come up within a date range. Helps you plan for upcoming financial obligations.
-
-**When the assistant uses it:**
-- "What bills do I have coming up next month?"
-- "What expenses should I expect in March?"
-- "How much will I need to pay for recurring expenses?"
-
-**What it returns:**
-- List of upcoming expenses with:
-  - Expense name
-  - Category
-  - Amount
-  - Frequency (monthly, yearly, etc.)
-  - When it's due
-
-**Data Sources:**
-| Table | What it provides |
-|-------|------------------|
-| `expenses` | All recurring expense records |
-
-**Related App Pages:** `/expenses`
-
----
-
-### 6. `compute_trip_budget`
-
-**What it does:**
-Checks if you can afford a trip or large purchase by looking at your income and fixed expenses. If you can't afford it now, it tells you how long you'd need to save.
-
-**When the assistant uses it:**
-- "Can I afford a $2,000 trip to Japan?"
-- "I want to buy a $500 gadget — is that doable?"
-- "How long would I need to save for a $5,000 vacation?"
-
-**What it returns:**
-- Whether you can afford it
-- Available funds after fixed expenses
-- If not affordable: how much you're short, and how many months to save
-- Recommendation on how to proceed
-
-**Data Sources:**
-| Table | What it provides |
-|-------|------------------|
-| `incomes` | Monthly income to calculate disposable funds |
-| `expenses` | Fixed/recurring expenses |
-| `daily_expenses` | Current month spending |
-
-**Related App Pages:** `/overview`, `/budget`
-
----
-
-### 7. `get_summary_range`
-
-**What it does:**
-Provides a financial summary over a longer period (e.g., 3 months, 6 months, a year). Shows totals and monthly averages for income and expenses.
-
-**When the assistant uses it:**
-- "How much did I earn this year so far?"
-- "What was my average monthly spending from January to June?"
-- "How much have I saved in the last 3 months?"
-
-**What it returns:**
-- Period covered
-- Total income
-- Total expenses
-- Net savings
-- Average monthly income
-- Average monthly expenses
-
-**Data Sources:**
-| Table | What it provides |
-|-------|------------------|
-| `incomes` | Income records across the date range |
-| `daily_expenses` | Spending records across the date range |
-
-**Related App Pages:** `/overview`
+**Related App Pages:** `/expenses` (Monthly Balance Projection graph)
 
 ---
 
@@ -241,9 +181,9 @@ Provides a financial summary over a longer period (e.g., 3 months, 6 months, a y
 |-------|-------------|------------|
 | `incomes` | All income sources | `name`, `amount`, `frequency`, `family_member_id`, `subject_to_cpf`, `future_milestones` |
 | `expenses` | Recurring expenses | `name`, `amount`, `frequency`, `category`, `is_active` |
-| `daily_expenses` | Day-to-day spending | `amount`, `category`, `date`, `description` |
-| `expense_categories` | Budget categories | `name`, `monthly_budget`, `color` |
+| `expense_categories` | Expense categories | `name`, `icon`, `is_default`, `tracked_in_budget` |
 | `family_members` | Household members | `name`, `relationship`, `is_contributing`, `date_of_birth` |
+| `current_holdings` | Bank account balances | `bank_name`, `holding_amount`, `family_member_id` |
 
 ---
 
@@ -256,10 +196,19 @@ The assistant often combines multiple tools to answer complex questions:
 2. Then calls `get_income_summary` to get the actual income numbers
 3. Combines the information to explain total household income and who contributes
 
-**Example: "Can we afford a vacation?"**
+**Example: "How much will I save this year?"**
+1. Calls `get_balance_summary` with the date range for the year
+2. Returns the projected final balance and total net savings
+
+**Example: "Can I afford a $5,000 trip to Japan in June?"**
+1. Calls `get_balance_summary` with hypothetical expense of $5,000 in June
+2. Shows the impact on savings and whether the balance stays positive
+3. Provides the percentage of monthly balance the trip would consume
+
+**Example: "What's my monthly cash flow?"**
 1. Calls `get_income_summary` to understand monthly income
 2. Calls `get_expenses_summary` to understand fixed costs
-3. Calls `compute_trip_budget` to assess affordability
+3. Calculates the difference to show disposable income
 
 ---
 

@@ -4,9 +4,8 @@ import {
   getToolRegistry,
   resetToolRegistry,
   MonthParamSchema,
-  DateRangeParamSchema,
-  TripBudgetParamSchema,
-  SummaryRangeParamSchema,
+  FamilySummaryParamSchema,
+  BalanceSummaryParamSchema,
   type ToolName,
 } from "./registry";
 
@@ -24,14 +23,11 @@ describe("ToolRegistry", () => {
       const registry = new ToolRegistry();
       const toolNames = registry.getToolNames();
 
-      expect(toolNames).toContain("get_remaining_budget");
-      expect(toolNames).toContain("get_upcoming_expenses");
-      expect(toolNames).toContain("compute_trip_budget");
-      expect(toolNames).toContain("get_summary_range");
       expect(toolNames).toContain("get_income_summary");
       expect(toolNames).toContain("get_expenses_summary");
       expect(toolNames).toContain("get_family_summary");
-      expect(toolNames).toHaveLength(7);
+      expect(toolNames).toContain("get_balance_summary");
+      expect(toolNames).toHaveLength(4);
     });
 
     it("should return singleton instance via getToolRegistry", () => {
@@ -58,13 +54,10 @@ describe("ToolRegistry", () => {
     it("should recognize allowed tools", () => {
       const registry = new ToolRegistry();
 
-      expect(registry.isAllowed("get_remaining_budget")).toBe(true);
-      expect(registry.isAllowed("get_upcoming_expenses")).toBe(true);
-      expect(registry.isAllowed("compute_trip_budget")).toBe(true);
-      expect(registry.isAllowed("get_summary_range")).toBe(true);
       expect(registry.isAllowed("get_income_summary")).toBe(true);
       expect(registry.isAllowed("get_expenses_summary")).toBe(true);
       expect(registry.isAllowed("get_family_summary")).toBe(true);
+      expect(registry.isAllowed("get_balance_summary")).toBe(true);
     });
 
     it("should reject unknown tools", () => {
@@ -83,11 +76,11 @@ describe("ToolRegistry", () => {
   describe("getDefinition", () => {
     it("should return definition for valid tool", () => {
       const registry = new ToolRegistry();
-      const def = registry.getDefinition("get_remaining_budget");
+      const def = registry.getDefinition("get_income_summary");
 
       expect(def).toBeDefined();
-      expect(def?.name).toBe("get_remaining_budget");
-      expect(def?.description).toContain("remaining budget");
+      expect(def?.name).toBe("get_income_summary");
+      expect(def?.description).toContain("income");
       expect(def?.parameters).toHaveProperty("type", "object");
     });
 
@@ -108,28 +101,27 @@ describe("ToolRegistry", () => {
       const registry = new ToolRegistry();
       const tools = registry.getOpenAITools();
 
-      expect(tools).toHaveLength(7);
+      expect(tools).toHaveLength(4);
 
-      const budgetTool = tools.find(
-        (t) => t.function.name === "get_remaining_budget"
+      const incomeTool = tools.find(
+        (t) => t.function.name === "get_income_summary"
       );
-      expect(budgetTool).toBeDefined();
-      expect(budgetTool?.type).toBe("function");
-      expect(budgetTool?.function.description).toBeDefined();
-      expect(budgetTool?.function.parameters).toHaveProperty("type", "object");
-      expect(budgetTool?.function.parameters).toHaveProperty("properties");
-      expect(budgetTool?.function.parameters).toHaveProperty("required");
+      expect(incomeTool).toBeDefined();
+      expect(incomeTool?.type).toBe("function");
+      expect(incomeTool?.function.description).toBeDefined();
+      expect(incomeTool?.function.parameters).toHaveProperty("type", "object");
+      expect(incomeTool?.function.parameters).toHaveProperty("properties");
+      expect(incomeTool?.function.parameters).toHaveProperty("required");
     });
 
     it("should include all required parameters", () => {
       const registry = new ToolRegistry();
       const tools = registry.getOpenAITools();
 
-      const tripBudgetTool = tools.find(
-        (t) => t.function.name === "compute_trip_budget"
+      const incomeTool = tools.find(
+        (t) => t.function.name === "get_income_summary"
       );
-      expect(tripBudgetTool?.function.parameters.required).toContain("month");
-      expect(tripBudgetTool?.function.parameters.required).toContain("tripCost");
+      expect(incomeTool?.function.parameters.required).toContain("month");
     });
   });
 
@@ -138,9 +130,9 @@ describe("ToolRegistry", () => {
   // ---------------------------------------------------------------------------
 
   describe("validateArgs", () => {
-    it("should validate valid month params", () => {
+    it("should validate valid month params for income summary", () => {
       const registry = new ToolRegistry();
-      const result = registry.validateArgs("get_remaining_budget", {
+      const result = registry.validateArgs("get_income_summary", {
         month: "2025-02",
       });
 
@@ -151,100 +143,12 @@ describe("ToolRegistry", () => {
       const registry = new ToolRegistry();
 
       expect(() =>
-        registry.validateArgs("get_remaining_budget", { month: "2025-2" })
+        registry.validateArgs("get_income_summary", { month: "2025-2" })
       ).toThrow();
 
       expect(() =>
-        registry.validateArgs("get_remaining_budget", { month: "Feb 2025" })
+        registry.validateArgs("get_income_summary", { month: "Feb 2025" })
       ).toThrow();
-    });
-
-    it("should validate valid date range params", () => {
-      const registry = new ToolRegistry();
-      const result = registry.validateArgs("get_upcoming_expenses", {
-        fromDate: "2025-02-01",
-        toDate: "2025-02-28",
-      });
-
-      expect(result).toEqual({
-        fromDate: "2025-02-01",
-        toDate: "2025-02-28",
-      });
-    });
-
-    it("should throw on invalid date format", () => {
-      const registry = new ToolRegistry();
-
-      expect(() =>
-        registry.validateArgs("get_upcoming_expenses", {
-          fromDate: "2025/02/01",
-          toDate: "2025-02-28",
-        })
-      ).toThrow();
-    });
-
-    it("should validate valid trip budget params", () => {
-      const registry = new ToolRegistry();
-      const result = registry.validateArgs("compute_trip_budget", {
-        month: "2025-12",
-        tripCost: 5000,
-      });
-
-      expect(result).toEqual({ month: "2025-12", tripCost: 5000 });
-    });
-
-    it("should throw on negative trip cost", () => {
-      const registry = new ToolRegistry();
-
-      expect(() =>
-        registry.validateArgs("compute_trip_budget", {
-          month: "2025-12",
-          tripCost: -100,
-        })
-      ).toThrow();
-    });
-
-    it("should throw for unknown tool", () => {
-      const registry = new ToolRegistry();
-
-      expect(() =>
-        registry.validateArgs("unknown" as ToolName, {})
-      ).toThrow("Unknown tool");
-    });
-
-    it("should validate valid summary range params", () => {
-      const registry = new ToolRegistry();
-      const result = registry.validateArgs("get_summary_range", {
-        fromDate: "2025-01-01",
-        toDate: "2025-06-30",
-      });
-
-      expect(result).toEqual({
-        fromDate: "2025-01-01",
-        toDate: "2025-06-30",
-        includeIncome: true,
-        includeExpenses: true,
-      });
-    });
-
-    it("should throw on invalid date range (from > to)", () => {
-      const registry = new ToolRegistry();
-
-      expect(() =>
-        registry.validateArgs("get_summary_range", {
-          fromDate: "2025-12-31",
-          toDate: "2025-01-01",
-        })
-      ).toThrow();
-    });
-
-    it("should validate valid income summary params", () => {
-      const registry = new ToolRegistry();
-      const result = registry.validateArgs("get_income_summary", {
-        month: "2025-02",
-      });
-
-      expect(result).toEqual({ month: "2025-02" });
     });
 
     it("should validate valid expenses summary params", () => {
@@ -255,6 +159,36 @@ describe("ToolRegistry", () => {
 
       expect(result).toEqual({ month: "2025-02" });
     });
+
+    it("should validate valid family summary params with defaults", () => {
+      const registry = new ToolRegistry();
+      const result = registry.validateArgs("get_family_summary", {});
+
+      expect(result).toEqual({ scope: "auto" });
+    });
+
+    it("should validate valid family summary params with all options", () => {
+      const registry = new ToolRegistry();
+      const result = registry.validateArgs("get_family_summary", {
+        scope: "member",
+        month: "2025-02",
+        memberName: "Bei Yu",
+      });
+
+      expect(result).toEqual({
+        scope: "member",
+        month: "2025-02",
+        memberName: "Bei Yu",
+      });
+    });
+
+    it("should throw for unknown tool", () => {
+      const registry = new ToolRegistry();
+
+      expect(() =>
+        registry.validateArgs("unknown" as ToolName, {})
+      ).toThrow("Unknown tool");
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -264,7 +198,7 @@ describe("ToolRegistry", () => {
   describe("safeValidateArgs", () => {
     it("should return success for valid args", () => {
       const registry = new ToolRegistry();
-      const result = registry.safeValidateArgs("get_remaining_budget", {
+      const result = registry.safeValidateArgs("get_income_summary", {
         month: "2025-02",
       });
 
@@ -276,7 +210,7 @@ describe("ToolRegistry", () => {
 
     it("should return error for invalid args", () => {
       const registry = new ToolRegistry();
-      const result = registry.safeValidateArgs("get_remaining_budget", {
+      const result = registry.safeValidateArgs("get_income_summary", {
         month: "invalid",
       });
 
@@ -286,14 +220,11 @@ describe("ToolRegistry", () => {
       }
     });
 
-    it("should return error for missing required args", () => {
+    it("should return success for family summary with no args", () => {
       const registry = new ToolRegistry();
-      const result = registry.safeValidateArgs("compute_trip_budget", {
-        month: "2025-02",
-        // tripCost is missing
-      });
+      const result = registry.safeValidateArgs("get_family_summary", {});
 
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
     });
   });
 });
@@ -317,99 +248,112 @@ describe("Zod Schemas", () => {
     });
   });
 
-  describe("DateRangeParamSchema", () => {
-    it("should accept valid YYYY-MM-DD format", () => {
-      const result = DateRangeParamSchema.safeParse({
-        fromDate: "2025-02-01",
-        toDate: "2025-02-28",
-      });
-      expect(result.success).toBe(true);
+  describe("FamilySummaryParamSchema", () => {
+    it("should accept valid scope values", () => {
+      expect(FamilySummaryParamSchema.safeParse({ scope: "household" }).success).toBe(true);
+      expect(FamilySummaryParamSchema.safeParse({ scope: "member" }).success).toBe(true);
+      expect(FamilySummaryParamSchema.safeParse({ scope: "auto" }).success).toBe(true);
     });
 
-    it("should reject invalid date format", () => {
-      const result = DateRangeParamSchema.safeParse({
-        fromDate: "02-01-2025",
-        toDate: "2025-02-28",
-      });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe("TripBudgetParamSchema", () => {
-    it("should accept positive trip cost", () => {
-      const result = TripBudgetParamSchema.safeParse({
-        month: "2025-06",
-        tripCost: 5000,
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("should reject zero trip cost", () => {
-      const result = TripBudgetParamSchema.safeParse({
-        month: "2025-06",
-        tripCost: 0,
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject negative trip cost", () => {
-      const result = TripBudgetParamSchema.safeParse({
-        month: "2025-06",
-        tripCost: -500,
-      });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe("SummaryRangeParamSchema", () => {
-    it("should accept valid date range with defaults", () => {
-      const result = SummaryRangeParamSchema.safeParse({
-        fromDate: "2025-01-01",
-        toDate: "2025-06-30",
-      });
+    it("should use default scope when not provided", () => {
+      const result = FamilySummaryParamSchema.safeParse({});
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.includeIncome).toBe(true);
-        expect(result.data.includeExpenses).toBe(true);
+        expect(result.data.scope).toBe("auto");
       }
     });
 
-    it("should accept valid date range with explicit toggles", () => {
-      const result = SummaryRangeParamSchema.safeParse({
-        fromDate: "2025-01-01",
-        toDate: "2025-06-30",
-        includeIncome: false,
-        includeExpenses: true,
+    it("should accept optional month parameter", () => {
+      const result = FamilySummaryParamSchema.safeParse({
+        month: "2025-02",
       });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.includeIncome).toBe(false);
-        expect(result.data.includeExpenses).toBe(true);
+        expect(result.data.month).toBe("2025-02");
       }
     });
 
-    it("should reject invalid date format", () => {
-      const result = SummaryRangeParamSchema.safeParse({
-        fromDate: "01-01-2025",
-        toDate: "2025-06-30",
+    it("should reject invalid month format", () => {
+      const result = FamilySummaryParamSchema.safeParse({
+        month: "02-2025",
       });
       expect(result.success).toBe(false);
     });
 
-    it("should reject when fromDate is after toDate", () => {
-      const result = SummaryRangeParamSchema.safeParse({
-        fromDate: "2025-06-30",
-        toDate: "2025-01-01",
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it("should accept same date for fromDate and toDate", () => {
-      const result = SummaryRangeParamSchema.safeParse({
-        fromDate: "2025-03-15",
-        toDate: "2025-03-15",
+    it("should accept memberName parameter", () => {
+      const result = FamilySummaryParamSchema.safeParse({
+        memberName: "Bei Yu",
       });
       expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.memberName).toBe("Bei Yu");
+      }
+    });
+  });
+
+  describe("BalanceSummaryParamSchema", () => {
+    it("should accept valid date range", () => {
+      const result = BalanceSummaryParamSchema.safeParse({
+        fromMonth: "2025-01",
+        toMonth: "2025-12",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.fromMonth).toBe("2025-01");
+        expect(result.data.toMonth).toBe("2025-12");
+      }
+    });
+
+    it("should reject invalid month format", () => {
+      const result = BalanceSummaryParamSchema.safeParse({
+        fromMonth: "01-2025",
+        toMonth: "2025-12",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should accept optional hypothetical expense", () => {
+      const result = BalanceSummaryParamSchema.safeParse({
+        fromMonth: "2025-01",
+        toMonth: "2025-12",
+        hypotheticalExpense: 5000,
+        hypotheticalExpenseMonth: "2025-06",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.hypotheticalExpense).toBe(5000);
+        expect(result.data.hypotheticalExpenseMonth).toBe("2025-06");
+      }
+    });
+
+    it("should accept optional hypothetical income", () => {
+      const result = BalanceSummaryParamSchema.safeParse({
+        fromMonth: "2025-01",
+        toMonth: "2025-12",
+        hypotheticalIncome: 10000,
+        hypotheticalIncomeMonth: "2025-03",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.hypotheticalIncome).toBe(10000);
+        expect(result.data.hypotheticalIncomeMonth).toBe("2025-03");
+      }
+    });
+
+    it("should reject negative hypothetical expense", () => {
+      const result = BalanceSummaryParamSchema.safeParse({
+        fromMonth: "2025-01",
+        toMonth: "2025-12",
+        hypotheticalExpense: -500,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should require both fromMonth and toMonth", () => {
+      const result = BalanceSummaryParamSchema.safeParse({
+        fromMonth: "2025-01",
+      });
+      expect(result.success).toBe(false);
     });
   });
 });

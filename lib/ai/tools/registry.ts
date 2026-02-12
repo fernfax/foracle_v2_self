@@ -11,36 +11,6 @@ export const MonthParamSchema = z.object({
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format"),
 });
 
-export const DateRangeParamSchema = z.object({
-  fromDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "fromDate must be in YYYY-MM-DD format"),
-  toDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "toDate must be in YYYY-MM-DD format"),
-});
-
-export const TripBudgetParamSchema = z.object({
-  month: z
-    .string()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format"),
-  tripCost: z.number().positive("Trip cost must be a positive number"),
-});
-
-export const SummaryRangeParamSchema = z.object({
-  fromDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "fromDate must be in YYYY-MM-DD format"),
-  toDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "toDate must be in YYYY-MM-DD format"),
-  includeIncome: z.boolean().optional().default(true),
-  includeExpenses: z.boolean().optional().default(true),
-}).refine(
-  (data) => new Date(data.fromDate) <= new Date(data.toDate),
-  { message: "fromDate must be before or equal to toDate" }
-);
-
 export const FamilySummaryParamSchema = z.object({
   scope: z.enum(["household", "member", "auto"]).default("auto"),
   month: z
@@ -51,24 +21,44 @@ export const FamilySummaryParamSchema = z.object({
   memberName: z.string().optional(),
 });
 
+export const BalanceSummaryParamSchema = z.object({
+  fromMonth: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "fromMonth must be in YYYY-MM format"),
+  toMonth: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "toMonth must be in YYYY-MM format"),
+  hypotheticalExpense: z
+    .number()
+    .positive("Hypothetical expense must be positive")
+    .optional(),
+  hypotheticalExpenseMonth: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "hypotheticalExpenseMonth must be in YYYY-MM format")
+    .optional(),
+  hypotheticalIncome: z
+    .number()
+    .positive("Hypothetical income must be positive")
+    .optional(),
+  hypotheticalIncomeMonth: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "hypotheticalIncomeMonth must be in YYYY-MM format")
+    .optional(),
+});
+
 // =============================================================================
 // Tool Type Definitions
 // =============================================================================
 
 export type MonthParams = z.infer<typeof MonthParamSchema>;
-export type DateRangeParams = z.infer<typeof DateRangeParamSchema>;
-export type TripBudgetParams = z.infer<typeof TripBudgetParamSchema>;
-export type SummaryRangeParams = z.infer<typeof SummaryRangeParamSchema>;
 export type FamilySummaryParams = z.infer<typeof FamilySummaryParamSchema>;
+export type BalanceSummaryParams = z.infer<typeof BalanceSummaryParamSchema>;
 
 export type ToolName =
-  | "get_remaining_budget"
-  | "get_upcoming_expenses"
-  | "compute_trip_budget"
-  | "get_summary_range"
   | "get_income_summary"
   | "get_expenses_summary"
-  | "get_family_summary";
+  | "get_family_summary"
+  | "get_balance_summary";
 
 export interface ToolDefinition {
   name: ToolName;
@@ -82,94 +72,6 @@ export interface ToolDefinition {
 // =============================================================================
 
 const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
-  get_remaining_budget: {
-    name: "get_remaining_budget",
-    description:
-      "Get the remaining budget breakdown by category for a specific month. Shows each category's budget, amount spent, and remaining balance. Use this when the user asks about budget availability or category-specific spending.",
-    schema: MonthParamSchema,
-    parameters: {
-      type: "object",
-      properties: {
-        month: {
-          type: "string",
-          description: "The month to check in YYYY-MM format (e.g., '2025-02')",
-        },
-      },
-      required: ["month"],
-    },
-  },
-
-  get_upcoming_expenses: {
-    name: "get_upcoming_expenses",
-    description:
-      "Get recurring expenses that will occur within a date range. Shows expense name, category, amount, and frequency. Use this when the user asks about future or planned expenses.",
-    schema: DateRangeParamSchema,
-    parameters: {
-      type: "object",
-      properties: {
-        fromDate: {
-          type: "string",
-          description: "Start date in YYYY-MM-DD format (e.g., '2025-02-01')",
-        },
-        toDate: {
-          type: "string",
-          description: "End date in YYYY-MM-DD format (e.g., '2025-02-28')",
-        },
-      },
-      required: ["fromDate", "toDate"],
-    },
-  },
-
-  compute_trip_budget: {
-    name: "compute_trip_budget",
-    description:
-      "Calculate if the user can afford a trip by comparing trip cost against available funds after fixed expenses. Returns affordability assessment and savings suggestions. Use this when the user asks about planning a trip or large purchase.",
-    schema: TripBudgetParamSchema,
-    parameters: {
-      type: "object",
-      properties: {
-        month: {
-          type: "string",
-          description: "The month to analyze in YYYY-MM format (e.g., '2025-02')",
-        },
-        tripCost: {
-          type: "number",
-          description: "The total cost of the trip in SGD",
-        },
-      },
-      required: ["month", "tripCost"],
-    },
-  },
-
-  get_summary_range: {
-    name: "get_summary_range",
-    description:
-      "Get a comprehensive income and expense summary for a date range. Returns total income, total expenses, net savings, and monthly averages. Use this when the user asks about earnings or spending over a period of time, such as 'How much did I earn/spend between January and June?' or 'What's my average monthly spending this year?'",
-    schema: SummaryRangeParamSchema,
-    parameters: {
-      type: "object",
-      properties: {
-        fromDate: {
-          type: "string",
-          description: "Start date in YYYY-MM-DD format (e.g., '2025-01-01')",
-        },
-        toDate: {
-          type: "string",
-          description: "End date in YYYY-MM-DD format (e.g., '2025-06-30')",
-        },
-        includeIncome: {
-          type: "boolean",
-          description: "Whether to include income in the summary (default: true)",
-        },
-        includeExpenses: {
-          type: "boolean",
-          description: "Whether to include expenses in the summary (default: true)",
-        },
-      },
-      required: ["fromDate", "toDate"],
-    },
-  },
-
   get_income_summary: {
     name: "get_income_summary",
     description:
@@ -233,6 +135,43 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       required: [],
     },
   },
+
+  get_balance_summary: {
+    name: "get_balance_summary",
+    description:
+      "Get projected cumulative balance (savings) over a date range. Returns monthly breakdown showing income, expenses, net savings, and cumulative balance for each month. Starting balance is fetched from current holdings. Supports hypothetical 'what-if' scenarios by adding optional one-time expenses or income. Use this when user asks about: future savings, balance projections, 'how much will I have saved by X', 'what will my balance be in N months', affordability of large purchases, or impact of spending on savings. IMPORTANT: When user asks about a SPECIFIC month (e.g., 'What is my balance in August 2026?'), only show that month's data in your response - do not list all intermediate months. When user asks about a RANGE or trend, you may show multiple months.",
+    schema: BalanceSummaryParamSchema,
+    parameters: {
+      type: "object",
+      properties: {
+        fromMonth: {
+          type: "string",
+          description: "Start month in YYYY-MM format (e.g., '2025-02')",
+        },
+        toMonth: {
+          type: "string",
+          description: "End month in YYYY-MM format (e.g., '2025-12')",
+        },
+        hypotheticalExpense: {
+          type: "number",
+          description: "Optional one-time expense amount to simulate (e.g., 5000 for a trip)",
+        },
+        hypotheticalExpenseMonth: {
+          type: "string",
+          description: "Month when hypothetical expense occurs in YYYY-MM format",
+        },
+        hypotheticalIncome: {
+          type: "number",
+          description: "Optional one-time income amount to simulate (e.g., bonus)",
+        },
+        hypotheticalIncomeMonth: {
+          type: "string",
+          description: "Month when hypothetical income occurs in YYYY-MM format",
+        },
+      },
+      required: ["fromMonth", "toMonth"],
+    },
+  },
 };
 
 // =============================================================================
@@ -240,13 +179,10 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
 // =============================================================================
 
 const ALLOWED_TOOLS: Set<ToolName> = new Set([
-  "get_remaining_budget",
-  "get_upcoming_expenses",
-  "compute_trip_budget",
-  "get_summary_range",
   "get_income_summary",
   "get_expenses_summary",
   "get_family_summary",
+  "get_balance_summary",
 ]);
 
 // =============================================================================

@@ -1,17 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { expenses, dailyExpenses, incomes, familyMembers } from "@/db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
-import { getBudgetSummary, getBudgetVsActual } from "@/lib/actions/budget-calculator";
+import { expenses, incomes, familyMembers, expenseCategories, currentHoldings } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf-calculator";
 import {
   getToolRegistry,
   type ToolName,
   type MonthParams,
-  type DateRangeParams,
-  type TripBudgetParams,
-  type SummaryRangeParams,
   type FamilySummaryParams,
+  type BalanceSummaryParams,
 } from "./registry";
 
 // =============================================================================
@@ -75,58 +72,6 @@ export function clearAuditLog(): void {
 // Tool Result Types
 // =============================================================================
 
-export interface CategoryBudgetItem {
-  category: string;
-  budget: number;
-  spent: number;
-  remaining: number;
-  percentUsed: number;
-}
-
-export interface RemainingBudgetResult {
-  month: string;
-  totalRemaining: number;
-  categories: CategoryBudgetItem[];
-}
-
-export interface UpcomingExpenseItem {
-  name: string;
-  category: string;
-  amount: number;
-  frequency: string;
-  nextOccurrence: string | null;
-}
-
-export interface UpcomingExpensesResult {
-  fromDate: string;
-  toDate: string;
-  totalExpected: number;
-  expenses: UpcomingExpenseItem[];
-}
-
-export interface TripBudgetResult {
-  month: string;
-  tripCost: number;
-  availableFunds: number;
-  canAfford: boolean;
-  shortfall: number;
-  monthlySavingsNeeded: number;
-  monthsToSave: number;
-  recommendation: string;
-}
-
-export interface SummaryRangeResult {
-  periodStart: string;
-  periodEnd: string;
-  periodDays: number;
-  periodMonthsApprox: number;
-  totalIncome: number;
-  totalExpenses: number;
-  netSavings: number;
-  averageMonthlyIncome: number;
-  averageMonthlyExpenses: number;
-}
-
 export interface CpfBreakdown {
   subjectToCpf: boolean;
   employeeContribution: number;
@@ -187,6 +132,14 @@ export interface RecurringExpenseItem {
   trackedInBudget: boolean;
 }
 
+export interface ExpenseCategoryInfo {
+  id: string;
+  name: string;
+  icon: string | null;
+  isDefault: boolean;
+  trackedInBudget: boolean;
+}
+
 export interface ExpensesSummaryResult {
   // Period info
   month: string;
@@ -198,6 +151,8 @@ export interface ExpensesSummaryResult {
   categoryCount: number;
   // All expense items
   expenses: RecurringExpenseItem[];
+  // User's expense categories
+  availableCategories: ExpenseCategoryInfo[];
 }
 
 // Family Summary Types
@@ -240,6 +195,47 @@ export interface FamilySummaryResult {
   notes: string[];
 }
 
+// Balance Summary Types
+export interface MonthlyBalanceProjection {
+  month: string; // "YYYY-MM" format
+  monthLabel: string; // "Jan 2025" format
+  income: number;
+  expenses: number;
+  netBalance: number; // income - expenses for this month
+  cumulativeBalance: number; // running total from starting balance
+}
+
+export interface HypotheticalImpact {
+  type: "expense" | "income";
+  amount: number;
+  month: string;
+  balanceWithout: number; // final balance without the hypothetical
+  balanceWith: number; // final balance with the hypothetical
+  impact: number; // difference
+  percentOfMonthlyBalance: number | null; // only for expenses: what % of that month's net balance
+}
+
+export interface BalanceSummaryResult {
+  // Period info
+  fromMonth: string;
+  toMonth: string;
+  monthCount: number;
+  // Starting balance (from current holdings)
+  startingBalance: number;
+  // Monthly projections
+  monthlyProjections: MonthlyBalanceProjection[];
+  // Period totals
+  totalIncome: number;
+  totalExpenses: number;
+  totalNetSavings: number;
+  // Final balance
+  finalBalance: number;
+  // Hypothetical impact (if provided)
+  hypotheticalImpact: HypotheticalImpact | null;
+  // Notes
+  notes: string[];
+}
+
 // =============================================================================
 // Helper Functions
 // =============================================================================
@@ -261,296 +257,33 @@ async function getCurrentUserId(): Promise<string | null> {
   }
 }
 
-// =============================================================================
-// Tool Executor: get_remaining_budget
-// =============================================================================
-
-async function executeGetRemainingBudget(
-  params: MonthParams,
-  userId: string
-): Promise<RemainingBudgetResult> {
-  const { year, month } = parseMonth(params.month);
-
-  const budgetVsActual = await getBudgetVsActual(year, month);
-
-  const categories: CategoryBudgetItem[] = budgetVsActual.map((item) => ({
-    category: item.categoryName,
-    budget: Math.round(item.monthlyBudget * 100) / 100,
-    spent: Math.round(item.spent * 100) / 100,
-    remaining: Math.round(item.remaining * 100) / 100,
-    percentUsed: Math.round(item.percentUsed * 100) / 100,
-  }));
-
-  const totalRemaining = categories.reduce((sum, cat) => sum + cat.remaining, 0);
-
-  return {
-    month: params.month,
-    totalRemaining: Math.round(totalRemaining * 100) / 100,
-    categories,
-  };
+/**
+ * Get the number of months between two YYYY-MM strings (inclusive)
+ */
+function getMonthsBetween(fromMonth: string, toMonth: string): number {
+  const from = parseMonth(fromMonth);
+  const to = parseMonth(toMonth);
+  return (to.year - from.year) * 12 + (to.month - from.month) + 1;
 }
 
-// =============================================================================
-// Tool Executor: get_upcoming_expenses
-// =============================================================================
-
-async function executeGetUpcomingExpenses(
-  params: DateRangeParams,
-  userId: string
-): Promise<UpcomingExpensesResult> {
-  // Get all active recurring expenses for the user
-  const userExpenses = await db
-    .select()
-    .from(expenses)
-    .where(
-      and(
-        eq(expenses.userId, userId),
-        eq(expenses.isActive, true)
-      )
-    );
-
-  // Filter expenses that occur within the date range
-  const fromDate = new Date(params.fromDate);
-  const toDate = new Date(params.toDate);
-
-  const upcomingExpenses: UpcomingExpenseItem[] = [];
-  let totalExpected = 0;
-
-  for (const expense of userExpenses) {
-    const amount = parseFloat(expense.amount);
-    const frequency = expense.frequency.toLowerCase();
-
-    // Check if expense occurs in the date range based on frequency
-    let occursInRange = false;
-    let nextOccurrence: string | null = null;
-
-    if (frequency === "one-time") {
-      // One-time expenses occur if their start date is in range
-      if (expense.startDate) {
-        const expenseDate = new Date(expense.startDate);
-        if (expenseDate >= fromDate && expenseDate <= toDate) {
-          occursInRange = true;
-          nextOccurrence = expense.startDate;
-        }
-      }
-    } else if (frequency === "monthly") {
-      // Monthly expenses always occur within any month span
-      occursInRange = true;
-      // Next occurrence is the first day of each month in range
-      nextOccurrence = params.fromDate;
-    } else if (frequency === "weekly" || frequency === "bi-weekly") {
-      // Weekly/bi-weekly expenses occur multiple times
-      occursInRange = true;
-      nextOccurrence = params.fromDate;
-    } else if (frequency === "yearly") {
-      // Yearly expenses - check if the annual date falls in range
-      if (expense.startDate) {
-        const startDate = new Date(expense.startDate);
-        const yearlyDate = new Date(
-          fromDate.getFullYear(),
-          startDate.getMonth(),
-          startDate.getDate()
-        );
-        if (yearlyDate >= fromDate && yearlyDate <= toDate) {
-          occursInRange = true;
-          nextOccurrence = yearlyDate.toISOString().split("T")[0];
-        }
-      } else {
-        occursInRange = true;
-        nextOccurrence = params.fromDate;
-      }
-    } else if (frequency === "quarterly") {
-      // Quarterly - simplified check
-      occursInRange = true;
-      nextOccurrence = params.fromDate;
-    } else {
-      // Other frequencies - assume they occur
-      occursInRange = true;
-      nextOccurrence = params.fromDate;
-    }
-
-    if (occursInRange) {
-      upcomingExpenses.push({
-        name: expense.name,
-        category: expense.category,
-        amount: Math.round(amount * 100) / 100,
-        frequency: expense.frequency,
-        nextOccurrence,
-      });
-      totalExpected += amount;
-    }
-  }
-
-  return {
-    fromDate: params.fromDate,
-    toDate: params.toDate,
-    totalExpected: Math.round(totalExpected * 100) / 100,
-    expenses: upcomingExpenses,
-  };
+/**
+ * Format a month for display (e.g., "2025-02" -> "Feb 2025")
+ */
+function formatMonthLabel(monthStr: string): string {
+  const { year, month } = parseMonth(monthStr);
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${monthNames[month - 1]} ${year}`;
 }
 
-// =============================================================================
-// Tool Executor: compute_trip_budget
-// =============================================================================
-
-async function executeComputeTripBudget(
-  params: TripBudgetParams,
-  userId: string
-): Promise<TripBudgetResult> {
-  const { year, month } = parseMonth(params.month);
-  const tripCost = params.tripCost;
-
-  // Get the budget summary to understand available funds
-  const summary = await getBudgetSummary(year, month);
-
-  // Available funds = remaining budget after fixed expenses
-  const availableFunds = summary.remaining;
-  const canAfford = availableFunds >= tripCost;
-  const shortfall = canAfford ? 0 : tripCost - availableFunds;
-
-  // Calculate how long it would take to save up
-  const monthlyBudget = summary.totalBudget;
-  const monthlySavingsRate = monthlyBudget * 0.1; // Assume 10% savings rate
-  const monthsToSave = shortfall > 0 ? Math.ceil(shortfall / monthlySavingsRate) : 0;
-
-  // Generate recommendation
-  let recommendation: string;
-  if (canAfford) {
-    recommendation = `You can afford this trip! You have $${availableFunds.toFixed(2)} remaining this month, which covers the $${tripCost.toFixed(2)} trip cost.`;
-  } else if (monthsToSave <= 3) {
-    recommendation = `You're $${shortfall.toFixed(2)} short. If you save $${monthlySavingsRate.toFixed(2)}/month (10% of budget), you could afford this in ${monthsToSave} month${monthsToSave > 1 ? "s" : ""}.`;
-  } else {
-    recommendation = `This trip costs $${shortfall.toFixed(2)} more than your available funds. Consider saving $${Math.ceil(shortfall / 3).toFixed(2)}/month for 3 months, or look for ways to reduce the trip cost.`;
-  }
-
-  return {
-    month: params.month,
-    tripCost: Math.round(tripCost * 100) / 100,
-    availableFunds: Math.round(availableFunds * 100) / 100,
-    canAfford,
-    shortfall: Math.round(shortfall * 100) / 100,
-    monthlySavingsNeeded: Math.round(monthlySavingsRate * 100) / 100,
-    monthsToSave,
-    recommendation,
-  };
-}
-
-// =============================================================================
-// Tool Executor: get_summary_range
-// =============================================================================
-
-async function executeGetSummaryRange(
-  params: SummaryRangeParams,
-  userId: string
-): Promise<SummaryRangeResult> {
-  const fromDate = new Date(params.fromDate);
-  const toDate = new Date(params.toDate);
-
-  // Calculate period metrics
-  const periodDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-  const periodMonthsApprox = Math.round((periodDays / 30.44) * 100) / 100; // Average days per month
-
-  let totalIncome = 0;
-  let totalExpenses = 0;
-
-  // Calculate income if requested
-  if (params.includeIncome) {
-    // Fetch active incomes for the user
-    const userIncomes = await db
-      .select()
-      .from(incomes)
-      .where(
-        and(
-          eq(incomes.userId, userId),
-          eq(incomes.isActive, true)
-        )
-      );
-
-    // Calculate income for each month in the range
-    for (const income of userIncomes) {
-      const amount = parseFloat(income.amount);
-      const frequency = income.frequency.toLowerCase();
-      const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
-      const incomeEndDate = income.endDate ? new Date(income.endDate) : null;
-
-      // Check if income overlaps with the period
-      if (incomeStartDate && incomeStartDate > toDate) continue;
-      if (incomeEndDate && incomeEndDate < fromDate) continue;
-
-      // Calculate effective date range
-      const effectiveStart = incomeStartDate && incomeStartDate > fromDate ? incomeStartDate : fromDate;
-      const effectiveEnd = incomeEndDate && incomeEndDate < toDate ? incomeEndDate : toDate;
-
-      // Count months the income applies to
-      let monthsActive = 0;
-      const current = new Date(effectiveStart.getFullYear(), effectiveStart.getMonth(), 1);
-      const endMonth = new Date(effectiveEnd.getFullYear(), effectiveEnd.getMonth(), 1);
-
-      while (current <= endMonth) {
-        monthsActive++;
-        current.setMonth(current.getMonth() + 1);
-      }
-
-      // Calculate total income based on frequency
-      if (frequency === "monthly") {
-        totalIncome += amount * monthsActive;
-      } else if (frequency === "yearly") {
-        // Yearly income: add if the period includes the income month
-        totalIncome += amount * (monthsActive / 12);
-      } else if (frequency === "weekly") {
-        const weeksInPeriod = periodDays / 7;
-        totalIncome += amount * weeksInPeriod;
-      } else if (frequency === "bi-weekly") {
-        const biWeeksInPeriod = periodDays / 14;
-        totalIncome += amount * biWeeksInPeriod;
-      } else if (frequency === "one-time") {
-        // One-time income: add if it falls within the range
-        if (incomeStartDate && incomeStartDate >= fromDate && incomeStartDate <= toDate) {
-          totalIncome += amount;
-        }
-      } else {
-        // Default to monthly for other frequencies
-        totalIncome += amount * monthsActive;
-      }
-    }
-  }
-
-  // Calculate expenses if requested
-  if (params.includeExpenses) {
-    // Fetch actual daily expenses for the date range
-    const userDailyExpenses = await db
-      .select()
-      .from(dailyExpenses)
-      .where(
-        and(
-          eq(dailyExpenses.userId, userId),
-          gte(dailyExpenses.date, params.fromDate),
-          lte(dailyExpenses.date, params.toDate)
-        )
-      );
-
-    // Sum up daily expenses
-    for (const expense of userDailyExpenses) {
-      totalExpenses += parseFloat(expense.amount);
-    }
-  }
-
-  // Calculate net savings and averages
-  const netSavings = totalIncome - totalExpenses;
-  const averageMonthlyIncome = periodMonthsApprox > 0 ? totalIncome / periodMonthsApprox : 0;
-  const averageMonthlyExpenses = periodMonthsApprox > 0 ? totalExpenses / periodMonthsApprox : 0;
-
-  return {
-    periodStart: params.fromDate,
-    periodEnd: params.toDate,
-    periodDays,
-    periodMonthsApprox,
-    totalIncome: Math.round(totalIncome * 100) / 100,
-    totalExpenses: Math.round(totalExpenses * 100) / 100,
-    netSavings: Math.round(netSavings * 100) / 100,
-    averageMonthlyIncome: Math.round(averageMonthlyIncome * 100) / 100,
-    averageMonthlyExpenses: Math.round(averageMonthlyExpenses * 100) / 100,
-  };
+/**
+ * Add N months to a YYYY-MM string
+ */
+function addMonthsToString(monthStr: string, offset: number): string {
+  const { year, month } = parseMonth(monthStr);
+  const totalMonths = year * 12 + (month - 1) + offset;
+  const newYear = Math.floor(totalMonths / 12);
+  const newMonth = (totalMonths % 12) + 1;
+  return `${newYear}-${String(newMonth).padStart(2, "0")}`;
 }
 
 // =============================================================================
@@ -603,7 +336,6 @@ async function executeGetIncomeSummary(
   const now = new Date();
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const isHistoricalMonth = monthStart < currentMonthStart;
-  const isFutureMonth = monthStart > currentMonthStart;
 
   for (const income of userIncomes) {
     let grossAmount = parseFloat(income.amount);
@@ -848,6 +580,12 @@ async function executeGetExpensesSummary(
       )
     );
 
+  // Fetch user's expense categories
+  const userExpenseCategories = await db
+    .select()
+    .from(expenseCategories)
+    .where(eq(expenseCategories.userId, userId));
+
   // Process expenses and calculate monthly amounts
   const expenseItems: RecurringExpenseItem[] = [];
   const categoryTotals: Record<string, { amount: number; count: number }> = {};
@@ -944,6 +682,15 @@ async function executeGetExpensesSummary(
   // Sort expenses by monthly amount (highest first)
   expenseItems.sort((a, b) => b.monthlyAmount - a.monthlyAmount);
 
+  // Build available categories list
+  const availableCategories: ExpenseCategoryInfo[] = userExpenseCategories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    icon: cat.icon,
+    isDefault: cat.isDefault || false,
+    trackedInBudget: cat.trackedInBudget || true,
+  }));
+
   return {
     month: params.month,
     totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100) / 100,
@@ -951,6 +698,7 @@ async function executeGetExpensesSummary(
     categoryBreakdown,
     categoryCount: categoryBreakdown.length,
     expenses: expenseItems,
+    availableCategories,
   };
 }
 
@@ -1085,6 +833,281 @@ async function executeGetFamilySummary(
 }
 
 // =============================================================================
+// Tool Executor: get_balance_summary
+// =============================================================================
+
+async function executeGetBalanceSummary(
+  params: BalanceSummaryParams,
+  userId: string
+): Promise<BalanceSummaryResult> {
+  const notes: string[] = [];
+  const monthCount = getMonthsBetween(params.fromMonth, params.toMonth);
+
+  // Validate date range
+  if (monthCount <= 0) {
+    throw new Error("toMonth must be after or equal to fromMonth");
+  }
+
+  // Fetch starting balance from current holdings
+  const holdings = await db
+    .select()
+    .from(currentHoldings)
+    .where(eq(currentHoldings.userId, userId));
+
+  const startingBalance = holdings.reduce((total, holding) => {
+    return total + parseFloat(holding.holdingAmount);
+  }, 0);
+
+  if (holdings.length === 0) {
+    notes.push("No current holdings found. Starting balance is $0.");
+  } else {
+    notes.push(`Starting balance calculated from ${holdings.length} holding(s).`);
+  }
+
+  // Fetch all active incomes and expenses
+  const userIncomes = await db
+    .select()
+    .from(incomes)
+    .where(and(eq(incomes.userId, userId), eq(incomes.isActive, true)));
+
+  const userExpenses = await db
+    .select()
+    .from(expenses)
+    .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+
+  // Calculate monthly projections
+  const monthlyProjections: MonthlyBalanceProjection[] = [];
+  let cumulativeBalance = startingBalance;
+  let totalIncome = 0;
+  let totalExpenses = 0;
+
+  for (let i = 0; i < monthCount; i++) {
+    const currentMonth = addMonthsToString(params.fromMonth, i);
+    const { year, month } = parseMonth(currentMonth);
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0);
+
+    // Calculate income for this month (reusing logic from executeGetIncomeSummary)
+    let monthlyIncome = 0;
+    for (const income of userIncomes) {
+      let amount = parseFloat(income.amount);
+      const frequency = income.frequency.toLowerCase();
+      const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
+      let incomeEndDate = income.endDate ? new Date(income.endDate) : null;
+
+      // Check if income is active during this month
+      if (incomeStartDate && incomeStartDate > monthEnd) continue;
+      if (incomeEndDate && incomeEndDate < monthStart) continue;
+
+      // Check for future milestones
+      let isUsingMilestone = false;
+      if (income.futureMilestones && income.accountForFutureChange) {
+        try {
+          const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
+          const applicableMilestones = milestones
+            .filter(m => m.targetMonth <= currentMonth)
+            .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
+
+          if (applicableMilestones.length > 0) {
+            amount = applicableMilestones[0].amount;
+            isUsingMilestone = true;
+          }
+
+          if (milestones.length > 0 && incomeEndDate) {
+            incomeEndDate = null;
+          }
+        } catch {
+          // Fall through
+        }
+      }
+
+      // Calculate effective amount (net if subject to CPF)
+      let effectiveAmount = amount;
+      if (income.subjectToCpf) {
+        if (isUsingMilestone) {
+          // For milestone income, calculate CPF dynamically based on the new amount
+          const cpfResult = calculateCPF(amount);
+          effectiveAmount = cpfResult.netTakeHome;
+        } else {
+          // For current income, use the stored netTakeHome if available
+          effectiveAmount = income.netTakeHome ? parseFloat(income.netTakeHome) : amount;
+        }
+      }
+
+      // Apply frequency
+      let allocatedAmount = 0;
+      if (frequency === "monthly") {
+        allocatedAmount = effectiveAmount;
+      } else if (frequency === "yearly") {
+        const startMonth = incomeStartDate ? incomeStartDate.getMonth() + 1 : 1;
+        if (month === startMonth) {
+          allocatedAmount = effectiveAmount;
+        }
+      } else if (frequency === "custom" && income.customMonths) {
+        try {
+          const customMonths = JSON.parse(income.customMonths) as number[];
+          if (customMonths.includes(month)) {
+            allocatedAmount = effectiveAmount;
+          }
+        } catch {
+          // Skip
+        }
+      } else if (frequency === "one-time") {
+        if (incomeStartDate &&
+            incomeStartDate.getFullYear() === year &&
+            incomeStartDate.getMonth() + 1 === month) {
+          allocatedAmount = effectiveAmount;
+        }
+      } else if (frequency === "quarterly") {
+        if (incomeStartDate) {
+          const monthsSinceStart = (year - incomeStartDate.getFullYear()) * 12 +
+                                   (month - 1 - incomeStartDate.getMonth());
+          if (monthsSinceStart >= 0 && monthsSinceStart % 3 === 0) {
+            allocatedAmount = effectiveAmount;
+          }
+        }
+      }
+
+      monthlyIncome += allocatedAmount;
+    }
+
+    // Calculate expenses for this month (reusing logic from executeGetExpensesSummary)
+    let monthlyExpense = 0;
+    for (const expense of userExpenses) {
+      const amount = parseFloat(expense.amount);
+      const frequency = expense.frequency.toLowerCase();
+      const expenseStartDate = expense.startDate ? new Date(expense.startDate) : null;
+      const expenseEndDate = expense.endDate ? new Date(expense.endDate) : null;
+
+      // Check if expense is active during this month
+      if (expenseStartDate && expenseStartDate > monthEnd) continue;
+      if (expenseEndDate && expenseEndDate < monthStart) continue;
+
+      // Apply frequency
+      let allocatedAmount = 0;
+      if (frequency === "monthly") {
+        allocatedAmount = amount;
+      } else if (frequency === "yearly") {
+        const startMonth = expenseStartDate ? expenseStartDate.getMonth() + 1 : 1;
+        if (month === startMonth) {
+          allocatedAmount = amount;
+        }
+      } else if (frequency === "custom" && expense.customMonths) {
+        try {
+          const customMonths = JSON.parse(expense.customMonths) as number[];
+          if (customMonths.includes(month)) {
+            allocatedAmount = amount;
+          }
+        } catch {
+          // Skip
+        }
+      } else if (frequency === "one-time") {
+        if (expenseStartDate &&
+            expenseStartDate.getFullYear() === year &&
+            expenseStartDate.getMonth() + 1 === month) {
+          allocatedAmount = amount;
+        }
+      } else if (frequency === "quarterly") {
+        if (expenseStartDate) {
+          const monthsSinceStart = (year - expenseStartDate.getFullYear()) * 12 +
+                                   (month - 1 - expenseStartDate.getMonth());
+          if (monthsSinceStart >= 0 && monthsSinceStart % 3 === 0) {
+            allocatedAmount = amount;
+          }
+        }
+      }
+
+      monthlyExpense += allocatedAmount;
+    }
+
+    // Add hypothetical expense if it falls in this month
+    let hypotheticalExpenseThisMonth = 0;
+    if (params.hypotheticalExpense && params.hypotheticalExpenseMonth === currentMonth) {
+      hypotheticalExpenseThisMonth = params.hypotheticalExpense;
+    }
+
+    // Add hypothetical income if it falls in this month
+    let hypotheticalIncomeThisMonth = 0;
+    if (params.hypotheticalIncome && params.hypotheticalIncomeMonth === currentMonth) {
+      hypotheticalIncomeThisMonth = params.hypotheticalIncome;
+    }
+
+    const effectiveIncome = monthlyIncome + hypotheticalIncomeThisMonth;
+    const effectiveExpense = monthlyExpense + hypotheticalExpenseThisMonth;
+    const netBalance = effectiveIncome - effectiveExpense;
+    cumulativeBalance += netBalance;
+    totalIncome += effectiveIncome;
+    totalExpenses += effectiveExpense;
+
+    monthlyProjections.push({
+      month: currentMonth,
+      monthLabel: formatMonthLabel(currentMonth),
+      income: Math.round(effectiveIncome * 100) / 100,
+      expenses: Math.round(effectiveExpense * 100) / 100,
+      netBalance: Math.round(netBalance * 100) / 100,
+      cumulativeBalance: Math.round(cumulativeBalance * 100) / 100,
+    });
+  }
+
+  // Calculate hypothetical impact if provided
+  let hypotheticalImpact: HypotheticalImpact | null = null;
+
+  if (params.hypotheticalExpense && params.hypotheticalExpenseMonth) {
+    // Recalculate without the hypothetical to get the difference
+    const finalWithout = cumulativeBalance + params.hypotheticalExpense;
+    const targetProjection = monthlyProjections.find(p => p.month === params.hypotheticalExpenseMonth);
+    const monthNetWithout = targetProjection ? targetProjection.netBalance + params.hypotheticalExpense : null;
+
+    hypotheticalImpact = {
+      type: "expense",
+      amount: params.hypotheticalExpense,
+      month: params.hypotheticalExpenseMonth,
+      balanceWithout: Math.round(finalWithout * 100) / 100,
+      balanceWith: Math.round(cumulativeBalance * 100) / 100,
+      impact: Math.round(-params.hypotheticalExpense * 100) / 100,
+      percentOfMonthlyBalance: monthNetWithout && monthNetWithout !== 0
+        ? Math.round((params.hypotheticalExpense / monthNetWithout) * 1000) / 10
+        : null,
+    };
+
+    notes.push(`Hypothetical expense of $${params.hypotheticalExpense.toLocaleString()} in ${formatMonthLabel(params.hypotheticalExpenseMonth)} included in projections.`);
+  }
+
+  if (params.hypotheticalIncome && params.hypotheticalIncomeMonth) {
+    // If we already have an expense impact, we can't show both - income takes precedence only if no expense
+    if (!hypotheticalImpact) {
+      const finalWithout = cumulativeBalance - params.hypotheticalIncome;
+
+      hypotheticalImpact = {
+        type: "income",
+        amount: params.hypotheticalIncome,
+        month: params.hypotheticalIncomeMonth,
+        balanceWithout: Math.round(finalWithout * 100) / 100,
+        balanceWith: Math.round(cumulativeBalance * 100) / 100,
+        impact: Math.round(params.hypotheticalIncome * 100) / 100,
+        percentOfMonthlyBalance: null,
+      };
+    }
+
+    notes.push(`Hypothetical income of $${params.hypotheticalIncome.toLocaleString()} in ${formatMonthLabel(params.hypotheticalIncomeMonth)} included in projections.`);
+  }
+
+  return {
+    fromMonth: params.fromMonth,
+    toMonth: params.toMonth,
+    monthCount,
+    startingBalance: Math.round(startingBalance * 100) / 100,
+    monthlyProjections,
+    totalIncome: Math.round(totalIncome * 100) / 100,
+    totalExpenses: Math.round(totalExpenses * 100) / 100,
+    totalNetSavings: Math.round((totalIncome - totalExpenses) * 100) / 100,
+    finalBalance: Math.round(cumulativeBalance * 100) / 100,
+    hypotheticalImpact,
+    notes,
+  };
+}
+
+// =============================================================================
 // Main Executor Function
 // =============================================================================
 
@@ -1166,22 +1189,6 @@ export async function executeTool(
     let data: unknown;
 
     switch (toolName as ToolName) {
-      case "get_remaining_budget":
-        data = await executeGetRemainingBudget(validationResult.data as MonthParams, userId);
-        break;
-
-      case "get_upcoming_expenses":
-        data = await executeGetUpcomingExpenses(validationResult.data as DateRangeParams, userId);
-        break;
-
-      case "compute_trip_budget":
-        data = await executeComputeTripBudget(validationResult.data as TripBudgetParams, userId);
-        break;
-
-      case "get_summary_range":
-        data = await executeGetSummaryRange(validationResult.data as SummaryRangeParams, userId);
-        break;
-
       case "get_income_summary":
         data = await executeGetIncomeSummary(validationResult.data as MonthParams, userId);
         break;
@@ -1192,6 +1199,10 @@ export async function executeTool(
 
       case "get_family_summary":
         data = await executeGetFamilySummary(validationResult.data as FamilySummaryParams, userId);
+        break;
+
+      case "get_balance_summary":
+        data = await executeGetBalanceSummary(validationResult.data as BalanceSummaryParams, userId);
         break;
 
       default:
