@@ -11,6 +11,7 @@ import {
   type DateRangeParams,
   type TripBudgetParams,
   type SummaryRangeParams,
+  type FamilySummaryParams,
 } from "./registry";
 
 // =============================================================================
@@ -215,6 +216,46 @@ export interface ExpensesSummaryResult {
   categoryCount: number;
   // All expense items
   expenses: RecurringExpenseItem[];
+}
+
+// Family Summary Types
+export interface FamilyMemberSummary {
+  memberId: string;
+  displayName: string;
+  relationship: string | null;
+  includeInIncomeTotals: boolean;
+  incomeSourceCount: number;
+  incomeIdentityHint: string | null; // e.g., "Evan Lee's Salary"
+  dateOfBirth: string | null;
+}
+
+export interface IncomeChangeSignal {
+  memberId: string;
+  memberName: string;
+  type: "scheduled" | "detected";
+  effectiveDate: string | null;
+  description: string;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface FamilySummaryResult {
+  // Query context
+  scope: "household" | "member";
+  month: string | null;
+  // Family structure
+  householdMembers: FamilyMemberSummary[];
+  memberCount: number;
+  // Inclusion breakdown
+  includedMembers: Array<{ memberId: string; name: string }>;
+  excludedMembers: Array<{ memberId: string; name: string }>;
+  includedMemberCount: number;
+  excludedMemberCount: number;
+  // If member-specific query
+  targetMember: FamilyMemberSummary | null;
+  // Income change signals
+  incomeChangeSignals: IncomeChangeSignal[];
+  // Notes and assumptions
+  notes: string[];
 }
 
 // =============================================================================
@@ -1014,6 +1055,136 @@ async function executeGetExpensesSummary(
 }
 
 // =============================================================================
+// Tool Executor: get_family_summary
+// =============================================================================
+
+async function executeGetFamilySummary(
+  params: FamilySummaryParams,
+  userId: string
+): Promise<FamilySummaryResult> {
+  // Determine effective scope
+  const effectiveScope: "household" | "member" =
+    params.scope === "auto"
+      ? (params.memberId || params.memberName ? "member" : "household")
+      : params.scope;
+
+  // Get all family members for this user
+  const userFamilyMembers = await db
+    .select()
+    .from(familyMembers)
+    .where(eq(familyMembers.userId, userId));
+
+  // Get all incomes for this user (to link to family members)
+  const userIncomes = await db
+    .select()
+    .from(incomes)
+    .where(and(
+      eq(incomes.userId, userId),
+      eq(incomes.isActive, true)
+    ));
+
+  // Build family member summaries
+  const householdMembers: FamilyMemberSummary[] = [];
+  const includedMembers: Array<{ memberId: string; name: string }> = [];
+  const excludedMembers: Array<{ memberId: string; name: string }> = [];
+  const notes: string[] = [];
+  const incomeChangeSignals: IncomeChangeSignal[] = [];
+  let targetMember: FamilyMemberSummary | null = null;
+
+  for (const member of userFamilyMembers) {
+    // Find incomes associated with this family member
+    const memberIncomes = userIncomes.filter(
+      (inc) => inc.familyMemberId === member.id
+    );
+
+    // Get income identity hint (first income name associated with this member)
+    const incomeIdentityHint = memberIncomes.length > 0
+      ? memberIncomes[0].name
+      : null;
+
+    const memberSummary: FamilyMemberSummary = {
+      memberId: member.id,
+      displayName: member.name,
+      relationship: member.relationship || null,
+      includeInIncomeTotals: member.isContributing || false,
+      incomeSourceCount: memberIncomes.length,
+      incomeIdentityHint,
+      dateOfBirth: member.dateOfBirth || null,
+    };
+
+    householdMembers.push(memberSummary);
+
+    // Track inclusion/exclusion
+    if (member.isContributing) {
+      includedMembers.push({ memberId: member.id, name: member.name });
+    } else {
+      excludedMembers.push({ memberId: member.id, name: member.name });
+      notes.push(`${member.name} is excluded from household income totals per family settings`);
+    }
+
+    // Check for income change signals via futureMilestones
+    for (const income of memberIncomes) {
+      if (income.futureMilestones) {
+        try {
+          const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
+          for (const milestone of milestones) {
+            incomeChangeSignals.push({
+              memberId: member.id,
+              memberName: member.name,
+              type: "scheduled",
+              effectiveDate: milestone.targetMonth,
+              description: `${member.name}'s income (${income.name}) scheduled to change to $${milestone.amount.toLocaleString()} in ${milestone.targetMonth}${milestone.reason ? ` (${milestone.reason})` : ""}`,
+              confidence: "high",
+            });
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
+
+    // Check if this is the target member for member-specific queries
+    if (effectiveScope === "member") {
+      const nameMatch = params.memberName
+        ? member.name.toLowerCase().includes(params.memberName.toLowerCase()) ||
+          (params.memberName.toLowerCase() === "spouse" && member.relationship?.toLowerCase() === "spouse") ||
+          (params.memberName.toLowerCase() === "wife" && member.relationship?.toLowerCase() === "spouse") ||
+          (params.memberName.toLowerCase() === "husband" && member.relationship?.toLowerCase() === "spouse")
+        : false;
+      const idMatch = params.memberId === member.id;
+
+      if (idMatch || nameMatch) {
+        targetMember = memberSummary;
+      }
+    }
+  }
+
+  // Add note if no family members found
+  if (householdMembers.length === 0) {
+    notes.push("No family members have been added yet. Income totals include all user incomes.");
+  }
+
+  // Add note about scope
+  if (effectiveScope === "member" && !targetMember && (params.memberId || params.memberName)) {
+    notes.push(`Could not find family member matching '${params.memberName || params.memberId}'. Showing all household members.`);
+  }
+
+  return {
+    scope: effectiveScope,
+    month: params.month || null,
+    householdMembers,
+    memberCount: householdMembers.length,
+    includedMembers,
+    excludedMembers,
+    includedMemberCount: includedMembers.length,
+    excludedMemberCount: excludedMembers.length,
+    targetMember,
+    incomeChangeSignals,
+    notes,
+  };
+}
+
+// =============================================================================
 // Main Executor Function
 // =============================================================================
 
@@ -1121,6 +1292,10 @@ export async function executeTool(
 
       case "get_expenses_summary":
         data = await executeGetExpensesSummary(validationResult.data as MonthParams, userId);
+        break;
+
+      case "get_family_summary":
+        data = await executeGetFamilySummary(validationResult.data as FamilySummaryParams, userId);
         break;
 
       default:

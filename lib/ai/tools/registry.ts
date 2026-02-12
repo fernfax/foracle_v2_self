@@ -41,6 +41,16 @@ export const SummaryRangeParamSchema = z.object({
   { message: "fromDate must be before or equal to toDate" }
 );
 
+export const FamilySummaryParamSchema = z.object({
+  scope: z.enum(["household", "member", "auto"]).default("auto"),
+  month: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format")
+    .optional(),
+  memberId: z.string().optional(),
+  memberName: z.string().optional(),
+});
+
 // =============================================================================
 // Tool Type Definitions
 // =============================================================================
@@ -49,6 +59,7 @@ export type MonthParams = z.infer<typeof MonthParamSchema>;
 export type DateRangeParams = z.infer<typeof DateRangeParamSchema>;
 export type TripBudgetParams = z.infer<typeof TripBudgetParamSchema>;
 export type SummaryRangeParams = z.infer<typeof SummaryRangeParamSchema>;
+export type FamilySummaryParams = z.infer<typeof FamilySummaryParamSchema>;
 
 export type ToolName =
   | "get_month_summary"
@@ -57,7 +68,8 @@ export type ToolName =
   | "compute_trip_budget"
   | "get_summary_range"
   | "get_income_summary"
-  | "get_expenses_summary";
+  | "get_expenses_summary"
+  | "get_family_summary";
 
 export interface ToolDefinition {
   name: ToolName;
@@ -209,6 +221,36 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       required: ["month"],
     },
   },
+
+  get_family_summary: {
+    name: "get_family_summary",
+    description:
+      "Get family/household structure and income inclusion settings. Returns list of family members, which members are included in household income totals, their relationships, and any detected income changes. Use this BEFORE get_income_summary when user asks about household income, combined income, family finances, who contributes to household income, spouse/partner income, or when you need to understand family structure. Also call this when user asks 'why did household income change' to check for member inclusion changes or income change signals.",
+    schema: FamilySummaryParamSchema,
+    parameters: {
+      type: "object",
+      properties: {
+        scope: {
+          type: "string",
+          enum: ["household", "member", "auto"],
+          description: "Scope of summary: 'household' for all members, 'member' for specific member, 'auto' to choose based on other params (default: auto)",
+        },
+        month: {
+          type: "string",
+          description: "Optional month context in YYYY-MM format for income change detection",
+        },
+        memberId: {
+          type: "string",
+          description: "Optional family member ID for member-specific queries",
+        },
+        memberName: {
+          type: "string",
+          description: "Optional family member name for lookup (e.g., 'Bei Yu', 'my wife', 'spouse')",
+        },
+      },
+      required: [],
+    },
+  },
 };
 
 // =============================================================================
@@ -223,6 +265,7 @@ const ALLOWED_TOOLS: Set<ToolName> = new Set([
   "get_summary_range",
   "get_income_summary",
   "get_expenses_summary",
+  "get_family_summary",
 ]);
 
 // =============================================================================
