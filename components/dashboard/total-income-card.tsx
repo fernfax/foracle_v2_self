@@ -148,11 +148,23 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
 
         if (applicableMilestones.length > 0) {
           totalMonthlyIncome += applicableMilestones[0].amount;
-          // Apply CPF deduction proportionally if applicable
+          // Apply CPF deduction with OW ceiling consideration
           if (income.subjectToCpf && income.employeeCpfContribution) {
+            const storedCpf = parseFloat(income.employeeCpfContribution);
             const baseAmount = parseFloat(income.amount);
-            const cpfRate = baseAmount > 0 ? parseFloat(income.employeeCpfContribution) / baseAmount : 0;
-            totalCpfDeduction += applicableMilestones[0].amount * cpfRate;
+            const milestoneAmount = applicableMilestones[0].amount;
+            const OW_CEILING = 8000;
+
+            if (milestoneAmount >= OW_CEILING && baseAmount >= OW_CEILING) {
+              // Both above ceiling - CPF stays the same (capped)
+              totalCpfDeduction += storedCpf;
+            } else if (milestoneAmount >= OW_CEILING) {
+              // Milestone above ceiling - use 20% of ceiling
+              totalCpfDeduction += OW_CEILING * 0.20;
+            } else {
+              // Milestone below ceiling - calculate at 20%
+              totalCpfDeduction += milestoneAmount * 0.20;
+            }
           }
           usedMilestoneData = true;
         }
@@ -276,12 +288,12 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
                   : ""
               }`}
             >
-              ${netIncome.toLocaleString()}
+              ${Math.round(netIncome).toLocaleString()}
             </div>
           </div>
           {hasCpfDeductions && (
             <p className="text-xs text-muted-foreground mt-1">
-              Gross Income: ${grossIncome.toLocaleString()}
+              Gross Income: ${Math.round(grossIncome).toLocaleString()}
             </p>
           )}
           {incomes.length > 0 && monthChange.amount !== 0 && (
@@ -294,7 +306,7 @@ export function TotalIncomeCard({ totalIncome, selectedMonth, slideDirection }: 
                 <TrendingDown className="h-3 w-3" />
               )}
               <span>
-                {monthChange.amount > 0 ? "+" : ""}${Math.abs(monthChange.amount).toLocaleString()}
+                {monthChange.amount > 0 ? "+" : ""}${Math.round(Math.abs(monthChange.amount)).toLocaleString()}
                 {monthChange.percent !== 0 && ` (${monthChange.percent > 0 ? "+" : ""}${monthChange.percent.toFixed(1)}%)`}
               </span>
               <span className="text-muted-foreground">vs last month</span>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ThreadList, ChatView } from "@/components/assistant";
+import { MessageSquare, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ThreadSummary {
   id: string;
@@ -34,6 +36,7 @@ export function AssistantClient() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | undefined>();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Fetch threads on mount
   useEffect(() => {
@@ -92,11 +95,13 @@ export function AssistantClient() {
     setSelectedThreadId(undefined);
     setMessages([]);
     setError(null);
+    setSidebarOpen(false);
   }, []);
 
   const handleSelectThread = useCallback((threadId: string) => {
     setSelectedThreadId(threadId);
     setError(null);
+    setSidebarOpen(false);
   }, []);
 
   const handleDeleteThread = useCallback(async (threadId: string) => {
@@ -200,8 +205,37 @@ export function AssistantClient() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-      {/* Sidebar - Thread list (hidden on mobile) */}
-      <div className="hidden md:block w-72 border-r">
+      {/* Mobile header with conversations toggle */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between border-b bg-background/95 backdrop-blur px-4 py-2 md:hidden">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Conversations
+          {threads.length > 0 && (
+            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
+              {threads.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Sidebar - Thread list */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-80 transform bg-background border-r transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:w-72",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* Mobile close button */}
+        <button
+          onClick={() => setSidebarOpen(false)}
+          className="absolute top-3 right-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground md:hidden"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
         <ThreadList
           threads={threads}
           selectedThreadId={selectedThreadId}
@@ -212,8 +246,16 @@ export function AssistantClient() {
         />
       </div>
 
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Main chat area */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pt-12 md:pt-0">
         <ChatView
           messages={messages}
           onSend={handleSendMessage}

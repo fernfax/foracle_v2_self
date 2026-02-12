@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { expenses, dailyExpenses, incomes, familyMembers } from "@/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { getBudgetSummary, getBudgetVsActual } from "@/lib/actions/budget-calculator";
+import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf-calculator";
 import {
   getToolRegistry,
   type ToolName,
@@ -11,6 +12,18 @@ import {
   type TripBudgetParams,
   type SummaryRangeParams,
 } from "./registry";
+
+// =============================================================================
+// Future Milestone Type
+// =============================================================================
+
+interface FutureMilestone {
+  id: string;
+  targetMonth: string; // "YYYY-MM" format
+  amount: number;
+  reason?: string;
+  notes?: string;
+}
 
 // =============================================================================
 // Types
@@ -645,18 +658,97 @@ async function executeGetIncomeSummary(
   let totalSpecialAccount = 0;
   let totalMedisaveAccount = 0;
 
+  const targetPeriod = params.month; // "YYYY-MM" format
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const isHistoricalMonth = monthStart < currentMonthStart;
+  const isFutureMonth = monthStart > currentMonthStart;
+
   for (const income of userIncomes) {
-    const grossAmount = parseFloat(income.amount);
+    let grossAmount = parseFloat(income.amount);
     const frequency = income.frequency.toLowerCase();
     const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
-    const incomeEndDate = income.endDate ? new Date(income.endDate) : null;
+    let incomeEndDate = income.endDate ? new Date(income.endDate) : null;
+    let isUsingMilestone = false;
+    let isUsingHistorical = false;
+    let milestoneReason: string | undefined;
 
-    // Check if income is active during this month
+    // Check if income is active during this month (skip startDate check if null)
     if (incomeStartDate && incomeStartDate > monthEnd) continue;
     if (incomeEndDate && incomeEndDate < monthStart) continue;
 
+    // Check for pastIncomeHistory for historical months
+    if (isHistoricalMonth && income.pastIncomeHistory) {
+      try {
+        const history = JSON.parse(income.pastIncomeHistory) as Array<{
+          period: string;
+          granularity: "yearly" | "monthly";
+          amount: number;
+        }>;
+
+        // Check for monthly granularity match first
+        const monthlyEntry = history.find(
+          h => h.granularity === "monthly" && h.period === targetPeriod
+        );
+        if (monthlyEntry) {
+          grossAmount = monthlyEntry.amount;
+          isUsingHistorical = true;
+        } else {
+          // Check for yearly granularity match
+          const yearlyEntry = history.find(
+            h => h.granularity === "yearly" && h.period === String(year)
+          );
+          if (yearlyEntry) {
+            grossAmount = yearlyEntry.amount / 12;
+            isUsingHistorical = true;
+          }
+        }
+      } catch {
+        // Fall through to current calculation
+      }
+    }
+
+    // Check if income has future milestones (used to ignore endDate)
+    let hasFutureMilestones = false;
+    let parsedMilestones: FutureMilestone[] = [];
+    if (income.futureMilestones) {
+      try {
+        parsedMilestones = JSON.parse(income.futureMilestones);
+        hasFutureMilestones = parsedMilestones.length > 0;
+      } catch {
+        // ignore
+      }
+    }
+
+    // Check for future milestones (salary changes) - only if not using historical data
+    if (!isUsingHistorical && hasFutureMilestones && income.accountForFutureChange) {
+      // Find the most recent milestone that applies to this month
+      const applicableMilestones = parsedMilestones
+        .filter(m => m.targetMonth <= targetPeriod)
+        .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
+
+      if (applicableMilestones.length > 0) {
+        grossAmount = applicableMilestones[0].amount;
+        milestoneReason = applicableMilestones[0].reason;
+        isUsingMilestone = true;
+      }
+
+      // If there are future milestones, the income continues indefinitely
+      if (incomeEndDate) {
+        incomeEndDate = null;
+      }
+    }
+
+    // If using historical or milestone data with known amount, skip frequency calculation
+    // and use the amount directly (it's already monthly)
+    if (isUsingHistorical) {
+      // Historical data is already the monthly amount, process it directly below
+    }
+
     // Calculate frequency multiplier for monthly amount
     let frequencyMultiplier = 1;
+    let appliesThisMonth = true;
+
     if (frequency === "monthly") {
       frequencyMultiplier = 1;
     } else if (frequency === "yearly") {
@@ -665,6 +757,16 @@ async function executeGetIncomeSummary(
       frequencyMultiplier = 4.33;
     } else if (frequency === "bi-weekly") {
       frequencyMultiplier = 2.17;
+    } else if (frequency === "custom" && income.customMonths) {
+      // Custom frequency: only include if this month is in the customMonths array
+      try {
+        const customMonths = JSON.parse(income.customMonths) as number[];
+        appliesThisMonth = customMonths.includes(month);
+        frequencyMultiplier = appliesThisMonth ? 1 : 0;
+      } catch {
+        appliesThisMonth = false;
+        frequencyMultiplier = 0;
+      }
     } else if (frequency === "one-time") {
       // One-time income: include full amount only if it falls in this month
       if (incomeStartDate &&
@@ -678,16 +780,43 @@ async function executeGetIncomeSummary(
       frequencyMultiplier = 1 / 3;
     }
 
-    const monthlyGross = grossAmount * frequencyMultiplier;
+    // Skip if this income doesn't apply this month (for custom frequency)
+    if (!appliesThisMonth) continue;
 
-    // Get CPF data
+    // Calculate monthly gross
+    // For historical data, grossAmount is already the monthly amount
+    const monthlyGross = isUsingHistorical ? grossAmount : grossAmount * frequencyMultiplier;
+
+    // Get CPF data - recalculate if using milestone or historical amount
     const subjectToCpf = income.subjectToCpf || false;
-    const employeeCpf = income.employeeCpfContribution ? parseFloat(income.employeeCpfContribution) : 0;
-    const employerCpf = income.employerCpfContribution ? parseFloat(income.employerCpfContribution) : 0;
-    const netTakeHome = income.netTakeHome ? parseFloat(income.netTakeHome) : monthlyGross;
-    const cpfOA = income.cpfOrdinaryAccount ? parseFloat(income.cpfOrdinaryAccount) : 0;
-    const cpfSA = income.cpfSpecialAccount ? parseFloat(income.cpfSpecialAccount) : 0;
-    const cpfMA = income.cpfMedisaveAccount ? parseFloat(income.cpfMedisaveAccount) : 0;
+    let employeeCpf: number;
+    let employerCpf: number;
+    let netTakeHome: number;
+    let cpfOA: number;
+    let cpfSA: number;
+    let cpfMA: number;
+
+    if ((isUsingMilestone || isUsingHistorical) && subjectToCpf) {
+      // Dynamically recalculate CPF for the new amount
+      const cpfResult = calculateCPF(monthlyGross);
+      const allocations = getCPFAllocationByAge(30); // Default age 30
+      const totalCpf = cpfResult.employeeCpfContribution + cpfResult.employerCpfContribution;
+
+      employeeCpf = cpfResult.employeeCpfContribution;
+      employerCpf = cpfResult.employerCpfContribution;
+      netTakeHome = cpfResult.netTakeHome;
+      cpfOA = totalCpf * allocations.oa;
+      cpfSA = totalCpf * allocations.sa;
+      cpfMA = totalCpf * allocations.ma;
+    } else {
+      // Use stored CPF values
+      employeeCpf = income.employeeCpfContribution ? parseFloat(income.employeeCpfContribution) : 0;
+      employerCpf = income.employerCpfContribution ? parseFloat(income.employerCpfContribution) : 0;
+      netTakeHome = income.netTakeHome ? parseFloat(income.netTakeHome) : monthlyGross;
+      cpfOA = income.cpfOrdinaryAccount ? parseFloat(income.cpfOrdinaryAccount) : 0;
+      cpfSA = income.cpfSpecialAccount ? parseFloat(income.cpfSpecialAccount) : 0;
+      cpfMA = income.cpfMedisaveAccount ? parseFloat(income.cpfMedisaveAccount) : 0;
+    }
 
     // Add to totals
     totalGrossIncome += monthlyGross;
@@ -703,8 +832,11 @@ async function executeGetIncomeSummary(
       ? familyMemberMap[income.familyMemberId] || null
       : null;
 
-    // Determine status based on incomeCategory
-    const status = income.incomeCategory || "current-recurring";
+    // Determine status based on incomeCategory and milestone
+    let status = income.incomeCategory || "current-recurring";
+    if (isUsingMilestone && milestoneReason) {
+      status = `${status} (${milestoneReason})`;
+    }
 
     // Build CPF breakdown if subject to CPF
     const cpfBreakdown: CpfBreakdown | null = subjectToCpf ? {
@@ -792,6 +924,8 @@ async function executeGetExpensesSummary(
 
     // Calculate monthly amount based on frequency
     let monthlyAmount = 0;
+    let appliesThisMonth = true;
+
     if (frequency === "monthly") {
       monthlyAmount = amount;
     } else if (frequency === "yearly") {
@@ -800,6 +934,16 @@ async function executeGetExpensesSummary(
       monthlyAmount = amount * 4.33;
     } else if (frequency === "bi-weekly") {
       monthlyAmount = amount * 2.17;
+    } else if (frequency === "custom" && expense.customMonths) {
+      // Custom frequency: only include if this month is in the customMonths array
+      try {
+        const customMonths = JSON.parse(expense.customMonths) as number[];
+        appliesThisMonth = customMonths.includes(month);
+        monthlyAmount = appliesThisMonth ? amount : 0;
+      } catch {
+        appliesThisMonth = false;
+        monthlyAmount = 0;
+      }
     } else if (frequency === "one-time") {
       // One-time expense: include full amount only if it falls in this month
       if (expenseStartDate &&
@@ -815,6 +959,9 @@ async function executeGetExpensesSummary(
       // Default to the stated amount
       monthlyAmount = amount;
     }
+
+    // Skip if expense doesn't apply this month
+    if (!appliesThisMonth) continue;
 
     if (monthlyAmount > 0) {
       totalMonthlyExpenses += monthlyAmount;

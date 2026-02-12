@@ -137,7 +137,7 @@ export function TotalExpensesCard({ totalExpenses, selectedMonth, slideDirection
                   : ""
               }`}
             >
-              ${displayAmount.toLocaleString()}
+              ${Math.round(displayAmount).toLocaleString()}
             </div>
           </div>
           {expenses.length > 0 && monthChange.amount !== 0 && (
@@ -150,7 +150,7 @@ export function TotalExpensesCard({ totalExpenses, selectedMonth, slideDirection
                 <TrendingUp className="h-3 w-3" />
               )}
               <span>
-                {monthChange.amount > 0 ? "+" : ""}${Math.abs(monthChange.amount).toLocaleString()}
+                {monthChange.amount > 0 ? "+" : ""}${Math.round(Math.abs(monthChange.amount)).toLocaleString()}
                 {monthChange.percent !== 0 && ` (${monthChange.percent > 0 ? "+" : ""}${monthChange.percent.toFixed(1)}%)`}
               </span>
               <span className="text-muted-foreground">vs last month</span>
