@@ -21,13 +21,23 @@ export const FamilySummaryParamSchema = z.object({
   memberName: z.string().optional(),
 });
 
+// Schema for individual hypothetical items (multi-scenario support)
+export const HypotheticalItemSchema = z.object({
+  type: z.enum(["income", "expense"]),
+  amount: z.number().positive("Amount must be positive"),
+  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format"),
+  label: z.string().optional(),
+});
+
 export const BalanceSummaryParamSchema = z.object({
+  // ===== EXISTING PARAMS (backwards compatible) =====
   fromMonth: z
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "fromMonth must be in YYYY-MM format"),
   toMonth: z
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "toMonth must be in YYYY-MM format"),
+  // Legacy single hypothetical (kept for backwards compatibility)
   hypotheticalExpense: z
     .number()
     .positive("Hypothetical expense must be positive")
@@ -44,6 +54,27 @@ export const BalanceSummaryParamSchema = z.object({
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "hypotheticalIncomeMonth must be in YYYY-MM format")
     .optional(),
+
+  // ===== NEW PARAMS (v2 enhancements) =====
+  // Multi-scenario hypotheticals (if provided, overrides legacy single hypothetical params)
+  hypotheticals: z.array(HypotheticalItemSchema).optional(),
+
+  // Safety / buffer constraints
+  minEndBalance: z
+    .number()
+    .optional()
+    .describe("Minimum acceptable balance at end of projection period"),
+  minMonthlyBalance: z
+    .number()
+    .optional()
+    .describe("Minimum acceptable balance for any month during projection"),
+
+  // Affordability mode - compute max affordable expense for a specific month
+  computeMaxAffordableExpenseMonth: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Must be in YYYY-MM format")
+    .optional()
+    .describe("If provided, computes the maximum one-time expense affordable in this month while respecting constraints"),
 });
 
 // =============================================================================
@@ -53,6 +84,7 @@ export const BalanceSummaryParamSchema = z.object({
 export type MonthParams = z.infer<typeof MonthParamSchema>;
 export type FamilySummaryParams = z.infer<typeof FamilySummaryParamSchema>;
 export type BalanceSummaryParams = z.infer<typeof BalanceSummaryParamSchema>;
+export type HypotheticalItem = z.infer<typeof HypotheticalItemSchema>;
 
 export type ToolName =
   | "get_income_summary"
@@ -139,7 +171,7 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
   get_balance_summary: {
     name: "get_balance_summary",
     description:
-      "Get projected cumulative balance (savings) over a date range. Returns monthly breakdown showing income, expenses, net savings, and cumulative balance for each month. Starting balance is fetched from current holdings. Supports hypothetical 'what-if' scenarios by adding optional one-time expenses or income. Use this when user asks about: future savings, balance projections, 'how much will I have saved by X', 'what will my balance be in N months', affordability of large purchases, or impact of spending on savings. IMPORTANT: When user asks about a SPECIFIC month (e.g., 'What is my balance in August 2026?'), only show that month's data in your response - do not list all intermediate months. When user asks about a RANGE or trend, you may show multiple months.",
+      "Cashflow & affordability engine for balance projections and spending analysis. Returns monthly breakdown showing income, expenses, net savings, and cumulative balance. Starting balance is fetched from current holdings. ALWAYS includes a safetyAssessment with traffic light status (green/yellow/red) based on emergency fund health: GREEN = balance stays above 9 months of net income, YELLOW = balance dips to 6-9 months (caution advised), RED = balance drops below 6 months (expense not recommended). Use this for: (1) Balance projections - 'how much will I have saved by X', 'what will my balance be'; (2) Affordability questions - 'how much can I spend on a gift', 'can I afford X', 'what's my budget for Y' - use computeMaxAffordableExpenseMonth to find max affordable amount; (3) Multi-scenario planning - use hypotheticals[] array for trips spanning months or multiple purchases; (4) Safety analysis - use minEndBalance/minMonthlyBalance to ensure constraints are met. IMPORTANT: When user asks about a SPECIFIC month, only show that month's data. For affordability questions, use computeMaxAffordableExpenseMonth and report the maxAffordableOneTimeExpense. ALWAYS report the safetyAssessment status and recommendation to the user - if status is 'yellow' or 'red', explicitly advise caution or against the expense.",
     schema: BalanceSummaryParamSchema,
     parameters: {
       type: "object",
@@ -154,19 +186,45 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
         },
         hypotheticalExpense: {
           type: "number",
-          description: "Optional one-time expense amount to simulate (e.g., 5000 for a trip)",
+          description: "[Legacy] Single one-time expense to simulate. For multiple scenarios, use hypotheticals[] instead.",
         },
         hypotheticalExpenseMonth: {
           type: "string",
-          description: "Month when hypothetical expense occurs in YYYY-MM format",
+          description: "[Legacy] Month for hypotheticalExpense in YYYY-MM format",
         },
         hypotheticalIncome: {
           type: "number",
-          description: "Optional one-time income amount to simulate (e.g., bonus)",
+          description: "[Legacy] Single one-time income to simulate. For multiple scenarios, use hypotheticals[] instead.",
         },
         hypotheticalIncomeMonth: {
           type: "string",
-          description: "Month when hypothetical income occurs in YYYY-MM format",
+          description: "[Legacy] Month for hypotheticalIncome in YYYY-MM format",
+        },
+        hypotheticals: {
+          type: "array",
+          description: "Array of hypothetical income/expense scenarios. If provided, legacy single hypothetical params are ignored.",
+          items: {
+            type: "object",
+            properties: {
+              type: { type: "string", enum: ["income", "expense"], description: "Whether this is income or expense" },
+              amount: { type: "number", description: "Amount in dollars" },
+              month: { type: "string", description: "Month in YYYY-MM format" },
+              label: { type: "string", description: "Optional label (e.g., 'Valentine gift', 'Japan trip')" },
+            },
+            required: ["type", "amount", "month"],
+          },
+        },
+        minEndBalance: {
+          type: "number",
+          description: "Minimum acceptable balance at end of projection. Used for constraint checking.",
+        },
+        minMonthlyBalance: {
+          type: "number",
+          description: "Minimum acceptable balance for any month. Used for constraint checking and affordability calculations.",
+        },
+        computeMaxAffordableExpenseMonth: {
+          type: "string",
+          description: "If provided (YYYY-MM format), computes the MAXIMUM one-time expense the user can afford in that month while never going below minMonthlyBalance (default 0). Use this for questions like 'how much can I spend on X'.",
         },
       },
       required: ["fromMonth", "toMonth"],
