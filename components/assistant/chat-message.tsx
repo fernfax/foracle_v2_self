@@ -4,7 +4,7 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp, User, Bot, Database } from "lucide-react";
+import { ChevronDown, ChevronUp, Bot, Database } from "lucide-react";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -24,29 +24,38 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
     .replace(/\n*---\n*\*\*Data used:\*\*\s*`[^`]+`\s*$/g, "")
     .trim();
 
+  // User messages: right-aligned speech bubble (ChatGPT style)
+  if (isUser) {
+    return (
+      <div className="flex justify-end px-4 py-3">
+        <div className="max-w-[85%] sm:max-w-[75%]">
+          <div className="bg-slate-800 dark:bg-slate-700 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{displayContent}</p>
+          </div>
+          {timestamp && (
+            <div className="flex justify-end mt-1">
+              <span className="text-xs text-muted-foreground">
+                {timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Assistant messages: left-aligned with avatar
   return (
-    <div
-      className={cn(
-        "flex gap-3 px-4 py-4",
-        isUser ? "bg-muted/30" : "bg-background"
-      )}
-    >
+    <div className="flex gap-3 px-4 py-4 bg-background">
       {/* Avatar */}
-      <div
-        className={cn(
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          isUser ? "bg-primary text-primary-foreground" : "bg-emerald-100 text-emerald-700"
-        )}
-      >
-        {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+        <Bot className="h-4 w-4" />
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-3 overflow-hidden">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
-            {isUser ? "You" : "Foracle Assistant"}
-          </span>
+          <span className="text-sm font-medium">Foracle Assistant</span>
           {timestamp && (
             <span className="text-xs text-muted-foreground">
               {timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -240,13 +249,10 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
 // Tool descriptions for display
 function getToolDescription(tool: string): string {
   const descriptions: Record<string, string> = {
-    get_month_summary: "Monthly budget overview",
-    get_remaining_budget: "Category budget breakdown",
-    get_upcoming_expenses: "Planned expenses",
-    compute_trip_budget: "Trip affordability analysis",
     get_income_summary: "Income and CPF details",
     get_expenses_summary: "Expense breakdown",
-    get_summary_range: "Date range summary",
+    get_family_summary: "Household structure",
+    get_balance_summary: "Balance projections",
   };
   return descriptions[tool] || "";
 }
