@@ -10,129 +10,19 @@ The AI Assistant has access to **7 tools** that help it understand and analyze y
 
 | Tool | Purpose | Data Source |
 |------|---------|-------------|
+| `get_income_summary` | Detailed income and CPF breakdown | `incomes`, `family_members` |
+| `get_expenses_summary` | Detailed expense breakdown | `expenses` |
+| `get_family_summary` | Household structure and income inclusion | `family_members`, `incomes` |
 | `get_remaining_budget` | Budget availability by category | `expenses`, `expense_categories`, `daily_expenses` |
 | `get_upcoming_expenses` | Future planned expenses | `expenses` |
 | `compute_trip_budget` | Affordability check for trips/purchases | `incomes`, `expenses`, `daily_expenses` |
 | `get_summary_range` | Financial summary over a date range | `incomes`, `daily_expenses` |
-| `get_income_summary` | Detailed income and CPF breakdown | `incomes`, `family_members` |
-| `get_expenses_summary` | Detailed expense breakdown | `expenses` |
-| `get_family_summary` | Household structure and income inclusion | `family_members`, `incomes` |
 
 ---
 
 ## Tool Details
 
-### 1. `get_remaining_budget`
-
-**What it does:**
-Shows how much budget you have left in each spending category. Useful for knowing if you can afford something in a specific category.
-
-**When the assistant uses it:**
-- "How much can I still spend on dining out?"
-- "What's left in my entertainment budget?"
-- "Which categories am I overspending in?"
-
-**What it returns:**
-- Each budget category with:
-  - Original budget amount
-  - Amount spent so far
-  - Remaining balance
-  - Percentage used
-
-**Data Sources:**
-| Table | What it provides |
-|-------|------------------|
-| `expenses` | Recurring expenses per category |
-| `expense_categories` | Budget limits and category definitions |
-| `daily_expenses` | Actual spending per category |
-
-**Related App Pages:** `/budget`
-
----
-
-### 2. `get_upcoming_expenses`
-
-**What it does:**
-Lists all your recurring bills and expenses that will come up within a date range. Helps you plan for upcoming financial obligations.
-
-**When the assistant uses it:**
-- "What bills do I have coming up next month?"
-- "What expenses should I expect in March?"
-- "How much will I need to pay for recurring expenses?"
-
-**What it returns:**
-- List of upcoming expenses with:
-  - Expense name
-  - Category
-  - Amount
-  - Frequency (monthly, yearly, etc.)
-  - When it's due
-
-**Data Sources:**
-| Table | What it provides |
-|-------|------------------|
-| `expenses` | All recurring expense records |
-
-**Related App Pages:** `/expenses`
-
----
-
-### 3. `compute_trip_budget`
-
-**What it does:**
-Checks if you can afford a trip or large purchase by looking at your income and fixed expenses. If you can't afford it now, it tells you how long you'd need to save.
-
-**When the assistant uses it:**
-- "Can I afford a $2,000 trip to Japan?"
-- "I want to buy a $500 gadget — is that doable?"
-- "How long would I need to save for a $5,000 vacation?"
-
-**What it returns:**
-- Whether you can afford it
-- Available funds after fixed expenses
-- If not affordable: how much you're short, and how many months to save
-- Recommendation on how to proceed
-
-**Data Sources:**
-| Table | What it provides |
-|-------|------------------|
-| `incomes` | Monthly income to calculate disposable funds |
-| `expenses` | Fixed/recurring expenses |
-| `daily_expenses` | Current month spending |
-
-**Related App Pages:** `/overview`, `/budget`
-
----
-
-### 4. `get_summary_range`
-
-**What it does:**
-Provides a financial summary over a longer period (e.g., 3 months, 6 months, a year). Shows totals and monthly averages for income and expenses.
-
-**When the assistant uses it:**
-- "How much did I earn this year so far?"
-- "What was my average monthly spending from January to June?"
-- "How much have I saved in the last 3 months?"
-
-**What it returns:**
-- Period covered
-- Total income
-- Total expenses
-- Net savings
-- Average monthly income
-- Average monthly expenses
-
-**Data Sources:**
-| Table | What it provides |
-|-------|------------------|
-| `incomes` | Income records across the date range |
-| `daily_expenses` | Spending records across the date range |
-
-**Related App Pages:** `/overview`
-
----
-
-### 5. `get_income_summary`
+### 1. `get_income_summary`
 
 **What it does:**
 Gives a detailed breakdown of all your income for a specific month. In Singapore, this includes CPF (Central Provident Fund) calculations — how much goes to your retirement accounts.
@@ -166,7 +56,7 @@ Gives a detailed breakdown of all your income for a specific month. In Singapore
 
 ---
 
-### 6. `get_expenses_summary`
+### 2. `get_expenses_summary`
 
 **What it does:**
 Provides a detailed breakdown of all your recurring expenses for a specific month. Shows what you're spending money on and which categories cost the most.
@@ -201,7 +91,7 @@ Provides a detailed breakdown of all your recurring expenses for a specific mont
 
 ---
 
-### 7. `get_family_summary`
+### 3. `get_family_summary`
 
 **What it does:**
 Shows your household structure — who's in your family and whose income counts toward your household total. This is important for understanding combined household income.
@@ -232,6 +122,116 @@ Shows your household structure — who's in your family and whose income counts 
 | `incomes` | Income records linked to family members |
 
 **Related App Pages:** `/user` (Family Members tab)
+
+---
+
+### 4. `get_remaining_budget`
+
+**What it does:**
+Shows how much budget you have left in each spending category. Useful for knowing if you can afford something in a specific category.
+
+**When the assistant uses it:**
+- "How much can I still spend on dining out?"
+- "What's left in my entertainment budget?"
+- "Which categories am I overspending in?"
+
+**What it returns:**
+- Each budget category with:
+  - Original budget amount
+  - Amount spent so far
+  - Remaining balance
+  - Percentage used
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `expenses` | Recurring expenses per category |
+| `expense_categories` | Budget limits and category definitions |
+| `daily_expenses` | Actual spending per category |
+
+**Related App Pages:** `/budget`
+
+---
+
+### 5. `get_upcoming_expenses`
+
+**What it does:**
+Lists all your recurring bills and expenses that will come up within a date range. Helps you plan for upcoming financial obligations.
+
+**When the assistant uses it:**
+- "What bills do I have coming up next month?"
+- "What expenses should I expect in March?"
+- "How much will I need to pay for recurring expenses?"
+
+**What it returns:**
+- List of upcoming expenses with:
+  - Expense name
+  - Category
+  - Amount
+  - Frequency (monthly, yearly, etc.)
+  - When it's due
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `expenses` | All recurring expense records |
+
+**Related App Pages:** `/expenses`
+
+---
+
+### 6. `compute_trip_budget`
+
+**What it does:**
+Checks if you can afford a trip or large purchase by looking at your income and fixed expenses. If you can't afford it now, it tells you how long you'd need to save.
+
+**When the assistant uses it:**
+- "Can I afford a $2,000 trip to Japan?"
+- "I want to buy a $500 gadget — is that doable?"
+- "How long would I need to save for a $5,000 vacation?"
+
+**What it returns:**
+- Whether you can afford it
+- Available funds after fixed expenses
+- If not affordable: how much you're short, and how many months to save
+- Recommendation on how to proceed
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `incomes` | Monthly income to calculate disposable funds |
+| `expenses` | Fixed/recurring expenses |
+| `daily_expenses` | Current month spending |
+
+**Related App Pages:** `/overview`, `/budget`
+
+---
+
+### 7. `get_summary_range`
+
+**What it does:**
+Provides a financial summary over a longer period (e.g., 3 months, 6 months, a year). Shows totals and monthly averages for income and expenses.
+
+**When the assistant uses it:**
+- "How much did I earn this year so far?"
+- "What was my average monthly spending from January to June?"
+- "How much have I saved in the last 3 months?"
+
+**What it returns:**
+- Period covered
+- Total income
+- Total expenses
+- Net savings
+- Average monthly income
+- Average monthly expenses
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `incomes` | Income records across the date range |
+| `daily_expenses` | Spending records across the date range |
+
+**Related App Pages:** `/overview`
 
 ---
 
