@@ -9,6 +9,7 @@ import {
   type MonthParams,
   type FamilySummaryParams,
   type BalanceSummaryParams,
+  type HypotheticalItem,
 } from "./registry";
 
 // =============================================================================
@@ -203,6 +204,8 @@ export interface MonthlyBalanceProjection {
   expenses: number;
   netBalance: number; // income - expenses for this month
   cumulativeBalance: number; // running total from starting balance
+  // New: track hypotheticals applied to this month
+  hypotheticalsApplied?: Array<{ type: "income" | "expense"; amount: number; label?: string }>;
 }
 
 export interface HypotheticalImpact {
@@ -213,6 +216,54 @@ export interface HypotheticalImpact {
   balanceWith: number; // final balance with the hypothetical
   impact: number; // difference
   percentOfMonthlyBalance: number | null; // only for expenses: what % of that month's net balance
+}
+
+// New: Affordability analysis result
+export interface AffordabilityAnalysis {
+  targetMonth: string; // "YYYY-MM"
+  maxAffordableOneTimeExpense: number;
+  bindingMonth: string; // the month where balance becomes tight
+  minimumProjectedBalance: number;
+  assumptions: string[];
+}
+
+// New: Constraints evaluation result
+export interface ConstraintsEvaluation {
+  minEndBalanceBreached: boolean;
+  minMonthlyBalanceBreached: boolean;
+  firstBreachMonth?: string; // "YYYY-MM"
+  minEndBalanceRequired?: number;
+  minMonthlyBalanceRequired?: number;
+}
+
+// New: Scenario summary for multi-hypotheticals
+export interface ScenarioSummary {
+  hypotheticalCount: number;
+  monthsAffected: number;
+  netImpact: number; // positive = net income, negative = net expense
+  totalHypotheticalIncome: number;
+  totalHypotheticalExpense: number;
+}
+
+// New: Safety assessment with traffic light system
+export type SafetyStatus = "green" | "yellow" | "red";
+
+export interface SafetyAssessment {
+  // Traffic light status
+  status: SafetyStatus;
+  statusLabel: string; // "Safe", "Caution", "At Risk"
+  // Emergency fund analysis
+  emergencyFundMonths: number; // How many months of net income the minimum balance represents
+  monthlyNetIncome: number; // Average monthly net income used for calculation
+  // Thresholds
+  greenThreshold: number; // 9 months of net income
+  yellowThreshold: number; // 6 months of net income
+  // Minimum balance details
+  minimumBalance: number;
+  minimumBalanceMonth: string; // "YYYY-MM"
+  minimumBalanceMonthLabel: string; // "Aug 2026"
+  // Recommendation
+  recommendation: string;
 }
 
 export interface BalanceSummaryResult {
@@ -230,10 +281,22 @@ export interface BalanceSummaryResult {
   totalNetSavings: number;
   // Final balance
   finalBalance: number;
-  // Hypothetical impact (if provided)
+  // Hypothetical impact (if provided) - kept for backwards compatibility
   hypotheticalImpact: HypotheticalImpact | null;
-  // Notes
+  // Notes - kept for backwards compatibility
   notes: string[];
+
+  // ===== NEW FIELDS (v2 enhancements) =====
+  // Top-level assumptions for transparency
+  assumptions: string[];
+  // Affordability analysis (if computeMaxAffordableExpenseMonth was provided)
+  affordabilityAnalysis?: AffordabilityAnalysis;
+  // Constraints evaluation (if minEndBalance or minMonthlyBalance was provided)
+  constraintsEvaluation?: ConstraintsEvaluation;
+  // Scenario summary (if hypotheticals[] was provided)
+  scenarioSummary?: ScenarioSummary;
+  // Safety assessment (always included) - traffic light system based on emergency fund
+  safetyAssessment: SafetyAssessment;
 }
 
 // =============================================================================
@@ -836,11 +899,180 @@ async function executeGetFamilySummary(
 // Tool Executor: get_balance_summary
 // =============================================================================
 
+/**
+ * Helper: Calculate base income for a month (without hypotheticals)
+ */
+function calculateMonthlyIncomeForMonth(
+  userIncomes: Array<{
+    amount: string;
+    frequency: string;
+    startDate: string;
+    endDate: string | null;
+    customMonths: string | null;
+    futureMilestones: string | null;
+    accountForFutureChange: boolean | null;
+    subjectToCpf: boolean | null;
+    netTakeHome: string | null;
+  }>,
+  currentMonth: string,
+  year: number,
+  month: number,
+  monthStart: Date,
+  monthEnd: Date
+): number {
+  let monthlyIncome = 0;
+
+  for (const income of userIncomes) {
+    let amount = parseFloat(income.amount);
+    const frequency = income.frequency.toLowerCase();
+    const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
+    let incomeEndDate = income.endDate ? new Date(income.endDate) : null;
+
+    if (incomeStartDate && incomeStartDate > monthEnd) continue;
+    if (incomeEndDate && incomeEndDate < monthStart) continue;
+
+    let isUsingMilestone = false;
+    if (income.futureMilestones && income.accountForFutureChange) {
+      try {
+        const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
+        const applicableMilestones = milestones
+          .filter(m => m.targetMonth <= currentMonth)
+          .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
+
+        if (applicableMilestones.length > 0) {
+          amount = applicableMilestones[0].amount;
+          isUsingMilestone = true;
+        }
+
+        if (milestones.length > 0 && incomeEndDate) {
+          incomeEndDate = null;
+        }
+      } catch {
+        // Fall through
+      }
+    }
+
+    let effectiveAmount = amount;
+    if (income.subjectToCpf) {
+      if (isUsingMilestone) {
+        const cpfResult = calculateCPF(amount);
+        effectiveAmount = cpfResult.netTakeHome;
+      } else {
+        effectiveAmount = income.netTakeHome ? parseFloat(income.netTakeHome) : amount;
+      }
+    }
+
+    let allocatedAmount = 0;
+    if (frequency === "monthly") {
+      allocatedAmount = effectiveAmount;
+    } else if (frequency === "yearly") {
+      const startMonth = incomeStartDate ? incomeStartDate.getMonth() + 1 : 1;
+      if (month === startMonth) {
+        allocatedAmount = effectiveAmount;
+      }
+    } else if (frequency === "custom" && income.customMonths) {
+      try {
+        const customMonths = JSON.parse(income.customMonths) as number[];
+        if (customMonths.includes(month)) {
+          allocatedAmount = effectiveAmount;
+        }
+      } catch {
+        // Skip
+      }
+    } else if (frequency === "one-time") {
+      if (incomeStartDate &&
+          incomeStartDate.getFullYear() === year &&
+          incomeStartDate.getMonth() + 1 === month) {
+        allocatedAmount = effectiveAmount;
+      }
+    } else if (frequency === "quarterly") {
+      if (incomeStartDate) {
+        const monthsSinceStart = (year - incomeStartDate.getFullYear()) * 12 +
+                                 (month - 1 - incomeStartDate.getMonth());
+        if (monthsSinceStart >= 0 && monthsSinceStart % 3 === 0) {
+          allocatedAmount = effectiveAmount;
+        }
+      }
+    }
+
+    monthlyIncome += allocatedAmount;
+  }
+
+  return monthlyIncome;
+}
+
+/**
+ * Helper: Calculate base expenses for a month (without hypotheticals)
+ */
+function calculateMonthlyExpensesForMonth(
+  userExpenses: Array<{
+    amount: string;
+    frequency: string;
+    startDate: string | null;
+    endDate: string | null;
+    customMonths: string | null;
+  }>,
+  year: number,
+  month: number,
+  monthStart: Date,
+  monthEnd: Date
+): number {
+  let monthlyExpense = 0;
+
+  for (const expense of userExpenses) {
+    const amount = parseFloat(expense.amount);
+    const frequency = expense.frequency.toLowerCase();
+    const expenseStartDate = expense.startDate ? new Date(expense.startDate) : null;
+    const expenseEndDate = expense.endDate ? new Date(expense.endDate) : null;
+
+    if (expenseStartDate && expenseStartDate > monthEnd) continue;
+    if (expenseEndDate && expenseEndDate < monthStart) continue;
+
+    let allocatedAmount = 0;
+    if (frequency === "monthly") {
+      allocatedAmount = amount;
+    } else if (frequency === "yearly") {
+      const startMonth = expenseStartDate ? expenseStartDate.getMonth() + 1 : 1;
+      if (month === startMonth) {
+        allocatedAmount = amount;
+      }
+    } else if (frequency === "custom" && expense.customMonths) {
+      try {
+        const customMonths = JSON.parse(expense.customMonths) as number[];
+        if (customMonths.includes(month)) {
+          allocatedAmount = amount;
+        }
+      } catch {
+        // Skip
+      }
+    } else if (frequency === "one-time") {
+      if (expenseStartDate &&
+          expenseStartDate.getFullYear() === year &&
+          expenseStartDate.getMonth() + 1 === month) {
+        allocatedAmount = amount;
+      }
+    } else if (frequency === "quarterly") {
+      if (expenseStartDate) {
+        const monthsSinceStart = (year - expenseStartDate.getFullYear()) * 12 +
+                                 (month - 1 - expenseStartDate.getMonth());
+        if (monthsSinceStart >= 0 && monthsSinceStart % 3 === 0) {
+          allocatedAmount = amount;
+        }
+      }
+    }
+
+    monthlyExpense += allocatedAmount;
+  }
+
+  return monthlyExpense;
+}
+
 async function executeGetBalanceSummary(
   params: BalanceSummaryParams,
   userId: string
 ): Promise<BalanceSummaryResult> {
   const notes: string[] = [];
+  const assumptions: string[] = [];
   const monthCount = getMonthsBetween(params.fromMonth, params.toMonth);
 
   // Validate date range
@@ -863,6 +1095,7 @@ async function executeGetBalanceSummary(
   } else {
     notes.push(`Starting balance calculated from ${holdings.length} holding(s).`);
   }
+  assumptions.push("Starting balance taken from current_holdings table");
 
   // Fetch all active incomes and expenses
   const userIncomes = await db
@@ -875,11 +1108,52 @@ async function executeGetBalanceSummary(
     .from(expenses)
     .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
 
+  assumptions.push("Future income estimated using current active income sources");
+  assumptions.push("Recurring expenses assumed constant unless end date specified");
+  assumptions.push("No investment growth included");
+  assumptions.push("CPF contributions calculated based on current rates");
+
+  // Normalize hypotheticals: use new array format if provided, else convert legacy params
+  let effectiveHypotheticals: HypotheticalItem[] = [];
+  const usingNewHypotheticalsFormat = params.hypotheticals && params.hypotheticals.length > 0;
+
+  if (usingNewHypotheticalsFormat) {
+    effectiveHypotheticals = params.hypotheticals!;
+    assumptions.push(`Using ${effectiveHypotheticals.length} hypothetical scenario(s)`);
+  } else {
+    // Convert legacy single hypothetical params to array format
+    if (params.hypotheticalExpense && params.hypotheticalExpenseMonth) {
+      effectiveHypotheticals.push({
+        type: "expense",
+        amount: params.hypotheticalExpense,
+        month: params.hypotheticalExpenseMonth,
+      });
+    }
+    if (params.hypotheticalIncome && params.hypotheticalIncomeMonth) {
+      effectiveHypotheticals.push({
+        type: "income",
+        amount: params.hypotheticalIncome,
+        month: params.hypotheticalIncomeMonth,
+      });
+    }
+  }
+
+  // Build a map of hypotheticals by month for quick lookup
+  const hypotheticalsByMonth = new Map<string, HypotheticalItem[]>();
+  for (const hyp of effectiveHypotheticals) {
+    const existing = hypotheticalsByMonth.get(hyp.month) || [];
+    existing.push(hyp);
+    hypotheticalsByMonth.set(hyp.month, existing);
+  }
+
   // Calculate monthly projections
   const monthlyProjections: MonthlyBalanceProjection[] = [];
   let cumulativeBalance = startingBalance;
   let totalIncome = 0;
   let totalExpenses = 0;
+  let totalBaseIncome = 0; // Track base income separately (without hypotheticals) for safety assessment
+  let minimumBalance = startingBalance;
+  let minimumBalanceMonth = params.fromMonth;
 
   for (let i = 0; i < monthCount; i++) {
     const currentMonth = addMonthsToString(params.fromMonth, i);
@@ -887,210 +1161,334 @@ async function executeGetBalanceSummary(
     const monthStart = new Date(year, month - 1, 1);
     const monthEnd = new Date(year, month, 0);
 
-    // Calculate income for this month (reusing logic from executeGetIncomeSummary)
-    let monthlyIncome = 0;
-    for (const income of userIncomes) {
-      let amount = parseFloat(income.amount);
-      const frequency = income.frequency.toLowerCase();
-      const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
-      let incomeEndDate = income.endDate ? new Date(income.endDate) : null;
+    // Calculate base income and expenses
+    const baseIncome = calculateMonthlyIncomeForMonth(
+      userIncomes, currentMonth, year, month, monthStart, monthEnd
+    );
+    const baseExpense = calculateMonthlyExpensesForMonth(
+      userExpenses, year, month, monthStart, monthEnd
+    );
 
-      // Check if income is active during this month
-      if (incomeStartDate && incomeStartDate > monthEnd) continue;
-      if (incomeEndDate && incomeEndDate < monthStart) continue;
+    // Track base income for safety assessment (excludes hypotheticals)
+    totalBaseIncome += baseIncome;
 
-      // Check for future milestones
-      let isUsingMilestone = false;
-      if (income.futureMilestones && income.accountForFutureChange) {
-        try {
-          const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
-          const applicableMilestones = milestones
-            .filter(m => m.targetMonth <= currentMonth)
-            .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
-
-          if (applicableMilestones.length > 0) {
-            amount = applicableMilestones[0].amount;
-            isUsingMilestone = true;
-          }
-
-          if (milestones.length > 0 && incomeEndDate) {
-            incomeEndDate = null;
-          }
-        } catch {
-          // Fall through
-        }
-      }
-
-      // Calculate effective amount (net if subject to CPF)
-      let effectiveAmount = amount;
-      if (income.subjectToCpf) {
-        if (isUsingMilestone) {
-          // For milestone income, calculate CPF dynamically based on the new amount
-          const cpfResult = calculateCPF(amount);
-          effectiveAmount = cpfResult.netTakeHome;
-        } else {
-          // For current income, use the stored netTakeHome if available
-          effectiveAmount = income.netTakeHome ? parseFloat(income.netTakeHome) : amount;
-        }
-      }
-
-      // Apply frequency
-      let allocatedAmount = 0;
-      if (frequency === "monthly") {
-        allocatedAmount = effectiveAmount;
-      } else if (frequency === "yearly") {
-        const startMonth = incomeStartDate ? incomeStartDate.getMonth() + 1 : 1;
-        if (month === startMonth) {
-          allocatedAmount = effectiveAmount;
-        }
-      } else if (frequency === "custom" && income.customMonths) {
-        try {
-          const customMonths = JSON.parse(income.customMonths) as number[];
-          if (customMonths.includes(month)) {
-            allocatedAmount = effectiveAmount;
-          }
-        } catch {
-          // Skip
-        }
-      } else if (frequency === "one-time") {
-        if (incomeStartDate &&
-            incomeStartDate.getFullYear() === year &&
-            incomeStartDate.getMonth() + 1 === month) {
-          allocatedAmount = effectiveAmount;
-        }
-      } else if (frequency === "quarterly") {
-        if (incomeStartDate) {
-          const monthsSinceStart = (year - incomeStartDate.getFullYear()) * 12 +
-                                   (month - 1 - incomeStartDate.getMonth());
-          if (monthsSinceStart >= 0 && monthsSinceStart % 3 === 0) {
-            allocatedAmount = effectiveAmount;
-          }
-        }
-      }
-
-      monthlyIncome += allocatedAmount;
-    }
-
-    // Calculate expenses for this month (reusing logic from executeGetExpensesSummary)
-    let monthlyExpense = 0;
-    for (const expense of userExpenses) {
-      const amount = parseFloat(expense.amount);
-      const frequency = expense.frequency.toLowerCase();
-      const expenseStartDate = expense.startDate ? new Date(expense.startDate) : null;
-      const expenseEndDate = expense.endDate ? new Date(expense.endDate) : null;
-
-      // Check if expense is active during this month
-      if (expenseStartDate && expenseStartDate > monthEnd) continue;
-      if (expenseEndDate && expenseEndDate < monthStart) continue;
-
-      // Apply frequency
-      let allocatedAmount = 0;
-      if (frequency === "monthly") {
-        allocatedAmount = amount;
-      } else if (frequency === "yearly") {
-        const startMonth = expenseStartDate ? expenseStartDate.getMonth() + 1 : 1;
-        if (month === startMonth) {
-          allocatedAmount = amount;
-        }
-      } else if (frequency === "custom" && expense.customMonths) {
-        try {
-          const customMonths = JSON.parse(expense.customMonths) as number[];
-          if (customMonths.includes(month)) {
-            allocatedAmount = amount;
-          }
-        } catch {
-          // Skip
-        }
-      } else if (frequency === "one-time") {
-        if (expenseStartDate &&
-            expenseStartDate.getFullYear() === year &&
-            expenseStartDate.getMonth() + 1 === month) {
-          allocatedAmount = amount;
-        }
-      } else if (frequency === "quarterly") {
-        if (expenseStartDate) {
-          const monthsSinceStart = (year - expenseStartDate.getFullYear()) * 12 +
-                                   (month - 1 - expenseStartDate.getMonth());
-          if (monthsSinceStart >= 0 && monthsSinceStart % 3 === 0) {
-            allocatedAmount = amount;
-          }
-        }
-      }
-
-      monthlyExpense += allocatedAmount;
-    }
-
-    // Add hypothetical expense if it falls in this month
-    let hypotheticalExpenseThisMonth = 0;
-    if (params.hypotheticalExpense && params.hypotheticalExpenseMonth === currentMonth) {
-      hypotheticalExpenseThisMonth = params.hypotheticalExpense;
-    }
-
-    // Add hypothetical income if it falls in this month
+    // Apply hypotheticals for this month
+    const monthHypotheticals = hypotheticalsByMonth.get(currentMonth) || [];
     let hypotheticalIncomeThisMonth = 0;
-    if (params.hypotheticalIncome && params.hypotheticalIncomeMonth === currentMonth) {
-      hypotheticalIncomeThisMonth = params.hypotheticalIncome;
+    let hypotheticalExpenseThisMonth = 0;
+    const appliedHypotheticals: Array<{ type: "income" | "expense"; amount: number; label?: string }> = [];
+
+    for (const hyp of monthHypotheticals) {
+      if (hyp.type === "income") {
+        hypotheticalIncomeThisMonth += hyp.amount;
+      } else {
+        hypotheticalExpenseThisMonth += hyp.amount;
+      }
+      appliedHypotheticals.push({ type: hyp.type, amount: hyp.amount, label: hyp.label });
     }
 
-    const effectiveIncome = monthlyIncome + hypotheticalIncomeThisMonth;
-    const effectiveExpense = monthlyExpense + hypotheticalExpenseThisMonth;
+    const effectiveIncome = baseIncome + hypotheticalIncomeThisMonth;
+    const effectiveExpense = baseExpense + hypotheticalExpenseThisMonth;
     const netBalance = effectiveIncome - effectiveExpense;
     cumulativeBalance += netBalance;
     totalIncome += effectiveIncome;
     totalExpenses += effectiveExpense;
 
-    monthlyProjections.push({
+    // Track minimum balance
+    if (cumulativeBalance < minimumBalance) {
+      minimumBalance = cumulativeBalance;
+      minimumBalanceMonth = currentMonth;
+    }
+
+    const projection: MonthlyBalanceProjection = {
       month: currentMonth,
       monthLabel: formatMonthLabel(currentMonth),
       income: Math.round(effectiveIncome * 100) / 100,
       expenses: Math.round(effectiveExpense * 100) / 100,
       netBalance: Math.round(netBalance * 100) / 100,
       cumulativeBalance: Math.round(cumulativeBalance * 100) / 100,
-    });
+    };
+
+    if (appliedHypotheticals.length > 0) {
+      projection.hypotheticalsApplied = appliedHypotheticals;
+    }
+
+    monthlyProjections.push(projection);
   }
 
-  // Calculate hypothetical impact if provided
+  // Calculate hypothetical impact (backwards compatible - uses first expense or income)
   let hypotheticalImpact: HypotheticalImpact | null = null;
+  const firstExpenseHyp = effectiveHypotheticals.find(h => h.type === "expense");
+  const firstIncomeHyp = effectiveHypotheticals.find(h => h.type === "income");
 
-  if (params.hypotheticalExpense && params.hypotheticalExpenseMonth) {
-    // Recalculate without the hypothetical to get the difference
-    const finalWithout = cumulativeBalance + params.hypotheticalExpense;
-    const targetProjection = monthlyProjections.find(p => p.month === params.hypotheticalExpenseMonth);
-    const monthNetWithout = targetProjection ? targetProjection.netBalance + params.hypotheticalExpense : null;
+  if (firstExpenseHyp) {
+    const finalWithout = cumulativeBalance + firstExpenseHyp.amount;
+    const targetProjection = monthlyProjections.find(p => p.month === firstExpenseHyp.month);
+    const monthNetWithout = targetProjection ? targetProjection.netBalance + firstExpenseHyp.amount : null;
 
     hypotheticalImpact = {
       type: "expense",
-      amount: params.hypotheticalExpense,
-      month: params.hypotheticalExpenseMonth,
+      amount: firstExpenseHyp.amount,
+      month: firstExpenseHyp.month,
       balanceWithout: Math.round(finalWithout * 100) / 100,
       balanceWith: Math.round(cumulativeBalance * 100) / 100,
-      impact: Math.round(-params.hypotheticalExpense * 100) / 100,
+      impact: Math.round(-firstExpenseHyp.amount * 100) / 100,
       percentOfMonthlyBalance: monthNetWithout && monthNetWithout !== 0
-        ? Math.round((params.hypotheticalExpense / monthNetWithout) * 1000) / 10
+        ? Math.round((firstExpenseHyp.amount / monthNetWithout) * 1000) / 10
         : null,
     };
+    notes.push(`Hypothetical expense of $${firstExpenseHyp.amount.toLocaleString()}${firstExpenseHyp.label ? ` (${firstExpenseHyp.label})` : ""} in ${formatMonthLabel(firstExpenseHyp.month)} included.`);
+  } else if (firstIncomeHyp) {
+    const finalWithout = cumulativeBalance - firstIncomeHyp.amount;
 
-    notes.push(`Hypothetical expense of $${params.hypotheticalExpense.toLocaleString()} in ${formatMonthLabel(params.hypotheticalExpenseMonth)} included in projections.`);
+    hypotheticalImpact = {
+      type: "income",
+      amount: firstIncomeHyp.amount,
+      month: firstIncomeHyp.month,
+      balanceWithout: Math.round(finalWithout * 100) / 100,
+      balanceWith: Math.round(cumulativeBalance * 100) / 100,
+      impact: Math.round(firstIncomeHyp.amount * 100) / 100,
+      percentOfMonthlyBalance: null,
+    };
+    notes.push(`Hypothetical income of $${firstIncomeHyp.amount.toLocaleString()}${firstIncomeHyp.label ? ` (${firstIncomeHyp.label})` : ""} in ${formatMonthLabel(firstIncomeHyp.month)} included.`);
   }
 
-  if (params.hypotheticalIncome && params.hypotheticalIncomeMonth) {
-    // If we already have an expense impact, we can't show both - income takes precedence only if no expense
-    if (!hypotheticalImpact) {
-      const finalWithout = cumulativeBalance - params.hypotheticalIncome;
+  // Build scenario summary if hypotheticals were provided
+  let scenarioSummary: ScenarioSummary | undefined;
+  if (effectiveHypotheticals.length > 0) {
+    const totalHypIncome = effectiveHypotheticals
+      .filter(h => h.type === "income")
+      .reduce((sum, h) => sum + h.amount, 0);
+    const totalHypExpense = effectiveHypotheticals
+      .filter(h => h.type === "expense")
+      .reduce((sum, h) => sum + h.amount, 0);
+    const affectedMonths = new Set(effectiveHypotheticals.map(h => h.month)).size;
 
-      hypotheticalImpact = {
-        type: "income",
-        amount: params.hypotheticalIncome,
-        month: params.hypotheticalIncomeMonth,
-        balanceWithout: Math.round(finalWithout * 100) / 100,
-        balanceWith: Math.round(cumulativeBalance * 100) / 100,
-        impact: Math.round(params.hypotheticalIncome * 100) / 100,
-        percentOfMonthlyBalance: null,
-      };
+    scenarioSummary = {
+      hypotheticalCount: effectiveHypotheticals.length,
+      monthsAffected: affectedMonths,
+      netImpact: Math.round((totalHypIncome - totalHypExpense) * 100) / 100,
+      totalHypotheticalIncome: Math.round(totalHypIncome * 100) / 100,
+      totalHypotheticalExpense: Math.round(totalHypExpense * 100) / 100,
+    };
+  }
+
+  // Evaluate constraints if provided
+  let constraintsEvaluation: ConstraintsEvaluation | undefined;
+  const minEndBalanceProvided = params.minEndBalance !== undefined;
+  const minMonthlyBalanceProvided = params.minMonthlyBalance !== undefined;
+
+  if (minEndBalanceProvided || minMonthlyBalanceProvided) {
+    const minEndBalanceBreached = minEndBalanceProvided && cumulativeBalance < params.minEndBalance!;
+    let minMonthlyBalanceBreached = false;
+    let firstBreachMonth: string | undefined;
+
+    if (minMonthlyBalanceProvided) {
+      for (const proj of monthlyProjections) {
+        if (proj.cumulativeBalance < params.minMonthlyBalance!) {
+          minMonthlyBalanceBreached = true;
+          if (!firstBreachMonth) {
+            firstBreachMonth = proj.month;
+          }
+        }
+      }
     }
 
-    notes.push(`Hypothetical income of $${params.hypotheticalIncome.toLocaleString()} in ${formatMonthLabel(params.hypotheticalIncomeMonth)} included in projections.`);
+    constraintsEvaluation = {
+      minEndBalanceBreached,
+      minMonthlyBalanceBreached,
+      firstBreachMonth,
+      minEndBalanceRequired: params.minEndBalance,
+      minMonthlyBalanceRequired: params.minMonthlyBalance,
+    };
+
+    if (minEndBalanceBreached) {
+      notes.push(`Warning: Final balance ($${Math.round(cumulativeBalance).toLocaleString()}) is below minimum required ($${params.minEndBalance!.toLocaleString()}).`);
+    }
+    if (minMonthlyBalanceBreached && firstBreachMonth) {
+      notes.push(`Warning: Balance drops below minimum ($${params.minMonthlyBalance!.toLocaleString()}) starting in ${formatMonthLabel(firstBreachMonth)}.`);
+    }
   }
+
+  // Compute max affordable expense if requested
+  let affordabilityAnalysis: AffordabilityAnalysis | undefined;
+  if (params.computeMaxAffordableExpenseMonth) {
+    const targetMonth = params.computeMaxAffordableExpenseMonth;
+    const minAllowedBalance = params.minMonthlyBalance ?? 0;
+
+    // We need to find the max expense that can be added to targetMonth
+    // such that no month from targetMonth onwards drops below minAllowedBalance
+
+    // First, compute projections WITHOUT any hypotheticals to get the baseline
+    let baselineBalance = startingBalance;
+    const baselineProjections: Array<{ month: string; cumulativeBalance: number }> = [];
+
+    for (let i = 0; i < monthCount; i++) {
+      const currentMonth = addMonthsToString(params.fromMonth, i);
+      const { year, month } = parseMonth(currentMonth);
+      const monthStart = new Date(year, month - 1, 1);
+      const monthEnd = new Date(year, month, 0);
+
+      const baseIncome = calculateMonthlyIncomeForMonth(
+        userIncomes, currentMonth, year, month, monthStart, monthEnd
+      );
+      const baseExpense = calculateMonthlyExpensesForMonth(
+        userExpenses, year, month, monthStart, monthEnd
+      );
+
+      baselineBalance += baseIncome - baseExpense;
+      baselineProjections.push({ month: currentMonth, cumulativeBalance: baselineBalance });
+    }
+
+    // Find the minimum balance from targetMonth onwards (the binding constraint)
+    const targetMonthIndex = baselineProjections.findIndex(p => p.month === targetMonth);
+
+    if (targetMonthIndex === -1) {
+      // Target month is outside the projection range
+      affordabilityAnalysis = {
+        targetMonth,
+        maxAffordableOneTimeExpense: 0,
+        bindingMonth: targetMonth,
+        minimumProjectedBalance: minAllowedBalance,
+        assumptions: [`Target month ${targetMonth} is outside the projection range (${params.fromMonth} to ${params.toMonth})`],
+      };
+    } else {
+      // Find minimum balance from targetMonth to end of projection
+      let minBalanceFromTarget = Infinity;
+      let bindingMonth = targetMonth;
+
+      for (let i = targetMonthIndex; i < baselineProjections.length; i++) {
+        if (baselineProjections[i].cumulativeBalance < minBalanceFromTarget) {
+          minBalanceFromTarget = baselineProjections[i].cumulativeBalance;
+          bindingMonth = baselineProjections[i].month;
+        }
+      }
+
+      // Max affordable = minBalanceFromTarget - minAllowedBalance
+      // Because adding an expense in targetMonth reduces all subsequent balances by that amount
+      const maxAffordable = Math.max(0, minBalanceFromTarget - minAllowedBalance);
+
+      affordabilityAnalysis = {
+        targetMonth,
+        maxAffordableOneTimeExpense: Math.round(maxAffordable * 100) / 100,
+        bindingMonth,
+        minimumProjectedBalance: Math.round(minBalanceFromTarget * 100) / 100,
+        assumptions: [
+          `Calculated based on baseline projections without hypotheticals`,
+          `Minimum balance constraint: $${minAllowedBalance.toLocaleString()}`,
+          `Binding month is ${formatMonthLabel(bindingMonth)} where balance would be tightest`,
+        ],
+      };
+
+      notes.push(`Max affordable one-time expense in ${formatMonthLabel(targetMonth)}: $${Math.round(maxAffordable).toLocaleString()}`);
+    }
+  }
+
+  // ==========================================================================
+  // Safety Assessment (Traffic Light System) - ALWAYS calculated
+  // ==========================================================================
+
+  // Calculate average base monthly net income from projections (excludes hypotheticals)
+  // This uses the same calculation logic as the projections, ensuring consistency
+  const baseMonthlyNetIncome = monthCount > 0 ? totalBaseIncome / monthCount : 0;
+
+  // Calculate thresholds (6 and 9 months of net income)
+  const yellowThreshold = baseMonthlyNetIncome * 6; // Below this = RED
+  const greenThreshold = baseMonthlyNetIncome * 9;  // At or above this = GREEN
+
+  // Determine which balance to check for safety assessment:
+  // - If there are hypothetical EXPENSES, use the balance in the expense month (most relevant)
+  // - If no hypotheticals, use the minimum balance across all months (general projection)
+  let safetyCheckBalance: number;
+  let safetyCheckMonth: string;
+
+  const hypotheticalExpenses = effectiveHypotheticals.filter(h => h.type === "expense");
+
+  if (hypotheticalExpenses.length > 0) {
+    // Find the balance in the month of the FIRST hypothetical expense
+    // This is the most relevant month when user asks "can I afford X in month Y?"
+    const expenseMonth = hypotheticalExpenses[0].month;
+    const expenseMonthProjection = monthlyProjections.find(p => p.month === expenseMonth);
+
+    if (expenseMonthProjection) {
+      safetyCheckBalance = expenseMonthProjection.cumulativeBalance;
+      safetyCheckMonth = expenseMonth;
+    } else {
+      // Expense month not in projection range - use final balance
+      safetyCheckBalance = cumulativeBalance;
+      safetyCheckMonth = params.toMonth;
+    }
+  } else {
+    // No hypothetical expenses - use minimum balance across all months
+    safetyCheckBalance = startingBalance;
+    safetyCheckMonth = params.fromMonth;
+
+    for (const proj of monthlyProjections) {
+      if (proj.cumulativeBalance < safetyCheckBalance) {
+        safetyCheckBalance = proj.cumulativeBalance;
+        safetyCheckMonth = proj.month;
+      }
+    }
+  }
+
+  // Calculate how many months of emergency fund the balance represents
+  const emergencyFundMonths = baseMonthlyNetIncome > 0
+    ? safetyCheckBalance / baseMonthlyNetIncome
+    : 0;
+
+  // Determine status
+  let safetyStatus: SafetyStatus;
+  let statusLabel: string;
+  let recommendation: string;
+
+  if (baseMonthlyNetIncome === 0) {
+    // No income data available - can't calculate safety
+    safetyStatus = "yellow";
+    statusLabel = "Unknown";
+    recommendation = "Unable to calculate emergency fund coverage - no recurring income data found.";
+  } else if (safetyCheckBalance >= greenThreshold) {
+    safetyStatus = "green";
+    statusLabel = "Safe";
+    if (hypotheticalExpenses.length > 0) {
+      recommendation = `After this expense, your emergency fund would be ${emergencyFundMonths.toFixed(1)} months of income in ${formatMonthLabel(safetyCheckMonth)} - well above the recommended 9 months.`;
+    } else {
+      recommendation = `Your emergency fund remains healthy at ${emergencyFundMonths.toFixed(1)} months of income throughout the projection period.`;
+    }
+  } else if (safetyCheckBalance >= yellowThreshold) {
+    safetyStatus = "yellow";
+    statusLabel = "Caution";
+    if (hypotheticalExpenses.length > 0) {
+      recommendation = `After this expense, your balance would be ${emergencyFundMonths.toFixed(1)} months of income in ${formatMonthLabel(safetyCheckMonth)}. Consider whether this expense is essential, as it reduces your safety buffer below the recommended 9 months.`;
+    } else {
+      recommendation = `Your balance dips to ${emergencyFundMonths.toFixed(1)} months of income in ${formatMonthLabel(safetyCheckMonth)}. Consider building a larger emergency fund buffer.`;
+    }
+  } else {
+    safetyStatus = "red";
+    statusLabel = "At Risk";
+    if (hypotheticalExpenses.length > 0) {
+      recommendation = `Warning: After this expense, your balance would drop to only ${emergencyFundMonths.toFixed(1)} months of income in ${formatMonthLabel(safetyCheckMonth)}, which is below the recommended 6-month emergency fund. This expense is not recommended unless absolutely necessary.`;
+    } else {
+      recommendation = `Warning: Your balance would drop to only ${emergencyFundMonths.toFixed(1)} months of income in ${formatMonthLabel(safetyCheckMonth)}, which is below the recommended 6-month emergency fund.`;
+    }
+  }
+
+  // Add safety note if not green
+  if (safetyStatus !== "green") {
+    notes.push(`Safety Alert: Balance reaches ${emergencyFundMonths.toFixed(1)} months of income (${statusLabel}) in ${formatMonthLabel(safetyCheckMonth)}.`);
+  }
+
+  const safetyAssessment: SafetyAssessment = {
+    status: safetyStatus,
+    statusLabel,
+    emergencyFundMonths: Math.round(emergencyFundMonths * 10) / 10,
+    monthlyNetIncome: Math.round(baseMonthlyNetIncome * 100) / 100,
+    greenThreshold: Math.round(greenThreshold * 100) / 100,
+    yellowThreshold: Math.round(yellowThreshold * 100) / 100,
+    minimumBalance: Math.round(safetyCheckBalance * 100) / 100,
+    minimumBalanceMonth: safetyCheckMonth,
+    minimumBalanceMonthLabel: formatMonthLabel(safetyCheckMonth),
+    recommendation,
+  };
 
   return {
     fromMonth: params.fromMonth,
@@ -1104,6 +1502,12 @@ async function executeGetBalanceSummary(
     finalBalance: Math.round(cumulativeBalance * 100) / 100,
     hypotheticalImpact,
     notes,
+    // New fields
+    assumptions,
+    affordabilityAnalysis,
+    constraintsEvaluation,
+    scenarioSummary,
+    safetyAssessment,
   };
 }
 

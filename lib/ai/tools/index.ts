@@ -5,11 +5,13 @@ export {
   MonthParamSchema,
   FamilySummaryParamSchema,
   BalanceSummaryParamSchema,
+  HypotheticalItemSchema,
   type ToolName,
   type ToolDefinition,
   type MonthParams,
   type FamilySummaryParams,
   type BalanceSummaryParams,
+  type HypotheticalItem,
 } from "./registry";
 
 export {
@@ -31,4 +33,9 @@ export {
   type IncomeChangeSignal,
   type MonthlyBalanceProjection,
   type HypotheticalImpact,
+  type AffordabilityAnalysis,
+  type ConstraintsEvaluation,
+  type ScenarioSummary,
+  type SafetyStatus,
+  type SafetyAssessment,
 } from "./executors";
