@@ -75,24 +75,6 @@ export function clearAuditLog(): void {
 // Tool Result Types
 // =============================================================================
 
-export interface MonthSummaryResult {
-  month: string;
-  // Income data
-  totalIncome: number;
-  // Budget/expense data
-  totalBudgetedExpenses: number;
-  totalSpent: number;
-  remainingBudget: number;
-  percentBudgetUsed: number;
-  // Net position
-  netSurplus: number;
-  // Pacing
-  dailyBudgetTarget: number;
-  pacingStatus: "under" | "on-track" | "over";
-  daysInMonth: number;
-  currentDay: number;
-}
-
 export interface CategoryBudgetItem {
   category: string;
   budget: number;
@@ -277,88 +259,6 @@ async function getCurrentUserId(): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-// =============================================================================
-// Tool Executor: get_month_summary
-// =============================================================================
-
-async function executeGetMonthSummary(
-  params: MonthParams,
-  userId: string
-): Promise<MonthSummaryResult> {
-  const { year, month } = parseMonth(params.month);
-
-  // Get budget summary (expenses)
-  const summary = await getBudgetSummary(year, month);
-
-  // Get income for this month
-  const userIncomes = await db
-    .select()
-    .from(incomes)
-    .where(
-      and(
-        eq(incomes.userId, userId),
-        eq(incomes.isActive, true)
-      )
-    );
-
-  // Calculate total monthly income
-  let totalIncome = 0;
-  const monthStart = new Date(year, month - 1, 1);
-  const monthEnd = new Date(year, month, 0);
-
-  for (const income of userIncomes) {
-    const amount = parseFloat(income.amount);
-    const frequency = income.frequency.toLowerCase();
-    const incomeStartDate = income.startDate ? new Date(income.startDate) : null;
-    const incomeEndDate = income.endDate ? new Date(income.endDate) : null;
-
-    // Check if income is active during this month
-    if (incomeStartDate && incomeStartDate > monthEnd) continue;
-    if (incomeEndDate && incomeEndDate < monthStart) continue;
-
-    // Calculate monthly income based on frequency
-    if (frequency === "monthly") {
-      totalIncome += amount;
-    } else if (frequency === "yearly") {
-      totalIncome += amount / 12;
-    } else if (frequency === "weekly") {
-      totalIncome += amount * 4.33;
-    } else if (frequency === "bi-weekly") {
-      totalIncome += amount * 2.17;
-    } else if (frequency === "one-time") {
-      // One-time income: include if it falls in this month
-      if (incomeStartDate &&
-          incomeStartDate.getFullYear() === year &&
-          incomeStartDate.getMonth() + 1 === month) {
-        totalIncome += amount;
-      }
-    } else {
-      // Default to monthly for other frequencies
-      totalIncome += amount;
-    }
-  }
-
-  const netSurplus = totalIncome - summary.totalBudget;
-
-  return {
-    month: params.month,
-    // Income
-    totalIncome: Math.round(totalIncome * 100) / 100,
-    // Budget/expenses
-    totalBudgetedExpenses: Math.round(summary.totalBudget * 100) / 100,
-    totalSpent: Math.round(summary.totalSpent * 100) / 100,
-    remainingBudget: Math.round(summary.remaining * 100) / 100,
-    percentBudgetUsed: Math.round(summary.percentUsed * 100) / 100,
-    // Net position
-    netSurplus: Math.round(netSurplus * 100) / 100,
-    // Pacing
-    dailyBudgetTarget: Math.round(summary.dailyBudget * 100) / 100,
-    pacingStatus: summary.pacingStatus,
-    daysInMonth: summary.daysInMonth,
-    currentDay: summary.currentDay,
-  };
 }
 
 // =============================================================================
@@ -1266,10 +1166,6 @@ export async function executeTool(
     let data: unknown;
 
     switch (toolName as ToolName) {
-      case "get_month_summary":
-        data = await executeGetMonthSummary(validationResult.data as MonthParams, userId);
-        break;
-
       case "get_remaining_budget":
         data = await executeGetRemainingBudget(validationResult.data as MonthParams, userId);
         break;
