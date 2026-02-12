@@ -201,9 +201,23 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
         if (applicableMilestones.length > 0) {
           totalMonthlyIncome += applicableMilestones[0].amount;
           if (income.subjectToCpf && income.employeeCpfContribution) {
+            // For milestones, use stored CPF if salary is at/above OW ceiling ($8,000)
+            // Otherwise recalculate proportionally
+            const storedCpf = parseFloat(income.employeeCpfContribution);
             const baseAmount = parseFloat(income.amount);
-            const cpfRate = baseAmount > 0 ? parseFloat(income.employeeCpfContribution) / baseAmount : 0;
-            totalCpfDeduction += applicableMilestones[0].amount * cpfRate;
+            const milestoneAmount = applicableMilestones[0].amount;
+            const OW_CEILING = 8000;
+
+            if (milestoneAmount >= OW_CEILING && baseAmount >= OW_CEILING) {
+              // Both above ceiling - CPF stays the same (capped)
+              totalCpfDeduction += storedCpf;
+            } else if (milestoneAmount >= OW_CEILING) {
+              // Milestone above ceiling - use 20% of ceiling
+              totalCpfDeduction += OW_CEILING * 0.20;
+            } else {
+              // Milestone below ceiling - calculate at 20%
+              totalCpfDeduction += milestoneAmount * 0.20;
+            }
           }
           usedMilestoneData = true;
         }
@@ -377,11 +391,11 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
               </div>
               <div className="overflow-hidden">
                 <p key={selectedMonth.toISOString() + '-income'} className={`text-xl sm:text-2xl font-semibold tabular-nums transition-all duration-300 ${animationClass}`}>
-                  ${displayIncome.toLocaleString()}
+                  ${Math.round(displayIncome).toLocaleString()}
                 </p>
               </div>
               <p className={`text-xs text-muted-foreground mt-1 ${hasCpfDeductions ? 'visible' : 'invisible'}`}>
-                Gross: ${displayGrossIncome.toLocaleString()}
+                Gross: ${Math.round(displayGrossIncome).toLocaleString()}
               </p>
               {/* Placeholder to match expense column height when budget data is shown */}
               {budgetData && !isFutureMonth && !hasCpfDeductions && (
@@ -402,13 +416,13 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
               </div>
               <div className="overflow-hidden">
                 <p key={selectedMonth.toISOString() + '-expenses'} className={`text-xl sm:text-2xl font-semibold tabular-nums transition-all duration-300 ${animationClass}`}>
-                  ${displayExpenses.toLocaleString()}
+                  ${Math.round(displayExpenses).toLocaleString()}
                 </p>
               </div>
               {/* Budget spent and budget total - hide for future months */}
               {budgetData && !isFutureMonth && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Budget Tracking: ${budgetData.totalSpent.toLocaleString()}/${budgetData.totalBudget.toLocaleString()}
+                  Budget Tracking: ${Math.round(budgetData.totalSpent).toLocaleString()}/${Math.round(budgetData.totalBudget).toLocaleString()}
                 </p>
               )}
             </div>
@@ -423,7 +437,7 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
               </div>
               <div className="overflow-hidden">
                 <p key={selectedMonth.toISOString() + '-savings'} className={`text-xl sm:text-2xl font-semibold tabular-nums transition-all duration-300 ${displaySavings >= 0 ? "text-emerald-600" : "text-red-600"} ${animationClass}`}>
-                  ${displaySavings.toLocaleString()}
+                  ${Math.round(displaySavings).toLocaleString()}
                 </p>
               </div>
               {/* Placeholder to match expense column height when budget data is shown */}
