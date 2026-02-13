@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ChatMessage } from "./chat-message";
 import { ChatComposer } from "./chat-composer";
 import { Bot, Sparkles, AlertCircle } from "lucide-react";
@@ -34,6 +34,8 @@ export function ChatView({
 }: ChatViewProps) {
   const { isExpanded } = useSidebar();
   const [isDesktop, setIsDesktop] = useState(true);
+  const latestUserMsgRef = useRef<HTMLDivElement>(null);
+  const prevMessageCount = useRef(messages.length);
 
   // Check if we're on desktop
   useEffect(() => {
@@ -42,6 +44,18 @@ export function ChatView({
     window.addEventListener("resize", checkIsDesktop);
     return () => window.removeEventListener("resize", checkIsDesktop);
   }, []);
+
+  // Scroll to bring latest user message to top when a new message is sent
+  useEffect(() => {
+    // Only scroll when a new message is added (not on initial load)
+    if (messages.length > prevMessageCount.current && latestUserMsgRef.current) {
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        latestUserMsgRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+    prevMessageCount.current = messages.length;
+  }, [messages.length]);
 
   const isEmpty = messages.length === 0 && !isLoading && !error;
 
@@ -56,15 +70,22 @@ export function ChatView({
           <EmptyState />
         ) : (
           <div className="pt-4 pb-4">
-            {messages.map((msg) => (
-              <ChatMessage
-                key={msg.id}
-                role={msg.role}
-                content={msg.content}
-                toolsUsed={msg.toolsUsed}
-                timestamp={new Date(msg.createdAt)}
-              />
-            ))}
+            {messages.map((msg, index) => {
+              // Find the last user message to attach the scroll ref
+              const isLastUserMessage = msg.role === "user" &&
+                !messages.slice(index + 1).some(m => m.role === "user");
+
+              return (
+                <div key={msg.id} ref={isLastUserMessage ? latestUserMsgRef : null}>
+                  <ChatMessage
+                    role={msg.role}
+                    content={msg.content}
+                    toolsUsed={msg.toolsUsed}
+                    timestamp={new Date(msg.createdAt)}
+                  />
+                </div>
+              );
+            })}
 
             {/* Loading indicator */}
             {isLoading && (
