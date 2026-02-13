@@ -143,6 +143,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 | `get_expenses_summary` | Expense breakdown by category |
 | `get_family_summary` | Household structure and member info |
 | `get_balance_summary` | Balance projections with safety assessment |
+| `search_knowledge` | Semantic search over financial knowledge base |
 
 ---
 
@@ -275,6 +276,50 @@ This ensures the AI **never recommends an expense that would deplete the emergen
 
 ---
 
+### 2.5 `search_knowledge`
+
+**Purpose**: Semantic search over the Foracle knowledge base for general financial information.
+
+**Parameters**:
+```typescript
+{
+  query: string,    // Natural language search query
+  limit?: number    // Max results (1-10, default: 5)
+}
+```
+
+**Returns**:
+- Relevant knowledge chunks with similarity scores
+- Document metadata (source, category, etc.)
+
+**When to Use**:
+- General financial questions: "What is CPF?", "How much emergency fund should I have?"
+- Concept explanations: "What are the CPF account types?"
+- Best practices: "What are good budgeting strategies?"
+
+**NOT for**:
+- User-specific data (use `get_income_summary`, `get_expenses_summary`, etc.)
+- Balance projections (use `get_balance_summary`)
+
+**Example Response**:
+```typescript
+{
+  query: "What is CPF?",
+  resultsCount: 3,
+  results: [
+    {
+      docId: "cpf-basics",
+      content: "# CPF (Central Provident Fund) Basics\n\nThe Central Provident Fund...",
+      similarity: 0.61,
+      metadata: { source: "cpf-official", category: "retirement" }
+    },
+    // ... more results
+  ]
+}
+```
+
+---
+
 ### Audit Logging
 
 All tool executions are logged for transparency:
@@ -328,4 +373,16 @@ lib/ai/
     ├── registry.ts       # Tool definitions and schemas
     ├── executors.ts      # Tool implementation logic
     └── index.ts          # Public exports
+
+lib/vectors/
+├── index.ts              # Public exports
+├── embeddings.ts         # Embedding providers (Voyage AI, OpenAI)
+├── chunker.ts            # Text chunking utilities
+├── ingest.ts             # Document ingestion
+└── retrieval.ts          # Semantic search queries
+
+db/schema.ts              # Includes kb_chunks and user_chunks tables
+scripts/
+├── migrate-vector-tables.sql  # pgvector table creation
+└── seed-kb.ts                 # Knowledge base seeding
 ```

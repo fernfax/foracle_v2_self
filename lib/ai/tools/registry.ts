@@ -29,6 +29,11 @@ export const HypotheticalItemSchema = z.object({
   label: z.string().optional(),
 });
 
+export const SearchKnowledgeParamSchema = z.object({
+  query: z.string().min(1, "Query cannot be empty"),
+  limit: z.number().int().min(1).max(10).default(5).optional(),
+});
+
 export const BalanceSummaryParamSchema = z.object({
   // ===== EXISTING PARAMS (backwards compatible) =====
   fromMonth: z
@@ -91,13 +96,15 @@ export const BalanceSummaryParamSchema = z.object({
 export type MonthParams = z.infer<typeof MonthParamSchema>;
 export type FamilySummaryParams = z.infer<typeof FamilySummaryParamSchema>;
 export type BalanceSummaryParams = z.infer<typeof BalanceSummaryParamSchema>;
+export type SearchKnowledgeParams = z.infer<typeof SearchKnowledgeParamSchema>;
 export type HypotheticalItem = z.infer<typeof HypotheticalItemSchema>;
 
 export type ToolName =
   | "get_income_summary"
   | "get_expenses_summary"
   | "get_family_summary"
-  | "get_balance_summary";
+  | "get_balance_summary"
+  | "search_knowledge";
 
 export interface ToolDefinition {
   name: ToolName;
@@ -241,6 +248,27 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       required: ["fromMonth", "toMonth"],
     },
   },
+
+  search_knowledge: {
+    name: "search_knowledge",
+    description:
+      "Search the Foracle knowledge base for relevant financial information. Use this tool when the user asks general financial questions about topics like CPF (Central Provident Fund), emergency funds, budgeting, savings strategies, or other financial concepts. This tool retrieves relevant knowledge chunks that you can use to provide accurate, informed answers. Do NOT use this for user-specific data (income, expenses, balances) - use the other tools for that. Examples of when to use: 'What is CPF?', 'How much emergency fund should I have?', 'What are good budgeting strategies?'",
+    schema: SearchKnowledgeParamSchema,
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "The search query - a natural language question or topic to search for",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum number of results to return (1-10, default: 5)",
+        },
+      },
+      required: ["query"],
+    },
+  },
 };
 
 // =============================================================================
@@ -252,6 +280,7 @@ const ALLOWED_TOOLS: Set<ToolName> = new Set([
   "get_expenses_summary",
   "get_family_summary",
   "get_balance_summary",
+  "search_knowledge",
 ]);
 
 // =============================================================================
