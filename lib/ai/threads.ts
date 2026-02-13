@@ -21,6 +21,7 @@ export interface ChatThread {
   title: string;
   messages: ChatMessage[];
   lastResponseId?: string;
+  orchestratorConversationId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -147,7 +148,8 @@ export async function addMessageToThread(
 
 export async function updateThreadResponseId(
   threadId: string,
-  responseId: string
+  responseId: string,
+  orchestratorConversationId?: string
 ): Promise<void> {
   const userId = await getCurrentUserId();
   const thread = threads.get(threadId);
@@ -157,6 +159,9 @@ export async function updateThreadResponseId(
   }
 
   thread.lastResponseId = responseId;
+  if (orchestratorConversationId) {
+    thread.orchestratorConversationId = orchestratorConversationId;
+  }
 }
 
 export async function deleteThread(threadId: string): Promise<boolean> {
@@ -212,6 +217,7 @@ export async function clearThreadMessages(threadId: string): Promise<boolean> {
 
   thread.messages = [];
   thread.lastResponseId = undefined;
+  thread.orchestratorConversationId = undefined;
   thread.updatedAt = new Date();
   return true;
 }
