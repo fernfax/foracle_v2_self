@@ -1231,6 +1231,10 @@ async function executeGetBalanceSummary(
     monthlyProjections.push(projection);
   }
 
+  // Calculate average base monthly net income from projections (excludes hypotheticals)
+  // This is used for safety assessment and affordability calculations
+  const baseMonthlyNetIncome = monthCount > 0 ? totalBaseIncome / monthCount : 0;
+
   // Calculate hypothetical impact (backwards compatible - uses first expense or income)
   let hypotheticalImpact: HypotheticalImpact | null = null;
   const firstExpenseHyp = effectiveHypotheticals.find(h => h.type === "expense");
@@ -1329,7 +1333,11 @@ async function executeGetBalanceSummary(
   let affordabilityAnalysis: AffordabilityAnalysis | undefined;
   if (params.computeMaxAffordableExpenseMonth) {
     const targetMonth = params.computeMaxAffordableExpenseMonth;
-    const minAllowedBalance = params.minMonthlyBalance ?? 0;
+
+    // Default to 6 months of net income as the safety floor (emergency fund minimum)
+    // This ensures any expense recommendation maintains at least 6 months emergency fund
+    const defaultSafetyFloor = baseMonthlyNetIncome * 6;
+    const minAllowedBalance = params.minMonthlyBalance ?? defaultSafetyFloor;
 
     // We need to find the max expense that can be added to targetMonth
     // such that no month from targetMonth onwards drops below minAllowedBalance
@@ -1383,6 +1391,9 @@ async function executeGetBalanceSummary(
       // Because adding an expense in targetMonth reduces all subsequent balances by that amount
       const maxAffordable = Math.max(0, minBalanceFromTarget - minAllowedBalance);
 
+      // Determine if we're using the safety floor or a custom constraint
+      const usingSafetyFloor = params.minMonthlyBalance === undefined;
+
       affordabilityAnalysis = {
         targetMonth,
         maxAffordableOneTimeExpense: Math.round(maxAffordable * 100) / 100,
@@ -1390,22 +1401,24 @@ async function executeGetBalanceSummary(
         minimumProjectedBalance: Math.round(minBalanceFromTarget * 100) / 100,
         assumptions: [
           `Calculated based on baseline projections without hypotheticals`,
-          `Minimum balance constraint: $${minAllowedBalance.toLocaleString()}`,
+          usingSafetyFloor
+            ? `Safety floor: $${Math.round(minAllowedBalance).toLocaleString()} (6 months of net income as emergency fund)`
+            : `Minimum balance constraint: $${minAllowedBalance.toLocaleString()}`,
           `Binding month is ${formatMonthLabel(bindingMonth)} where balance would be tightest`,
         ],
       };
 
-      notes.push(`Max affordable one-time expense in ${formatMonthLabel(targetMonth)}: $${Math.round(maxAffordable).toLocaleString()}`);
+      if (usingSafetyFloor) {
+        notes.push(`Max affordable one-time expense in ${formatMonthLabel(targetMonth)}: $${Math.round(maxAffordable).toLocaleString()} (while maintaining 6-month emergency fund)`);
+      } else {
+        notes.push(`Max affordable one-time expense in ${formatMonthLabel(targetMonth)}: $${Math.round(maxAffordable).toLocaleString()}`);
+      }
     }
   }
 
   // ==========================================================================
   // Safety Assessment (Traffic Light System) - ALWAYS calculated
   // ==========================================================================
-
-  // Calculate average base monthly net income from projections (excludes hypotheticals)
-  // This uses the same calculation logic as the projections, ensuring consistency
-  const baseMonthlyNetIncome = monthCount > 0 ? totalBaseIncome / monthCount : 0;
 
   // Calculate thresholds (6 and 9 months of net income)
   const yellowThreshold = baseMonthlyNetIncome * 6; // Below this = RED
