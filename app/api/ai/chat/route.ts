@@ -176,14 +176,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     }
 
     try {
-      // Use a simple conversation ID based on thread for multi-turn
+      // Use the orchestrator's conversation ID for multi-turn context
       console.log("[AI Chat] Calling orchestrator.chat with message:", message.slice(0, 50));
-      const result = await orchestrator.chat(message, thread.lastResponseId ? thread.id : undefined);
+      console.log("[AI Chat] Using orchestrator conversation ID:", thread.orchestratorConversationId || "new");
+      const result = await orchestrator.chat(message, thread.orchestratorConversationId);
       console.log("[AI Chat] Orchestrator response received, tools used:", result.toolsUsed);
 
-      // Store the response ID for conversation continuity
+      // Store both the response ID and conversation ID for continuity
       if (result.responseId) {
-        await updateThreadResponseId(thread.id, result.responseId);
+        await updateThreadResponseId(thread.id, result.responseId, result.conversationId);
       }
 
       // Add assistant message to thread
