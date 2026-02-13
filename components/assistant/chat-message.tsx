@@ -115,10 +115,39 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                 </li>
               ),
 
-              // Strong/Bold
-              strong: ({ children }) => (
-                <strong className="font-semibold text-foreground">{children}</strong>
-              ),
+              // Strong/Bold - with safety status color coding
+              strong: ({ children }) => {
+                const text = String(children).toLowerCase();
+
+                // Green status indicators
+                if (text.includes("green") || text.includes("safe")) {
+                  return (
+                    <strong className="font-semibold text-emerald-600 dark:text-emerald-500">
+                      {children}
+                    </strong>
+                  );
+                }
+
+                // Yellow/Caution status indicators
+                if (text.includes("yellow") || text.includes("caution")) {
+                  return (
+                    <strong className="font-semibold text-amber-600 dark:text-amber-500">
+                      {children}
+                    </strong>
+                  );
+                }
+
+                // Red/At Risk status indicators
+                if (text.includes("red") || text.includes("at risk")) {
+                  return (
+                    <strong className="font-semibold text-red-600 dark:text-red-500">
+                      {children}
+                    </strong>
+                  );
+                }
+
+                return <strong className="font-semibold text-foreground">{children}</strong>;
+              },
 
               // Emphasis/Italic
               em: ({ children }) => (
