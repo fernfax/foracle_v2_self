@@ -1,5 +1,29 @@
-import { pgTable, text, timestamp, decimal, integer, varchar, date, boolean } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, text, timestamp, decimal, integer, varchar, date, boolean, jsonb, index, customType } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+
+// =============================================================================
+// Custom Types for pgvector
+// =============================================================================
+
+// Custom vector type for pgvector extension
+// Voyage AI voyage-3-lite outputs 512 dimensions, OpenAI text-embedding-3-small outputs 1536 dimensions
+// We use 1536 as max to support both providers
+const vector = customType<{ data: number[]; driverData: string; config: { dimensions: number } }>({
+  dataType(config) {
+    const dimensions = config?.dimensions ?? 1536;
+    return `vector(${dimensions})`;
+  },
+  toDriver(value: number[]): string {
+    return `[${value.join(",")}]`;
+  },
+  fromDriver(value: string): number[] {
+    // Parse "[1,2,3]" format from Postgres
+    return value
+      .slice(1, -1)
+      .split(",")
+      .map(Number);
+  },
+});
 
 // Users table - synced with Clerk
 export const users = pgTable("users", {
@@ -320,6 +344,56 @@ export const budgetShifts = pgTable("budget_shifts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// =============================================================================
+// Vector Search Tables (pgvector)
+// =============================================================================
+
+/**
+ * Knowledge Base Chunks - Global shared knowledge (no user_id)
+ * Used for storing embeddings of public/shared documentation, FAQs, etc.
+ * All users can query these chunks for semantic search.
+ */
+export const kbChunks = pgTable("kb_chunks", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  docId: varchar("doc_id", { length: 255 }).notNull(), // Document identifier (e.g., "cpf-guide", "financial-terms")
+  chunkIndex: integer("chunk_index").notNull(), // Position of this chunk in the document
+  content: text("content").notNull(), // The actual text content
+  embedding: vector("embedding", { dimensions: 1536 }), // Vector embedding (null until generated)
+  metadata: jsonb("metadata"), // Flexible metadata: { source, title, section, tags, etc. }
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  // Btree indexes for filtering
+  index("kb_chunks_doc_id_idx").on(table.docId),
+  index("kb_chunks_created_at_idx").on(table.createdAt),
+  // Note: HNSW index for vector similarity search is created via raw SQL migration
+  // because Drizzle doesn't have native HNSW index support
+]);
+
+/**
+ * User Chunks - Private per-user knowledge (multi-tenant safe)
+ * Used for storing embeddings of user-uploaded documents, notes, etc.
+ * Each user can only access their own chunks.
+ */
+export const userChunks = pgTable("user_chunks", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  docId: varchar("doc_id", { length: 255 }).notNull(), // Document identifier within user's namespace
+  chunkIndex: integer("chunk_index").notNull(), // Position of this chunk in the document
+  content: text("content").notNull(), // The actual text content
+  embedding: vector("embedding", { dimensions: 1536 }), // Vector embedding (null until generated)
+  metadata: jsonb("metadata"), // Flexible metadata: { filename, pageNumber, section, tags, etc. }
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  // Btree indexes for filtering
+  index("user_chunks_user_id_idx").on(table.userId),
+  index("user_chunks_doc_id_idx").on(table.docId),
+  index("user_chunks_user_doc_idx").on(table.userId, table.docId),
+  index("user_chunks_created_at_idx").on(table.createdAt),
+  // Note: HNSW index for vector similarity search is created via raw SQL migration
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
@@ -337,6 +411,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   quickLinks: many(quickLinks),
   investmentPolicies: many(investmentPolicies),
   budgetShifts: many(budgetShifts),
+  userChunks: many(userChunks),
 }));
 
 export const familyMembersRelations = relations(familyMembers, ({ one, many }) => ({
@@ -470,6 +545,13 @@ export const investmentPoliciesRelations = relations(investmentPolicies, ({ one 
 export const budgetShiftsRelations = relations(budgetShifts, ({ one }) => ({
   user: one(users, {
     fields: [budgetShifts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userChunksRelations = relations(userChunks, ({ one }) => ({
+  user: one(users, {
+    fields: [userChunks.userId],
     references: [users.id],
   }),
 }));
