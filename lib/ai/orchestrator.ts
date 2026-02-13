@@ -393,6 +393,9 @@ export class AIOrchestrator {
 
     conversation.updatedAt = new Date();
 
+    // HARD RULE: Always return toolsUsed array so the UI can display
+    // the "Data sources used" section at the bottom of assistant messages.
+    // This ensures transparency about which data sources were queried.
     return {
       response: finalResponse,
       toolsUsed: toolsUsedThisRound,
