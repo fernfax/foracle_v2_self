@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChatMessage } from "./chat-message";
 import { ChatComposer } from "./chat-composer";
 import { Bot, Sparkles, AlertCircle } from "lucide-react";
@@ -32,7 +32,6 @@ export function ChatView({
   error = null,
   quotaInfo,
 }: ChatViewProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isExpanded } = useSidebar();
   const [isDesktop, setIsDesktop] = useState(true);
 
@@ -43,11 +42,6 @@ export function ChatView({
     window.addEventListener("resize", checkIsDesktop);
     return () => window.removeEventListener("resize", checkIsDesktop);
   }, []);
-
-  // Auto-scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const isEmpty = messages.length === 0 && !isLoading && !error;
 
@@ -61,7 +55,7 @@ export function ChatView({
         {isEmpty ? (
           <EmptyState />
         ) : (
-          <div className="pb-4">
+          <div className="pt-4 pb-4">
             {messages.map((msg) => (
               <ChatMessage
                 key={msg.id}
@@ -96,8 +90,6 @@ export function ChatView({
                 <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
-
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
