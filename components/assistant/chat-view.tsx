@@ -41,9 +41,9 @@ export function ChatView({
   const isEmpty = messages.length === 0 && !isLoading && !error;
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto">
+    <div className="relative min-h-[calc(100vh-4rem)]">
+      {/* Messages area - with padding at bottom for fixed composer */}
+      <div className="pb-32">
         {isEmpty ? (
           <EmptyState />
         ) : (
@@ -88,33 +88,37 @@ export function ChatView({
         )}
       </div>
 
-      {/* Quota warning */}
-      {quotaInfo && quotaInfo.used >= quotaInfo.limit * 0.8 && (
-        <div className="mx-4 mb-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          <span className="font-medium">
-            {quotaInfo.limit - quotaInfo.used} messages remaining today.
-          </span>{" "}
-          Quota resets at midnight.
-        </div>
-      )}
+      {/* Fixed composer at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        {/* Quota warning */}
+        {quotaInfo && quotaInfo.used >= quotaInfo.limit * 0.8 && (
+          <div className="mx-auto max-w-3xl px-4">
+            <div className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <span className="font-medium">
+                {quotaInfo.limit - quotaInfo.used} messages remaining today.
+              </span>{" "}
+              Quota resets at midnight.
+            </div>
+          </div>
+        )}
 
-      {/* Composer */}
-      <ChatComposer
-        onSend={onSend}
-        disabled={isLoading || (quotaInfo && quotaInfo.used >= quotaInfo.limit)}
-        placeholder={
-          quotaInfo && quotaInfo.used >= quotaInfo.limit
-            ? "Daily message limit reached. Resets at midnight."
-            : undefined
-        }
-      />
+        <ChatComposer
+          onSend={onSend}
+          disabled={isLoading || (quotaInfo && quotaInfo.used >= quotaInfo.limit)}
+          placeholder={
+            quotaInfo && quotaInfo.used >= quotaInfo.limit
+              ? "Daily message limit reached. Resets at midnight."
+              : undefined
+          }
+        />
+      </div>
     </div>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="flex h-full flex-col items-center justify-center px-4 text-center">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
         <Sparkles className="h-8 w-8 text-emerald-600" />
       </div>

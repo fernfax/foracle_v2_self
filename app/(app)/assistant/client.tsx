@@ -1,17 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { ThreadList, ChatView } from "@/components/assistant";
-import { MessageSquare, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-interface ThreadSummary {
-  id: string;
-  title: string;
-  lastMessage: string;
-  messageCount: number;
-  updatedAt: string;
-}
+import { useState, useCallback } from "react";
+import { ChatView } from "@/components/assistant";
 
 interface Message {
   id: string;
@@ -28,100 +18,11 @@ interface QuotaInfo {
 }
 
 export function AssistantClient() {
-  const [threads, setThreads] = useState<ThreadSummary[]>([]);
-  const [selectedThreadId, setSelectedThreadId] = useState<string | undefined>();
+  const [threadId, setThreadId] = useState<string | undefined>();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoadingThreads, setIsLoadingThreads] = useState(true);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | undefined>();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Fetch threads on mount
-  useEffect(() => {
-    fetchThreads();
-  }, []);
-
-  // Fetch messages when thread changes
-  useEffect(() => {
-    if (selectedThreadId) {
-      fetchThreadMessages(selectedThreadId);
-    } else {
-      setMessages([]);
-    }
-  }, [selectedThreadId]);
-
-  const fetchThreads = async () => {
-    setIsLoadingThreads(true);
-    try {
-      const res = await fetch("/api/ai/threads");
-      const data = await res.json();
-
-      if (data.success) {
-        setThreads(data.threads || []);
-        if (data.quota) {
-          setQuotaInfo(data.quota);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch threads:", err);
-    } finally {
-      setIsLoadingThreads(false);
-    }
-  };
-
-  const fetchThreadMessages = async (threadId: string) => {
-    setIsLoadingMessages(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/ai/threads?threadId=${threadId}`);
-      const data = await res.json();
-
-      if (data.success && data.thread) {
-        setMessages(data.thread.messages || []);
-      } else {
-        setMessages([]);
-      }
-    } catch (err) {
-      console.error("Failed to fetch messages:", err);
-      setError("Failed to load messages");
-    } finally {
-      setIsLoadingMessages(false);
-    }
-  };
-
-  const handleNewThread = useCallback(() => {
-    setSelectedThreadId(undefined);
-    setMessages([]);
-    setError(null);
-    setSidebarOpen(false);
-  }, []);
-
-  const handleSelectThread = useCallback((threadId: string) => {
-    setSelectedThreadId(threadId);
-    setError(null);
-    setSidebarOpen(false);
-  }, []);
-
-  const handleDeleteThread = useCallback(async (threadId: string) => {
-    try {
-      const res = await fetch(`/api/ai/threads?threadId=${threadId}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        setThreads((prev) => prev.filter((t) => t.id !== threadId));
-        if (selectedThreadId === threadId) {
-          setSelectedThreadId(undefined);
-          setMessages([]);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to delete thread:", err);
-    }
-  }, [selectedThreadId]);
 
   const handleSendMessage = useCallback(async (content: string) => {
     setIsSending(true);
@@ -142,7 +43,7 @@ export function AssistantClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: content,
-          threadId: selectedThreadId,
+          threadId,
         }),
       });
 
@@ -154,8 +55,8 @@ export function AssistantClient() {
 
       if (data.success) {
         // Update thread ID if new
-        if (data.threadId && data.threadId !== selectedThreadId) {
-          setSelectedThreadId(data.threadId);
+        if (data.threadId && data.threadId !== threadId) {
+          setThreadId(data.threadId);
         }
 
         // Add assistant response
@@ -167,9 +68,6 @@ export function AssistantClient() {
           createdAt: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMsg]);
-
-        // Refresh threads list
-        fetchThreads();
       } else {
         // Handle error response
         if (data.response) {
@@ -183,9 +81,8 @@ export function AssistantClient() {
           setMessages((prev) => [...prev, errorMsg]);
 
           // Update thread if new
-          if (data.threadId && data.threadId !== selectedThreadId) {
-            setSelectedThreadId(data.threadId);
-            fetchThreads();
+          if (data.threadId && data.threadId !== threadId) {
+            setThreadId(data.threadId);
           }
         } else {
           setError(data.error || "Failed to send message");
@@ -201,69 +98,15 @@ export function AssistantClient() {
     } finally {
       setIsSending(false);
     }
-  }, [selectedThreadId]);
+  }, [threadId]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-      {/* Mobile header with conversations toggle */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between border-b bg-background/95 backdrop-blur px-4 py-2 md:hidden">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <MessageSquare className="h-4 w-4" />
-          Conversations
-          {threads.length > 0 && (
-            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
-              {threads.length}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Sidebar - Thread list */}
-      <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-40 w-80 transform bg-background border-r transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:w-72",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        {/* Mobile close button */}
-        <button
-          onClick={() => setSidebarOpen(false)}
-          className="absolute top-3 right-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground md:hidden"
-        >
-          <X className="h-4 w-4" />
-        </button>
-
-        <ThreadList
-          threads={threads}
-          selectedThreadId={selectedThreadId}
-          onSelectThread={handleSelectThread}
-          onNewThread={handleNewThread}
-          onDeleteThread={handleDeleteThread}
-          isLoading={isLoadingThreads}
-        />
-      </div>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main chat area */}
-      <div className="flex-1 min-w-0 pt-12 md:pt-0">
-        <ChatView
-          messages={messages}
-          onSend={handleSendMessage}
-          isLoading={isSending || isLoadingMessages}
-          error={error}
-          quotaInfo={quotaInfo}
-        />
-      </div>
-    </div>
+    <ChatView
+      messages={messages}
+      onSend={handleSendMessage}
+      isLoading={isSending}
+      error={error}
+      quotaInfo={quotaInfo}
+    />
   );
 }
