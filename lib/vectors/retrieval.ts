@@ -30,7 +30,7 @@ export interface SearchResult {
 export interface SearchOptions {
   /** Maximum number of results (default: 5) */
   limit?: number;
-  /** Minimum similarity threshold 0-1 (default: 0.7) */
+  /** Minimum similarity threshold 0-1 (default: 0.5) */
   minSimilarity?: number;
   /** Filter by document ID */
   docId?: string;
@@ -48,7 +48,7 @@ export async function searchKnowledgeBase(
   query: string,
   options: SearchOptions = {}
 ): Promise<SearchResult[]> {
-  const { limit = 5, minSimilarity = 0.7, docId } = options;
+  const { limit = 5, minSimilarity = 0.5, docId } = options;
 
   const client = getEmbeddingsClient();
   const queryEmbedding = await client.embedQuery(query);
@@ -106,7 +106,7 @@ export async function searchUserChunks(
     throw new Error("userId is required for user chunk search");
   }
 
-  const { limit = 5, minSimilarity = 0.7, docId } = options;
+  const { limit = 5, minSimilarity = 0.5, docId } = options;
 
   const client = getEmbeddingsClient();
   const queryEmbedding = await client.embedQuery(query);

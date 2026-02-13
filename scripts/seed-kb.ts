@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Seed Knowledge Base Script
  *
@@ -12,9 +13,10 @@
  *   - pgvector extension enabled in database
  */
 
-import * as dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
+// Load environment variables FIRST (before any other imports)
+require("dotenv").config({ path: ".env.local" });
 
+// Now import modules that depend on env vars
 import { ingestToKnowledgeBase, listKnowledgeBaseDocs } from "../lib/vectors";
 
 // Sample knowledge base documents
