@@ -75,6 +75,13 @@ export const BalanceSummaryParamSchema = z.object({
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Must be in YYYY-MM format")
     .optional()
     .describe("If provided, computes the maximum one-time expense affordable in this month while respecting constraints"),
+
+  // Find safe purchase month - given an expense amount, find when it's safe to purchase
+  findSafeMonthForExpense: z
+    .number()
+    .positive("Expense amount must be positive")
+    .optional()
+    .describe("If provided, finds the earliest month where this expense can be made while maintaining at least 6 months of income as emergency fund"),
 });
 
 // =============================================================================
@@ -171,7 +178,7 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
   get_balance_summary: {
     name: "get_balance_summary",
     description:
-      "Cashflow & affordability engine for balance projections and spending analysis. Returns monthly breakdown showing income, expenses, net savings, and cumulative balance. Starting balance is fetched from current holdings. ALWAYS includes a safetyAssessment with traffic light status (green/yellow/red) based on emergency fund health: GREEN = balance stays above 9 months of net income, YELLOW = balance dips to 6-9 months (caution advised), RED = balance drops below 6 months (expense not recommended). Use this for: (1) Balance projections - 'how much will I have saved by X', 'what will my balance be'; (2) Affordability questions - 'how much can I spend on a gift', 'can I afford X', 'what's my budget for Y' - use computeMaxAffordableExpenseMonth to find max affordable amount; (3) Multi-scenario planning - use hypotheticals[] array for trips spanning months or multiple purchases; (4) Safety analysis - use minEndBalance/minMonthlyBalance to ensure constraints are met. IMPORTANT: When user asks about a SPECIFIC month, only show that month's data. For affordability questions, use computeMaxAffordableExpenseMonth and report the maxAffordableOneTimeExpense. ALWAYS report the safetyAssessment status and recommendation to the user - if status is 'yellow' or 'red', explicitly advise caution or against the expense.",
+      "Cashflow & affordability engine for balance projections and spending analysis. Returns monthly breakdown showing income, expenses, net savings, and cumulative balance. Starting balance is fetched from current holdings. ALWAYS includes a safetyAssessment with traffic light status (green/yellow/red) based on emergency fund health: GREEN = balance stays above 9 months of net income, YELLOW = balance dips to 6-9 months (caution advised), RED = balance drops below 6 months (expense not recommended). Use this for: (1) Balance projections - 'how much will I have saved by X', 'what will my balance be'; (2) Affordability questions - 'how much can I spend on a gift', 'can I afford X', 'what's my budget for Y' - use computeMaxAffordableExpenseMonth to find max affordable amount; (3) Multi-scenario planning - use hypotheticals[] array for trips spanning months or multiple purchases; (4) Safety analysis - use minEndBalance/minMonthlyBalance to ensure constraints are met; (5) Purchase timing advice - 'when can I safely buy X' - use findSafeMonthForExpense to find the earliest month where a purchase maintains 6+ months emergency fund. IMPORTANT: When user asks about a SPECIFIC month, only show that month's data. For affordability questions, use computeMaxAffordableExpenseMonth. For 'when should I buy' questions, use findSafeMonthForExpense and report the safePurchaseRecommendation. ALWAYS report the safetyAssessment status and recommendation to the user - if status is 'yellow' or 'red', explicitly advise caution or against the expense.",
     schema: BalanceSummaryParamSchema,
     parameters: {
       type: "object",
@@ -225,6 +232,10 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
         computeMaxAffordableExpenseMonth: {
           type: "string",
           description: "If provided (YYYY-MM format), computes the MAXIMUM one-time expense the user can afford in that month while never going below minMonthlyBalance (default 0). Use this for questions like 'how much can I spend on X'.",
+        },
+        findSafeMonthForExpense: {
+          type: "number",
+          description: "If provided (expense amount), finds the EARLIEST month where this expense can be made while maintaining at least 6 months of income as emergency fund. Use this for questions like 'when is a good time to buy X' or 'when can I safely purchase Y'.",
         },
       },
       required: ["fromMonth", "toMonth"],

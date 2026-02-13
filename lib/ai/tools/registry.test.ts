@@ -522,6 +522,51 @@ describe("Zod Schemas", () => {
       });
     });
 
+    describe("v2 safe purchase timing", () => {
+      it("should accept findSafeMonthForExpense parameter", () => {
+        const result = BalanceSummaryParamSchema.safeParse({
+          fromMonth: "2025-01",
+          toMonth: "2025-12",
+          findSafeMonthForExpense: 700,
+        });
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.findSafeMonthForExpense).toBe(700);
+        }
+      });
+
+      it("should reject negative findSafeMonthForExpense", () => {
+        const result = BalanceSummaryParamSchema.safeParse({
+          fromMonth: "2025-01",
+          toMonth: "2025-12",
+          findSafeMonthForExpense: -100,
+        });
+        expect(result.success).toBe(false);
+      });
+
+      it("should reject zero findSafeMonthForExpense", () => {
+        const result = BalanceSummaryParamSchema.safeParse({
+          fromMonth: "2025-01",
+          toMonth: "2025-12",
+          findSafeMonthForExpense: 0,
+        });
+        expect(result.success).toBe(false);
+      });
+
+      it("should accept findSafeMonthForExpense with other params", () => {
+        const result = BalanceSummaryParamSchema.safeParse({
+          fromMonth: "2025-01",
+          toMonth: "2025-12",
+          findSafeMonthForExpense: 5000,
+          minMonthlyBalance: 1000,
+        });
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.findSafeMonthForExpense).toBe(5000);
+        }
+      });
+    });
+
     describe("v2 backwards compatibility", () => {
       it("should still accept legacy hypothetical expense params", () => {
         const result = BalanceSummaryParamSchema.safeParse({
