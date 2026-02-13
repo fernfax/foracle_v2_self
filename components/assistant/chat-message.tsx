@@ -9,6 +9,11 @@ import { ChevronDown, ChevronUp, Bot, Database } from "lucide-react";
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
+  /**
+   * HARD RULE: When tools are used, the "Data sources used" collapsible section
+   * MUST always appear at the bottom of assistant messages. This provides
+   * transparency about which data sources were queried to generate the response.
+   */
   toolsUsed?: string[];
   timestamp?: Date;
 }
@@ -235,7 +240,11 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
           </ReactMarkdown>
         </div>
 
-        {/* Data Used collapsible section */}
+        {/*
+          HARD RULE: Data sources section MUST always appear when tools were used.
+          This collapsible section shows which data sources (tools) were queried
+          to generate the response, ensuring transparency for the user.
+        */}
         {hasDataUsed && (
           <div className="mt-4 rounded-lg border bg-muted/30">
             <button
