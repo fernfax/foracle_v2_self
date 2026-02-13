@@ -38,4 +38,5 @@ export {
   type ScenarioSummary,
   type SafetyStatus,
   type SafetyAssessment,
+  type SafePurchaseRecommendation,
 } from "./executors";

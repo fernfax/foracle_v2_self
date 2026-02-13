@@ -266,6 +266,19 @@ export interface SafetyAssessment {
   recommendation: string;
 }
 
+// New: Safe purchase timing recommendation
+export interface SafePurchaseRecommendation {
+  expenseAmount: number;
+  safetyThresholdMonths: number; // 6 months
+  recommendedMonth: string | null; // "YYYY-MM" or null if never safe within projection
+  recommendedMonthLabel: string | null; // "Aug 2026"
+  balanceAfterPurchase: number | null;
+  emergencyFundMonthsAfter: number | null;
+  monthsToWait: number; // 0 if already safe, or number of months to wait
+  isSafeNow: boolean;
+  recommendation: string;
+}
+
 export interface BalanceSummaryResult {
   // Period info
   fromMonth: string;
@@ -297,6 +310,8 @@ export interface BalanceSummaryResult {
   scenarioSummary?: ScenarioSummary;
   // Safety assessment (always included) - traffic light system based on emergency fund
   safetyAssessment: SafetyAssessment;
+  // Safe purchase recommendation (if findSafeMonthForExpense was provided)
+  safePurchaseRecommendation?: SafePurchaseRecommendation;
 }
 
 // =============================================================================
@@ -1490,6 +1505,86 @@ async function executeGetBalanceSummary(
     recommendation,
   };
 
+  // ==========================================================================
+  // Safe Purchase Recommendation (if findSafeMonthForExpense was provided)
+  // ==========================================================================
+
+  let safePurchaseRecommendation: SafePurchaseRecommendation | undefined;
+
+  if (params.findSafeMonthForExpense) {
+    const expenseAmount = params.findSafeMonthForExpense;
+    const safetyThresholdMonths = 6; // Must maintain at least 6 months of income
+
+    // Calculate projections WITHOUT any hypotheticals to get the baseline
+    let baselineBalance = startingBalance;
+    const baselineProjections: Array<{ month: string; cumulativeBalance: number }> = [];
+
+    for (let i = 0; i < monthCount; i++) {
+      const currentMonth = addMonthsToString(params.fromMonth, i);
+      const { year, month } = parseMonth(currentMonth);
+      const monthStart = new Date(year, month - 1, 1);
+      const monthEnd = new Date(year, month, 0);
+
+      const baseIncome = calculateMonthlyIncomeForMonth(
+        userIncomes, currentMonth, year, month, monthStart, monthEnd
+      );
+      const baseExpense = calculateMonthlyExpensesForMonth(
+        userExpenses, year, month, monthStart, monthEnd
+      );
+
+      baselineBalance += baseIncome - baseExpense;
+      baselineProjections.push({ month: currentMonth, cumulativeBalance: baselineBalance });
+    }
+
+    // Find the first month where (balance - expense) >= (6 months of income)
+    const safetyThreshold = baseMonthlyNetIncome * safetyThresholdMonths;
+    let recommendedMonth: string | null = null;
+    let balanceAfterPurchase: number | null = null;
+    let emergencyFundMonthsAfter: number | null = null;
+    let monthsToWait = 0;
+    let isSafeNow = false;
+
+    for (let i = 0; i < baselineProjections.length; i++) {
+      const proj = baselineProjections[i];
+      const balanceAfter = proj.cumulativeBalance - expenseAmount;
+
+      if (balanceAfter >= safetyThreshold) {
+        recommendedMonth = proj.month;
+        balanceAfterPurchase = balanceAfter;
+        emergencyFundMonthsAfter = baseMonthlyNetIncome > 0 ? balanceAfter / baseMonthlyNetIncome : 0;
+        monthsToWait = i;
+        isSafeNow = i === 0;
+        break;
+      }
+    }
+
+    // Generate recommendation text
+    let purchaseRecommendation: string;
+    if (recommendedMonth) {
+      if (isSafeNow) {
+        purchaseRecommendation = `You can safely purchase this in ${formatMonthLabel(recommendedMonth)}. After the $${expenseAmount.toLocaleString()} expense, you'll still have ${emergencyFundMonthsAfter?.toFixed(1)} months of income as emergency fund.`;
+      } else {
+        purchaseRecommendation = `The earliest safe time to make this $${expenseAmount.toLocaleString()} purchase is ${formatMonthLabel(recommendedMonth)} (${monthsToWait} month${monthsToWait !== 1 ? 's' : ''} from now). By then, you'll have enough savings to maintain a 6+ month emergency fund after the purchase.`;
+      }
+    } else {
+      purchaseRecommendation = `Based on current projections through ${formatMonthLabel(params.toMonth)}, there is no month where this $${expenseAmount.toLocaleString()} expense would leave you with a safe 6-month emergency fund. Consider saving more or reducing the expense amount.`;
+    }
+
+    safePurchaseRecommendation = {
+      expenseAmount,
+      safetyThresholdMonths,
+      recommendedMonth,
+      recommendedMonthLabel: recommendedMonth ? formatMonthLabel(recommendedMonth) : null,
+      balanceAfterPurchase: balanceAfterPurchase ? Math.round(balanceAfterPurchase * 100) / 100 : null,
+      emergencyFundMonthsAfter: emergencyFundMonthsAfter ? Math.round(emergencyFundMonthsAfter * 10) / 10 : null,
+      monthsToWait,
+      isSafeNow,
+      recommendation: purchaseRecommendation,
+    };
+
+    notes.push(purchaseRecommendation);
+  }
+
   return {
     fromMonth: params.fromMonth,
     toMonth: params.toMonth,
@@ -1508,6 +1603,7 @@ async function executeGetBalanceSummary(
     constraintsEvaluation,
     scenarioSummary,
     safetyAssessment,
+    safePurchaseRecommendation,
   };
 }
 
