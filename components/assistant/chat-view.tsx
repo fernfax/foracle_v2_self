@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { ChatMessage } from "./chat-message";
 import { ChatComposer } from "./chat-composer";
 import { Bot, Sparkles, AlertCircle } from "lucide-react";
+import { useSidebar } from "@/components/sidebar/sidebar-context";
 
 interface Message {
   id: string;
@@ -32,6 +33,16 @@ export function ChatView({
   quotaInfo,
 }: ChatViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { isExpanded } = useSidebar();
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  // Check if we're on desktop
+  useEffect(() => {
+    const checkIsDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkIsDesktop();
+    window.addEventListener("resize", checkIsDesktop);
+    return () => window.removeEventListener("resize", checkIsDesktop);
+  }, []);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -39,6 +50,9 @@ export function ChatView({
   }, [messages]);
 
   const isEmpty = messages.length === 0 && !isLoading && !error;
+
+  // Calculate left offset for fixed bottom bar (sidebar width on desktop)
+  const sidebarWidth = isDesktop ? (isExpanded ? 260 : 72) : 0;
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)]">
@@ -88,8 +102,11 @@ export function ChatView({
         )}
       </div>
 
-      {/* Fixed composer at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      {/* Fixed composer at bottom - respects sidebar width */}
+      <div
+        className="fixed bottom-0 right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-all duration-300"
+        style={{ left: sidebarWidth }}
+      >
         {/* Quota warning */}
         {quotaInfo && quotaInfo.used >= quotaInfo.limit * 0.8 && (
           <div className="mx-auto max-w-3xl px-4">
