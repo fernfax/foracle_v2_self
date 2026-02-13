@@ -9,8 +9,10 @@ import {
   type MonthParams,
   type FamilySummaryParams,
   type BalanceSummaryParams,
+  type SearchKnowledgeParams,
   type HypotheticalItem,
 } from "./registry";
+import { searchKnowledgeBase, type SearchResult } from "@/lib/vectors";
 
 // =============================================================================
 // Future Milestone Type
@@ -1621,6 +1623,40 @@ async function executeGetBalanceSummary(
 }
 
 // =============================================================================
+// Tool Executor: search_knowledge
+// =============================================================================
+
+export interface SearchKnowledgeResult {
+  query: string;
+  resultsCount: number;
+  results: Array<{
+    docId: string;
+    content: string;
+    similarity: number;
+    metadata: Record<string, unknown> | null;
+  }>;
+}
+
+async function executeSearchKnowledge(
+  params: SearchKnowledgeParams
+): Promise<SearchKnowledgeResult> {
+  const { query, limit = 5 } = params;
+
+  const results = await searchKnowledgeBase(query, { limit });
+
+  return {
+    query,
+    resultsCount: results.length,
+    results: results.map((r) => ({
+      docId: r.docId,
+      content: r.content,
+      similarity: r.similarity,
+      metadata: r.metadata,
+    })),
+  };
+}
+
+// =============================================================================
 // Main Executor Function
 // =============================================================================
 
@@ -1716,6 +1752,10 @@ export async function executeTool(
 
       case "get_balance_summary":
         data = await executeGetBalanceSummary(validationResult.data as BalanceSummaryParams, userId);
+        break;
+
+      case "search_knowledge":
+        data = await executeSearchKnowledge(validationResult.data as SearchKnowledgeParams);
         break;
 
       default:
