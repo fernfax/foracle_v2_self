@@ -1,0 +1,27 @@
+# Docker Compose for local Postgres with pgvector
+# Usage: docker-compose up -d
+
+version: "3.9"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: foracle_postgres
+    environment:
+      POSTGRES_USER: foracle
+      POSTGRES_PASSWORD: foracle_dev_password
+      POSTGRES_DB: foracle_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Optional: init script to enable pgvector on startup
+      - ./scripts/init-pgvector.sql:/docker-entrypoint-initdb.d/init-pgvector.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U foracle -d foracle_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
