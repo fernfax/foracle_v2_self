@@ -14,24 +14,38 @@ When you ask a general financial question, the assistant searches this knowledge
 
 ## Topics Covered
 
-### 1. CPF (Central Provident Fund)
+### 1. CPF (Central Provident Fund) - Updated January 2026
 
-Everything you need to know about Singapore's mandatory savings scheme:
+Comprehensive knowledge about Singapore's mandatory savings scheme, including the latest 2026 updates:
 
-- **What is CPF?** - An overview of the Central Provident Fund and its purpose
-- **Contribution Rates** - How much employees and employers contribute (20% + 17% = 37% for those aged 55 and below)
-- **Account Types**:
-  - **Ordinary Account (OA)** - For housing, insurance, investment, education
-  - **Special Account (SA)** - For retirement savings
-  - **MediSave Account (MA)** - For healthcare expenses
-- **Interest Rates** - How much each account earns (2.5% for OA, 4% for SA/MA)
-- **Allocation Rates** - How contributions are split between the three accounts
+#### CPF Ordinary Wage Ceiling
+- **Current ceiling: $8,000/month** (effective 1 Jan 2026)
+- History of ceiling increases from $6,000 (2016) to $8,000 (2026)
+- Annual salary ceiling: $102,000
+- CPF Annual Limit: $37,740
+- How the ceiling affects high earners
+
+#### CPF Contribution Rates (2026)
+- **Age 55 and below**: 37% (17% employer + 20% employee)
+- **Age 55-60**: 34% (16% employer + 18% employee) - *increased in 2026*
+- **Age 60-65**: 25% (12.5% employer + 12.5% employee) - *increased in 2026*
+- **Age 65-70**: 16.5% (9% employer + 7.5% employee)
+- **Above 70**: 12.5% (7.5% employer + 5% employee)
+
+#### CPF Account Types & Allocation
+- **Ordinary Account (OA)** - Housing, insurance, investment, education (2.5% interest)
+- **Special Account (SA)** - Retirement savings (4% interest)
+- **MediSave Account (MA)** - Healthcare expenses (4% interest)
+- **Retirement Account (RA)** - Created at age 55 (up to 6% interest)
+- Detailed allocation rates by age group
 
 **Example questions you can ask:**
-- "What is CPF?"
-- "How much CPF do I contribute?"
+- "What is the CPF OW ceiling in 2026?"
+- "How much CPF do I contribute if I'm 58 years old?"
 - "What are the CPF account types?"
+- "How is my CPF split between OA, SA, and MA?"
 - "What interest does my CPF earn?"
+- "What changed for CPF in 2026?"
 
 ---
 
