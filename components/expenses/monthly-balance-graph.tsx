@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
 import { Info, TrendingUp } from "lucide-react";
-import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
+import { ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, Customized } from "recharts";
 import { calculateMonthlyBalance, timeRangeToMonths, type MonthlyBalanceData, type SpecialItem } from "@/lib/balance-calculator";
 
 interface Income {
@@ -24,6 +24,8 @@ interface Income {
   subjectToCpf: boolean | null;
   futureMilestones: string | null;
   accountForFutureChange: boolean | null;
+  accountForBonus: boolean | null;
+  bonusGroups: string | null;
 }
 
 interface Expense {
@@ -87,10 +89,11 @@ const TIME_RANGES = [
 ];
 
 // Arrow marker colors
-const ARROW_COLORS = {
+const ARROW_COLORS: Record<string, string> = {
   'one-off-income': '#10b981',    // emerald-500
   'one-off-expense': '#ef4444',   // red-500
   'custom-expense': '#f59e0b',    // amber-500
+  'bonus': '#8b5cf6',             // violet-500
 };
 
 // Custom dot component that renders balance dots and arrow markers for special items
@@ -111,24 +114,25 @@ const CustomBalanceDot = (props: any) => {
     const uniqueTypes = new Set(payload.specialItems.map((item: SpecialItem) => item.type));
     const baseOffset = 12; // pixels from the dot
 
-    let incomeCount = 0;
+    let incomeArrowCount = 0;
     let expenseCount = 0;
 
     // Render one arrow per unique type
     uniqueTypes.forEach((type) => {
-      if (type === 'one-off-income') {
-        // Green up arrow above the line
-        const yPos = cy - baseOffset;
+      if (type === 'one-off-income' || type === 'bonus') {
+        // Up arrows above the line (green for one-off income, purple for bonus)
+        const color = type === 'bonus' ? ARROW_COLORS['bonus'] : ARROW_COLORS['one-off-income'];
+        const yPos = cy - baseOffset - (incomeArrowCount * 13);
         elements.push(
           <polygon
-            key={`arrow-income`}
+            key={`arrow-${type}`}
             points={`${cx},${yPos - 7} ${cx - 5},${yPos + 4} ${cx + 5},${yPos + 4}`}
-            fill={ARROW_COLORS['one-off-income']}
+            fill={color}
             stroke="white"
             strokeWidth={1}
           />
         );
-        incomeCount++;
+        incomeArrowCount++;
       } else {
         // Red or orange down arrow below the line
         const color = type === 'one-off-expense'
@@ -152,6 +156,70 @@ const CustomBalanceDot = (props: any) => {
   return <g>{elements}</g>;
 };
 
+// Custom dot component for income line - purple on bonus months, green otherwise
+const CustomIncomeDot = (props: any) => {
+  const { cx, cy, payload } = props;
+  if (cx === undefined || cy === undefined) return null;
+
+  // Check if this month has a bonus
+  const hasBonus = payload.bonus > 0;
+  const fillColor = hasBonus ? '#8b5cf6' : '#10b981'; // violet for bonus, emerald otherwise
+
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={hasBonus ? 5 : 3}
+      fill={fillColor}
+      stroke="white"
+      strokeWidth={hasBonus ? 2 : 0}
+    />
+  );
+};
+
+// Custom component to render purple highlight rectangles for bonus months
+const BonusHighlightRects = (props: any) => {
+  const { formattedGraphicalItems, xAxisMap, yAxisMap } = props;
+
+  if (!formattedGraphicalItems || !xAxisMap || !yAxisMap) return null;
+
+  const xAxis = Object.values(xAxisMap)[0] as any;
+  const yAxis = Object.values(yAxisMap)[0] as any;
+
+  if (!xAxis || !yAxis) return null;
+
+  // Find the income area's data points
+  const incomeArea = formattedGraphicalItems.find((item: any) => item.props?.dataKey === 'income');
+  if (!incomeArea?.props?.points) return null;
+
+  const points = incomeArea.props.points;
+  const bandWidth = xAxis.bandSize || (xAxis.width / points.length);
+
+  return (
+    <g>
+      {points.map((point: any, index: number) => {
+        if (!point.payload?.bonus || point.payload.bonus <= 0) return null;
+
+        const x = point.x - bandWidth / 2;
+        const y = point.y;
+        const height = yAxis.y + yAxis.height - y;
+
+        return (
+          <rect
+            key={`bonus-rect-${index}`}
+            x={x}
+            y={y}
+            width={bandWidth}
+            height={height}
+            fill="#8b5cf6"
+            fillOpacity={0.5}
+          />
+        );
+      })}
+    </g>
+  );
+};
+
 /**
  * Format currency for display
  */
@@ -172,6 +240,7 @@ function getSpecialItemLabel(type: SpecialItem['type']): string {
     case 'one-off-income': return 'One-off';
     case 'one-off-expense': return 'One-off';
     case 'custom-expense': return 'Custom';
+    case 'bonus': return 'Bonus';
     default: return '';
   }
 }
@@ -215,15 +284,32 @@ function CustomTooltip({ active, payload, viewMode }: any) {
     // Check if we have combined investment data
     const hasInvestmentData = data.balanceWithInvestments !== undefined;
 
+    // Check if there's bonus income this month
+    const hasBonus = data.bonus > 0;
+
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
         <p className="font-semibold text-gray-900 mb-2">{data.month}</p>
         <div className="space-y-1 text-sm">
           {viewMode === "cumulative" ? (
             <>
-              <p className="text-green-600">
-                Income: {formatCurrency(data.income)}
-              </p>
+              {hasBonus ? (
+                <>
+                  <p className="text-green-600">
+                    Salary Income: {formatCurrency(data.salaryIncome)}
+                  </p>
+                  <p className="text-violet-600">
+                    Bonus: {formatCurrency(data.bonus)}
+                  </p>
+                  <p className="text-green-700 font-medium">
+                    Total Income: {formatCurrency(data.income)}
+                  </p>
+                </>
+              ) : (
+                <p className="text-green-600">
+                  Income: {formatCurrency(data.income)}
+                </p>
+              )}
               <p className="text-red-600">
                 Expenses: {formatCurrency(data.expense)}
               </p>
@@ -238,9 +324,23 @@ function CustomTooltip({ active, payload, viewMode }: any) {
             </>
           ) : (
             <>
-              <p className="text-green-600">
-                Income: {formatCurrency(data.income)}
-              </p>
+              {hasBonus ? (
+                <>
+                  <p className="text-green-600">
+                    Salary Income: {formatCurrency(data.salaryIncome)}
+                  </p>
+                  <p className="text-violet-600">
+                    Bonus: {formatCurrency(data.bonus)}
+                  </p>
+                  <p className="text-green-700 font-medium">
+                    Total Income: {formatCurrency(data.income)}
+                  </p>
+                </>
+              ) : (
+                <p className="text-green-600">
+                  Income: {formatCurrency(data.income)}
+                </p>
+              )}
               <p className="text-red-600">
                 Expenses: {formatCurrency(data.expense)}
               </p>
@@ -595,6 +695,10 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
                 </linearGradient>
+                <linearGradient id="colorBonus" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
@@ -636,6 +740,12 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                         <polygon points="6,1 2,10 10,10" fill="#10b981" />
                       </svg>
                       <span className="text-gray-600">One-off Income</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 12 12">
+                        <polygon points="6,1 2,10 10,10" fill="#8b5cf6" />
+                      </svg>
+                      <span className="text-gray-600">Bonus</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <svg width="12" height="12" viewBox="0 0 12 12">
@@ -682,17 +792,20 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                 </>
               ) : (
                 <>
+                  {/* Income area with green fill */}
                   <Area
                     type="monotone"
                     dataKey="income"
                     stroke="#10b981"
                     strokeWidth={2}
-                    dot={isLongDuration ? false : { fill: "#10b981", r: 3 }}
-                    activeDot={{ r: 5 }}
+                    dot={isLongDuration ? false : <CustomIncomeDot />}
+                    activeDot={{ r: 5, fill: "#10b981" }}
                     fillOpacity={1}
                     fill="url(#colorIncome)"
                     name="Income"
                   />
+                  {/* Purple highlight rectangles for bonus months */}
+                  <Customized component={BonusHighlightRects} />
                   <Area
                     type="monotone"
                     dataKey="expense"
