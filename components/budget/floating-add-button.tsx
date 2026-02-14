@@ -10,13 +10,14 @@ export function FloatingAddButton() {
   const pathname = usePathname();
   const { openModal } = useAddExpense();
   const isBudgetPage = pathname === "/budget";
+  const isAssistantPage = pathname === "/assistant";
 
   const handleClick = () => {
     openModal();
   };
 
-  // Don't render on budget page (it has its own button)
-  if (isBudgetPage) {
+  // Don't render on budget page (it has its own button) or assistant page
+  if (isBudgetPage || isAssistantPage) {
     return null;
   }
 

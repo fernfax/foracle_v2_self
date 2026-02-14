@@ -65,6 +65,9 @@ export function HelpButton() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [welcomeModalTour, setWelcomeModalTour] = useState<TourName>("overall");
 
+  // Don't render on assistant page (has its own input interface)
+  const isAssistantPage = pathname === "/assistant";
+
   // Check if user is on the correct page for a specific tour
   const isOnCorrectPage = (tourName: TourName): boolean => {
     const targetPathname = TOUR_PATHNAMES[tourName];
@@ -183,6 +186,11 @@ export function HelpButton() {
     setShowConfirmDialog(false);
     setPendingTour(null);
   };
+
+  // Don't render on assistant page
+  if (isAssistantPage) {
+    return null;
+  }
 
   return (
     <>

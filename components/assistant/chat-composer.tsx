@@ -19,12 +19,14 @@ export function ChatComposer({
   const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea
+  // Auto-resize textarea with minimum height
+  const MIN_HEIGHT = 44; // Consistent minimum height
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+      const newHeight = Math.max(MIN_HEIGHT, Math.min(textarea.scrollHeight, 200));
+      textarea.style.height = `${newHeight}px`;
     }
   }, [message]);
 
@@ -55,7 +57,7 @@ export function ChatComposer({
   const canSend = message.trim().length > 0 && !isDisabled;
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="border-t bg-background p-3 sm:p-4">
       <div className="mx-auto max-w-3xl">
         <div
           className={cn(
@@ -70,9 +72,10 @@ export function ChatComposer({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={isDisabled}
-            rows={1}
+            rows={2}
             className={cn(
-              "flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none",
+              "flex-1 resize-none bg-transparent px-2 py-1.5 outline-none min-h-[44px]",
+              "text-base sm:text-sm", // 16px on mobile prevents iOS zoom
               "placeholder:text-muted-foreground/60"
             )}
             maxLength={2000}
@@ -103,8 +106,8 @@ export function ChatComposer({
           </p>
         )}
 
-        {/* Helper text */}
-        <p className="mt-2 text-center text-xs text-muted-foreground">
+        {/* Helper text - hidden on mobile as users tap send button */}
+        <p className="mt-2 text-center text-xs text-muted-foreground hidden sm:block">
           Press Enter to send, Shift+Enter for new line
         </p>
       </div>

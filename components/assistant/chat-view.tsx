@@ -64,8 +64,8 @@ export function ChatView({
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)]">
-      {/* Messages area - with padding at bottom for fixed composer */}
-      <div className="pb-32">
+      {/* Messages area - with padding at bottom for fixed composer (extra on mobile for nav) */}
+      <div className={isDesktop ? "pb-32" : "pb-52"}>
         {isEmpty ? (
           <EmptyState />
         ) : (
@@ -115,10 +115,13 @@ export function ChatView({
         )}
       </div>
 
-      {/* Fixed composer at bottom - respects sidebar width */}
+      {/* Fixed composer at bottom - respects sidebar width and mobile nav */}
       <div
-        className="fixed bottom-0 right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-all duration-300"
-        style={{ left: sidebarWidth }}
+        className="fixed right-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-all duration-300"
+        style={{
+          left: sidebarWidth,
+          bottom: isDesktop ? 0 : 72, // Account for mobile bottom nav height
+        }}
       >
         {/* Quota warning */}
         {quotaInfo && quotaInfo.used >= quotaInfo.limit * 0.8 && (
