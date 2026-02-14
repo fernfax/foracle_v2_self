@@ -41,6 +41,8 @@ interface Income {
   subjectToCpf: boolean | null;
   futureMilestones: string | null;
   accountForFutureChange: boolean | null;
+  accountForBonus: boolean | null;
+  bonusGroups: string | null;
 }
 
 interface CurrentHolding {

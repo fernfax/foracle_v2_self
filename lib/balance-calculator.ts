@@ -1,5 +1,5 @@
 import { parse, format, addMonths, isSameMonth, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
-import { calculateCPF } from "./cpf-calculator";
+import { calculateCPF, calculateBonusCPF } from "./cpf-calculator";
 
 interface FutureMilestone {
   id: string;
@@ -7,6 +7,11 @@ interface FutureMilestone {
   amount: number;
   reason?: string;
   notes?: string;
+}
+
+interface BonusGroup {
+  month: number;  // 1-12 (calendar month)
+  amount: string;  // Bonus multiplier (e.g., "1.5" for 1.5 months)
 }
 
 interface Income {
@@ -22,6 +27,8 @@ interface Income {
   subjectToCpf: boolean | null;
   futureMilestones: string | null;  // JSON string of FutureMilestone[]
   accountForFutureChange: boolean | null;  // Whether to include future milestones in projections
+  accountForBonus: boolean | null;  // Whether to include bonus in projections
+  bonusGroups: string | null;  // JSON string: [{month: number, amount: string}]
 }
 
 interface Expense {
@@ -38,13 +45,15 @@ interface Expense {
 export interface SpecialItem {
   name: string;
   amount: number;
-  type: 'one-off-income' | 'one-off-expense' | 'custom-expense';
+  type: 'one-off-income' | 'one-off-expense' | 'custom-expense' | 'bonus';
 }
 
 export interface MonthlyBalanceData {
   month: string;
   balance: number;
-  income: number;
+  salaryIncome: number;  // Regular salary income (net after CPF)
+  bonus: number;  // Net bonus after CPF deductions
+  income: number;  // Total income (salary + bonus) for backwards compatibility
   expense: number;
   monthlyBalance: number;
   specialItems: SpecialItem[];
@@ -217,10 +226,11 @@ export function calculateMonthlyBalance(
 
   for (let monthOffset = 0; monthOffset < totalMonths; monthOffset++) {
     const targetMonth = addMonths(new Date(), monthOffset);
+    const targetMonthNumber = targetMonth.getMonth() + 1; // 1-12 calendar month
     const specialItems: SpecialItem[] = [];
 
-    // Calculate total income for this month
-    const monthlyIncome = activeIncomes.reduce((total, income) => {
+    // Calculate total salary income for this month
+    const monthlySalaryIncome = activeIncomes.reduce((total, income) => {
       let amount = parseFloat(income.amount);
       const effectiveStartDate = income.startDate;
       let effectiveEndDate = income.endDate;
@@ -287,6 +297,59 @@ export function calculateMonthlyBalance(
       return total + allocatedAmount;
     }, 0);
 
+    // Calculate total bonus income for this month
+    const monthlyBonusIncome = activeIncomes.reduce((total, income) => {
+      // Skip if bonus is not enabled for this income
+      if (!income.accountForBonus || !income.bonusGroups) {
+        return total;
+      }
+
+      // Check if income is active in this month
+      if (!isActiveInMonth(income.startDate, income.endDate, monthOffset)) {
+        return total;
+      }
+
+      // Parse bonus groups
+      let bonusGroups: BonusGroup[];
+      try {
+        bonusGroups = JSON.parse(income.bonusGroups);
+      } catch {
+        return total;
+      }
+
+      // Find bonus for this month
+      const bonusForMonth = bonusGroups.find(bg => bg.month === targetMonthNumber);
+      if (!bonusForMonth) {
+        return total;
+      }
+
+      // Calculate gross bonus amount (monthly salary * multiplier)
+      const grossSalary = parseFloat(income.amount);
+      const bonusMultiplier = parseFloat(bonusForMonth.amount);
+      const grossBonus = grossSalary * bonusMultiplier;
+
+      // Calculate net bonus after CPF deductions (if subject to CPF)
+      let netBonus = grossBonus;
+      if (income.subjectToCpf) {
+        // Use calculateBonusCPF for AW ceiling calculation
+        const bonusCpf = calculateBonusCPF(
+          grossSalary,  // Monthly OW for ceiling calc
+          grossBonus,   // Gross bonus
+          30            // Default age
+        );
+        netBonus = grossBonus - bonusCpf.bonusEmployeeCpf;
+      }
+
+      // Track bonus in specialItems for tooltip display
+      specialItems.push({
+        name: `${income.name} Bonus (${bonusMultiplier}x)`,
+        amount: Math.round(netBonus * 100) / 100,
+        type: 'bonus',
+      });
+
+      return total + netBonus;
+    }, 0);
+
     // Calculate total expenses for this month
     const monthlyExpense = activeExpenses.reduce((total, expense) => {
       const amount = parseFloat(expense.amount);
@@ -320,8 +383,11 @@ export function calculateMonthlyBalance(
       return total + allocatedAmount;
     }, 0);
 
+    // Total income = salary + bonus
+    const totalMonthlyIncome = monthlySalaryIncome + monthlyBonusIncome;
+
     // Calculate net balance for this month
-    const monthlyBalance = monthlyIncome - monthlyExpense;
+    const monthlyBalance = totalMonthlyIncome - monthlyExpense;
 
     // Add to cumulative balance
     cumulativeBalance += monthlyBalance;
@@ -329,7 +395,9 @@ export function calculateMonthlyBalance(
     data.push({
       month: getMonthLabel(monthOffset),
       balance: Math.round(cumulativeBalance * 100) / 100, // Round to 2 decimal places
-      income: Math.round(monthlyIncome * 100) / 100,
+      salaryIncome: Math.round(monthlySalaryIncome * 100) / 100,
+      bonus: Math.round(monthlyBonusIncome * 100) / 100,
+      income: Math.round(totalMonthlyIncome * 100) / 100, // Total income for backwards compatibility
       expense: Math.round(monthlyExpense * 100) / 100,
       monthlyBalance: Math.round(monthlyBalance * 100) / 100, // Monthly net balance (non-cumulative)
       specialItems,
