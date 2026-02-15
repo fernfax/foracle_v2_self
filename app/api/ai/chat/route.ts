@@ -12,6 +12,7 @@ import {
   addMessageToThread,
   updateThreadResponseId,
 } from "@/lib/ai/threads";
+import { getSinglishMode } from "@/lib/actions/singlish-mode";
 
 // =============================================================================
 // Types
@@ -150,6 +151,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     // Record the message for rate limiting
     recordMessage(userId, thread.id);
 
+    // Get user's Singlish mode preference
+    const singlishMode = await getSinglishMode();
+
     // Get orchestrator and process message
     console.log("[AI Chat] Getting orchestrator...");
     let orchestrator;
@@ -179,7 +183,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       // Use the orchestrator's conversation ID for multi-turn context
       console.log("[AI Chat] Calling orchestrator.chat with message:", message.slice(0, 50));
       console.log("[AI Chat] Using orchestrator conversation ID:", thread.orchestratorConversationId || "new");
-      const result = await orchestrator.chat(message, thread.orchestratorConversationId);
+      console.log("[AI Chat] Singlish mode:", singlishMode);
+      const result = await orchestrator.chat(message, thread.orchestratorConversationId, singlishMode);
       console.log("[AI Chat] Orchestrator response received, tools used:", result.toolsUsed);
 
       // Store both the response ID and conversation ID for continuity

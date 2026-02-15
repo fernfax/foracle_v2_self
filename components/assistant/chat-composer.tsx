@@ -3,17 +3,22 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SinglishToggle } from "./singlish-toggle";
 
 interface ChatComposerProps {
   onSend: (message: string) => Promise<void>;
   disabled?: boolean;
   placeholder?: string;
+  singlishEnabled?: boolean;
+  onSinglishToggle?: (enabled: boolean) => Promise<void>;
 }
 
 export function ChatComposer({
   onSend,
   disabled = false,
   placeholder = "Ask about your budget, spending, or financial goals...",
+  singlishEnabled = false,
+  onSinglishToggle,
 }: ChatComposerProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -80,6 +85,14 @@ export function ChatComposer({
             )}
             maxLength={2000}
           />
+
+          {onSinglishToggle && (
+            <SinglishToggle
+              enabled={singlishEnabled}
+              onToggle={onSinglishToggle}
+              disabled={isDisabled}
+            />
+          )}
 
           <button
             onClick={handleSubmit}

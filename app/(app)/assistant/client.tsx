@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { ChatView } from "@/components/assistant";
+import { setSinglishMode } from "@/lib/actions/singlish-mode";
 
 interface Message {
   id: string;
@@ -17,12 +18,22 @@ interface QuotaInfo {
   resetAt: string;
 }
 
-export function AssistantClient() {
+interface AssistantClientProps {
+  initialSinglishMode?: boolean;
+}
+
+export function AssistantClient({ initialSinglishMode = false }: AssistantClientProps) {
   const [threadId, setThreadId] = useState<string | undefined>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | undefined>();
+  const [singlishEnabled, setSinglishEnabled] = useState(initialSinglishMode);
+
+  const handleSinglishToggle = useCallback(async (enabled: boolean) => {
+    setSinglishEnabled(enabled);
+    await setSinglishMode(enabled);
+  }, []);
 
   const handleSendMessage = useCallback(async (content: string) => {
     setIsSending(true);
@@ -107,6 +118,8 @@ export function AssistantClient() {
       isLoading={isSending}
       error={error}
       quotaInfo={quotaInfo}
+      singlishEnabled={singlishEnabled}
+      onSinglishToggle={handleSinglishToggle}
     />
   );
 }

@@ -34,6 +34,7 @@ export const users = pgTable("users", {
   imageUrl: text("image_url"),
   onboardingCompleted: boolean("onboarding_completed").default(false),
   tourCompletedAt: text("tour_completed_at"), // JSON: {"dashboard":"2024-01-15T...","incomes":null,"expenses":null}
+  singlishMode: boolean("singlish_mode").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

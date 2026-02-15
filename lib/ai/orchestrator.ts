@@ -45,7 +45,7 @@ export interface OrchestratorResult {
 const DEFAULT_MAX_TOOL_CALLS = 3;
 
 // Generate system prompt with current date
-function generateSystemPrompt(): string {
+function generateSystemPrompt(singlishMode: boolean = false): string {
   // Get current date in Singapore timezone
   const now = new Date();
   const sgDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Singapore" }));
@@ -60,7 +60,7 @@ function generateSystemPrompt(): string {
                       "July", "August", "September", "October", "November", "December"];
   const currentMonthName = monthNames[currentMonth - 1];
 
-  return `You are Foracle Assistant, an AI financial companion for the Foracle personal finance app. You help users understand their finances, analyze spending patterns, and plan for financial goals.
+  let basePrompt = `You are Foracle Assistant, an AI financial companion for the Foracle personal finance app. You help users understand their finances, analyze spending patterns, and plan for financial goals.
 
 ## CURRENT DATE CONTEXT
 **IMPORTANT**: Today's date is ${currentDateFormatted} (${currentDay} ${currentMonthName} ${currentYear}).
@@ -246,9 +246,52 @@ Add a horizontal rule (---) between major sections to visually separate content 
 ---
 
 **Data used:** \`get_income_summary\`, \`get_expenses_summary\``;
+
+  // Append Singlish instructions when enabled
+  if (singlishMode) {
+    basePrompt += `
+
+## SINGLISH COMMUNICATION MODE (ACTIVE)
+
+You are now responding in Singlish (Singapore English).
+
+### Language Guidelines:
+
+1. **Sentence-ending particles** (use naturally):
+   - "lah" - emphasis/softening ("Can one lah", "Don't worry lah")
+   - "leh" - persuasion ("This one better leh")
+   - "lor" - resignation ("Like that lor")
+   - "meh" - skeptical questions ("Really meh?")
+   - "sia" - exclamation ("Wah, this one jialat sia")
+
+2. **Common expressions**:
+   - "Can" / "Cannot" - yes/no
+   - "Jialat" - serious/difficult
+   - "Shiok" - great/satisfying
+   - "Paiseh" - embarrassed/sorry
+   - "Sian" - bored/tired
+   - "Steady" - reliable/well done
+
+3. **Grammar patterns**:
+   - Drop articles: "Go bank" not "Go to the bank"
+   - Use "already" for completion: "Pay already"
+   - Use "got" liberally: "You got save money or not?"
+
+4. **Keep it natural**:
+   - Don't overdo it - sprinkle particles naturally
+   - Financial data stays accurate
+   - Use Singlish more in casual remarks, less in data presentation
+
+**Examples:**
+- "Wah, your expenses this month hit $3,500 already leh."
+- "Eh, your food budget a bit high sia. Maybe can cut down lah."
+- "Can lah! Your balance steady one, go ahead."`;
+  }
+
+  return basePrompt;
 }
 
-const DEFAULT_SYSTEM_PROMPT = generateSystemPrompt();
+const DEFAULT_SYSTEM_PROMPT = generateSystemPrompt(false);
 
 // =============================================================================
 // Conversation Store (In-Memory)
@@ -282,8 +325,11 @@ export class AIOrchestrator {
   /**
    * Get the system prompt with current date context
    */
-  private getSystemPrompt(): string {
-    return this.customSystemPrompt ?? generateSystemPrompt();
+  private getSystemPrompt(singlishMode: boolean = false): string {
+    if (this.customSystemPrompt) {
+      return this.customSystemPrompt;
+    }
+    return generateSystemPrompt(singlishMode);
   }
 
   /**
@@ -314,7 +360,8 @@ export class AIOrchestrator {
    */
   async chat(
     userMessage: string,
-    conversationId?: string
+    conversationId?: string,
+    singlishMode: boolean = false
   ): Promise<OrchestratorResult> {
     // Get or create conversation
     let conversation: ConversationState;
@@ -341,8 +388,8 @@ export class AIOrchestrator {
     const registry = getToolRegistry();
     const tools = registry.getOpenAITools();
 
-    // Get fresh system prompt with current date
-    const systemPrompt = this.getSystemPrompt();
+    // Get fresh system prompt with current date (and Singlish mode if enabled)
+    const systemPrompt = this.getSystemPrompt(singlishMode);
 
     // Initial API call
     let response = await this.client.createResponse({

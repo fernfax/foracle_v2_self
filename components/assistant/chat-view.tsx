@@ -23,6 +23,8 @@ interface ChatViewProps {
     used: number;
     limit: number;
   };
+  singlishEnabled?: boolean;
+  onSinglishToggle?: (enabled: boolean) => Promise<void>;
 }
 
 export function ChatView({
@@ -31,6 +33,8 @@ export function ChatView({
   isLoading = false,
   error = null,
   quotaInfo,
+  singlishEnabled = false,
+  onSinglishToggle,
 }: ChatViewProps) {
   const { isExpanded } = useSidebar();
   const [isDesktop, setIsDesktop] = useState(true);
@@ -147,6 +151,8 @@ export function ChatView({
               ? "Daily message limit reached. Resets at midnight."
               : undefined
           }
+          singlishEnabled={singlishEnabled}
+          onSinglishToggle={onSinglishToggle}
         />
       </div>
     </div>
