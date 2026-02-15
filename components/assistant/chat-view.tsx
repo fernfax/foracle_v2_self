@@ -46,16 +46,20 @@ export function ChatView({
   }, []);
 
   // Scroll to bring latest user message to top when a new message is sent
+  // Skip for the first message - let it stay near the input until AI replies
   useEffect(() => {
     // Only scroll when a new message is added (not on initial load)
-    if (messages.length > prevMessageCount.current && latestUserMsgRef.current) {
+    // And only if there's more than just the first user message (wait for AI reply to push it up)
+    const isFirstUserMessage = messages.length === 1 && messages[0]?.role === "user";
+
+    if (messages.length > prevMessageCount.current && latestUserMsgRef.current && !isFirstUserMessage) {
       // Small delay to ensure DOM has updated
       setTimeout(() => {
         latestUserMsgRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     }
     prevMessageCount.current = messages.length;
-  }, [messages.length]);
+  }, [messages.length, messages]);
 
   const isEmpty = messages.length === 0 && !isLoading && !error;
 
@@ -69,7 +73,7 @@ export function ChatView({
         {isEmpty ? (
           <EmptyState />
         ) : (
-          <div className="pt-4 pb-4">
+          <div className="pt-4 pb-4 min-h-[calc(100vh-12rem)] flex flex-col justify-end">
             {messages.map((msg, index) => {
               // Find the last user message to attach the scroll ref
               const isLastUserMessage = msg.role === "user" &&
