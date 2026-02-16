@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { expenses, incomes, familyMembers, expenseCategories, currentHoldings } from "@/db/schema";
+import { expenses, incomes, familyMembers, expenseCategories, currentHoldings, propertyAssets, vehicleAssets, assets, policies } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf-calculator";
 import {
@@ -10,6 +10,11 @@ import {
   type FamilySummaryParams,
   type BalanceSummaryParams,
   type SearchKnowledgeParams,
+  type HoldingsSummaryParams,
+  type PropertyAssetsSummaryParams,
+  type VehicleAssetsSummaryParams,
+  type OtherAssetsSummaryParams,
+  type InsuranceSummaryParams,
   type HypotheticalItem,
 } from "./registry";
 import { searchKnowledgeBase, type SearchResult } from "@/lib/vectors";
@@ -156,6 +161,179 @@ export interface ExpensesSummaryResult {
   expenses: RecurringExpenseItem[];
   // User's expense categories
   availableCategories: ExpenseCategoryInfo[];
+}
+
+// Holdings Summary Types
+export interface HoldingItem {
+  id: string;
+  bankName: string;
+  amount: number;
+  familyMember: string | null;
+  updatedAt: string;
+}
+
+export interface HoldingsSummaryResult {
+  // Total liquid assets
+  totalHoldings: number;
+  holdingsCount: number;
+  // Individual holdings
+  holdings: HoldingItem[];
+  // Family member breakdown (if applicable)
+  holdingsByMember: Array<{
+    memberName: string | null;
+    totalAmount: number;
+    accountCount: number;
+  }>;
+  // Notes
+  notes: string[];
+}
+
+// Property Assets Summary Types
+export interface PropertyAssetItem {
+  id: string;
+  propertyName: string;
+  purchaseDate: string;
+  originalPurchasePrice: number;
+  loanAmountTaken: number | null;
+  outstandingLoan: number;
+  monthlyLoanPayment: number;
+  interestRate: number;
+  // CPF details
+  principalCpfWithdrawn: number | null;
+  housingGrantTaken: number | null;
+  accruedInterestToDate: number | null;
+  // Calculated fields
+  equityOwned: number; // originalPurchasePrice - outstandingLoan
+  loanProgress: number | null; // percentage of loan paid off
+  isActive: boolean;
+}
+
+export interface PropertyAssetsSummaryResult {
+  propertyCount: number;
+  totalPropertyValue: number;
+  totalOutstandingLoans: number;
+  totalEquity: number;
+  totalMonthlyPayments: number;
+  properties: PropertyAssetItem[];
+  notes: string[];
+}
+
+// Vehicle Assets Summary Types
+export interface VehicleAssetItem {
+  id: string;
+  vehicleName: string;
+  purchaseDate: string;
+  coeExpiryDate: string | null;
+  originalPurchasePrice: number;
+  loanAmountTaken: number | null;
+  loanAmountRepaid: number | null;
+  monthlyLoanPayment: number | null;
+  // Calculated fields
+  outstandingLoan: number | null;
+  loanProgress: number | null; // percentage of loan paid off
+  coeYearsRemaining: number | null;
+  isActive: boolean;
+}
+
+export interface VehicleAssetsSummaryResult {
+  vehicleCount: number;
+  totalVehicleValue: number;
+  totalOutstandingLoans: number;
+  totalMonthlyPayments: number;
+  vehicles: VehicleAssetItem[];
+  notes: string[];
+}
+
+// Other Assets Summary Types
+export interface OtherAssetItem {
+  id: string;
+  name: string;
+  type: string;
+  currentValue: number;
+  purchaseValue: number | null;
+  purchaseDate: string | null;
+  description: string | null;
+  // Calculated
+  gainLoss: number | null;
+  gainLossPercent: number | null;
+}
+
+export interface OtherAssetsSummaryResult {
+  assetCount: number;
+  totalCurrentValue: number;
+  totalPurchaseValue: number;
+  totalGainLoss: number;
+  // Breakdown by type
+  assetsByType: Array<{
+    type: string;
+    count: number;
+    totalValue: number;
+  }>;
+  assets: OtherAssetItem[];
+  appliedFilter: string | null;
+  notes: string[];
+}
+
+// Insurance Summary Types
+export interface CoverageDetails {
+  death: number | null;
+  tpd: number | null;
+  criticalIllness: number | null;
+  earlyCriticalIllness: number | null;
+  hospitalisationPlan: number | null;
+}
+
+export interface InsurancePolicyItem {
+  id: string;
+  provider: string;
+  policyNumber: string | null;
+  policyType: string;
+  status: string;
+  // Policy holder
+  familyMember: string | null;
+  // Dates
+  startDate: string;
+  maturityDate: string | null;
+  coverageUntilAge: number | null;
+  yearsActive: number;
+  // Premium
+  premiumAmount: number;
+  premiumFrequency: string;
+  annualPremium: number;
+  totalPremiumDuration: number | null;
+  // Coverage
+  coverage: CoverageDetails | null;
+  totalCoverage: number;
+  description: string | null;
+}
+
+export interface InsuranceSummaryResult {
+  policyCount: number;
+  activePolicyCount: number;
+  // Premium totals
+  totalAnnualPremiums: number;
+  totalMonthlyPremiums: number;
+  // Coverage totals
+  totalDeathCoverage: number;
+  totalCriticalIllnessCoverage: number;
+  // Breakdown by type
+  policiesByType: Array<{
+    type: string;
+    count: number;
+    annualPremium: number;
+  }>;
+  // Breakdown by provider
+  policiesByProvider: Array<{
+    provider: string;
+    count: number;
+    annualPremium: number;
+  }>;
+  // All policies
+  policies: InsurancePolicyItem[];
+  // Filters applied
+  appliedTypeFilter: string | null;
+  appliedStatusFilter: string;
+  notes: string[];
 }
 
 // Family Summary Types
@@ -1623,6 +1801,583 @@ async function executeGetBalanceSummary(
 }
 
 // =============================================================================
+// Tool Executor: get_holdings_summary
+// =============================================================================
+
+async function executeGetHoldingsSummary(
+  userId: string
+): Promise<HoldingsSummaryResult> {
+  // Fetch all holdings for the user
+  const holdings = await db
+    .select()
+    .from(currentHoldings)
+    .where(eq(currentHoldings.userId, userId));
+
+  // Get family members to map IDs to names
+  const userFamilyMembers = await db
+    .select()
+    .from(familyMembers)
+    .where(eq(familyMembers.userId, userId));
+
+  const familyMemberMap: Record<string, string> = {};
+  userFamilyMembers.forEach((fm) => {
+    familyMemberMap[fm.id] = fm.name;
+  });
+
+  // Process holdings
+  const holdingItems: HoldingItem[] = [];
+  let totalHoldings = 0;
+
+  // Track holdings by family member
+  const memberTotals: Record<string, { totalAmount: number; accountCount: number }> = {};
+
+  for (const holding of holdings) {
+    const amount = parseFloat(holding.holdingAmount);
+    totalHoldings += amount;
+
+    // Get family member name if linked
+    const familyMemberName = holding.familyMemberId
+      ? familyMemberMap[holding.familyMemberId] || null
+      : null;
+
+    // Track by member
+    const memberKey = familyMemberName || "__self__";
+    if (!memberTotals[memberKey]) {
+      memberTotals[memberKey] = { totalAmount: 0, accountCount: 0 };
+    }
+    memberTotals[memberKey].totalAmount += amount;
+    memberTotals[memberKey].accountCount += 1;
+
+    holdingItems.push({
+      id: holding.id,
+      bankName: holding.bankName,
+      amount: Math.round(amount * 100) / 100,
+      familyMember: familyMemberName,
+      updatedAt: holding.updatedAt.toISOString(),
+    });
+  }
+
+  // Sort holdings by amount (highest first)
+  holdingItems.sort((a, b) => b.amount - a.amount);
+
+  // Build holdings by member breakdown
+  const holdingsByMember = Object.entries(memberTotals)
+    .map(([memberKey, data]) => ({
+      memberName: memberKey === "__self__" ? null : memberKey,
+      totalAmount: Math.round(data.totalAmount * 100) / 100,
+      accountCount: data.accountCount,
+    }))
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+
+  // Build notes
+  const notes: string[] = [];
+  if (holdings.length === 0) {
+    notes.push("No holdings found. Consider adding your bank accounts to track your liquid assets.");
+  } else {
+    notes.push(`Total across ${holdings.length} account(s).`);
+  }
+
+  return {
+    totalHoldings: Math.round(totalHoldings * 100) / 100,
+    holdingsCount: holdings.length,
+    holdings: holdingItems,
+    holdingsByMember,
+    notes,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_property_assets_summary
+// =============================================================================
+
+async function executeGetPropertyAssetsSummary(
+  userId: string
+): Promise<PropertyAssetsSummaryResult> {
+  // Fetch all active property assets for the user
+  const properties = await db
+    .select()
+    .from(propertyAssets)
+    .where(and(eq(propertyAssets.userId, userId), eq(propertyAssets.isActive, true)));
+
+  const propertyItems: PropertyAssetItem[] = [];
+  let totalPropertyValue = 0;
+  let totalOutstandingLoans = 0;
+  let totalMonthlyPayments = 0;
+  const notes: string[] = [];
+
+  for (const property of properties) {
+    const purchasePrice = parseFloat(property.originalPurchasePrice);
+    const outstandingLoan = parseFloat(property.outstandingLoan);
+    const monthlyPayment = parseFloat(property.monthlyLoanPayment);
+    const loanTaken = property.loanAmountTaken ? parseFloat(property.loanAmountTaken) : null;
+
+    totalPropertyValue += purchasePrice;
+    totalOutstandingLoans += outstandingLoan;
+    totalMonthlyPayments += monthlyPayment;
+
+    // Calculate equity and loan progress
+    const equityOwned = purchasePrice - outstandingLoan;
+    const loanProgress = loanTaken && loanTaken > 0
+      ? Math.round(((loanTaken - outstandingLoan) / loanTaken) * 1000) / 10
+      : null;
+
+    propertyItems.push({
+      id: property.id,
+      propertyName: property.propertyName,
+      purchaseDate: property.purchaseDate,
+      originalPurchasePrice: Math.round(purchasePrice * 100) / 100,
+      loanAmountTaken: loanTaken ? Math.round(loanTaken * 100) / 100 : null,
+      outstandingLoan: Math.round(outstandingLoan * 100) / 100,
+      monthlyLoanPayment: Math.round(monthlyPayment * 100) / 100,
+      interestRate: parseFloat(property.interestRate),
+      principalCpfWithdrawn: property.principalCpfWithdrawn ? parseFloat(property.principalCpfWithdrawn) : null,
+      housingGrantTaken: property.housingGrantTaken ? parseFloat(property.housingGrantTaken) : null,
+      accruedInterestToDate: property.accruedInterestToDate ? parseFloat(property.accruedInterestToDate) : null,
+      equityOwned: Math.round(equityOwned * 100) / 100,
+      loanProgress,
+      isActive: property.isActive || false,
+    });
+  }
+
+  // Sort by purchase price (highest first)
+  propertyItems.sort((a, b) => b.originalPurchasePrice - a.originalPurchasePrice);
+
+  const totalEquity = totalPropertyValue - totalOutstandingLoans;
+
+  if (properties.length === 0) {
+    notes.push("No property assets found.");
+  } else {
+    notes.push(`Total across ${properties.length} property(ies).`);
+    if (totalOutstandingLoans > 0) {
+      const overallLoanProgress = Math.round((totalEquity / totalPropertyValue) * 1000) / 10;
+      notes.push(`Overall equity: ${overallLoanProgress}% of property value.`);
+    }
+  }
+
+  return {
+    propertyCount: properties.length,
+    totalPropertyValue: Math.round(totalPropertyValue * 100) / 100,
+    totalOutstandingLoans: Math.round(totalOutstandingLoans * 100) / 100,
+    totalEquity: Math.round(totalEquity * 100) / 100,
+    totalMonthlyPayments: Math.round(totalMonthlyPayments * 100) / 100,
+    properties: propertyItems,
+    notes,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_vehicle_assets_summary
+// =============================================================================
+
+async function executeGetVehicleAssetsSummary(
+  userId: string
+): Promise<VehicleAssetsSummaryResult> {
+  // Fetch all active vehicle assets for the user
+  const vehicles = await db
+    .select()
+    .from(vehicleAssets)
+    .where(and(eq(vehicleAssets.userId, userId), eq(vehicleAssets.isActive, true)));
+
+  const vehicleItems: VehicleAssetItem[] = [];
+  let totalVehicleValue = 0;
+  let totalOutstandingLoans = 0;
+  let totalMonthlyPayments = 0;
+  const notes: string[] = [];
+
+  const now = new Date();
+
+  for (const vehicle of vehicles) {
+    const purchasePrice = parseFloat(vehicle.originalPurchasePrice);
+    const loanTaken = vehicle.loanAmountTaken ? parseFloat(vehicle.loanAmountTaken) : null;
+    const loanRepaid = vehicle.loanAmountRepaid ? parseFloat(vehicle.loanAmountRepaid) : null;
+    const monthlyPayment = vehicle.monthlyLoanPayment ? parseFloat(vehicle.monthlyLoanPayment) : null;
+
+    totalVehicleValue += purchasePrice;
+
+    // Calculate outstanding loan
+    let outstandingLoan: number | null = null;
+    let loanProgress: number | null = null;
+    if (loanTaken !== null) {
+      outstandingLoan = loanTaken - (loanRepaid || 0);
+      totalOutstandingLoans += outstandingLoan;
+      loanProgress = loanTaken > 0 ? Math.round(((loanRepaid || 0) / loanTaken) * 1000) / 10 : null;
+    }
+
+    if (monthlyPayment) {
+      totalMonthlyPayments += monthlyPayment;
+    }
+
+    // Calculate COE years remaining (Singapore-specific)
+    let coeYearsRemaining: number | null = null;
+    if (vehicle.coeExpiryDate) {
+      const coeExpiry = new Date(vehicle.coeExpiryDate);
+      const diffMs = coeExpiry.getTime() - now.getTime();
+      coeYearsRemaining = Math.round((diffMs / (1000 * 60 * 60 * 24 * 365)) * 10) / 10;
+      if (coeYearsRemaining < 0) coeYearsRemaining = 0;
+    }
+
+    vehicleItems.push({
+      id: vehicle.id,
+      vehicleName: vehicle.vehicleName,
+      purchaseDate: vehicle.purchaseDate,
+      coeExpiryDate: vehicle.coeExpiryDate || null,
+      originalPurchasePrice: Math.round(purchasePrice * 100) / 100,
+      loanAmountTaken: loanTaken ? Math.round(loanTaken * 100) / 100 : null,
+      loanAmountRepaid: loanRepaid ? Math.round(loanRepaid * 100) / 100 : null,
+      monthlyLoanPayment: monthlyPayment ? Math.round(monthlyPayment * 100) / 100 : null,
+      outstandingLoan: outstandingLoan !== null ? Math.round(outstandingLoan * 100) / 100 : null,
+      loanProgress,
+      coeYearsRemaining,
+      isActive: vehicle.isActive || false,
+    });
+  }
+
+  // Sort by purchase price (highest first)
+  vehicleItems.sort((a, b) => b.originalPurchasePrice - a.originalPurchasePrice);
+
+  if (vehicles.length === 0) {
+    notes.push("No vehicle assets found.");
+  } else {
+    notes.push(`Total across ${vehicles.length} vehicle(s).`);
+    // Check for COE expiring soon
+    const expiringCOE = vehicleItems.filter(v => v.coeYearsRemaining !== null && v.coeYearsRemaining <= 2);
+    if (expiringCOE.length > 0) {
+      notes.push(`${expiringCOE.length} vehicle(s) with COE expiring within 2 years.`);
+    }
+  }
+
+  return {
+    vehicleCount: vehicles.length,
+    totalVehicleValue: Math.round(totalVehicleValue * 100) / 100,
+    totalOutstandingLoans: Math.round(totalOutstandingLoans * 100) / 100,
+    totalMonthlyPayments: Math.round(totalMonthlyPayments * 100) / 100,
+    vehicles: vehicleItems,
+    notes,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_other_assets_summary
+// =============================================================================
+
+async function executeGetOtherAssetsSummary(
+  params: OtherAssetsSummaryParams,
+  userId: string
+): Promise<OtherAssetsSummaryResult> {
+  // Fetch all assets for the user
+  let userAssets = await db
+    .select()
+    .from(assets)
+    .where(eq(assets.userId, userId));
+
+  // Apply type filter if provided
+  const appliedFilter = params.assetType || null;
+  if (appliedFilter) {
+    userAssets = userAssets.filter(a => a.type.toLowerCase() === appliedFilter.toLowerCase());
+  }
+
+  const assetItems: OtherAssetItem[] = [];
+  let totalCurrentValue = 0;
+  let totalPurchaseValue = 0;
+  const typeMap: Record<string, { count: number; totalValue: number }> = {};
+  const notes: string[] = [];
+
+  for (const asset of userAssets) {
+    const currentValue = parseFloat(asset.currentValue);
+    const purchaseValue = asset.purchaseValue ? parseFloat(asset.purchaseValue) : null;
+
+    totalCurrentValue += currentValue;
+    if (purchaseValue !== null) {
+      totalPurchaseValue += purchaseValue;
+    }
+
+    // Track by type
+    const assetType = asset.type;
+    if (!typeMap[assetType]) {
+      typeMap[assetType] = { count: 0, totalValue: 0 };
+    }
+    typeMap[assetType].count += 1;
+    typeMap[assetType].totalValue += currentValue;
+
+    // Calculate gain/loss
+    let gainLoss: number | null = null;
+    let gainLossPercent: number | null = null;
+    if (purchaseValue !== null && purchaseValue > 0) {
+      gainLoss = currentValue - purchaseValue;
+      gainLossPercent = Math.round((gainLoss / purchaseValue) * 1000) / 10;
+    }
+
+    assetItems.push({
+      id: asset.id,
+      name: asset.name,
+      type: asset.type,
+      currentValue: Math.round(currentValue * 100) / 100,
+      purchaseValue: purchaseValue ? Math.round(purchaseValue * 100) / 100 : null,
+      purchaseDate: asset.purchaseDate || null,
+      description: asset.description || null,
+      gainLoss: gainLoss !== null ? Math.round(gainLoss * 100) / 100 : null,
+      gainLossPercent,
+    });
+  }
+
+  // Sort by current value (highest first)
+  assetItems.sort((a, b) => b.currentValue - a.currentValue);
+
+  // Build type breakdown
+  const assetsByType = Object.entries(typeMap)
+    .map(([type, data]) => ({
+      type,
+      count: data.count,
+      totalValue: Math.round(data.totalValue * 100) / 100,
+    }))
+    .sort((a, b) => b.totalValue - a.totalValue);
+
+  const totalGainLoss = totalCurrentValue - totalPurchaseValue;
+
+  if (userAssets.length === 0) {
+    if (appliedFilter) {
+      notes.push(`No assets found with type "${appliedFilter}".`);
+    } else {
+      notes.push("No other assets found.");
+    }
+  } else {
+    notes.push(`Total across ${userAssets.length} asset(s).`);
+    if (totalPurchaseValue > 0) {
+      const overallGainLossPercent = Math.round((totalGainLoss / totalPurchaseValue) * 1000) / 10;
+      if (totalGainLoss >= 0) {
+        notes.push(`Overall gain: $${totalGainLoss.toLocaleString()} (+${overallGainLossPercent}%).`);
+      } else {
+        notes.push(`Overall loss: $${Math.abs(totalGainLoss).toLocaleString()} (${overallGainLossPercent}%).`);
+      }
+    }
+  }
+
+  return {
+    assetCount: userAssets.length,
+    totalCurrentValue: Math.round(totalCurrentValue * 100) / 100,
+    totalPurchaseValue: Math.round(totalPurchaseValue * 100) / 100,
+    totalGainLoss: Math.round(totalGainLoss * 100) / 100,
+    assetsByType,
+    assets: assetItems,
+    appliedFilter,
+    notes,
+  };
+}
+
+// =============================================================================
+// Tool Executor: get_insurance_summary
+// =============================================================================
+
+async function executeGetInsuranceSummary(
+  params: InsuranceSummaryParams,
+  userId: string
+): Promise<InsuranceSummaryResult> {
+  // Fetch all policies for the user
+  let userPolicies = await db
+    .select()
+    .from(policies)
+    .where(eq(policies.userId, userId));
+
+  // Get family members to map IDs to names
+  const userFamilyMembers = await db
+    .select()
+    .from(familyMembers)
+    .where(eq(familyMembers.userId, userId));
+
+  const familyMemberMap: Record<string, string> = {};
+  userFamilyMembers.forEach((fm) => {
+    familyMemberMap[fm.id] = fm.name;
+  });
+
+  // Apply status filter (default: active)
+  const statusFilter = params.status || "active";
+  if (statusFilter !== "all") {
+    userPolicies = userPolicies.filter(p => p.status === statusFilter);
+  }
+
+  // Apply type filter if provided
+  const typeFilter = params.policyType || null;
+  if (typeFilter) {
+    userPolicies = userPolicies.filter(p => p.policyType.toLowerCase() === typeFilter.toLowerCase());
+  }
+
+  const policyItems: InsurancePolicyItem[] = [];
+  let totalAnnualPremiums = 0;
+  let totalDeathCoverage = 0;
+  let totalCriticalIllnessCoverage = 0;
+  let activePolicyCount = 0;
+  const typeMap: Record<string, { count: number; annualPremium: number }> = {};
+  const providerMap: Record<string, { count: number; annualPremium: number }> = {};
+  const notes: string[] = [];
+  const now = new Date();
+
+  for (const policy of userPolicies) {
+    const premiumAmount = parseFloat(policy.premiumAmount);
+    const frequency = policy.premiumFrequency.toLowerCase();
+
+    // Calculate annual premium
+    let annualPremium = premiumAmount;
+    if (frequency === "monthly") {
+      annualPremium = premiumAmount * 12;
+    } else if (frequency === "quarterly") {
+      annualPremium = premiumAmount * 4;
+    } else if (frequency === "yearly" || frequency === "annual") {
+      annualPremium = premiumAmount;
+    } else if (frequency === "custom" && policy.customMonths) {
+      try {
+        const customMonths = JSON.parse(policy.customMonths) as number[];
+        annualPremium = premiumAmount * customMonths.length;
+      } catch {
+        annualPremium = premiumAmount;
+      }
+    }
+
+    totalAnnualPremiums += annualPremium;
+
+    // Track active policies
+    if (policy.status === "active") {
+      activePolicyCount++;
+    }
+
+    // Parse coverage options
+    let coverage: CoverageDetails | null = null;
+    let totalCoverage = 0;
+    if (policy.coverageOptions) {
+      try {
+        const parsed = JSON.parse(policy.coverageOptions);
+        coverage = {
+          death: parsed.death || null,
+          tpd: parsed.tpd || null,
+          criticalIllness: parsed.criticalIllness || null,
+          earlyCriticalIllness: parsed.earlyCriticalIllness || null,
+          hospitalisationPlan: parsed.hospitalisationPlan || null,
+        };
+        // Sum up coverage amounts
+        if (coverage.death) {
+          totalCoverage += coverage.death;
+          totalDeathCoverage += coverage.death;
+        }
+        if (coverage.criticalIllness) {
+          totalCoverage += coverage.criticalIllness;
+          totalCriticalIllnessCoverage += coverage.criticalIllness;
+        }
+        if (coverage.earlyCriticalIllness) {
+          totalCoverage += coverage.earlyCriticalIllness;
+        }
+        if (coverage.tpd) {
+          totalCoverage += coverage.tpd;
+        }
+      } catch {
+        // Keep coverage as null
+      }
+    }
+
+    // Track by type
+    const policyType = policy.policyType;
+    if (!typeMap[policyType]) {
+      typeMap[policyType] = { count: 0, annualPremium: 0 };
+    }
+    typeMap[policyType].count += 1;
+    typeMap[policyType].annualPremium += annualPremium;
+
+    // Track by provider
+    const provider = policy.provider;
+    if (!providerMap[provider]) {
+      providerMap[provider] = { count: 0, annualPremium: 0 };
+    }
+    providerMap[provider].count += 1;
+    providerMap[provider].annualPremium += annualPremium;
+
+    // Calculate years active
+    const startDate = new Date(policy.startDate);
+    const yearsActive = Math.round((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365) * 10) / 10;
+
+    // Get family member name if linked
+    const familyMemberName = policy.familyMemberId
+      ? familyMemberMap[policy.familyMemberId] || null
+      : null;
+
+    policyItems.push({
+      id: policy.id,
+      provider: policy.provider,
+      policyNumber: policy.policyNumber || null,
+      policyType: policy.policyType,
+      status: policy.status || "active",
+      familyMember: familyMemberName,
+      startDate: policy.startDate,
+      maturityDate: policy.maturityDate || null,
+      coverageUntilAge: policy.coverageUntilAge || null,
+      yearsActive: Math.max(0, yearsActive),
+      premiumAmount: Math.round(premiumAmount * 100) / 100,
+      premiumFrequency: policy.premiumFrequency,
+      annualPremium: Math.round(annualPremium * 100) / 100,
+      totalPremiumDuration: policy.totalPremiumDuration || null,
+      coverage,
+      totalCoverage: Math.round(totalCoverage * 100) / 100,
+      description: policy.description || null,
+    });
+  }
+
+  // Sort by annual premium (highest first)
+  policyItems.sort((a, b) => b.annualPremium - a.annualPremium);
+
+  // Build type breakdown
+  const policiesByType = Object.entries(typeMap)
+    .map(([type, data]) => ({
+      type,
+      count: data.count,
+      annualPremium: Math.round(data.annualPremium * 100) / 100,
+    }))
+    .sort((a, b) => b.annualPremium - a.annualPremium);
+
+  // Build provider breakdown
+  const policiesByProvider = Object.entries(providerMap)
+    .map(([provider, data]) => ({
+      provider,
+      count: data.count,
+      annualPremium: Math.round(data.annualPremium * 100) / 100,
+    }))
+    .sort((a, b) => b.annualPremium - a.annualPremium);
+
+  // Calculate monthly equivalent
+  const totalMonthlyPremiums = totalAnnualPremiums / 12;
+
+  // Build notes
+  if (userPolicies.length === 0) {
+    if (typeFilter) {
+      notes.push(`No ${typeFilter} insurance policies found.`);
+    } else if (statusFilter !== "all") {
+      notes.push(`No ${statusFilter} insurance policies found.`);
+    } else {
+      notes.push("No insurance policies found.");
+    }
+  } else {
+    notes.push(`Total across ${userPolicies.length} policy(ies).`);
+    if (totalDeathCoverage > 0) {
+      notes.push(`Total death/TPD coverage: $${totalDeathCoverage.toLocaleString()}.`);
+    }
+    if (totalCriticalIllnessCoverage > 0) {
+      notes.push(`Total critical illness coverage: $${totalCriticalIllnessCoverage.toLocaleString()}.`);
+    }
+  }
+
+  return {
+    policyCount: userPolicies.length,
+    activePolicyCount,
+    totalAnnualPremiums: Math.round(totalAnnualPremiums * 100) / 100,
+    totalMonthlyPremiums: Math.round(totalMonthlyPremiums * 100) / 100,
+    totalDeathCoverage: Math.round(totalDeathCoverage * 100) / 100,
+    totalCriticalIllnessCoverage: Math.round(totalCriticalIllnessCoverage * 100) / 100,
+    policiesByType,
+    policiesByProvider,
+    policies: policyItems,
+    appliedTypeFilter: typeFilter,
+    appliedStatusFilter: statusFilter,
+    notes,
+  };
+}
+
+// =============================================================================
 // Tool Executor: search_knowledge
 // =============================================================================
 
@@ -1752,6 +2507,26 @@ export async function executeTool(
 
       case "get_balance_summary":
         data = await executeGetBalanceSummary(validationResult.data as BalanceSummaryParams, userId);
+        break;
+
+      case "get_holdings_summary":
+        data = await executeGetHoldingsSummary(userId);
+        break;
+
+      case "get_property_assets_summary":
+        data = await executeGetPropertyAssetsSummary(userId);
+        break;
+
+      case "get_vehicle_assets_summary":
+        data = await executeGetVehicleAssetsSummary(userId);
+        break;
+
+      case "get_other_assets_summary":
+        data = await executeGetOtherAssetsSummary(validationResult.data as OtherAssetsSummaryParams, userId);
+        break;
+
+      case "get_insurance_summary":
+        data = await executeGetInsuranceSummary(validationResult.data as InsuranceSummaryParams, userId);
         break;
 
       case "search_knowledge":

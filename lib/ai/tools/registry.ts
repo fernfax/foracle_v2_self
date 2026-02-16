@@ -34,6 +34,31 @@ export const SearchKnowledgeParamSchema = z.object({
   limit: z.number().int().min(1).max(10).default(5).optional(),
 });
 
+export const HoldingsSummaryParamSchema = z.object({});
+
+export const PropertyAssetsSummaryParamSchema = z.object({});
+
+export const VehicleAssetsSummaryParamSchema = z.object({});
+
+export const OtherAssetsSummaryParamSchema = z.object({
+  assetType: z
+    .string()
+    .optional()
+    .describe("Optional filter by asset type (e.g., 'investment', 'savings', 'collectible')"),
+});
+
+export const InsuranceSummaryParamSchema = z.object({
+  policyType: z
+    .string()
+    .optional()
+    .describe("Optional filter by policy type (e.g., 'life', 'health', 'auto', 'home')"),
+  status: z
+    .enum(["active", "lapsed", "cancelled", "matured", "all"])
+    .optional()
+    .default("active")
+    .describe("Filter by policy status (default: active)"),
+});
+
 export const BalanceSummaryParamSchema = z.object({
   // ===== EXISTING PARAMS (backwards compatible) =====
   fromMonth: z
@@ -97,6 +122,11 @@ export type MonthParams = z.infer<typeof MonthParamSchema>;
 export type FamilySummaryParams = z.infer<typeof FamilySummaryParamSchema>;
 export type BalanceSummaryParams = z.infer<typeof BalanceSummaryParamSchema>;
 export type SearchKnowledgeParams = z.infer<typeof SearchKnowledgeParamSchema>;
+export type HoldingsSummaryParams = z.infer<typeof HoldingsSummaryParamSchema>;
+export type PropertyAssetsSummaryParams = z.infer<typeof PropertyAssetsSummaryParamSchema>;
+export type VehicleAssetsSummaryParams = z.infer<typeof VehicleAssetsSummaryParamSchema>;
+export type OtherAssetsSummaryParams = z.infer<typeof OtherAssetsSummaryParamSchema>;
+export type InsuranceSummaryParams = z.infer<typeof InsuranceSummaryParamSchema>;
 export type HypotheticalItem = z.infer<typeof HypotheticalItemSchema>;
 
 export type ToolName =
@@ -104,6 +134,11 @@ export type ToolName =
   | "get_expenses_summary"
   | "get_family_summary"
   | "get_balance_summary"
+  | "get_holdings_summary"
+  | "get_property_assets_summary"
+  | "get_vehicle_assets_summary"
+  | "get_other_assets_summary"
+  | "get_insurance_summary"
   | "search_knowledge";
 
 export interface ToolDefinition {
@@ -249,6 +284,81 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
     },
   },
 
+  get_holdings_summary: {
+    name: "get_holdings_summary",
+    description:
+      "Get the user's current cash holdings and liquid assets summary. Returns a breakdown of all bank accounts and holdings with their amounts, total liquid assets, and family member attribution if applicable. Use this when the user asks about their current savings, how much money they have, their bank balance, liquid assets, cash on hand, or current holdings. This provides the starting balance for financial projections.",
+    schema: HoldingsSummaryParamSchema,
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
+
+  get_property_assets_summary: {
+    name: "get_property_assets_summary",
+    description:
+      "Get the user's property assets summary. Returns details about all properties owned including purchase price, outstanding loan, monthly payments, interest rate, CPF withdrawn, and housing grants. Use this when the user asks about their property, house, HDB, condo, real estate, mortgage, home loan, or property value.",
+    schema: PropertyAssetsSummaryParamSchema,
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
+
+  get_vehicle_assets_summary: {
+    name: "get_vehicle_assets_summary",
+    description:
+      "Get the user's vehicle assets summary. Returns details about all vehicles owned including purchase price, loan details, COE expiry date (Singapore-specific), and current loan status. Use this when the user asks about their car, vehicle, motorcycle, COE, car loan, or vehicle value.",
+    schema: VehicleAssetsSummaryParamSchema,
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
+
+  get_other_assets_summary: {
+    name: "get_other_assets_summary",
+    description:
+      "Get the user's other assets summary (excluding property and vehicles). Returns details about investments, savings, collectibles, and other tracked assets with current and purchase values. Use this when the user asks about their investments, savings accounts, collectibles, other assets, net worth components, or asset portfolio. Optionally filter by asset type.",
+    schema: OtherAssetsSummaryParamSchema,
+    parameters: {
+      type: "object",
+      properties: {
+        assetType: {
+          type: "string",
+          description: "Optional filter by asset type (e.g., 'investment', 'savings', 'collectible')",
+        },
+      },
+      required: [],
+    },
+  },
+
+  get_insurance_summary: {
+    name: "get_insurance_summary",
+    description:
+      "Get the user's insurance policies summary. Returns details about all insurance policies including life, health, auto, and home insurance. Shows provider, premium amounts, coverage details, policy status, and family member attribution. Use this when the user asks about their insurance, policies, premiums, coverage, life insurance, health insurance, or insurance costs.",
+    schema: InsuranceSummaryParamSchema,
+    parameters: {
+      type: "object",
+      properties: {
+        policyType: {
+          type: "string",
+          description: "Optional filter by policy type (e.g., 'life', 'health', 'auto', 'home')",
+        },
+        status: {
+          type: "string",
+          enum: ["active", "lapsed", "cancelled", "matured", "all"],
+          description: "Filter by policy status (default: active)",
+        },
+      },
+      required: [],
+    },
+  },
+
   search_knowledge: {
     name: "search_knowledge",
     description:
@@ -280,6 +390,11 @@ const ALLOWED_TOOLS: Set<ToolName> = new Set([
   "get_expenses_summary",
   "get_family_summary",
   "get_balance_summary",
+  "get_holdings_summary",
+  "get_property_assets_summary",
+  "get_vehicle_assets_summary",
+  "get_other_assets_summary",
+  "get_insurance_summary",
   "search_knowledge",
 ]);
 
