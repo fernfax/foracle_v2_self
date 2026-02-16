@@ -6,7 +6,7 @@ This document describes the tools available to the Foracle AI Assistant. These t
 
 ## Overview
 
-The AI Assistant has access to **4 tools** that help it understand and analyze your financial situation:
+The AI Assistant has access to **9 tools** that help it understand and analyze your financial situation:
 
 | Tool | Purpose | Data Source |
 |------|---------|-------------|
@@ -14,6 +14,11 @@ The AI Assistant has access to **4 tools** that help it understand and analyze y
 | `get_expenses_summary` | Detailed expense breakdown | `expenses`, `expense_categories` |
 | `get_family_summary` | Household structure and income inclusion | `family_members`, `incomes` |
 | `get_balance_summary` | Projected savings over a date range | `current_holdings`, `incomes`, `expenses` |
+| `get_holdings_summary` | Current cash and liquid assets | `current_holdings`, `family_members` |
+| `get_property_assets_summary` | Property assets and mortgages | `property_assets` |
+| `get_vehicle_assets_summary` | Vehicle assets and loans | `vehicle_assets` |
+| `get_other_assets_summary` | Other assets (investments, etc.) | `assets` |
+| `get_insurance_summary` | Insurance policies and coverage | `policies` |
 
 ---
 
@@ -175,6 +180,188 @@ Projects your cumulative savings/balance over a date range. Shows month-by-month
 
 ---
 
+### 5. `get_holdings_summary`
+
+**What it does:**
+Shows your current cash holdings and liquid assets — how much money you have in your bank accounts right now. This is separate from income (which is recurring) and gives a snapshot of your current financial position.
+
+**When the assistant uses it:**
+- "How much money do I have?"
+- "What's my current savings?"
+- "What's my bank balance?"
+- "How much liquid assets do I have?"
+- "What's in my accounts?"
+
+**What it returns:**
+- Total holdings (sum across all accounts)
+- Number of accounts
+- Individual holdings with:
+  - Bank name
+  - Amount
+  - Which family member owns it (if applicable)
+  - Last updated date
+- Holdings breakdown by family member:
+  - Member name
+  - Total amount
+  - Number of accounts
+- Notes explaining any context
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `current_holdings` | Bank account balances |
+| `family_members` | Links accounts to family members |
+
+**Related App Pages:** `/assets` (Current Holdings section)
+
+---
+
+### 6. `get_property_assets_summary`
+
+**What it does:**
+Shows details about all property assets you own — houses, HDB flats, condos, etc. Includes purchase price, loan details, CPF usage, and equity calculations.
+
+**When the assistant uses it:**
+- "What properties do I own?"
+- "How much do I owe on my mortgage?"
+- "What's my home equity?"
+- "How much CPF did I use for my house?"
+- "What are my monthly mortgage payments?"
+
+**What it returns:**
+- Total property value (sum of purchase prices)
+- Total outstanding loans
+- Total equity owned
+- Total monthly payments
+- Individual properties with:
+  - Property name and purchase date
+  - Original purchase price
+  - Loan amount taken and outstanding
+  - Monthly payment and interest rate
+  - CPF withdrawn and housing grant
+  - Equity owned (purchase price - outstanding loan)
+  - Loan progress percentage
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `property_assets` | All property records with loan and CPF details |
+
+**Related App Pages:** `/assets` (Property Assets section)
+
+---
+
+### 7. `get_vehicle_assets_summary`
+
+**What it does:**
+Shows details about all vehicles you own — cars, motorcycles, etc. Includes purchase price, loan status, and COE expiry (Singapore-specific).
+
+**When the assistant uses it:**
+- "What cars do I own?"
+- "How much do I owe on my car loan?"
+- "When does my COE expire?"
+- "What's my vehicle worth?"
+- "What are my car loan payments?"
+
+**What it returns:**
+- Total vehicle value
+- Total outstanding loans
+- Total monthly payments
+- Individual vehicles with:
+  - Vehicle name and purchase date
+  - COE expiry date and years remaining
+  - Original purchase price
+  - Loan taken, repaid, and outstanding
+  - Monthly payment
+  - Loan progress percentage
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `vehicle_assets` | All vehicle records with loan and COE details |
+
+**Related App Pages:** `/assets` (Vehicle Assets section)
+
+---
+
+### 8. `get_other_assets_summary`
+
+**What it does:**
+Shows details about other assets you track — investments, savings, collectibles, etc. Can be filtered by asset type.
+
+**When the assistant uses it:**
+- "What other assets do I have?"
+- "What are my investments worth?"
+- "Show me my asset portfolio"
+- "How much have my investments grown?"
+- "What's my total net worth from assets?"
+
+**What it returns:**
+- Total current value
+- Total purchase value
+- Overall gain/loss
+- Breakdown by asset type
+- Individual assets with:
+  - Name and type
+  - Current and purchase value
+  - Purchase date
+  - Gain/loss amount and percentage
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `assetType` | No | Filter by type (e.g., 'investment', 'savings', 'collectible') |
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `assets` | Generic asset records with values |
+
+**Related App Pages:** `/assets` (Other Assets section)
+
+---
+
+### 9. `get_insurance_summary`
+
+**What it does:**
+Shows details about all your insurance policies — life, health, auto, home, etc. Includes provider, premium amounts, coverage details, and policy status.
+
+**When the assistant uses it:**
+- "What insurance do I have?"
+- "How much am I paying for insurance?"
+- "What's my life insurance coverage?"
+- "Show me my health insurance policies"
+- "How much death coverage do I have?"
+
+**What it returns:**
+- Total annual and monthly premiums
+- Total death and critical illness coverage
+- Breakdown by policy type
+- Breakdown by provider
+- Individual policies with:
+  - Provider and policy number
+  - Policy type and status
+  - Policy holder (family member)
+  - Start date, maturity date, years active
+  - Premium amount and frequency
+  - Coverage details (death, TPD, critical illness, hospitalisation)
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `policyType` | No | Filter by type (e.g., 'life', 'health', 'auto', 'home') |
+| `status` | No | Filter by status: 'active' (default), 'lapsed', 'cancelled', 'matured', 'all' |
+
+**Data Sources:**
+| Table | What it provides |
+|-------|------------------|
+| `policies` | All insurance policy records |
+| `family_members` | Links policies to family members |
+
+**Related App Pages:** `/policies`
+
+---
+
 ## Database Tables Reference
 
 | Table | Description | Key Fields |
@@ -184,6 +371,10 @@ Projects your cumulative savings/balance over a date range. Shows month-by-month
 | `expense_categories` | Expense categories | `name`, `icon`, `is_default`, `tracked_in_budget` |
 | `family_members` | Household members | `name`, `relationship`, `is_contributing`, `date_of_birth` |
 | `current_holdings` | Bank account balances | `bank_name`, `holding_amount`, `family_member_id` |
+| `property_assets` | Property/real estate | `property_name`, `original_purchase_price`, `outstanding_loan`, `monthly_loan_payment`, `interest_rate` |
+| `vehicle_assets` | Vehicles | `vehicle_name`, `original_purchase_price`, `coe_expiry_date`, `loan_amount_taken`, `loan_amount_repaid` |
+| `assets` | Other assets | `name`, `type`, `current_value`, `purchase_value`, `purchase_date` |
+| `policies` | Insurance policies | `provider`, `policy_type`, `premium_amount`, `premium_frequency`, `coverage_options`, `status` |
 
 ---
 
@@ -209,6 +400,28 @@ The assistant often combines multiple tools to answer complex questions:
 1. Calls `get_income_summary` to understand monthly income
 2. Calls `get_expenses_summary` to understand fixed costs
 3. Calculates the difference to show disposable income
+
+**Example: "How much do I have in the bank?"**
+1. Calls `get_holdings_summary` to get all current holdings
+2. Returns total across all accounts with individual breakdown
+3. Shows which accounts belong to which family members
+
+**Example: "What's my net worth?"**
+1. Calls `get_holdings_summary` for liquid assets
+2. Calls `get_property_assets_summary` for property equity
+3. Calls `get_vehicle_assets_summary` for vehicle values
+4. Calls `get_other_assets_summary` for other asset values
+5. Combines all to calculate total net worth
+
+**Example: "How much do I owe across all loans?"**
+1. Calls `get_property_assets_summary` for mortgage balances
+2. Calls `get_vehicle_assets_summary` for car loan balances
+3. Sums up all outstanding loans
+
+**Example: "Am I adequately insured?"**
+1. Calls `get_insurance_summary` to get all active policies
+2. Calls `get_income_summary` to understand annual income
+3. Compares death/CI coverage against typical recommendations (e.g., 10x annual income)
 
 ---
 
