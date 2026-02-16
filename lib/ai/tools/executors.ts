@@ -2192,7 +2192,7 @@ async function executeGetInsuranceSummary(
   // Apply status filter (default: active)
   const statusFilter = params.status || "active";
   if (statusFilter !== "all") {
-    userPolicies = userPolicies.filter(p => p.status === statusFilter);
+    userPolicies = userPolicies.filter(p => p.status?.toLowerCase() === statusFilter.toLowerCase());
   }
 
   // Apply type filter if provided
