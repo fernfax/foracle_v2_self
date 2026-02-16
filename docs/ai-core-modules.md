@@ -27,16 +27,18 @@ This document explains the two core modules that power Foracle's AI Assistant: t
 │                     TOOL EXECUTORS                               │
 │  (lib/ai/tools/executors.ts)                                     │
 │                                                                  │
-│  • get_income_summary                                            │
-│  • get_expenses_summary                                          │
-│  • get_family_summary                                            │
-│  • get_balance_summary (with safety assessment)                  │
+│  • get_income_summary          • get_holdings_summary            │
+│  • get_expenses_summary        • get_property_assets_summary     │
+│  • get_family_summary          • get_vehicle_assets_summary      │
+│  • get_balance_summary         • get_other_assets_summary        │
+│  • search_knowledge            • get_insurance_summary           │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Database                                  │
-│  (incomes, expenses, familyMembers, currentHoldings)            │
+│  incomes, expenses, familyMembers, currentHoldings,             │
+│  propertyAssets, vehicleAssets, assets, policies                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -143,6 +145,11 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 | `get_expenses_summary` | Expense breakdown by category |
 | `get_family_summary` | Household structure and member info |
 | `get_balance_summary` | Balance projections with safety assessment |
+| `get_holdings_summary` | Current cash and liquid asset holdings |
+| `get_property_assets_summary` | Property assets with mortgage/loan details |
+| `get_vehicle_assets_summary` | Vehicle assets with loan and COE details |
+| `get_other_assets_summary` | Other assets (investments, savings, etc.) |
+| `get_insurance_summary` | Insurance policies and coverage details |
 | `search_knowledge` | Semantic search over financial knowledge base |
 
 ---
@@ -230,6 +237,179 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
+### 2.5 `get_holdings_summary`
+
+**Purpose**: Returns current cash and liquid asset holdings across all bank accounts.
+
+**Parameters**:
+```typescript
+{}  // No parameters required
+```
+
+**Returns**:
+- Total holdings amount across all accounts
+- Number of accounts
+- Individual holdings with bank name, amount, and family member ownership
+- Holdings breakdown by family member (name, total, account count)
+- Contextual notes
+
+**Database Tables**: `currentHoldings`, `familyMembers`
+
+---
+
+### 2.6 `get_property_assets_summary`
+
+**Purpose**: Returns details about all property assets including mortgage and CPF information.
+
+**Parameters**:
+```typescript
+{}  // No parameters required
+```
+
+**Returns**:
+- Total property value (sum of purchase prices)
+- Total outstanding loans
+- Total equity owned
+- Total monthly mortgage payments
+- Individual properties with:
+  - Property name and purchase date
+  - Original purchase price
+  - Loan amount taken and outstanding
+  - Monthly payment and interest rate
+  - CPF withdrawn and housing grant
+  - Equity owned (purchase price - outstanding loan)
+  - Loan progress percentage
+
+**Database Tables**: `propertyAssets`
+
+---
+
+### 2.7 `get_vehicle_assets_summary`
+
+**Purpose**: Returns details about all vehicle assets including loan status and COE information.
+
+**Parameters**:
+```typescript
+{}  // No parameters required
+```
+
+**Returns**:
+- Total vehicle value
+- Total outstanding loans
+- Total monthly payments
+- Individual vehicles with:
+  - Vehicle name and purchase date
+  - COE expiry date and years remaining
+  - Original purchase price
+  - Loan taken, repaid, and outstanding
+  - Monthly payment
+  - Loan progress percentage
+
+**Database Tables**: `vehicleAssets`
+
+---
+
+### 2.8 `get_other_assets_summary`
+
+**Purpose**: Returns details about other tracked assets like investments, savings, and collectibles.
+
+**Parameters**:
+```typescript
+{
+  assetType?: string  // Optional filter: "investment", "savings", "collectible", etc.
+}
+```
+
+**Returns**:
+- Total current value
+- Total purchase value
+- Overall gain/loss amount and percentage
+- Breakdown by asset type (type, count, currentValue, purchaseValue, gainLoss)
+- Individual assets with:
+  - Name and type
+  - Current and purchase value
+  - Purchase date
+  - Gain/loss amount and percentage
+
+**Database Tables**: `assets`
+
+---
+
+### 2.9 `get_insurance_summary`
+
+**Purpose**: Returns details about all insurance policies including coverage and premium information.
+
+**Parameters**:
+```typescript
+{
+  policyType?: string,  // Optional filter: "life", "health", "auto", "home", etc.
+  status?: "active" | "lapsed" | "cancelled" | "matured" | "all"  // Default: "active"
+}
+```
+
+**Returns**:
+- Total annual and monthly premiums
+- Total death coverage
+- Total critical illness coverage
+- Active policy count
+- Breakdown by policy type (type, count, annualPremium)
+- Breakdown by provider (provider, count, annualPremium)
+- Individual policies with:
+  - Provider and policy number
+  - Policy type and status
+  - Policy holder (family member name)
+  - Start date, maturity date, years active
+  - Premium amount and frequency (monthly/annual)
+  - Coverage details (death, TPD, critical illness, hospitalisation)
+
+**Database Tables**: `policies`, `familyMembers`
+
+---
+
+### 2.10 `search_knowledge`
+
+**Purpose**: Semantic search over the Foracle knowledge base for general financial information.
+
+**Parameters**:
+```typescript
+{
+  query: string,    // Natural language search query
+  limit?: number    // Max results (1-10, default: 5)
+}
+```
+
+**Returns**:
+- Relevant knowledge chunks with similarity scores
+- Document metadata (source, category, etc.)
+
+**When to Use**:
+- General financial questions: "What is CPF?", "How much emergency fund should I have?"
+- Concept explanations: "What are the CPF account types?"
+- Best practices: "What are good budgeting strategies?"
+
+**NOT for**:
+- User-specific data (use the other tools)
+- Balance projections (use `get_balance_summary`)
+
+**Example Response**:
+```typescript
+{
+  query: "What is CPF?",
+  resultsCount: 3,
+  results: [
+    {
+      docId: "cpf-basics",
+      content: "# CPF (Central Provident Fund) Basics\n\nThe Central Provident Fund...",
+      similarity: 0.61,
+      metadata: { source: "cpf-official", category: "retirement" }
+    },
+    // ... more results
+  ]
+}
+```
+
+---
+
 ### Safety Assessment (Traffic Light System)
 
 The `get_balance_summary` tool includes a **safety assessment** that evaluates whether an expense is financially safe based on emergency fund coverage.
@@ -273,50 +453,6 @@ const minAllowedBalance = params.minMonthlyBalance ?? defaultSafetyFloor;
 ```
 
 This ensures the AI **never recommends an expense that would deplete the emergency fund** below safe levels.
-
----
-
-### 2.5 `search_knowledge`
-
-**Purpose**: Semantic search over the Foracle knowledge base for general financial information.
-
-**Parameters**:
-```typescript
-{
-  query: string,    // Natural language search query
-  limit?: number    // Max results (1-10, default: 5)
-}
-```
-
-**Returns**:
-- Relevant knowledge chunks with similarity scores
-- Document metadata (source, category, etc.)
-
-**When to Use**:
-- General financial questions: "What is CPF?", "How much emergency fund should I have?"
-- Concept explanations: "What are the CPF account types?"
-- Best practices: "What are good budgeting strategies?"
-
-**NOT for**:
-- User-specific data (use `get_income_summary`, `get_expenses_summary`, etc.)
-- Balance projections (use `get_balance_summary`)
-
-**Example Response**:
-```typescript
-{
-  query: "What is CPF?",
-  resultsCount: 3,
-  results: [
-    {
-      docId: "cpf-basics",
-      content: "# CPF (Central Provident Fund) Basics\n\nThe Central Provident Fund...",
-      similarity: 0.61,
-      metadata: { source: "cpf-official", category: "retirement" }
-    },
-    // ... more results
-  ]
-}
-```
 
 ---
 
