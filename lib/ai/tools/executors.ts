@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { expenses, incomes, familyMembers, expenseCategories, currentHoldings, propertyAssets, vehicleAssets, assets, policies } from "@/db/schema";
+import { expenses, incomes, familyMembers, expenseCategories, currentHoldings, propertyAssets, vehicleAssets, assets, policies, dailyExpenses, expenseSubcategories } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf-calculator";
 import {
@@ -15,6 +15,7 @@ import {
   type VehicleAssetsSummaryParams,
   type OtherAssetsSummaryParams,
   type InsuranceSummaryParams,
+  type DailyExpenseSummaryParams,
   type HypotheticalItem,
 } from "./registry";
 import { searchKnowledgeBase, type SearchResult } from "@/lib/vectors";
@@ -333,6 +334,59 @@ export interface InsuranceSummaryResult {
   // Filters applied
   appliedTypeFilter: string | null;
   appliedStatusFilter: string;
+  notes: string[];
+}
+
+// Daily Expense Summary Types
+export interface DailyExpenseItem {
+  id: string;
+  date: string;
+  categoryName: string;
+  subcategoryName: string | null;
+  amount: number;
+  note: string | null;
+  // Foreign currency details (if applicable)
+  originalCurrency: string | null;
+  originalAmount: number | null;
+  exchangeRate: number | null;
+}
+
+export interface DailyExpenseCategoryBreakdown {
+  categoryName: string;
+  totalAmount: number;
+  expenseCount: number;
+  percentOfTotal: number;
+  // Subcategory breakdown within this category
+  subcategories: Array<{
+    subcategoryName: string;
+    totalAmount: number;
+    expenseCount: number;
+  }>;
+}
+
+export interface DailyExpenseSummaryResult {
+  // Date range
+  fromDate: string;
+  toDate: string;
+  daysCovered: number;
+  // Totals
+  totalSpent: number;
+  expenseCount: number;
+  averagePerDay: number;
+  // Category breakdown
+  categoryBreakdown: DailyExpenseCategoryBreakdown[];
+  categoryCount: number;
+  // All expense items (sorted by date descending)
+  expenses: DailyExpenseItem[];
+  // Filters applied
+  appliedCategoryFilter: string | null;
+  appliedSubcategoryFilter: string | null;
+  // Available categories and subcategories for context
+  availableCategories: string[];
+  availableSubcategories: Array<{
+    categoryName: string;
+    subcategoryName: string;
+  }>;
   notes: string[];
 }
 
@@ -2392,6 +2446,201 @@ export interface SearchKnowledgeResult {
   }>;
 }
 
+// =============================================================================
+// Daily Expense Summary Executor
+// =============================================================================
+
+async function executeGetDailyExpenseSummary(
+  params: DailyExpenseSummaryParams,
+  userId: string
+): Promise<DailyExpenseSummaryResult> {
+  const now = new Date();
+
+  // Determine date range
+  let fromDate: string;
+  let toDate: string;
+
+  if (params.month) {
+    // If month is provided, use entire month
+    const [year, month] = params.month.split("-").map(Number);
+    fromDate = `${params.month}-01`;
+    // Get last day of month
+    const lastDay = new Date(year, month, 0).getDate();
+    toDate = `${params.month}-${lastDay.toString().padStart(2, "0")}`;
+  } else {
+    // Use fromDate/toDate or defaults
+    if (params.fromDate) {
+      fromDate = params.fromDate;
+    } else {
+      // Default: start of current month
+      fromDate = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-01`;
+    }
+
+    if (params.toDate) {
+      toDate = params.toDate;
+    } else {
+      // Default: today
+      toDate = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
+    }
+  }
+
+  // Fetch all daily expenses for user within date range
+  const userDailyExpenses = await db
+    .select()
+    .from(dailyExpenses)
+    .where(eq(dailyExpenses.userId, userId));
+
+  // Filter by date range
+  let filteredExpenses = userDailyExpenses.filter((e) => {
+    const expenseDate = e.date;
+    return expenseDate >= fromDate && expenseDate <= toDate;
+  });
+
+  // Apply category filter if provided (case-insensitive)
+  if (params.categoryName) {
+    filteredExpenses = filteredExpenses.filter(
+      (e) => e.categoryName.toLowerCase() === params.categoryName!.toLowerCase()
+    );
+  }
+
+  // Apply subcategory filter if provided (case-insensitive)
+  if (params.subcategoryName) {
+    filteredExpenses = filteredExpenses.filter(
+      (e) => e.subcategoryName?.toLowerCase() === params.subcategoryName!.toLowerCase()
+    );
+  }
+
+  // Get all user subcategories for context
+  const userSubcategories = await db
+    .select()
+    .from(expenseSubcategories)
+    .where(eq(expenseSubcategories.userId, userId));
+
+  // Get user expense categories for context
+  const userExpenseCategories = await db
+    .select()
+    .from(expenseCategories)
+    .where(eq(expenseCategories.userId, userId));
+
+  // Build category ID to name map
+  const categoryIdToName: Record<string, string> = {};
+  userExpenseCategories.forEach((c) => {
+    categoryIdToName[c.id] = c.name;
+  });
+
+  // Calculate totals and breakdowns
+  let totalSpent = 0;
+  const categoryMap: Record<string, {
+    totalAmount: number;
+    expenseCount: number;
+    subcategories: Record<string, { totalAmount: number; expenseCount: number }>;
+  }> = {};
+
+  const expenseItems: DailyExpenseItem[] = [];
+
+  for (const expense of filteredExpenses) {
+    const amount = parseFloat(expense.amount);
+    totalSpent += amount;
+
+    const catName = expense.categoryName;
+    const subCatName = expense.subcategoryName || null;
+
+    // Initialize category if needed
+    if (!categoryMap[catName]) {
+      categoryMap[catName] = {
+        totalAmount: 0,
+        expenseCount: 0,
+        subcategories: {},
+      };
+    }
+
+    categoryMap[catName].totalAmount += amount;
+    categoryMap[catName].expenseCount += 1;
+
+    // Track subcategory within category
+    if (subCatName) {
+      if (!categoryMap[catName].subcategories[subCatName]) {
+        categoryMap[catName].subcategories[subCatName] = {
+          totalAmount: 0,
+          expenseCount: 0,
+        };
+      }
+      categoryMap[catName].subcategories[subCatName].totalAmount += amount;
+      categoryMap[catName].subcategories[subCatName].expenseCount += 1;
+    }
+
+    // Build expense item
+    expenseItems.push({
+      id: expense.id,
+      date: expense.date,
+      categoryName: catName,
+      subcategoryName: subCatName,
+      amount,
+      note: expense.note,
+      originalCurrency: expense.originalCurrency,
+      originalAmount: expense.originalAmount ? parseFloat(expense.originalAmount) : null,
+      exchangeRate: expense.exchangeRate ? parseFloat(expense.exchangeRate) : null,
+    });
+  }
+
+  // Sort expenses by date descending (most recent first)
+  expenseItems.sort((a, b) => b.date.localeCompare(a.date));
+
+  // Build category breakdown
+  const categoryBreakdown: DailyExpenseCategoryBreakdown[] = Object.entries(categoryMap)
+    .map(([catName, data]) => ({
+      categoryName: catName,
+      totalAmount: data.totalAmount,
+      expenseCount: data.expenseCount,
+      percentOfTotal: totalSpent > 0 ? (data.totalAmount / totalSpent) * 100 : 0,
+      subcategories: Object.entries(data.subcategories).map(([subName, subData]) => ({
+        subcategoryName: subName,
+        totalAmount: subData.totalAmount,
+        expenseCount: subData.expenseCount,
+      })).sort((a, b) => b.totalAmount - a.totalAmount),
+    }))
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+
+  // Calculate days covered
+  const fromDateObj = new Date(fromDate);
+  const toDateObj = new Date(toDate);
+  const daysCovered = Math.ceil((toDateObj.getTime() - fromDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  // Build available categories list
+  const availableCategories = [...new Set(userExpenseCategories.map((c) => c.name))];
+
+  // Build available subcategories list with their parent categories
+  const availableSubcategories = userSubcategories.map((sub) => ({
+    categoryName: categoryIdToName[sub.categoryId] || "Unknown",
+    subcategoryName: sub.name,
+  }));
+
+  const notes: string[] = [];
+  if (filteredExpenses.length === 0) {
+    notes.push(`No expenses found for the period ${fromDate} to ${toDate}.`);
+    if (params.categoryName || params.subcategoryName) {
+      notes.push("Try removing filters to see all expenses.");
+    }
+  }
+
+  return {
+    fromDate,
+    toDate,
+    daysCovered,
+    totalSpent,
+    expenseCount: filteredExpenses.length,
+    averagePerDay: daysCovered > 0 ? totalSpent / daysCovered : 0,
+    categoryBreakdown,
+    categoryCount: Object.keys(categoryMap).length,
+    expenses: expenseItems,
+    appliedCategoryFilter: params.categoryName || null,
+    appliedSubcategoryFilter: params.subcategoryName || null,
+    availableCategories,
+    availableSubcategories,
+    notes,
+  };
+}
+
 async function executeSearchKnowledge(
   params: SearchKnowledgeParams
 ): Promise<SearchKnowledgeResult> {
@@ -2527,6 +2776,10 @@ export async function executeTool(
 
       case "get_insurance_summary":
         data = await executeGetInsuranceSummary(validationResult.data as InsuranceSummaryParams, userId);
+        break;
+
+      case "get_daily_expense_summary":
+        data = await executeGetDailyExpenseSummary(validationResult.data as DailyExpenseSummaryParams, userId);
         break;
 
       case "search_knowledge":
