@@ -29,16 +29,18 @@ This document explains the two core modules that power Foracle's AI Assistant: t
 │                                                                  │
 │  • get_income_summary          • get_holdings_summary            │
 │  • get_expenses_summary        • get_property_assets_summary     │
-│  • get_family_summary          • get_vehicle_assets_summary      │
-│  • get_balance_summary         • get_other_assets_summary        │
-│  • search_knowledge            • get_insurance_summary           │
+│  • get_daily_expense_summary   • get_vehicle_assets_summary      │
+│  • get_family_summary          • get_other_assets_summary        │
+│  • get_balance_summary         • get_insurance_summary           │
+│  • search_knowledge                                              │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Database                                  │
-│  incomes, expenses, familyMembers, currentHoldings,             │
-│  propertyAssets, vehicleAssets, assets, policies                │
+│  incomes, expenses, dailyExpenses, familyMembers,               │
+│  currentHoldings, propertyAssets, vehicleAssets,                │
+│  assets, policies, expenseSubcategories                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -142,7 +144,8 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 | Tool Name | Description |
 |-----------|-------------|
 | `get_income_summary` | Income breakdown with CPF calculations |
-| `get_expenses_summary` | Expense breakdown by category |
+| `get_expenses_summary` | Recurring expense breakdown by category |
+| `get_daily_expense_summary` | Actual daily spending history and totals |
 | `get_family_summary` | Household structure and member info |
 | `get_balance_summary` | Balance projections with safety assessment |
 | `get_holdings_summary` | Current cash and liquid asset holdings |
@@ -187,7 +190,33 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
-### 2.3 `get_family_summary`
+### 2.3 `get_daily_expense_summary`
+
+**Purpose**: Returns actual daily spending summary for a date range. Unlike `get_expenses_summary` which shows planned recurring expenses, this shows real money spent.
+
+**Parameters**:
+```typescript
+{
+  month?: "YYYY-MM",        // Shorthand for entire month
+  fromDate?: "YYYY-MM-DD",  // Start date (default: start of current month)
+  toDate?: "YYYY-MM-DD",    // End date (default: today)
+  categoryName?: string,    // Filter by category (e.g., "Food")
+  subcategoryName?: string  // Filter by subcategory (e.g., "Groceries")
+}
+```
+
+**Returns**:
+- Date range and days covered
+- Total spent and average per day
+- Category breakdown with subcategory details
+- All expense items with dates, amounts, and notes
+- Foreign currency details if applicable
+
+**Database Tables**: `dailyExpenses`, `expenseSubcategories`, `expenseCategories`
+
+---
+
+### 2.4 `get_family_summary`
 
 **Purpose**: Returns household structure and income inclusion settings.
 
@@ -208,7 +237,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
-### 2.4 `get_balance_summary` (Most Complex)
+### 2.5 `get_balance_summary` (Most Complex)
 
 **Purpose**: Cashflow projection engine with safety assessment and affordability analysis.
 
@@ -237,7 +266,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
-### 2.5 `get_holdings_summary`
+### 2.6 `get_holdings_summary`
 
 **Purpose**: Returns current cash and liquid asset holdings across all bank accounts.
 
@@ -257,7 +286,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
-### 2.6 `get_property_assets_summary`
+### 2.7 `get_property_assets_summary`
 
 **Purpose**: Returns details about all property assets including mortgage and CPF information.
 
@@ -284,7 +313,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
-### 2.7 `get_vehicle_assets_summary`
+### 2.8 `get_vehicle_assets_summary`
 
 **Purpose**: Returns details about all vehicle assets including loan status and COE information.
 
@@ -309,7 +338,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
-### 2.8 `get_other_assets_summary`
+### 2.9 `get_other_assets_summary`
 
 **Purpose**: Returns details about other tracked assets like investments, savings, and collectibles.
 
@@ -335,7 +364,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
-### 2.9 `get_insurance_summary`
+### 2.10 `get_insurance_summary`
 
 **Purpose**: Returns details about all insurance policies including coverage and premium information.
 
@@ -366,7 +395,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ---
 
-### 2.10 `search_knowledge`
+### 2.11 `search_knowledge`
 
 **Purpose**: Semantic search over the Foracle knowledge base for general financial information.
 

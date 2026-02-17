@@ -59,6 +59,32 @@ export const InsuranceSummaryParamSchema = z.object({
     .describe("Filter by policy status (default: active)"),
 });
 
+export const DailyExpenseSummaryParamSchema = z.object({
+  fromDate: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "fromDate must be in YYYY-MM-DD format")
+    .optional()
+    .describe("Start date for filtering (YYYY-MM-DD). Defaults to start of current month."),
+  toDate: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "toDate must be in YYYY-MM-DD format")
+    .optional()
+    .describe("End date for filtering (YYYY-MM-DD). Defaults to today."),
+  month: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "month must be in YYYY-MM format")
+    .optional()
+    .describe("Shorthand to get all expenses for a specific month (YYYY-MM). Overrides fromDate/toDate if provided."),
+  categoryName: z
+    .string()
+    .optional()
+    .describe("Optional filter by category name (e.g., 'Food', 'Transport', 'Shopping')"),
+  subcategoryName: z
+    .string()
+    .optional()
+    .describe("Optional filter by subcategory name (e.g., 'Groceries', 'Dining Out', 'Grab')"),
+});
+
 export const BalanceSummaryParamSchema = z.object({
   // ===== EXISTING PARAMS (backwards compatible) =====
   fromMonth: z
@@ -127,6 +153,7 @@ export type PropertyAssetsSummaryParams = z.infer<typeof PropertyAssetsSummaryPa
 export type VehicleAssetsSummaryParams = z.infer<typeof VehicleAssetsSummaryParamSchema>;
 export type OtherAssetsSummaryParams = z.infer<typeof OtherAssetsSummaryParamSchema>;
 export type InsuranceSummaryParams = z.infer<typeof InsuranceSummaryParamSchema>;
+export type DailyExpenseSummaryParams = z.infer<typeof DailyExpenseSummaryParamSchema>;
 export type HypotheticalItem = z.infer<typeof HypotheticalItemSchema>;
 
 export type ToolName =
@@ -139,6 +166,7 @@ export type ToolName =
   | "get_vehicle_assets_summary"
   | "get_other_assets_summary"
   | "get_insurance_summary"
+  | "get_daily_expense_summary"
   | "search_knowledge";
 
 export interface ToolDefinition {
@@ -359,6 +387,39 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
     },
   },
 
+  get_daily_expense_summary: {
+    name: "get_daily_expense_summary",
+    description:
+      "Get actual daily spending summary for a date range. Unlike get_expenses_summary (which shows planned recurring expenses), this tool shows ACTUAL money spent tracked day by day. Returns total spent, breakdown by category and subcategory, and individual expense items with dates and notes. Use this when the user asks about their actual spending, how much they spent on food/transport/shopping, daily expenses, spending history, or transaction history. Supports filtering by category (e.g., 'Food', 'Transport') or subcategory (e.g., 'Groceries', 'Dining Out'). Examples: 'How much did I spend on food this month?', 'What were my transport costs last week?', 'Show my spending for February'.",
+    schema: DailyExpenseSummaryParamSchema,
+    parameters: {
+      type: "object",
+      properties: {
+        fromDate: {
+          type: "string",
+          description: "Start date in YYYY-MM-DD format. Defaults to start of current month.",
+        },
+        toDate: {
+          type: "string",
+          description: "End date in YYYY-MM-DD format. Defaults to today.",
+        },
+        month: {
+          type: "string",
+          description: "Shorthand for a specific month in YYYY-MM format. Overrides fromDate/toDate if provided.",
+        },
+        categoryName: {
+          type: "string",
+          description: "Optional filter by category name (e.g., 'Food', 'Transport', 'Shopping')",
+        },
+        subcategoryName: {
+          type: "string",
+          description: "Optional filter by subcategory name (e.g., 'Groceries', 'Dining Out', 'Grab')",
+        },
+      },
+      required: [],
+    },
+  },
+
   search_knowledge: {
     name: "search_knowledge",
     description:
@@ -395,6 +456,7 @@ const ALLOWED_TOOLS: Set<ToolName> = new Set([
   "get_vehicle_assets_summary",
   "get_other_assets_summary",
   "get_insurance_summary",
+  "get_daily_expense_summary",
   "search_knowledge",
 ]);
 
