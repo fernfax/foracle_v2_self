@@ -24,6 +24,7 @@ interface PropertyAsset {
   housingGrantTaken: string | null;
   accruedInterestToDate: string | null;
   linkedExpenseId: string | null;
+  paidByCpf: boolean | null;
 }
 
 interface PropertyDetailsModalProps {

@@ -194,6 +194,9 @@ export const propertyAssets = pgTable("property_assets", {
   housingGrantTaken: decimal("housing_grant_taken", { precision: 15, scale: 2 }),
   accruedInterestToDate: decimal("accrued_interest_to_date", { precision: 15, scale: 2 }),
 
+  // CPF Integration
+  paidByCpf: boolean("paid_by_cpf").default(false),
+
   // Metadata
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
