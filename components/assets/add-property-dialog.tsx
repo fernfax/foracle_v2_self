@@ -47,6 +47,7 @@ interface PropertyAsset {
   housingGrantTaken: string | null;
   accruedInterestToDate: string | null;
   linkedExpenseId: string | null;
+  paidByCpf: boolean | null;
 }
 
 interface AddPropertyDialogProps {
@@ -97,6 +98,9 @@ export function AddPropertyDialog({
     property?.accruedInterestToDate || ""
   );
 
+  // CPF Integration
+  const [paidByCpf, setPaidByCpf] = useState(!!property?.paidByCpf);
+
   // Expenditure Integration
   const [addToExpenditures, setAddToExpenditures] = useState(
     !!property?.linkedExpenseId
@@ -144,6 +148,7 @@ export function AddPropertyDialog({
     setPrincipalCpfWithdrawn("");
     setHousingGrantTaken("");
     setAccruedInterestToDate("");
+    setPaidByCpf(false);
     setAddToExpenditures(false);
     setConfirmationModalOpen(false);
     setExpenseName("");
@@ -196,6 +201,7 @@ export function AddPropertyDialog({
       setPrincipalCpfWithdrawn(property.principalCpfWithdrawn || "");
       setHousingGrantTaken(property.housingGrantTaken || "");
       setAccruedInterestToDate(property.accruedInterestToDate || "");
+      setPaidByCpf(!!property.paidByCpf);
       setAddToExpenditures(!!property.linkedExpenseId);
     }
   }, [property]);
@@ -226,6 +232,7 @@ export function AddPropertyDialog({
         principalCpfWithdrawn: principalCpfWithdrawn ? parseFloat(principalCpfWithdrawn) : undefined,
         housingGrantTaken: housingGrantTaken ? parseFloat(housingGrantTaken) : undefined,
         accruedInterestToDate: accruedInterestToDate ? parseFloat(accruedInterestToDate) : undefined,
+        paidByCpf,
         addToExpenditures,
         expenseName: addToExpenditures ? expenseName : undefined,
         expenditureAmount: addToExpenditures && expenditureAmount ? parseFloat(expenditureAmount) : undefined,
@@ -422,6 +429,21 @@ export function AddPropertyDialog({
                   <p className="text-xs text-muted-foreground">
                     You pay this amount monthly
                   </p>
+                  <div className="flex items-center justify-between mt-3 p-2.5 bg-white border border-gray-200 rounded-lg">
+                    <div className="flex-1">
+                      <Label htmlFor="paidByCpf" className="text-xs font-semibold text-gray-900">
+                        Paid by CPF?
+                      </Label>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Deduct from CPF OA projection, split across all CPF-contributing members
+                      </p>
+                    </div>
+                    <Switch
+                      id="paidByCpf"
+                      checked={paidByCpf}
+                      onCheckedChange={setPaidByCpf}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="interestRate">

@@ -15,6 +15,7 @@ import { DollarSign, Users, Building2, Briefcase } from "lucide-react";
 import { IncomeList } from "@/components/income/income-list";
 import { FamilyMemberList } from "@/components/family-members/family-member-list";
 import { CpfList } from "@/components/cpf/cpf-list";
+import { CpfProjectionGraph } from "@/components/cpf/cpf-projection-graph";
 import { CurrentHoldingList } from "@/components/current-holdings/current-holding-list";
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
 import { CurrentHolding } from "@/lib/actions/current-holdings";
@@ -89,15 +90,24 @@ type FamilyMember = {
   updatedAt: Date;
 };
 
+type PropertyAssetForCpf = {
+  id: string;
+  monthlyLoanPayment: string;
+  outstandingLoan: string;
+  paidByCpf: boolean | null;
+  isActive: boolean | null;
+};
+
 interface UserHomepageClientProps {
   initialIncomes: Income[];
   initialFamilyMembers: FamilyMember[];
   initialCpfData: CpfByFamilyMember[];
   initialCurrentHoldings: CurrentHolding[];
   initialPolicies: Policy[];
+  initialPropertyAssets: PropertyAssetForCpf[];
 }
 
-export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies }: UserHomepageClientProps) {
+export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets }: UserHomepageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -164,6 +174,9 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
 
         <TabsContent value="cpf" className="mt-4">
           <CpfList initialCpfData={initialCpfData} />
+          <div className="mt-6">
+            <CpfProjectionGraph cpfData={initialCpfData} incomes={initialIncomes} propertyAssets={initialPropertyAssets} />
+          </div>
         </TabsContent>
 
         <TabsContent value="current" className="mt-4">

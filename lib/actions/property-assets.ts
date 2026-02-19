@@ -32,6 +32,7 @@ export async function createPropertyAsset(data: {
   principalCpfWithdrawn?: number;
   housingGrantTaken?: number;
   accruedInterestToDate?: number;
+  paidByCpf?: boolean;
   addToExpenditures?: boolean;
   expenseName?: string; // Customizable expense name
   expenditureAmount?: number; // Customizable expenditure amount
@@ -75,11 +76,13 @@ export async function createPropertyAsset(data: {
     principalCpfWithdrawn: data.principalCpfWithdrawn?.toString() || null,
     housingGrantTaken: data.housingGrantTaken?.toString() || null,
     accruedInterestToDate: data.accruedInterestToDate?.toString() || null,
+    paidByCpf: data.paidByCpf ?? false,
     isActive: true,
   }).returning();
 
   revalidatePath("/assets");
   revalidatePath("/expenses");
+  revalidatePath("/user");
   return newPropertyAsset[0];
 }
 
@@ -114,6 +117,7 @@ export async function updatePropertyAsset(
     principalCpfWithdrawn?: number;
     housingGrantTaken?: number;
     accruedInterestToDate?: number;
+    paidByCpf?: boolean;
     addToExpenditures?: boolean;
     expenseName?: string; // Customizable expense name
     expenditureAmount?: number; // Customizable expenditure amount
@@ -185,6 +189,7 @@ export async function updatePropertyAsset(
       principalCpfWithdrawn: data.principalCpfWithdrawn?.toString() || null,
       housingGrantTaken: data.housingGrantTaken?.toString() || null,
       accruedInterestToDate: data.accruedInterestToDate?.toString() || null,
+      paidByCpf: data.paidByCpf ?? false,
       updatedAt: new Date(),
     })
     .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, userId)))
@@ -192,6 +197,7 @@ export async function updatePropertyAsset(
 
   revalidatePath("/assets");
   revalidatePath("/expenses");
+  revalidatePath("/user");
   return updated[0];
 }
 

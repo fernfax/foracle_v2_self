@@ -22,6 +22,7 @@ interface PropertyAsset {
   housingGrantTaken: string | null;
   accruedInterestToDate: string | null;
   linkedExpenseId: string | null;
+  paidByCpf: boolean | null;
   isActive: boolean | null;
   createdAt: Date;
   updatedAt: Date;
