@@ -140,7 +140,7 @@ export function SidebarNavItem({
                     className={cn(
                       "flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-all duration-200",
                       isSubActive
-                        ? "bg-slate-800 text-[#4E47DD] font-medium"
+                        ? "bg-slate-700 text-white font-medium"
                         : "text-slate-400 hover:bg-slate-800 hover:text-white",
                       isSubmenuOpen
                         ? "translate-x-0 opacity-100"
