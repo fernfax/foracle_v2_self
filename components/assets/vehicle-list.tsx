@@ -166,7 +166,16 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                 className="relative overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setSelectedVehicle(vehicle)}
               >
-                <CardHeader className="pb-3">
+                {/* Background vehicle illustration */}
+                <div
+                  className="absolute inset-0 opacity-[0.18] pointer-events-none"
+                  style={{
+                    backgroundImage: "url(/whitescape-vehicle.jpg)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+                <CardHeader className="pb-3 relative">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100">
@@ -214,7 +223,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 relative">
                   {/* Key Metrics */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
