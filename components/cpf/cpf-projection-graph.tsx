@@ -310,7 +310,7 @@ export function CpfProjectionGraph({
   incomes,
   propertyAssets = [],
 }: CpfProjectionGraphProps) {
-  const [timeRange, setTimeRange] = useState("36");
+  const [timeRange, setTimeRange] = useState("12");
   const [viewMode, setViewMode] = useState<"cumulative" | "non-cumulative">(
     "cumulative"
   );
