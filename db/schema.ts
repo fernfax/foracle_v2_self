@@ -296,6 +296,15 @@ export const currentHoldings = pgTable("current_holdings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Holding Amount History table - tracks historical amount snapshots for graphing
+export const holdingAmountHistory = pgTable("holding_amount_history", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  holdingId: varchar("holding_id", { length: 255 }).notNull().references(() => currentHoldings.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+});
+
 // Quick Links table - user-customizable header shortcuts
 export const quickLinks = pgTable("quick_links", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -521,7 +530,7 @@ export const goalsRelations = relations(goals, ({ one }) => ({
   }),
 }));
 
-export const currentHoldingsRelations = relations(currentHoldings, ({ one }) => ({
+export const currentHoldingsRelations = relations(currentHoldings, ({ one, many }) => ({
   user: one(users, {
     fields: [currentHoldings.userId],
     references: [users.id],
@@ -529,6 +538,18 @@ export const currentHoldingsRelations = relations(currentHoldings, ({ one }) => 
   familyMember: one(familyMembers, {
     fields: [currentHoldings.familyMemberId],
     references: [familyMembers.id],
+  }),
+  amountHistory: many(holdingAmountHistory),
+}));
+
+export const holdingAmountHistoryRelations = relations(holdingAmountHistory, ({ one }) => ({
+  holding: one(currentHoldings, {
+    fields: [holdingAmountHistory.holdingId],
+    references: [currentHoldings.id],
+  }),
+  user: one(users, {
+    fields: [holdingAmountHistory.userId],
+    references: [users.id],
   }),
 }));
 
