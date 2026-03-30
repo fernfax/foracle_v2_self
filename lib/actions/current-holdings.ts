@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { currentHoldings, familyMembers } from "@/db/schema";
+import { currentHoldings, familyMembers, holdingAmountHistory } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -76,6 +76,14 @@ export async function addCurrentHolding(data: {
     })
     .returning();
 
+  // Record initial amount in history
+  await db.insert(holdingAmountHistory).values({
+    id: randomUUID(),
+    holdingId: id,
+    userId,
+    amount: data.holdingAmount.toString(),
+  });
+
   // Fetch family member name if linked
   let familyMemberName: string | null = null;
   if (data.familyMemberId) {
@@ -136,6 +144,16 @@ export async function updateCurrentHolding(
     .set(updateData)
     .where(and(eq(currentHoldings.id, id), eq(currentHoldings.userId, userId)))
     .returning();
+
+  // Record amount snapshot in history if amount changed
+  if (data.holdingAmount !== undefined) {
+    await db.insert(holdingAmountHistory).values({
+      id: randomUUID(),
+      holdingId: id,
+      userId,
+      amount: data.holdingAmount.toString(),
+    });
+  }
 
   // Fetch family member name if linked
   let familyMemberName: string | null = null;

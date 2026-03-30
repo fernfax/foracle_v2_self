@@ -107,6 +107,11 @@ export function AddCurrentHoldingDialog({
         </DialogHeader>
 
         <DialogBody>
+        {holding && holding.updatedAt && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Last updated: {new Date(holding.updatedAt).toLocaleString()}
+          </p>
+        )}
         <form id="current-holding-form" onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Account Holder */}
           <div className="space-y-2">
