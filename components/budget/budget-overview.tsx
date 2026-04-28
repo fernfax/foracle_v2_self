@@ -41,30 +41,30 @@ export function BudgetOverview({
   const usageStatus = getBudgetUsageStatus(percentUsed);
 
   const statusColors = {
-    safe: "bg-blue-500",
-    warning: "bg-yellow-500",
-    danger: "bg-red-500",
+    safe: "bg-[#B8622A]",
+    warning: "bg-[#D4A843]",
+    danger: "bg-[#E05555]",
   };
 
   const pacingConfig = {
     under: {
       label: "UNDERSPENDING",
-      textColor: "text-emerald-700",
-      bgColor: "bg-emerald-50",
+      textColor: "text-[#007A68]",
+      bgColor: "bg-[rgba(0,196,170,0.12)]",
       Icon: TrendingDown,
       message: "You're below your expected spending pace.",
     },
     "on-track": {
       label: "ON TRACK",
-      textColor: "text-blue-700",
-      bgColor: "bg-blue-50",
+      textColor: "text-[#7A3A0A]",
+      bgColor: "bg-[rgba(184,98,42,0.10)]",
       Icon: CheckCircle,
       message: "You're on track with your budget.",
     },
     over: {
       label: "OVERSPENDING",
-      textColor: "text-red-700",
-      bgColor: "bg-red-50",
+      textColor: "text-[#8B0000]",
+      bgColor: "bg-[rgba(224,85,85,0.12)]",
       Icon: AlertTriangle,
       message: "You're ahead of budget. Consider slowing down spending.",
     },
@@ -110,7 +110,7 @@ export function BudgetOverview({
       </div>
 
       {/* Progress Bar */}
-      <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden mb-4">
+      <div className="h-2.5 bg-muted rounded-full overflow-hidden mb-4">
         <div
           className={cn(
             "h-full transition-all rounded-full",

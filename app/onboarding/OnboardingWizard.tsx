@@ -79,12 +79,12 @@ interface StepConfig {
 
 const STEP_CONFIG: StepConfig[] = [
   { title: "", subtitle: "", showProgress: false, displayStep: 0 }, // Welcome - no step number
-  { title: "Tell us about yourself", subtitle: "Let's start with your basic information", displayStep: 1, icon: User, iconBgColor: "bg-blue-100", iconColor: "text-blue-600" },
-  { title: "Your Income", subtitle: "Add your primary source of income", displayStep: 2, icon: DollarSign, iconBgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
-  { title: "CPF Allocation", subtitle: "Add your CPF Holdings (Optional)", displayStep: 3, icon: PiggyBank, iconBgColor: "bg-purple-100", iconColor: "text-purple-600" },
-  { title: "Current Holdings", subtitle: "Add your bank accounts and savings (Optional)", displayStep: 4, icon: Building2, iconBgColor: "bg-amber-100", iconColor: "text-amber-600" },
-  { title: "Your Expenses", subtitle: "Choose the categories where you typically spend money", displayStep: 5, icon: Wallet, iconBgColor: "bg-rose-100", iconColor: "text-rose-600" },
-  { title: "You're all set!", subtitle: "Review your information and complete setup", displayStep: 6, icon: CheckCircle2, iconBgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+  { title: "Tell us about yourself", subtitle: "Let's start with your basic information", displayStep: 1, icon: User, iconBgColor: "bg-[rgba(58,107,82,0.12)]", iconColor: "text-[#3A6B52]" },
+  { title: "Your Income", subtitle: "Add your primary source of income", displayStep: 2, icon: DollarSign, iconBgColor: "bg-[rgba(0,196,170,0.12)]", iconColor: "text-[#007A68]" },
+  { title: "CPF Allocation", subtitle: "Add your CPF Holdings (Optional)", displayStep: 3, icon: PiggyBank, iconBgColor: "bg-[rgba(184,98,42,0.12)]", iconColor: "text-[#B8622A]" },
+  { title: "Current Holdings", subtitle: "Add your bank accounts and savings (Optional)", displayStep: 4, icon: Building2, iconBgColor: "bg-[rgba(212,168,67,0.15)]", iconColor: "text-[#7A5A00]" },
+  { title: "Your Expenses", subtitle: "Choose the categories where you typically spend money", displayStep: 5, icon: Wallet, iconBgColor: "bg-[rgba(212,132,90,0.12)]", iconColor: "text-[#B8622A]" },
+  { title: "You're all set!", subtitle: "Review your information and complete setup", displayStep: 6, icon: CheckCircle2, iconBgColor: "bg-[rgba(0,196,170,0.15)]", iconColor: "text-[#007A68]" },
 ];
 
 export function OnboardingWizard() {

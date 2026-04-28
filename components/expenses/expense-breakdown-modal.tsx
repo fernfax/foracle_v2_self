@@ -288,7 +288,7 @@ export function ExpenseBreakdownModal({
                         );
                       }}
                       outerRadius={140}
-                      fill="#8884d8"
+                      fill="#3A6B52"
                       dataKey="value"
                     >
                       {breakdownDetails.categories.map((cat, index) => (
@@ -300,24 +300,24 @@ export function ExpenseBreakdownModal({
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
-                            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">
-                              <p className="text-sm font-bold mb-2 text-gray-900 dark:text-gray-100">{data.name}</p>
+                            <div className="bg-white dark:bg-foreground/80 border border-border dark:border-border rounded-lg shadow-lg p-3">
+                              <p className="text-sm font-bold mb-2 text-foreground dark:text-foreground/40">{data.name}</p>
                               <div className="space-y-1 text-xs">
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-gray-600 dark:text-gray-400">Total:</span>
-                                  <span className="font-semibold text-gray-900 dark:text-gray-100">${data.value.toLocaleString()}</span>
+                                  <span className="text-foreground dark:text-muted-foreground">Total:</span>
+                                  <span className="font-semibold text-foreground dark:text-foreground/40">${data.value.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-gray-600 dark:text-gray-400">Percentage:</span>
-                                  <span className="font-semibold text-gray-900 dark:text-gray-100">{data.percentage.toFixed(1)}%</span>
+                                  <span className="text-foreground dark:text-muted-foreground">Percentage:</span>
+                                  <span className="font-semibold text-foreground dark:text-foreground/40">{data.percentage.toFixed(1)}%</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-gray-600 dark:text-gray-400">Count:</span>
-                                  <span className="font-semibold text-gray-900 dark:text-gray-100">{data.count}</span>
+                                  <span className="text-foreground dark:text-muted-foreground">Count:</span>
+                                  <span className="font-semibold text-foreground dark:text-foreground/40">{data.count}</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-gray-600 dark:text-gray-400">Average:</span>
-                                  <span className="font-semibold text-gray-900 dark:text-gray-100">${data.avgPerExpense.toLocaleString()}</span>
+                                  <span className="text-foreground dark:text-muted-foreground">Average:</span>
+                                  <span className="font-semibold text-foreground dark:text-foreground/40">${data.avgPerExpense.toLocaleString()}</span>
                                 </div>
                               </div>
                             </div>

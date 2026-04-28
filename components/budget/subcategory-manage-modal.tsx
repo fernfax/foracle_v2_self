@@ -186,7 +186,7 @@ export function SubcategoryManageModal({
                         onClick={handleEdit}
                         disabled={isSubmitting || !editingName.trim()}
                       >
-                        <Check className="h-4 w-4 text-green-600" />
+                        <Check className="h-4 w-4 text-[#007A68]" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -207,7 +207,7 @@ export function SubcategoryManageModal({
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all",
                       isSelected
-                        ? "border-blue-500 bg-blue-50"
+                        ? "border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)]"
                         : "border-border hover:bg-muted/50"
                     )}
                     onClick={() => {

@@ -102,7 +102,7 @@ export function SwipeableExpenseRow({
 
         {/* Delete button - positioned right after content */}
         <div
-          className="w-20 flex-shrink-0 bg-red-500 flex items-center justify-center cursor-pointer"
+          className="w-20 flex-shrink-0 bg-[#E05555] flex items-center justify-center cursor-pointer"
           onClick={handleDeleteClick}
         >
           <Trash2 className="h-5 w-5 text-white" />

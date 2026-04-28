@@ -68,7 +68,7 @@ export function WizardNavigation({
           disabled={!canProceed || isSubmitting}
           className={`gap-2 min-w-[140px] ${
             isLastStep
-              ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
+              ? "bg-[#B8622A] hover:bg-[#B8622A] text-white shadow-lg shadow-[#B8622A]/20"
               : ""
           }`}
         >

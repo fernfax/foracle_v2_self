@@ -56,23 +56,23 @@ export default function MobileGuidePage() {
       </div>
 
       {/* Benefits */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-8">
+      <div className="bg-gradient-to-r from-[rgba(184,98,42,0.10)] to-[rgba(184,98,42,0.10)] rounded-xl p-6 mb-8">
         <h2 className="font-semibold text-lg mb-3">Why add to home screen?</h2>
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle2 className="h-4 w-4 text-[#007A68]" />
             Full-screen experience without browser UI
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle2 className="h-4 w-4 text-[#007A68]" />
             Quick access from your home screen
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle2 className="h-4 w-4 text-[#007A68]" />
             Feels like a native app
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle2 className="h-4 w-4 text-[#007A68]" />
             Works offline for cached data
           </li>
         </ul>
@@ -88,12 +88,12 @@ export default function MobileGuidePage() {
             className="bg-white rounded-xl border border-border/60 overflow-hidden shadow-sm"
           >
             {/* Step Header */}
-            <div className="p-4 border-b border-border/60 bg-slate-50/50">
+            <div className="p-4 border-b border-border/60 bg-muted/50">
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#387DF5] text-white font-semibold text-sm">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-display font-semibold text-sm">
                   {step.number}
                 </div>
-                <h3 className="font-semibold text-lg">{step.title}</h3>
+                <h3 className="font-display font-semibold text-lg">{step.title}</h3>
               </div>
             </div>
 
@@ -102,7 +102,7 @@ export default function MobileGuidePage() {
               <p className="text-muted-foreground mb-4">{step.description}</p>
 
               {/* Image */}
-              <div className="max-w-[280px] mx-auto bg-slate-100 rounded-2xl overflow-hidden border-4 border-slate-200">
+              <div className="max-w-[280px] mx-auto bg-muted rounded-2xl overflow-hidden border-4 border-border">
                 <Image
                   src={step.image}
                   alt={step.title}
@@ -117,8 +117,8 @@ export default function MobileGuidePage() {
       </div>
 
       {/* Footer Note */}
-      <div className="mt-8 p-4 bg-amber-50 rounded-xl border border-amber-200">
-        <p className="text-sm text-amber-800">
+      <div className="mt-8 p-4 bg-[rgba(212,168,67,0.15)] rounded-xl border border-[rgba(212,168,67,0.30)]">
+        <p className="text-sm text-[#7A5A00]">
           <strong>Note:</strong> This feature only works in Safari on iOS.
           If you're using a different browser, please open this page in Safari first.
         </p>

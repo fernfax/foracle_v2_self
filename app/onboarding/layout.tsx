@@ -23,8 +23,8 @@ export default async function OnboardingLayout({
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="absolute inset-0 bg-muted/30" />
+    <div className="relative min-h-screen bg-gradient-to-br from-background via-background to-[#F0EBE0]/30">
+      <div className="absolute inset-0 bg-[#F0EBE0]/20" />
       <FloatingIcons />
       <HeroBlurMask />
       <div className="relative z-10">

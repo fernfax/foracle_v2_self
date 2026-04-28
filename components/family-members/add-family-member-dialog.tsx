@@ -118,7 +118,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
           {/* Row 1: Full Name */}
           <div className="space-y-2">
             <Label htmlFor="name">
-              Full Name <span className="text-red-500">*</span>
+              Full Name <span className="text-[#8B0000]">*</span>
             </Label>
             <Input
               id="name"
@@ -132,7 +132,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
           {/* Row 2: Relationship */}
           <div className="space-y-2">
             <Label htmlFor="relationship">
-              Relationship <span className="text-red-500">*</span>
+              Relationship <span className="text-[#8B0000]">*</span>
             </Label>
             <Select value={relationship} onValueChange={setRelationship}>
               <SelectTrigger className="bg-white">
@@ -150,7 +150,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
 
           {/* Row 3: Date of Birth */}
           <div className="space-y-2">
-            <Label>Date of Birth <span className="text-red-500">*</span></Label>
+            <Label>Date of Birth <span className="text-[#8B0000]">*</span></Label>
             <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={false}>
               <PopoverTrigger asChild>
                 <Button

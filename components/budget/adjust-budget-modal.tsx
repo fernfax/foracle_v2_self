@@ -187,7 +187,7 @@ export function AdjustBudgetModal({
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Max: {formatBudgetCurrency(maxShiftable)}</span>
                 {shiftAmount > maxShiftable && (
-                  <span className="text-red-500">Exceeds available budget</span>
+                  <span className="text-[#8B0000]">Exceeds available budget</span>
                 )}
               </div>
             </div>
@@ -202,7 +202,7 @@ export function AdjustBudgetModal({
                   <div className="font-medium">{sourceCategory}</div>
                   <div className="text-muted-foreground">
                     {formatBudgetCurrency(sourceBudgetInfo?.monthlyBudget || 0)} →{" "}
-                    <span className={cn(isValidAmount ? "text-orange-600" : "text-red-600")}>
+                    <span className={cn(isValidAmount ? "text-[#7A3A0A]" : "text-[#8B0000]")}>
                       {formatBudgetCurrency((sourceBudgetInfo?.monthlyBudget || 0) - shiftAmount)}
                     </span>
                   </div>
@@ -212,7 +212,7 @@ export function AdjustBudgetModal({
                   <div className="font-medium">{targetCategory}</div>
                   <div className="text-muted-foreground">
                     {formatBudgetCurrency(targetBudgetInfo?.monthlyBudget || 0)} →{" "}
-                    <span className="text-green-600">
+                    <span className="text-[#007A68]">
                       {formatBudgetCurrency((targetBudgetInfo?.monthlyBudget || 0) + shiftAmount)}
                     </span>
                   </div>
@@ -235,7 +235,7 @@ export function AdjustBudgetModal({
 
           {/* Error Message */}
           {error && (
-            <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+            <div className="p-3 bg-[rgba(224,85,85,0.12)] text-[#8B0000] rounded-lg text-sm">
               {error}
             </div>
           )}

@@ -13,29 +13,29 @@ const FEATURES = [
     icon: TrendingUp,
     title: "Track Your Income",
     description: "Monitor all your income sources in one place",
-    bgColor: "bg-emerald-100",
-    iconColor: "text-emerald-600",
+    bgColor: "bg-[rgba(58,107,82,0.12)]",
+    iconColor: "text-[#3A6B52]",
   },
   {
     icon: PiggyBank,
     title: "Manage CPF",
     description: "Keep track of your CPF contributions and allocations",
-    bgColor: "bg-purple-100",
-    iconColor: "text-purple-600",
+    bgColor: "bg-[rgba(184,98,42,0.12)]",
+    iconColor: "text-[#B8622A]",
   },
   {
     icon: BarChart3,
     title: "Monitor Holdings",
     description: "View your savings and investments at a glance",
-    bgColor: "bg-blue-100",
-    iconColor: "text-blue-600",
+    bgColor: "bg-[rgba(0,196,170,0.12)]",
+    iconColor: "text-[#007A68]",
   },
   {
     icon: Target,
     title: "Set Financial Goals",
     description: "Plan and track your financial milestones",
-    bgColor: "bg-cyan-100",
-    iconColor: "text-cyan-600",
+    bgColor: "bg-[rgba(212,168,67,0.15)]",
+    iconColor: "text-[#7A5A00]",
   },
 ];
 
@@ -45,7 +45,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       {/* Hero Section */}
       <div className="mb-12" data-blur-target="heading">
         <div className="flex items-end justify-center gap-3 mb-4">
-          <h1 className="text-4xl font-bold tracking-tight">
+          <h1 className="font-display text-4xl font-semibold tracking-[-0.025em] text-foreground">
             Welcome to
           </h1>
           <Image
@@ -56,8 +56,11 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
             className="object-contain mb-0.5"
           />
         </div>
-        <p className="text-xl text-muted-foreground max-w-md mx-auto" data-blur-target="description">
-          Your personal finance companion for smarter money management
+        <p
+          className="font-editorial text-xl text-foreground/65 max-w-md mx-auto"
+          data-blur-target="description"
+        >
+          Your guided companion for calmer money decisions.
         </p>
       </div>
 
@@ -66,13 +69,13 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
         {FEATURES.map((feature) => (
           <div
             key={feature.title}
-            className="flex items-start gap-4 p-4 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm text-left"
+            className="flex items-start gap-4 p-4 rounded-lg border border-border/40 bg-card/85 backdrop-blur-sm text-left"
           >
-            <div className={`flex items-center justify-center w-10 h-10 rounded-xl ${feature.bgColor} shrink-0`}>
+            <div className={`flex items-center justify-center w-10 h-10 rounded-md ${feature.bgColor} shrink-0`}>
               <feature.icon className={`h-5 w-5 ${feature.iconColor}`} />
             </div>
             <div>
-              <h3 className="font-medium mb-1">{feature.title}</h3>
+              <h3 className="font-display font-semibold text-sm mb-1">{feature.title}</h3>
               <p className="text-sm text-muted-foreground">{feature.description}</p>
             </div>
           </div>
@@ -84,13 +87,13 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
         size="lg"
         onClick={onNext}
         data-blur-target="cta"
-        className="gap-2 px-10 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-105 transition-all duration-200"
+        className="gap-2 px-10"
       >
         Get Started
         <ChevronRight className="h-5 w-5" />
       </Button>
 
-      <p className="text-sm text-muted-foreground mt-4" data-blur-target="subtext">
+      <p className="font-display text-[11px] font-semibold tracking-[0.14em] uppercase text-muted-foreground mt-4" data-blur-target="subtext">
         Takes about 3 minutes to set up
       </p>
     </div>

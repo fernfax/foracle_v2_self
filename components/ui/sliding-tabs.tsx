@@ -74,7 +74,7 @@ export function SlidingTabs({
     <div
       ref={containerRef}
       className={cn(
-        "relative inline-flex items-center gap-1 p-1.5 rounded-full bg-slate-100/80 border border-slate-200/50",
+        "relative inline-flex items-center gap-1 p-1.5 rounded-full bg-muted/70 border border-border/40",
         // Mobile: allow horizontal scroll within container, hide scrollbar
         "max-w-full overflow-x-auto scrollbar-hide",
         className
@@ -82,7 +82,7 @@ export function SlidingTabs({
     >
       {/* Sliding indicator */}
       <div
-        className="absolute top-1.5 bottom-1.5 rounded-full bg-[#387DF5] shadow-md transition-all duration-300 ease-out"
+        className="absolute top-1.5 bottom-1.5 rounded-full bg-primary shadow-sm shadow-primary/20 transition-all duration-300 ease-out"
         style={{
           left: indicatorStyle.left,
           width: indicatorStyle.width,
@@ -101,12 +101,12 @@ export function SlidingTabs({
             onClick={() => onValueChange(tab.value)}
             data-tour={tab.dataTour}
             className={cn(
-              "relative z-10 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200",
+              "relative z-10 flex items-center gap-1.5 px-3 py-2 rounded-full font-display text-[13px] font-medium transition-colors duration-200",
               // Larger padding on desktop
               "md:gap-2 md:px-5 md:py-2.5",
               isActive
-                ? "text-white"
-                : "text-slate-600 hover:text-slate-900"
+                ? "text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             {Icon && <Icon className="h-4 w-4" />}
@@ -116,9 +116,9 @@ export function SlidingTabs({
                 className={cn(
                   "ml-1 text-xs px-1.5 py-0.5 rounded-full",
                   isActive
-                    ? "bg-white/20 text-white"
+                    ? "bg-primary-foreground/20 text-primary-foreground"
                     : tab.badgeVariant === "success"
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-[rgba(0,196,170,0.15)] text-[#007A68]"
                     : "bg-primary/10 text-primary"
                 )}
               >

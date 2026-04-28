@@ -112,38 +112,38 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
       case 'self':
         return {
           icon: User,
-          bgColor: 'bg-blue-100',
-          iconColor: 'text-blue-600'
+          bgColor: 'bg-[rgba(184,98,42,0.10)]',
+          iconColor: 'text-[#7A3A0A]'
         };
       case 'spouse':
         return {
           icon: Heart,
-          bgColor: 'bg-pink-100',
-          iconColor: 'text-pink-600'
+          bgColor: 'bg-[rgba(224,85,85,0.12)]',
+          iconColor: 'text-[#8B0000]'
         };
       case 'child':
         return {
           icon: Baby,
-          bgColor: 'bg-green-100',
-          iconColor: 'text-green-600'
+          bgColor: 'bg-[rgba(0,196,170,0.12)]',
+          iconColor: 'text-[#007A68]'
         };
       case 'parent':
         return {
           icon: Users,
-          bgColor: 'bg-purple-100',
-          iconColor: 'text-purple-600'
+          bgColor: 'bg-[rgba(184,98,42,0.10)]',
+          iconColor: 'text-[#7A3A0A]'
         };
       case 'sibling':
         return {
           icon: Users,
-          bgColor: 'bg-orange-100',
-          iconColor: 'text-orange-600'
+          bgColor: 'bg-[rgba(184,98,42,0.10)]',
+          iconColor: 'text-[#7A3A0A]'
         };
       default:
         return {
           icon: UserCircle,
-          bgColor: 'bg-gray-100',
-          iconColor: 'text-gray-600'
+          bgColor: 'bg-muted',
+          iconColor: 'text-foreground'
         };
     }
   };
@@ -312,13 +312,13 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
                     <AvatarIcon className={`w-6 h-6 ${avatarConfig.iconColor}`} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-xl font-semibold text-foreground">
                       {member.name}
                       {member.relationship?.toLowerCase() === 'self' && (
-                        <span className="ml-2 text-sm font-normal text-gray-500">(You)</span>
+                        <span className="ml-2 text-sm font-normal text-foreground/400">(You)</span>
                       )}
                     </h2>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-foreground/400">
                       {memberPolicies.length} {memberPolicies.length === 1 ? 'policy' : 'policies'}
                     </p>
                   </div>
@@ -338,9 +338,9 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-lg bg-gray-50">
-                  <Shield className="h-8 w-8 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600 mb-3">No policies for {member.name}</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-lg bg-muted">
+                  <Shield className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-foreground mb-3">No policies for {member.name}</p>
                   <Button
                     variant="outline"
                     size="sm"
@@ -389,7 +389,7 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[#E05555] hover:bg-[#E05555]"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>

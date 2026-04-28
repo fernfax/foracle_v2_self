@@ -34,7 +34,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
     return (
       <div className="flex justify-end px-4 py-3">
         <div className="max-w-[85%] sm:max-w-[75%]">
-          <div className="bg-slate-800 dark:bg-slate-700 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
+          <div className="bg-foreground/80 dark:bg-foreground/80 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{displayContent}</p>
           </div>
           {timestamp && (
@@ -53,7 +53,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
   return (
     <div className="flex gap-3 px-4 py-4 bg-background">
       {/* Avatar */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)] text-[#007A68]">
         <Bot className="h-4 w-4" />
       </div>
 
@@ -127,7 +127,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                 // Green status indicators
                 if (text.includes("green") || text.includes("safe")) {
                   return (
-                    <strong className="font-semibold text-emerald-600 dark:text-emerald-500">
+                    <strong className="font-semibold text-[#007A68] dark:text-[#007A68]">
                       {children}
                     </strong>
                   );
@@ -136,7 +136,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                 // Yellow/Caution status indicators
                 if (text.includes("yellow") || text.includes("caution")) {
                   return (
-                    <strong className="font-semibold text-amber-600 dark:text-amber-500">
+                    <strong className="font-semibold text-[#7A5A00] dark:text-[#7A5A00]">
                       {children}
                     </strong>
                   );
@@ -145,7 +145,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                 // Red/At Risk status indicators
                 if (text.includes("red") || text.includes("at risk")) {
                   return (
-                    <strong className="font-semibold text-red-600 dark:text-red-500">
+                    <strong className="font-semibold text-[#8B0000] dark:text-[#8B0000]">
                       {children}
                     </strong>
                   );
@@ -218,7 +218,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
 
               // Blockquote
               blockquote: ({ children }) => (
-                <blockquote className="my-3 border-l-4 border-emerald-500 pl-4 italic text-muted-foreground">
+                <blockquote className="my-3 border-l-4 border-[rgba(0,196,170,0.25)] pl-4 italic text-muted-foreground">
                   {children}
                 </blockquote>
               ),
@@ -229,7 +229,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-600 hover:text-emerald-700 underline"
+                  className="text-[#007A68] hover:text-[#007A68] underline"
                 >
                   {children}
                 </a>
@@ -267,7 +267,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                 <ul className="space-y-1.5">
                   {toolsUsed.map((tool, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#00C4AA] flex-shrink-0" />
                       <code className="rounded bg-muted px-1.5 py-0.5 font-mono">{tool}</code>
                       <span className="text-muted-foreground/70">
                         {getToolDescription(tool)}

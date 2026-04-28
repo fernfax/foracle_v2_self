@@ -17,10 +17,10 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
             key={stepNumber}
             className={`h-2 w-2 rounded-full transition-all ${
               isActive
-                ? "bg-gray-900"
+                ? "bg-foreground/80"
                 : isCompleted
-                ? "bg-gray-500"
-                : "border-2 border-gray-300 bg-transparent"
+                ? "bg-muted0"
+                : "border-2 border-border bg-transparent"
             }`}
           />
         );

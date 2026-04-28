@@ -198,16 +198,16 @@ export function AddInvestmentModal({
           <div className="space-y-6 py-4">
             {/* Basic Details */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900">
+              <div className="pb-3 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">
                   Investment Details
                 </h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <div className="bg-muted rounded-lg p-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">
-                      Investment Name <span className="text-red-500">*</span>
+                      Investment Name <span className="text-[#8B0000]">*</span>
                     </Label>
                     <Input
                       id="name"
@@ -219,7 +219,7 @@ export function AddInvestmentModal({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="type">
-                      Type <span className="text-red-500">*</span>
+                      Type <span className="text-[#8B0000]">*</span>
                     </Label>
                     <Select value={type} onValueChange={setType}>
                       <SelectTrigger className="bg-white">
@@ -240,20 +240,20 @@ export function AddInvestmentModal({
 
             {/* Financial Details */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900">
+              <div className="pb-3 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">
                   Financial Details
                 </h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <div className="bg-muted rounded-lg p-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentCapital">
                       Current Portfolio Capital{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-[#8B0000]">*</span>
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">
                         $
                       </span>
                       <Input
@@ -272,7 +272,7 @@ export function AddInvestmentModal({
                     <div className="flex items-center gap-1">
                       <Label htmlFor="projectedYield">
                         Projected Annual Yield %{" "}
-                        <span className="text-red-500">*</span>
+                        <span className="text-[#8B0000]">*</span>
                       </Label>
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
@@ -322,7 +322,7 @@ export function AddInvestmentModal({
                         step="0.01"
                         className="bg-white pr-8"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/400">
                         %
                       </span>
                     </div>
@@ -333,20 +333,20 @@ export function AddInvestmentModal({
 
             {/* Contribution Details */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900">
+              <div className="pb-3 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">
                   Contribution Details
                 </h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <div className="bg-muted rounded-lg p-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="contributionAmount">
                       Contribution Amount{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-[#8B0000]">*</span>
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">
                         $
                       </span>
                       <Input
@@ -391,7 +391,7 @@ export function AddInvestmentModal({
                 {contributionFrequency === "custom" && (
                   <div className="space-y-2 pt-2">
                     <Label>
-                      Select Months <span className="text-red-500">*</span>
+                      Select Months <span className="text-[#8B0000]">*</span>
                     </Label>
                     <div className="grid grid-cols-6 gap-2">
                       {MONTHS.map((month) => (
@@ -402,8 +402,8 @@ export function AddInvestmentModal({
                           className={cn(
                             "px-3 py-2 text-sm rounded-md border transition-colors",
                             selectedMonths.includes(month.value)
-                              ? "bg-blue-600 text-white border-blue-600"
-                              : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+                              ? "bg-[#B8622A] text-white border-[rgba(184,98,42,0.25)]"
+                              : "bg-white text-foreground border-border hover:border-border"
                           )}
                         >
                           {month.label}

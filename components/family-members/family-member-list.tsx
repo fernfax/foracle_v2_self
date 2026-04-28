@@ -182,38 +182,38 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
       case 'self':
         return {
           icon: User,
-          bgColor: 'bg-blue-100',
-          iconColor: 'text-blue-600'
+          bgColor: 'bg-[rgba(184,98,42,0.10)]',
+          iconColor: 'text-[#7A3A0A]'
         };
       case 'spouse':
         return {
           icon: Heart,
-          bgColor: 'bg-pink-100',
-          iconColor: 'text-pink-600'
+          bgColor: 'bg-[rgba(224,85,85,0.12)]',
+          iconColor: 'text-[#8B0000]'
         };
       case 'child':
         return {
           icon: Baby,
-          bgColor: 'bg-green-100',
-          iconColor: 'text-green-600'
+          bgColor: 'bg-[rgba(0,196,170,0.12)]',
+          iconColor: 'text-[#007A68]'
         };
       case 'parent':
         return {
           icon: Users,
-          bgColor: 'bg-purple-100',
-          iconColor: 'text-purple-600'
+          bgColor: 'bg-[rgba(184,98,42,0.10)]',
+          iconColor: 'text-[#7A3A0A]'
         };
       case 'sibling':
         return {
           icon: Users,
-          bgColor: 'bg-orange-100',
-          iconColor: 'text-orange-600'
+          bgColor: 'bg-[rgba(184,98,42,0.10)]',
+          iconColor: 'text-[#7A3A0A]'
         };
       default:
         return {
           icon: UserCircle,
-          bgColor: 'bg-gray-100',
-          iconColor: 'text-gray-600'
+          bgColor: 'bg-muted',
+          iconColor: 'text-foreground'
         };
     }
   };
@@ -603,8 +603,8 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Family Financial Overview
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-100">
-                <Users className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+                <Users className="h-5 w-5 text-[#7A3A0A]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -629,7 +629,7 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
                       </div>
                       <div className="flex items-center gap-4 flex-shrink-0 text-xs">
                         {member.income > 0 && (
-                          <div className="flex items-center gap-1 text-green-600">
+                          <div className="flex items-center gap-1 text-[#007A68]">
                             <DollarSign className="h-3 w-3" />
                             <span className="font-semibold">${member.income.toLocaleString()}</span>
                           </div>
@@ -663,8 +663,8 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Family Financial Overview
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-100">
-                <Users className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+                <Users className="h-5 w-5 text-[#7A3A0A]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -691,8 +691,8 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Quick Stats
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
-                <Shield className="h-5 w-5 text-rose-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(224,85,85,0.12)]">
+                <Shield className="h-5 w-5 text-[#8B0000]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -724,7 +724,7 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
                       </div>
                       <div className="flex justify-between mt-1">
                         <span className="text-muted-foreground">Income:</span>
-                        <span className="font-semibold text-green-600">${familyOverviewStats.topContributor.income.toLocaleString()}/mo</span>
+                        <span className="font-semibold text-[#007A68]">${familyOverviewStats.topContributor.income.toLocaleString()}/mo</span>
                       </div>
                     </div>
                   )}
@@ -738,8 +738,8 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Quick Stats
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
-                <Shield className="h-5 w-5 text-rose-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(224,85,85,0.12)]">
+                <Shield className="h-5 w-5 text-[#8B0000]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -770,7 +770,7 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
           variant="outline"
           size="sm"
           onClick={() => setIsAddDialogOpen(true)}
-          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
         >
           <Plus className="h-4 w-4 mr-1.5" />
           Add Member
@@ -840,13 +840,13 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
 
                 return (
                 <React.Fragment key={member.id}>
-                  <TableRow className={member.relationship === "Self" ? "bg-blue-50/50" : ""}>
+                  <TableRow className={member.relationship === "Self" ? "bg-[rgba(184,98,42,0.10)]/50" : ""}>
                     <TableCell>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleRow(member.id)}
-                        className="h-8 w-8 p-0 hover:!bg-gray-200"
+                        className="h-8 w-8 p-0 hover:!bg-muted"
                       >
                         {expandedRows.has(member.id) ? (
                           <ChevronDown className="h-4 w-4" />
@@ -865,7 +865,7 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
                     </TableCell>
                     <TableCell>
                       {member.relationship === "Self" ? (
-                        <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                        <Badge variant="outline" className="bg-[rgba(184,98,42,0.10)] text-[#7A3A0A] border-[rgba(184,98,42,0.25)]">
                           <Lock className="h-3 w-3 mr-1" />
                           {member.relationship}
                         </Badge>
@@ -886,7 +886,7 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:!bg-gray-200">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:!bg-muted">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -896,7 +896,7 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => member.relationship !== "Self" && handleDeleteClick(member)}
-                            className={member.relationship === "Self" ? "text-muted-foreground cursor-not-allowed opacity-50" : "text-red-600"}
+                            className={member.relationship === "Self" ? "text-muted-foreground cursor-not-allowed opacity-50" : "text-[#8B0000]"}
                             disabled={member.relationship === "Self"}
                           >
                             {member.relationship === "Self" ? "🔒 Cannot Delete Primary User" : "Delete"}
@@ -912,7 +912,7 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
                           {getMemberGrossSalary(member.id) > 0 && (
                             <div>
                               <span className="font-medium">Gross Salary:</span>{" "}
-                              <span className="text-green-600 font-semibold">
+                              <span className="text-[#007A68] font-semibold">
                                 ${getMemberGrossSalary(member.id).toLocaleString("en-US", {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
@@ -1045,14 +1045,14 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
                 <div>This action cannot be undone. This will permanently delete this family member.</div>
 
                 {linkedIncomesForDelete.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
-                    <div className="font-semibold text-red-900">
+                  <div className="bg-[rgba(224,85,85,0.12)] border border-[rgba(224,85,85,0.25)] rounded-lg p-4 space-y-2">
+                    <div className="font-semibold text-[#8B0000]">
                       ⚠️ This family member has {linkedIncomesForDelete.length} linked income{linkedIncomesForDelete.length > 1 ? 's' : ''}
                     </div>
-                    <div className="text-sm text-red-800">
+                    <div className="text-sm text-[#8B0000]">
                       The following income records will also be permanently deleted:
                     </div>
-                    <ul className="list-disc list-inside text-sm text-red-800 space-y-1 max-h-48 overflow-y-auto">
+                    <ul className="list-disc list-inside text-sm text-[#8B0000] space-y-1 max-h-48 overflow-y-auto">
                       {linkedIncomesForDelete.map((income) => (
                         <li key={income.id}>
                           <span className="font-medium">{income.name}</span> ({income.category}) - ${parseFloat(income.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
@@ -1066,7 +1066,7 @@ export function FamilyMemberList({ initialMembers, incomes = [], cpfData = [], h
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-[#E05555] hover:bg-[#E05555]">
               {linkedIncomesForDelete.length > 0
                 ? `Delete Member & ${linkedIncomesForDelete.length} Income${linkedIncomesForDelete.length > 1 ? 's' : ''}`
                 : "Delete Member"

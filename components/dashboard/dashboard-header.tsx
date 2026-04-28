@@ -353,7 +353,7 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
                   Current Month
                 </Button>
               )}
-              <div className="flex items-center justify-between bg-slate-100 rounded-full px-1 py-1 w-[230px]">
+              <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[230px]">
                 <button
                   onClick={goToPreviousMonth}
                   disabled={isCurrentMonth()}
@@ -385,8 +385,8 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs sm:text-sm font-medium text-muted-foreground">Total Nett Income</span>
-                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-100">
-                  <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[rgba(0,196,170,0.12)]">
+                  <DollarSign className="h-3.5 w-3.5 text-[#007A68]" />
                 </div>
               </div>
               <div className="overflow-hidden">
@@ -410,8 +410,8 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs sm:text-sm font-medium text-muted-foreground">Total Expenses</span>
-                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-red-100">
-                  <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[rgba(224,85,85,0.12)]">
+                  <TrendingDown className="h-3.5 w-3.5 text-[#8B0000]" />
                 </div>
               </div>
               <div className="overflow-hidden">
@@ -431,12 +431,12 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
             <div className="py-3 sm:py-0 sm:px-4 last:pb-0 sm:last:pr-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs sm:text-sm font-medium text-muted-foreground">Net Savings</span>
-                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-100">
-                  <Wallet className="h-3.5 w-3.5 text-blue-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[rgba(184,98,42,0.10)]">
+                  <Wallet className="h-3.5 w-3.5 text-[#7A3A0A]" />
                 </div>
               </div>
               <div className="overflow-hidden">
-                <p key={selectedMonth.toISOString() + '-savings'} className={`text-xl sm:text-2xl font-semibold tabular-nums transition-all duration-300 ${displaySavings >= 0 ? "text-emerald-600" : "text-red-600"} ${animationClass}`}>
+                <p key={selectedMonth.toISOString() + '-savings'} className={`text-xl sm:text-2xl font-semibold tabular-nums transition-all duration-300 ${displaySavings >= 0 ? "text-[#007A68]" : "text-[#8B0000]"} ${animationClass}`}>
                   ${Math.round(displaySavings).toLocaleString()}
                 </p>
               </div>

@@ -269,14 +269,14 @@ export function AddPropertyDialog({
         <div className="space-y-6 py-4">
           {/* Property Information */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Property Information</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Property Information</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-muted rounded-lg p-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="propertyName">
-                    Property Name <span className="text-red-500">*</span>
+                    Property Name <span className="text-[#8B0000]">*</span>
                   </Label>
                   <Input
                     id="propertyName"
@@ -288,7 +288,7 @@ export function AddPropertyDialog({
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    Purchase Date <span className="text-red-500">*</span>
+                    Purchase Date <span className="text-[#8B0000]">*</span>
                   </Label>
                   <Popover open={purchaseDateOpen} onOpenChange={setPurchaseDateOpen}>
                     <PopoverTrigger asChild>
@@ -322,17 +322,17 @@ export function AddPropertyDialog({
 
           {/* Purchase Details */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Purchase Details</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Purchase Details</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-muted rounded-lg p-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="originalPurchasePrice">
-                    Original Purchase Price <span className="text-red-500">*</span>
+                    Original Purchase Price <span className="text-[#8B0000]">*</span>
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="originalPurchasePrice"
                       type="number"
@@ -348,7 +348,7 @@ export function AddPropertyDialog({
                 <div className="space-y-2">
                   <Label htmlFor="loanAmountTaken">Loan Amount Taken</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="loanAmountTaken"
                       type="number"
@@ -367,17 +367,17 @@ export function AddPropertyDialog({
 
           {/* Loan Repayment */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Loan Repayment</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Loan Repayment</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-muted rounded-lg p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="outstandingLoan">
-                    Outstanding Loan <span className="text-red-500">*</span>
+                    Outstanding Loan <span className="text-[#8B0000]">*</span>
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="outstandingLoan"
                       type="number"
@@ -393,13 +393,13 @@ export function AddPropertyDialog({
                 <div className="space-y-2">
                   <Label htmlFor="loanAmountRepaid">Loan Amount Repaid</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="loanAmountRepaid"
                       type="number"
                       value={loanAmountRepaid.toFixed(2)}
                       disabled
-                      className="bg-gray-100 pl-7"
+                      className="bg-muted pl-7"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -411,10 +411,10 @@ export function AddPropertyDialog({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="monthlyLoanPayment">
-                    Monthly Loan Payment <span className="text-red-500">*</span>
+                    Monthly Loan Payment <span className="text-[#8B0000]">*</span>
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="monthlyLoanPayment"
                       type="number"
@@ -429,12 +429,12 @@ export function AddPropertyDialog({
                   <p className="text-xs text-muted-foreground">
                     You pay this amount monthly
                   </p>
-                  <div className="flex items-center justify-between mt-3 p-2.5 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between mt-3 p-2.5 bg-white border border-border rounded-lg">
                     <div className="flex-1">
-                      <Label htmlFor="paidByCpf" className="text-xs font-semibold text-gray-900">
+                      <Label htmlFor="paidByCpf" className="text-xs font-semibold text-foreground">
                         Paid by CPF?
                       </Label>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
+                      <p className="text-[11px] text-foreground/400 mt-0.5">
                         Deduct from CPF OA projection, split across all CPF-contributing members
                       </p>
                     </div>
@@ -447,10 +447,10 @@ export function AddPropertyDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="interestRate">
-                    Interest Rate <span className="text-red-500">*</span>
+                    Interest Rate <span className="text-[#8B0000]">*</span>
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">%</span>
                     <Input
                       id="interestRate"
                       type="number"
@@ -474,13 +474,13 @@ export function AddPropertyDialog({
                     Interest Repayment
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="interestRepayment"
                       type="number"
                       value={interestRepayment.toFixed(2)}
                       disabled
-                      className="bg-gray-100 pl-7"
+                      className="bg-muted pl-7"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -494,13 +494,13 @@ export function AddPropertyDialog({
                     Principal Repayment
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="principalRepayment"
                       type="number"
                       value={principalRepayment.toFixed(2)}
                       disabled
-                      className="bg-gray-100 pl-7"
+                      className="bg-muted pl-7"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -515,15 +515,15 @@ export function AddPropertyDialog({
 
           {/* Additional Details */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Additional Details</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Additional Details</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-muted rounded-lg p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="principalCpfWithdrawn">Principal CPF Withdrawn</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="principalCpfWithdrawn"
                       type="number"
@@ -539,7 +539,7 @@ export function AddPropertyDialog({
                 <div className="space-y-2">
                   <Label htmlFor="housingGrantTaken">Housing Grant Taken</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="housingGrantTaken"
                       type="number"
@@ -558,7 +558,7 @@ export function AddPropertyDialog({
                 <div className="space-y-2">
                   <Label htmlFor="accruedInterestToDate">Accrued Interest to Date</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="accruedInterestToDate"
                       type="number"
@@ -574,13 +574,13 @@ export function AddPropertyDialog({
                 <div className="space-y-2">
                   <Label htmlFor="amountToBeReturnedToCpf">Amount to be returned to CPF</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="amountToBeReturnedToCpf"
                       type="number"
                       value={amountToBeReturnedToCpf.toFixed(2)}
                       disabled
-                      className="bg-gray-100 pl-7"
+                      className="bg-muted pl-7"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -593,16 +593,16 @@ export function AddPropertyDialog({
 
           {/* Expenditure Integration */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Expenditure Integration</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Expenditure Integration</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-muted rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Label htmlFor="addToExpenditures" className="text-sm font-semibold text-gray-900">
+                  <Label htmlFor="addToExpenditures" className="text-sm font-semibold text-foreground">
                     Add to expenditures
                   </Label>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-foreground/400 mt-1">
                     Automatically track this property's monthly loan payment as a recurring expenditure
                   </p>
                 </div>
@@ -613,7 +613,7 @@ export function AddPropertyDialog({
                 />
               </div>
               {validationError && (
-                <div className="mt-3 text-sm text-red-600 bg-red-50 p-2 rounded">
+                <div className="mt-3 text-sm text-[#8B0000] bg-[rgba(224,85,85,0.12)] p-2 rounded">
                   {validationError}
                 </div>
               )}
@@ -665,7 +665,7 @@ export function AddPropertyDialog({
               Monthly Payment
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
               <Input
                 id="expenditureAmount"
                 type="number"
@@ -684,13 +684,13 @@ export function AddPropertyDialog({
 
           {/* Display-only Details */}
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="text-gray-600">Property:</div>
+            <div className="text-foreground">Property:</div>
             <div className="font-medium">{propertyName || "-"}</div>
 
-            <div className="text-gray-600">Frequency:</div>
+            <div className="text-foreground">Frequency:</div>
             <div className="font-medium">Monthly</div>
 
-            <div className="text-gray-600">Start Date:</div>
+            <div className="text-foreground">Start Date:</div>
             <div className="font-medium">
               {purchaseDate ? format(purchaseDate, "MMMM d, yyyy") : "-"}
             </div>

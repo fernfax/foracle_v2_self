@@ -130,7 +130,7 @@ export function ProviderManagerPopover({
             style={{
               maxHeight: '300px',
               scrollbarWidth: 'thin',
-              scrollbarColor: '#94a3b8 #f1f5f9'
+              scrollbarColor: 'rgba(28,43,42,0.35) #F0EBE0'
             }}
             onWheel={(e) => {
               e.stopPropagation();
@@ -189,7 +189,7 @@ export function ProviderManagerPopover({
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDelete(provider.id)}
-                          className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-7 px-2 text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

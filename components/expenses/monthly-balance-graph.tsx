@@ -90,10 +90,10 @@ const TIME_RANGES = [
 
 // Arrow marker colors
 const ARROW_COLORS: Record<string, string> = {
-  'one-off-income': '#10b981',    // emerald-500
-  'one-off-expense': '#ef4444',   // red-500
-  'custom-expense': '#f59e0b',    // amber-500
-  'bonus': '#8b5cf6',             // violet-500
+  'one-off-income': '#00C4AA',    // emerald-500
+  'one-off-expense': '#E05555',   // red-500
+  'custom-expense': '#D4A843',    // amber-500
+  'bonus': '#D4845A',             // violet-500
 };
 
 // Custom dot component that renders balance dots and arrow markers for special items
@@ -105,7 +105,7 @@ const CustomBalanceDot = (props: any) => {
 
   // Always render the regular balance dot
   elements.push(
-    <circle key="balance-dot" cx={cx} cy={cy} r={4} fill="#3b82f6" />
+    <circle key="balance-dot" cx={cx} cy={cy} r={4} fill="#3A6B52" />
   );
 
   // Render arrows for special items if present (one arrow per type per month)
@@ -163,7 +163,7 @@ const CustomIncomeDot = (props: any) => {
 
   // Check if this month has a bonus
   const hasBonus = payload.bonus > 0;
-  const fillColor = hasBonus ? '#8b5cf6' : '#10b981'; // violet for bonus, emerald otherwise
+  const fillColor = hasBonus ? '#D4845A' : '#00C4AA'; // violet for bonus, emerald otherwise
 
   return (
     <circle
@@ -211,7 +211,7 @@ const BonusHighlightRects = (props: any) => {
             y={y}
             width={bandWidth}
             height={height}
-            fill="#8b5cf6"
+            fill="#D4845A"
             fillOpacity={0.5}
           />
         );
@@ -257,8 +257,8 @@ function CustomTooltip({ active, payload, viewMode }: any) {
       const arrowData = firstPayload.payload as ArrowDataPoint;
       const color = ARROW_COLORS[arrowData.type];
       return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <p className="font-semibold text-gray-900 mb-2">{arrowData.month}</p>
+        <div className="bg-white border border-border rounded-lg shadow-lg p-3">
+          <p className="font-semibold text-foreground mb-2">{arrowData.month}</p>
           <div className="flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-sm"
@@ -288,36 +288,36 @@ function CustomTooltip({ active, payload, viewMode }: any) {
     const hasBonus = data.bonus > 0;
 
     return (
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-        <p className="font-semibold text-gray-900 mb-2">{data.month}</p>
+      <div className="bg-white border border-border rounded-lg shadow-lg p-4">
+        <p className="font-semibold text-foreground mb-2">{data.month}</p>
         <div className="space-y-1 text-sm">
           {viewMode === "cumulative" ? (
             <>
               {hasBonus ? (
                 <>
-                  <p className="text-green-600">
+                  <p className="text-[#007A68]">
                     Salary Income: {formatCurrency(data.salaryIncome)}
                   </p>
-                  <p className="text-violet-600">
+                  <p className="text-[#7A3A0A]">
                     Bonus: {formatCurrency(data.bonus)}
                   </p>
-                  <p className="text-green-700 font-medium">
+                  <p className="text-[#007A68] font-medium">
                     Total Income: {formatCurrency(data.income)}
                   </p>
                 </>
               ) : (
-                <p className="text-green-600">
+                <p className="text-[#007A68]">
                   Income: {formatCurrency(data.income)}
                 </p>
               )}
-              <p className="text-red-600">
+              <p className="text-[#8B0000]">
                 Expenses: {formatCurrency(data.expense)}
               </p>
-              <p className="font-semibold text-blue-600">
+              <p className="font-semibold text-[#7A3A0A]">
                 Cumulative Balance: {formatCurrency(data.balance)}
               </p>
               {hasInvestmentData && data.balanceWithInvestments !== undefined && (
-                <p className="font-semibold text-teal-600">
+                <p className="font-semibold text-[#007A68]">
                   With Investments: {formatCurrency(data.balanceWithInvestments)}
                 </p>
               )}
@@ -326,29 +326,29 @@ function CustomTooltip({ active, payload, viewMode }: any) {
             <>
               {hasBonus ? (
                 <>
-                  <p className="text-green-600">
+                  <p className="text-[#007A68]">
                     Salary Income: {formatCurrency(data.salaryIncome)}
                   </p>
-                  <p className="text-violet-600">
+                  <p className="text-[#7A3A0A]">
                     Bonus: {formatCurrency(data.bonus)}
                   </p>
-                  <p className="text-green-700 font-medium">
+                  <p className="text-[#007A68] font-medium">
                     Total Income: {formatCurrency(data.income)}
                   </p>
                 </>
               ) : (
-                <p className="text-green-600">
+                <p className="text-[#007A68]">
                   Income: {formatCurrency(data.income)}
                 </p>
               )}
-              <p className="text-red-600">
+              <p className="text-[#8B0000]">
                 Expenses: {formatCurrency(data.expense)}
               </p>
-              <p className={`font-semibold ${data.monthlyBalance >= 0 ? "text-blue-700" : "text-red-700"}`}>
+              <p className={`font-semibold ${data.monthlyBalance >= 0 ? "text-[#7A3A0A]" : "text-[#8B0000]"}`}>
                 Net Balance: {formatCurrency(data.monthlyBalance)}
               </p>
               {hasInvestmentData && data.monthlyBalanceWithInvestments !== undefined && (
-                <p className={`font-semibold ${data.monthlyBalanceWithInvestments >= 0 ? "text-teal-600" : "text-red-600"}`}>
+                <p className={`font-semibold ${data.monthlyBalanceWithInvestments >= 0 ? "text-[#007A68]" : "text-[#8B0000]"}`}>
                   Net + Investments: {formatCurrency(data.monthlyBalanceWithInvestments)}
                 </p>
               )}
@@ -357,7 +357,7 @@ function CustomTooltip({ active, payload, viewMode }: any) {
 
           {/* Show special items if any */}
           {specialItems.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="mt-2 pt-2 border-t border-border">
               {specialItems.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <div
@@ -612,11 +612,11 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
 
         {/* Investment Toggle */}
         {hasInvestments && (
-          <div className="flex items-center gap-2 mt-3 sm:mt-4 px-3 py-2 bg-teal-50 rounded-lg border border-teal-100 w-fit">
-            <TrendingUp className="h-4 w-4 text-teal-600 flex-shrink-0" />
+          <div className="flex items-center gap-2 mt-3 sm:mt-4 px-3 py-2 bg-[rgba(0,196,170,0.12)] rounded-lg border border-[rgba(0,196,170,0.25)] w-fit">
+            <TrendingUp className="h-4 w-4 text-[#007A68] flex-shrink-0" />
             <Label
               htmlFor="includeInvestments"
-              className="text-sm font-medium text-teal-900 cursor-pointer whitespace-nowrap"
+              className="text-sm font-medium text-[#007A68] cursor-pointer whitespace-nowrap"
             >
               Include Investments
             </Label>
@@ -630,35 +630,35 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
 
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-4">
-          <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-            <p className="text-xs text-gray-600 mb-0.5">Starting Balance</p>
-            <p className="text-sm sm:text-lg font-semibold text-gray-900">
+          <div className="bg-muted rounded-lg p-2 sm:p-3">
+            <p className="text-xs text-foreground mb-0.5">Starting Balance</p>
+            <p className="text-sm sm:text-lg font-semibold text-foreground">
               {formatCurrency(startingBalance)}
             </p>
             {includeInvestments && (
-              <p className="text-[10px] text-teal-600">
+              <p className="text-[10px] text-[#007A68]">
                 + {formatCurrency(investmentStartingCapital)} investments
               </p>
             )}
           </div>
-          <div className={`rounded-lg p-2 sm:p-3 ${isPositive ? "bg-green-50" : "bg-red-50"}`}>
-            <p className="text-xs text-gray-600 mb-0.5">Projected Balance</p>
-            <p className={`text-sm sm:text-lg font-semibold ${isPositive ? "text-green-700" : "text-red-700"}`}>
+          <div className={`rounded-lg p-2 sm:p-3 ${isPositive ? "bg-[rgba(0,196,170,0.12)]" : "bg-[rgba(224,85,85,0.12)]"}`}>
+            <p className="text-xs text-foreground mb-0.5">Projected Balance</p>
+            <p className={`text-sm sm:text-lg font-semibold ${isPositive ? "text-[#007A68]" : "text-[#8B0000]"}`}>
               {formatCurrency(finalBalance)}
             </p>
             {includeInvestments && (
-              <p className={`text-[10px] ${isCombinedPositive ? "text-teal-600" : "text-red-600"}`}>
+              <p className={`text-[10px] ${isCombinedPositive ? "text-[#007A68]" : "text-[#8B0000]"}`}>
                 Combined: {formatCurrency(finalBalanceWithInvestments)}
               </p>
             )}
           </div>
-          <div className={`rounded-lg p-2 sm:p-3 ${(finalBalance - startingBalance) >= 0 ? "bg-green-50" : "bg-red-50"}`}>
-            <p className="text-xs text-gray-600 mb-0.5">Net Change</p>
-            <p className={`text-sm sm:text-lg font-semibold ${(finalBalance - startingBalance) >= 0 ? "text-green-700" : "text-red-700"}`}>
+          <div className={`rounded-lg p-2 sm:p-3 ${(finalBalance - startingBalance) >= 0 ? "bg-[rgba(0,196,170,0.12)]" : "bg-[rgba(224,85,85,0.12)]"}`}>
+            <p className="text-xs text-foreground mb-0.5">Net Change</p>
+            <p className={`text-sm sm:text-lg font-semibold ${(finalBalance - startingBalance) >= 0 ? "text-[#007A68]" : "text-[#8B0000]"}`}>
               {(finalBalance - startingBalance) >= 0 ? "+" : ""}{formatCurrency(finalBalance - startingBalance)}
             </p>
             {includeInvestments && (
-              <p className="text-[10px] text-teal-600">
+              <p className="text-[10px] text-[#007A68]">
                 Combined: {(finalBalanceWithInvestments - startingBalance - investmentStartingCapital) >= 0 ? "+" : ""}
                 {formatCurrency(finalBalanceWithInvestments - startingBalance - investmentStartingCapital)}
               </p>
@@ -676,34 +676,34 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
             >
               <defs>
                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#3A6B52" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#3A6B52" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#00C4AA" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#00C4AA" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#E05555" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#E05555" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorNetBalance" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#3A6B52" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#3A6B52" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorCombined" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#5A9470" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#5A9470" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorBonus" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#D4845A" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#D4845A" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
               <XAxis
                 dataKey="month"
-                stroke="#6b7280"
+                stroke="rgba(28,43,42,0.55)"
                 style={{ fontSize: "12px" }}
                 angle={-45}
                 textAnchor="end"
@@ -712,7 +712,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                 interval={xAxisInterval}
               />
               <YAxis
-                stroke="#6b7280"
+                stroke="rgba(28,43,42,0.55)"
                 style={{ fontSize: "12px" }}
                 tickFormatter={(value) => formatCurrency(value)}
                 domain={[yAxisMin, yAxisMax]}
@@ -731,33 +731,33 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                           className="w-3 h-3 rounded-sm"
                           style={{ backgroundColor: entry.color }}
                         />
-                        <span className="text-gray-600">{entry.value}</span>
+                        <span className="text-foreground">{entry.value}</span>
                       </div>
                     ))}
                     {/* Arrow legend items */}
                     <div className="flex items-center gap-1.5">
                       <svg width="12" height="12" viewBox="0 0 12 12">
-                        <polygon points="6,1 2,10 10,10" fill="#10b981" />
+                        <polygon points="6,1 2,10 10,10" fill="#00C4AA" />
                       </svg>
-                      <span className="text-gray-600">One-off Income</span>
+                      <span className="text-foreground">One-off Income</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <svg width="12" height="12" viewBox="0 0 12 12">
-                        <polygon points="6,1 2,10 10,10" fill="#8b5cf6" />
+                        <polygon points="6,1 2,10 10,10" fill="#D4845A" />
                       </svg>
-                      <span className="text-gray-600">Bonus</span>
+                      <span className="text-foreground">Bonus</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <svg width="12" height="12" viewBox="0 0 12 12">
-                        <polygon points="6,11 2,2 10,2" fill="#ef4444" />
+                        <polygon points="6,11 2,2 10,2" fill="#E05555" />
                       </svg>
-                      <span className="text-gray-600">One-off Expense</span>
+                      <span className="text-foreground">One-off Expense</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <svg width="12" height="12" viewBox="0 0 12 12">
-                        <polygon points="6,11 2,2 10,2" fill="#f59e0b" />
+                        <polygon points="6,11 2,2 10,2" fill="#D4A843" />
                       </svg>
-                      <span className="text-gray-600">Custom Expense</span>
+                      <span className="text-foreground">Custom Expense</span>
                     </div>
                   </div>
                 )}
@@ -768,7 +768,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   <Area
                     type="monotone"
                     dataKey="balance"
-                    stroke="#3b82f6"
+                    stroke="#3A6B52"
                     strokeWidth={2}
                     dot={isLongDuration ? false : <CustomBalanceDot />}
                     activeDot={{ r: 5 }}
@@ -780,9 +780,9 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                     <Area
                       type="monotone"
                       dataKey="balanceWithInvestments"
-                      stroke="#14b8a6"
+                      stroke="#5A9470"
                       strokeWidth={2}
-                      dot={isLongDuration ? false : { fill: "#14b8a6", r: 3 }}
+                      dot={isLongDuration ? false : { fill: "#5A9470", r: 3 }}
                       activeDot={{ r: 5 }}
                       fillOpacity={1}
                       fill="url(#colorCombined)"
@@ -796,10 +796,10 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   <Area
                     type="monotone"
                     dataKey="income"
-                    stroke="#10b981"
+                    stroke="#00C4AA"
                     strokeWidth={2}
                     dot={isLongDuration ? false : <CustomIncomeDot />}
-                    activeDot={{ r: 5, fill: "#10b981" }}
+                    activeDot={{ r: 5, fill: "#00C4AA" }}
                     fillOpacity={1}
                     fill="url(#colorIncome)"
                     name="Income"
@@ -809,9 +809,9 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   <Area
                     type="monotone"
                     dataKey="expense"
-                    stroke="#ef4444"
+                    stroke="#E05555"
                     strokeWidth={2}
-                    dot={isLongDuration ? false : { fill: "#ef4444", r: 3 }}
+                    dot={isLongDuration ? false : { fill: "#E05555", r: 3 }}
                     activeDot={{ r: 5 }}
                     fillOpacity={1}
                     fill="url(#colorExpense)"
@@ -820,9 +820,9 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   <Area
                     type="monotone"
                     dataKey="monthlyBalance"
-                    stroke="#3b82f6"
+                    stroke="#3A6B52"
                     strokeWidth={2}
-                    dot={isLongDuration ? false : { fill: "#3b82f6", r: 3 }}
+                    dot={isLongDuration ? false : { fill: "#3A6B52", r: 3 }}
                     activeDot={{ r: 5 }}
                     fillOpacity={1}
                     fill="url(#colorNetBalance)"
@@ -832,9 +832,9 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                     <Area
                       type="monotone"
                       dataKey="monthlyBalanceWithInvestments"
-                      stroke="#14b8a6"
+                      stroke="#5A9470"
                       strokeWidth={2}
-                      dot={isLongDuration ? false : { fill: "#14b8a6", r: 3 }}
+                      dot={isLongDuration ? false : { fill: "#5A9470", r: 3 }}
                       activeDot={{ r: 5 }}
                       fillOpacity={1}
                       fill="url(#colorCombined)"

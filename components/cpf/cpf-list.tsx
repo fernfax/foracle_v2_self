@@ -306,7 +306,7 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                             </div>
                             <div>
                               <span className="font-medium">Monthly Nett Income:</span>{" "}
-                              <span className="text-green-700 font-semibold">{formatCurrency(member.monthlyNettIncome)}</span>
+                              <span className="text-[#007A68] font-semibold">{formatCurrency(member.monthlyNettIncome)}</span>
                             </div>
                           </div>
 
@@ -320,14 +320,14 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                               </div>
                               <div>
                                 <span className="font-medium">Annual Nett Bonus:</span>{" "}
-                                <span className="text-green-700 font-semibold">{formatCurrency(member.bonusAmount - member.bonusEmployeeCpf)}</span>
+                                <span className="text-[#007A68] font-semibold">{formatCurrency(member.bonusAmount - member.bonusEmployeeCpf)}</span>
                               </div>
                             </div>
                           )}
 
-                          <div className="bg-blue-50 p-3 rounded-md space-y-2">
+                          <div className="bg-[rgba(184,98,42,0.10)] p-3 rounded-md space-y-2">
                             <div className="flex items-center justify-between">
-                              <div className="font-semibold text-blue-900">CPF Breakdown (Monthly)</div>
+                              <div className="font-semibold text-[#7A3A0A]">CPF Breakdown (Monthly)</div>
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <button className="text-muted-foreground hover:text-foreground transition-colors">
@@ -345,7 +345,7 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                                       <p className="text-sm font-medium mt-1">
                                         The current OW ceiling is $8,000 (2026).
                                       </p>
-                                      <p className="text-sm font-medium mt-1 text-green-600">
+                                      <p className="text-sm font-medium mt-1 text-[#007A68]">
                                         This user is {member.monthlyGrossIncome > 8000 ? 'above' : 'below or at'} the OW Ceiling
                                       </p>
                                     </div>
@@ -366,31 +366,31 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                                             </tr>
                                           </thead>
                                           <tbody>
-                                            <tr className={member.employeeCpfRate === 20 && member.employerCpfRate === 17 ? "border-b bg-yellow-100" : "border-b"}>
+                                            <tr className={member.employeeCpfRate === 20 && member.employerCpfRate === 17 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b"}>
                                               <td className="p-2">55 and below</td>
                                               <td className="text-center p-2">17</td>
                                               <td className="text-center p-2">20</td>
                                               <td className="text-center p-2 font-medium">37</td>
                                             </tr>
-                                            <tr className={member.employeeCpfRate === 17 && member.employerCpfRate === 15.5 ? "border-b bg-yellow-100" : "border-b bg-muted/30"}>
+                                            <tr className={member.employeeCpfRate === 17 && member.employerCpfRate === 15.5 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b bg-muted/30"}>
                                               <td className="p-2">Above 55 to 60</td>
                                               <td className="text-center p-2">15.5</td>
                                               <td className="text-center p-2">17</td>
                                               <td className="text-center p-2 font-medium">32.5</td>
                                             </tr>
-                                            <tr className={member.employeeCpfRate === 11.5 && member.employerCpfRate === 12 ? "border-b bg-yellow-100" : "border-b"}>
+                                            <tr className={member.employeeCpfRate === 11.5 && member.employerCpfRate === 12 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b"}>
                                               <td className="p-2">Above 60 to 65</td>
                                               <td className="text-center p-2">12</td>
                                               <td className="text-center p-2">11.5</td>
                                               <td className="text-center p-2 font-medium">23.5</td>
                                             </tr>
-                                            <tr className={member.employeeCpfRate === 7.5 && member.employerCpfRate === 9 ? "border-b bg-yellow-100" : "border-b bg-muted/30"}>
+                                            <tr className={member.employeeCpfRate === 7.5 && member.employerCpfRate === 9 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b bg-muted/30"}>
                                               <td className="p-2">Above 65 to 70</td>
                                               <td className="text-center p-2">9</td>
                                               <td className="text-center p-2">7.5</td>
                                               <td className="text-center p-2 font-medium">16.5</td>
                                             </tr>
-                                            <tr className={member.employeeCpfRate === 5 && member.employerCpfRate === 7.5 ? "bg-yellow-100" : ""}>
+                                            <tr className={member.employeeCpfRate === 5 && member.employerCpfRate === 7.5 ? "bg-[rgba(212,168,67,0.15)]" : ""}>
                                               <td className="p-2">Above 70</td>
                                               <td className="text-center p-2">7.5</td>
                                               <td className="text-center p-2">5</td>
@@ -405,13 +405,13 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                               </Popover>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-blue-200">
+                            <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-[rgba(184,98,42,0.25)]">
                               <div>
-                                <span className="text-blue-700 font-semibold">Gross Income:</span>{" "}
+                                <span className="text-[#7A3A0A] font-semibold">Gross Income:</span>{" "}
                                 <div className="font-bold">{formatCurrency(member.monthlyGrossIncome)}</div>
                               </div>
                               <div>
-                                <span className="text-blue-700 font-semibold">Net Income:</span>{" "}
+                                <span className="text-[#7A3A0A] font-semibold">Net Income:</span>{" "}
                                 <div className="font-bold">{formatCurrency(member.monthlyNettIncome)}</div>
                               </div>
                               <div></div>
@@ -419,30 +419,30 @@ export function CpfList({ initialCpfData }: CpfListProps) {
 
                             <div className="grid grid-cols-3 gap-4 text-sm pt-3">
                               <div>
-                                <span className="text-blue-700">Monthly CPF Contribution:</span>{" "}
+                                <span className="text-[#7A3A0A]">Monthly CPF Contribution:</span>{" "}
                                 <div className="font-medium">{formatCurrency(member.monthlyTotalCpf)}</div>
                               </div>
                               <div>
-                                <span className="text-blue-700">Employer Share ({formatPercentage(member.employerCpfRate)}):</span>{" "}
+                                <span className="text-[#7A3A0A]">Employer Share ({formatPercentage(member.employerCpfRate)}):</span>{" "}
                                 <div className="font-medium">{formatCurrency(member.monthlyEmployerCpf)}</div>
                               </div>
                               <div>
-                                <span className="text-blue-700">Employee Share ({formatPercentage(member.employeeCpfRate)}):</span>{" "}
+                                <span className="text-[#7A3A0A]">Employee Share ({formatPercentage(member.employeeCpfRate)}):</span>{" "}
                                 <div className="font-medium">{formatCurrency(member.monthlyEmployeeCpf)}</div>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4 text-sm">
                               <div>
-                                <span className="text-blue-700">OA ({formatPercentage(member.oaAllocationRate)}):</span>{" "}
+                                <span className="text-[#7A3A0A]">OA ({formatPercentage(member.oaAllocationRate)}):</span>{" "}
                                 <div className="font-medium">{formatCurrency(member.monthlyOaAllocation)}</div>
                               </div>
                               <div>
-                                <span className="text-blue-700">SA ({formatPercentage(member.saAllocationRate)}):</span>{" "}
+                                <span className="text-[#7A3A0A]">SA ({formatPercentage(member.saAllocationRate)}):</span>{" "}
                                 <div className="font-medium">{formatCurrency(member.monthlySaAllocation)}</div>
                               </div>
                               <div>
-                                <span className="text-blue-700">MA ({formatPercentage(member.maAllocationRate)}):</span>{" "}
+                                <span className="text-[#7A3A0A]">MA ({formatPercentage(member.maAllocationRate)}):</span>{" "}
                                 <div className="font-medium">{formatCurrency(member.monthlyMaAllocation)}</div>
                               </div>
                             </div>
@@ -450,9 +450,9 @@ export function CpfList({ initialCpfData }: CpfListProps) {
 
                           {/* Bonus CPF Section (only shown if bonusTotalCpf > 0) */}
                           {member.bonusTotalCpf > 0 && (
-                            <div className="bg-purple-50 p-3 rounded-md space-y-2">
+                            <div className="bg-[rgba(184,98,42,0.10)] p-3 rounded-md space-y-2">
                               <div className="flex items-center justify-between">
-                                <div className="font-semibold text-purple-900">CPF Breakdown (Annual Bonuses)</div>
+                                <div className="font-semibold text-[#7A3A0A]">CPF Breakdown (Annual Bonuses)</div>
                                 <Popover>
                                   <PopoverTrigger asChild>
                                     <button className="text-muted-foreground hover:text-foreground transition-colors">
@@ -474,7 +474,7 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                                         </p>
                                       </div>
 
-                                      <div className="bg-blue-50 p-2 rounded text-sm">
+                                      <div className="bg-[rgba(184,98,42,0.10)] p-2 rounded text-sm">
                                         <div className="font-medium mb-1">For this member:</div>
                                         <div>Total Bonus: {formatCurrency(member.bonusAmount)}</div>
                                         <div>CPF Applicable Bonus: {formatCurrency(member.bonusCpfApplicableAmount)}</div>
@@ -497,25 +497,25 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                                               </tr>
                                             </thead>
                                             <tbody>
-                                              <tr className={member.age !== null && member.age <= 35 ? "border-b bg-yellow-100" : "border-b"}>
+                                              <tr className={member.age !== null && member.age <= 35 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b"}>
                                                 <td className="p-2">35 & below</td>
                                                 <td className="text-center p-2">0.6217</td>
                                                 <td className="text-center p-2">0.1621</td>
                                                 <td className="text-center p-2">0.2162</td>
                                               </tr>
-                                              <tr className={member.age !== null && member.age > 35 && member.age <= 45 ? "border-b bg-yellow-100" : "border-b bg-muted/30"}>
+                                              <tr className={member.age !== null && member.age > 35 && member.age <= 45 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b bg-muted/30"}>
                                                 <td className="p-2">Above 35 - 45</td>
                                                 <td className="text-center p-2">0.5677</td>
                                                 <td className="text-center p-2">0.1891</td>
                                                 <td className="text-center p-2">0.2432</td>
                                               </tr>
-                                              <tr className={member.age !== null && member.age > 45 && member.age <= 50 ? "border-b bg-yellow-100" : "border-b"}>
+                                              <tr className={member.age !== null && member.age > 45 && member.age <= 50 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b"}>
                                                 <td className="p-2">Above 45 - 50</td>
                                                 <td className="text-center p-2">0.5136</td>
                                                 <td className="text-center p-2">0.2162</td>
                                                 <td className="text-center p-2">0.2702</td>
                                               </tr>
-                                              <tr className={member.age !== null && member.age > 50 && member.age <= 55 ? "border-b bg-yellow-100" : "border-b bg-muted/30"}>
+                                              <tr className={member.age !== null && member.age > 50 && member.age <= 55 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b bg-muted/30"}>
                                                 <td className="p-2">Above 50 - 55</td>
                                                 <td className="text-center p-2">0.4055</td>
                                                 <td className="text-center p-2">0.3108</td>
@@ -530,25 +530,25 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                                                   </div>
                                                 </td>
                                               </tr>
-                                              <tr className={member.age !== null && member.age > 55 && member.age <= 60 ? "border-b bg-yellow-100" : "border-b"}>
+                                              <tr className={member.age !== null && member.age > 55 && member.age <= 60 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b"}>
                                                 <td className="p-2">Above 55 - 60</td>
                                                 <td className="text-center p-2">0.3694</td>
                                                 <td className="text-center p-2">0.3076</td>
                                                 <td className="text-center p-2">0.3230</td>
                                               </tr>
-                                              <tr className={member.age !== null && member.age > 60 && member.age <= 65 ? "border-b bg-yellow-100" : "border-b bg-muted/30"}>
+                                              <tr className={member.age !== null && member.age > 60 && member.age <= 65 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b bg-muted/30"}>
                                                 <td className="p-2">Above 60 - 65</td>
                                                 <td className="text-center p-2">0.149</td>
                                                 <td className="text-center p-2">0.4042</td>
                                                 <td className="text-center p-2">0.4468</td>
                                               </tr>
-                                              <tr className={member.age !== null && member.age > 65 && member.age <= 70 ? "border-b bg-yellow-100" : "border-b"}>
+                                              <tr className={member.age !== null && member.age > 65 && member.age <= 70 ? "border-b bg-[rgba(212,168,67,0.15)]" : "border-b"}>
                                                 <td className="p-2">Above 65 - 70</td>
                                                 <td className="text-center p-2">0.0607</td>
                                                 <td className="text-center p-2">0.303</td>
                                                 <td className="text-center p-2">0.6363</td>
                                               </tr>
-                                              <tr className={member.age !== null && member.age > 70 ? "bg-yellow-100" : "bg-muted/30"}>
+                                              <tr className={member.age !== null && member.age > 70 ? "bg-[rgba(212,168,67,0.15)]" : "bg-muted/30"}>
                                                 <td className="p-2">Above 70</td>
                                                 <td className="text-center p-2">0.08</td>
                                                 <td className="text-center p-2">0.08</td>
@@ -566,13 +566,13 @@ export function CpfList({ initialCpfData }: CpfListProps) {
                                 </Popover>
                               </div>
 
-                              <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-purple-200">
+                              <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-[rgba(184,98,42,0.25)]">
                                 <div>
-                                  <span className="text-purple-700 font-semibold">Gross Bonus:</span>{" "}
+                                  <span className="text-[#7A3A0A] font-semibold">Gross Bonus:</span>{" "}
                                   <div className="font-bold">{formatCurrency(member.bonusAmount)}</div>
                                 </div>
                                 <div>
-                                  <span className="text-purple-700 font-semibold">Net Bonus:</span>{" "}
+                                  <span className="text-[#7A3A0A] font-semibold">Net Bonus:</span>{" "}
                                   <div className="font-bold">{formatCurrency(member.bonusAmount - member.bonusEmployeeCpf)}</div>
                                 </div>
                                 <div></div>
@@ -580,30 +580,30 @@ export function CpfList({ initialCpfData }: CpfListProps) {
 
                               <div className="grid grid-cols-3 gap-4 text-sm pt-3">
                                 <div>
-                                  <span className="text-purple-700">Annual Bonus CPF Contribution:</span>{" "}
+                                  <span className="text-[#7A3A0A]">Annual Bonus CPF Contribution:</span>{" "}
                                   <div className="font-medium">{formatCurrency(member.bonusTotalCpf)}</div>
                                 </div>
                                 <div>
-                                  <span className="text-purple-700">Annual Employer Bonus CPF Share:</span>{" "}
+                                  <span className="text-[#7A3A0A]">Annual Employer Bonus CPF Share:</span>{" "}
                                   <div className="font-medium">{formatCurrency(member.bonusEmployerCpf)}</div>
                                 </div>
                                 <div>
-                                  <span className="text-purple-700">Annual Employee Bonus CPF Share:</span>{" "}
+                                  <span className="text-[#7A3A0A]">Annual Employee Bonus CPF Share:</span>{" "}
                                   <div className="font-medium">{formatCurrency(member.bonusEmployeeCpf)}</div>
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-3 gap-4 text-sm">
                                 <div>
-                                  <span className="text-purple-700">Bonus OA ({formatPercentage(member.oaAllocationRate)}):</span>{" "}
+                                  <span className="text-[#7A3A0A]">Bonus OA ({formatPercentage(member.oaAllocationRate)}):</span>{" "}
                                   <div className="font-medium">{formatCurrency(member.bonusOaAllocation)}</div>
                                 </div>
                                 <div>
-                                  <span className="text-purple-700">Bonus SA ({formatPercentage(member.saAllocationRate)}):</span>{" "}
+                                  <span className="text-[#7A3A0A]">Bonus SA ({formatPercentage(member.saAllocationRate)}):</span>{" "}
                                   <div className="font-medium">{formatCurrency(member.bonusSaAllocation)}</div>
                                 </div>
                                 <div>
-                                  <span className="text-purple-700">Bonus MA ({formatPercentage(member.maAllocationRate)}):</span>{" "}
+                                  <span className="text-[#7A3A0A]">Bonus MA ({formatPercentage(member.maAllocationRate)}):</span>{" "}
                                   <div className="font-medium">{formatCurrency(member.bonusMaAllocation)}</div>
                                 </div>
                               </div>

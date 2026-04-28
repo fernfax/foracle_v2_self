@@ -21,8 +21,10 @@ interface SidebarNavItemProps {
   href: string;
   label: string;
   icon: LucideIcon;
-  bgColor: string;
-  iconColor: string;
+  /** Legacy prop kept for backwards-compat; ignored in current design. */
+  bgColor?: string;
+  /** Legacy prop kept for backwards-compat; ignored in current design. */
+  iconColor?: string;
   isExpanded: boolean;
   subItems?: SubItem[];
   isSubmenuOpen?: boolean;
@@ -30,12 +32,19 @@ interface SidebarNavItemProps {
   comingSoon?: boolean;
 }
 
+/**
+ * Sidebar item — see /design_guide/design_guide.md §10.8.
+ *
+ * Performance notes:
+ * - Single render tree across expanded/collapsed states (no remount on toggle).
+ * - Tooltip stays mounted; suppressed via `open={false}` when expanded.
+ * - Label and chevron animate via opacity + transform only (GPU-friendly).
+ * - Submenu DOM stays mounted across toggles; visibility gated via classes.
+ */
 export function SidebarNavItem({
   href,
   label,
   icon: Icon,
-  bgColor,
-  iconColor,
   isExpanded,
   subItems,
   isSubmenuOpen = false,
@@ -45,11 +54,9 @@ export function SidebarNavItem({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Check if this nav item is active (exact match only for parent items)
   const isActive = pathname === href;
   const currentTab = searchParams.get("tab");
 
-  // Check which subitem is active
   const getSubItemActive = (subHref: string) => {
     const url = new URL(subHref, "http://localhost");
     const subTab = url.searchParams.get("tab");
@@ -65,72 +72,90 @@ export function SidebarNavItem({
     }
   };
 
-  const linkContent = (
-    <div className="relative">
-      <Link
-        href={href}
-        onClick={handleClick}
+  const itemBaseClasses = cn(
+    "group flex items-center rounded-md py-2 px-2 gap-3 font-display text-sm transition-colors duration-150 overflow-hidden",
+    isActive
+      ? "bg-[#B8622A] text-[#FBF7F1] shadow-sm shadow-[#B8622A]/20"
+      : "text-[rgba(240,235,224,0.55)] hover:bg-[#2C3E3D] hover:text-[#F0EBE0]"
+  );
+
+  const iconClasses = cn(
+    "h-[18px] w-[18px] flex-shrink-0 transition-colors",
+    isActive ? "text-[#FBF7F1]" : "text-[rgba(240,235,224,0.55)] group-hover:text-[#F0EBE0]"
+  );
+
+  const trigger = (
+    <Link
+      href={href}
+      onClick={handleClick}
+      className={itemBaseClasses}
+      aria-label={label}
+    >
+      <Icon className={iconClasses} />
+
+      <span
         className={cn(
-          "group flex items-center rounded-xl transition-all duration-200 py-1.5 px-1.5 gap-3",
-          isActive
-            ? "bg-[#4E47DD] text-white"
-            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+          "font-medium whitespace-nowrap flex-1 flex items-center gap-2 transition-[opacity,transform] duration-200",
+          isExpanded
+            ? "opacity-100 translate-x-0"
+            : "opacity-0 -translate-x-1 pointer-events-none"
         )}
       >
-        {/* Icon container */}
-        <div
-          className={cn(
-            "flex-shrink-0 p-2 rounded-lg transition-colors flex items-center justify-center",
-            isActive ? "bg-white/20" : bgColor
-          )}
-        >
-          <Icon
-            className={cn(
-              "h-5 w-5 transition-colors",
-              isActive ? "text-white" : iconColor
-            )}
-          />
-        </div>
-
-        {/* Label - animated visibility */}
-        <span
-          className={cn(
-            "font-medium text-sm whitespace-nowrap transition-all duration-300 flex-1 flex items-center gap-2",
-            isExpanded
-              ? "opacity-100 translate-x-0"
-              : "opacity-0 w-0 -translate-x-2 overflow-hidden"
-          )}
-        >
-          {label}
-          {comingSoon && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-              Soon
-            </span>
-          )}
-        </span>
-
-        {/* Chevron for items with subitems */}
-        {hasSubItems && isExpanded && (
-          <ChevronRight
-            className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              isSubmenuOpen ? "rotate-90" : ""
-            )}
-          />
+        {label}
+        {comingSoon && (
+          <span className="font-display text-[10px] px-1.5 py-0.5 rounded-xs bg-[rgba(212,168,67,0.18)] text-[#D4A843] font-semibold uppercase tracking-wider">
+            Soon
+          </span>
         )}
-      </Link>
+      </span>
 
-      {/* Submenu - animated expand/collapse */}
-      {hasSubItems && isExpanded && (
+      {hasSubItems && (
+        <ChevronRight
+          className={cn(
+            "h-4 w-4 transition-[transform,opacity] duration-200 flex-shrink-0",
+            isExpanded ? "opacity-60" : "opacity-0",
+            isSubmenuOpen ? "rotate-90" : ""
+          )}
+        />
+      )}
+    </Link>
+  );
+
+  return (
+    <div className="relative">
+      <TooltipProvider delayDuration={0} disableHoverableContent={isExpanded}>
+        <Tooltip open={isExpanded ? false : undefined}>
+          <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+          <TooltipContent side="right" sideOffset={12}>
+            <p className="flex items-center gap-2">
+              {label}
+              {comingSoon && (
+                <span className="font-display text-[10px] px-1.5 py-0.5 rounded-xs bg-[rgba(212,168,67,0.18)] text-[#D4A843] font-semibold uppercase tracking-wider">
+                  Soon
+                </span>
+              )}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/*
+        Submenu — DOM stays mounted across sidebar toggles to avoid React reconciliation
+        during the grid animation. Visibility gated via class only.
+      */}
+      {hasSubItems && (
         <div
           className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            isSubmenuOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            "grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            isExpanded && isSubmenuOpen
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0 pointer-events-none"
           )}
+          aria-hidden={!(isExpanded && isSubmenuOpen)}
         >
           <div className="overflow-hidden">
-            <div className="pl-12 mt-1 space-y-0.5">
-              {subItems.map((subItem, index) => {
+            <div className="pl-9 mt-1 space-y-0.5 border-l border-[rgba(240,235,224,0.08)] ml-4">
+              {subItems.map((subItem) => {
                 const isSubActive = getSubItemActive(subItem.href);
                 const SubIcon = subItem.icon;
                 return (
@@ -138,17 +163,12 @@ export function SidebarNavItem({
                     key={subItem.href}
                     href={subItem.href}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-all duration-200",
+                      "flex items-center gap-2 px-3 py-1.5 font-display text-[13px] rounded-sm transition-colors duration-150",
                       isSubActive
-                        ? "bg-slate-700 text-white font-medium"
-                        : "text-slate-400 hover:bg-slate-800 hover:text-white",
-                      isSubmenuOpen
-                        ? "translate-x-0 opacity-100"
-                        : "-translate-x-2 opacity-0"
+                        ? "bg-[rgba(184,98,42,0.15)] text-[#D4845A] font-medium"
+                        : "text-[rgba(240,235,224,0.50)] hover:bg-[#2C3E3D] hover:text-[#F0EBE0]"
                     )}
-                    style={{
-                      transitionDelay: isSubmenuOpen ? `${index * 50}ms` : "0ms",
-                    }}
+                    tabIndex={isExpanded && isSubmenuOpen ? 0 : -1}
                   >
                     {SubIcon && <SubIcon className="h-4 w-4" />}
                     {subItem.label}
@@ -161,51 +181,4 @@ export function SidebarNavItem({
       )}
     </div>
   );
-
-  // Show tooltip when collapsed
-  if (!isExpanded) {
-    return (
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={href}
-              className={cn(
-                "group flex items-center justify-center rounded-xl transition-all duration-200 py-1.5 px-1.5",
-                isActive
-                  ? "bg-[#4E47DD] text-white"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              )}
-            >
-              <div
-                className={cn(
-                  "flex-shrink-0 p-2 rounded-lg transition-colors flex items-center justify-center",
-                  isActive ? "bg-white/20" : bgColor
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "h-5 w-5 transition-colors",
-                    isActive ? "text-white" : iconColor
-                  )}
-                />
-              </div>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={12}>
-            <p className="flex items-center gap-2">
-              {label}
-              {comingSoon && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-                  Soon
-                </span>
-              )}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  return linkContent;
 }

@@ -171,10 +171,10 @@ export function AssetBreakdownModal({
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 75) return "bg-emerald-500";
-    if (progress >= 50) return "bg-blue-500";
-    if (progress >= 25) return "bg-amber-500";
-    return "bg-gray-400";
+    if (progress >= 75) return "bg-[#00C4AA]";
+    if (progress >= 50) return "bg-[#B8622A]";
+    if (progress >= 25) return "bg-[#D4A843]";
+    return "bg-muted";
   };
 
   return (
@@ -182,7 +182,7 @@ export function AssetBreakdownModal({
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-purple-600" />
+            <TrendingUp className="h-5 w-5 text-[#7A3A0A]" />
             Asset Breakdown
           </DialogTitle>
           <DialogDescription>
@@ -199,11 +199,11 @@ export function AssetBreakdownModal({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Outstanding Loans</p>
-              <p className="text-2xl font-semibold text-amber-600">${breakdownDetails.totalLoan.toLocaleString()}</p>
+              <p className="text-2xl font-semibold text-[#7A5A00]">${breakdownDetails.totalLoan.toLocaleString()}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Net Equity</p>
-              <p className="text-2xl font-semibold text-emerald-600">${breakdownDetails.totalEquity.toLocaleString()}</p>
+              <p className="text-2xl font-semibold text-[#007A68]">${breakdownDetails.totalEquity.toLocaleString()}</p>
             </div>
           </div>
 
@@ -213,13 +213,13 @@ export function AssetBreakdownModal({
             <div>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50">
-                      <Home className="h-4 w-4 text-emerald-600" />
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[rgba(0,196,170,0.12)]">
+                      <Home className="h-4 w-4 text-[#007A68]" />
                     </div>
                     <h3 className="text-lg font-semibold">Properties</h3>
                     <span className="text-sm text-muted-foreground">({breakdownDetails.properties.length})</span>
                   </div>
-                  <p className="text-lg font-semibold text-emerald-600">
+                  <p className="text-lg font-semibold text-[#007A68]">
                     ${breakdownDetails.propertyEquity.toLocaleString()}
                   </p>
                 </div>
@@ -244,7 +244,7 @@ export function AssetBreakdownModal({
                         >
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
-                              <Home className="h-5 w-5 text-emerald-600" />
+                              <Home className="h-5 w-5 text-[#007A68]" />
                               <div>
                                 <h4 className="font-semibold">{property.propertyName}</h4>
                                 <p className="text-xs text-muted-foreground">
@@ -254,7 +254,7 @@ export function AssetBreakdownModal({
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="text-right">
-                                <p className="text-lg font-bold text-emerald-600">${equity.toLocaleString()}</p>
+                                <p className="text-lg font-bold text-[#007A68]">${equity.toLocaleString()}</p>
                                 <p className="text-xs text-muted-foreground">Equity</p>
                               </div>
                               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -267,7 +267,7 @@ export function AssetBreakdownModal({
                               <span className="text-muted-foreground">Loan Progress</span>
                               <span className="font-medium">{progress.toFixed(1)}% paid off</span>
                             </div>
-                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
                               <div
                                 className={`h-full rounded-full transition-all ${getProgressColor(progress)}`}
                                 style={{ width: `${progress}%` }}
@@ -291,13 +291,13 @@ export function AssetBreakdownModal({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50">
-                      <Car className="h-4 w-4 text-amber-600" />
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[rgba(212,168,67,0.15)]">
+                      <Car className="h-4 w-4 text-[#7A5A00]" />
                     </div>
                     <h3 className="text-lg font-semibold">Vehicles</h3>
                     <span className="text-sm text-muted-foreground">({breakdownDetails.vehicles.length})</span>
                   </div>
-                  <p className="text-lg font-semibold text-amber-600">
+                  <p className="text-lg font-semibold text-[#7A5A00]">
                     ${breakdownDetails.vehicleEquity.toLocaleString()}
                   </p>
                 </div>
@@ -324,7 +324,7 @@ export function AssetBreakdownModal({
                         >
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
-                              <Car className="h-5 w-5 text-amber-600" />
+                              <Car className="h-5 w-5 text-[#7A5A00]" />
                               <div>
                                 <h4 className="font-semibold">{vehicle.vehicleName}</h4>
                                 <p className="text-xs text-muted-foreground">
@@ -334,7 +334,7 @@ export function AssetBreakdownModal({
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="text-right">
-                                <p className="text-lg font-bold text-amber-600">${equity.toLocaleString()}</p>
+                                <p className="text-lg font-bold text-[#7A5A00]">${equity.toLocaleString()}</p>
                                 <p className="text-xs text-muted-foreground">Equity</p>
                               </div>
                               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -348,7 +348,7 @@ export function AssetBreakdownModal({
                                 <span className="text-muted-foreground">Loan Progress</span>
                                 <span className="font-medium">{progress.toFixed(1)}% paid off</span>
                               </div>
-                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div className="h-2 bg-muted rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full transition-all ${getProgressColor(progress)}`}
                                   style={{ width: `${progress}%` }}
@@ -363,7 +363,7 @@ export function AssetBreakdownModal({
                             </div>
                           )}
                           {loanTaken === 0 && (
-                            <p className="text-sm text-emerald-600">Fully paid - No outstanding loan</p>
+                            <p className="text-sm text-[#007A68]">Fully paid - No outstanding loan</p>
                           )}
                         </div>
                       );

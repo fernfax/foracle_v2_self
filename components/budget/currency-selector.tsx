@@ -172,7 +172,7 @@ export function CurrencySelector({
                   <div className="text-lg font-semibold">
                     {currentRate.toFixed(4)}
                     {customRate && (
-                      <span className="ml-2 text-xs text-orange-500">(Custom)</span>
+                      <span className="ml-2 text-xs text-[#7A3A0A]">(Custom)</span>
                     )}
                   </div>
                 )}

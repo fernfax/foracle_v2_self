@@ -1,0 +1,4635 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Foracle — Brand Guide v1.0</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Lora:ital,wght@0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet" />
+    <style>
+      :root {
+        /* ── Light mode surface stack ── */
+        --bg-page: #fbf7f1;
+        --bg-surface: #ffffff;
+        --bg-muted: #f0ebe0;
+
+        /* ── Text stack ── */
+        --text-primary: #1c2b2a;
+        --text-secondary: rgba(28, 43, 42, 0.55);
+        --text-muted: rgba(28, 43, 42, 0.35);
+
+        /* ── Brand palette ── */
+        --h: #1c2b2a;
+        --h2: #243332;
+        --h3: #2c3e3d;
+        --dk: #141e1d;
+
+        /* ── Accent colours ── */
+        --p: #b8622a; /* Terracotta — primary CTA (light mode) */
+        --p2: #d4845a; /* Prawn Coral — primary CTA (dark mode) / hover (light) */
+        --g: #3a6b52; /* Jungle Green — secondary / charts (light mode) */
+        --g2: #5a9470; /* Sage Green — charts (dark mode) */
+        --go: #d4a843; /* Kaya Gold — warning (both modes) */
+        --tl: #00c4aa; /* Teal Flash — positive (both modes) */
+        --tl2: #33d4bc; /* Teal light */
+        --cr: #f0ebe0; /* Bak Chang Cream */
+        --cr2: #fbf7f1; /* Warm White */
+        --err: #e05555; /* Alert Red (light) */
+        --err2: #e07070; /* Alert Red (dark) */
+        --warn: #d4a843;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: #fbf7f1;
+        color: var(--h);
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      /* ── COVER ── */
+      .cover {
+        background: var(--h);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 64px 80px;
+        position: relative;
+        overflow: hidden;
+        page-break-after: always;
+      }
+
+      .cover-geo {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 50%;
+        opacity: 0.07;
+        background-image:
+          repeating-linear-gradient(
+            0deg,
+            #b8622a 0,
+            #b8622a 1px,
+            transparent 1px,
+            transparent 40px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            #b8622a 0,
+            #b8622a 1px,
+            transparent 1px,
+            transparent 40px
+          );
+      }
+
+      .cover-circle {
+        position: absolute;
+        right: 120px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 360px;
+        height: 360px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 196, 170, 0.15);
+      }
+      .cover-circle::before {
+        content: "";
+        position: absolute;
+        inset: 40px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 196, 170, 0.1);
+      }
+      .cover-circle::after {
+        content: "";
+        position: absolute;
+        inset: 80px;
+        border-radius: 50%;
+        background: rgba(0, 196, 170, 0.04);
+        border: 1px solid rgba(0, 196, 170, 0.12);
+      }
+
+      .cover-top {
+      }
+      .cover-eyebrow {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(240, 235, 224, 0.4);
+        margin-bottom: 32px;
+      }
+      .cover-wordmark {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 80px;
+        font-weight: 600;
+        color: #f0ebe0;
+        letter-spacing: -3px;
+        line-height: 1;
+      }
+      .cover-wordmark span {
+        color: var(--p);
+      }
+      .cover-tagline {
+        font-family: "Lora", serif;
+        font-style: italic;
+        font-size: 20px;
+        color: rgba(240, 235, 224, 0.45);
+        margin-top: 16px;
+      }
+
+      .cover-motif {
+        display: flex;
+        height: 8px;
+        margin: 48px 0 32px;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .cover-motif div {
+        flex: 1;
+      }
+
+      .cover-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+      .cover-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 36px;
+        font-weight: 600;
+        color: #f0ebe0;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+      }
+      .cover-meta {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 12px;
+        color: rgba(240, 235, 224, 0.35);
+        text-align: right;
+        line-height: 2;
+      }
+
+      /* ── LAYOUT ── */
+      .page {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      /* ── SECTION DIVIDER ── */
+      .sec-divider {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 64px 80px 32px;
+      }
+      .sec-num {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--p);
+        white-space: nowrap;
+      }
+      .sec-line {
+        flex: 1;
+        height: 1px;
+        background: rgba(28, 43, 42, 0.15);
+      }
+      .sec-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--h);
+        letter-spacing: -0.5px;
+        padding: 0 80px 32px;
+      }
+
+      /* ── CONTENT BLOCKS ── */
+      .content {
+        padding: 0 80px;
+      }
+
+      .block {
+        margin-bottom: 48px;
+      }
+      .block-label {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(28, 43, 42, 0.4);
+        margin-bottom: 14px;
+      }
+      .block-desc {
+        font-size: 14px;
+        color: rgba(28, 43, 42, 0.65);
+        line-height: 1.7;
+        max-width: 640px;
+        margin-bottom: 20px;
+      }
+
+      /* ── MOTIF STRIP ── */
+      .motif {
+        display: flex;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .motif.h8 {
+        height: 8px;
+      }
+      .motif.h12 {
+        height: 12px;
+      }
+      .motif.h4 {
+        height: 4px;
+      }
+      .motif.h3 {
+        height: 3px;
+      }
+      .motif div {
+        flex: 1;
+      }
+
+      /* ── COLOUR SWATCHES ── */
+      .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+      }
+      .swatch {
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .swatch-colour {
+        height: 80px;
+      }
+      .swatch-info {
+        padding: 10px 12px;
+        background: white;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+      }
+      .swatch-name {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--h);
+        margin-bottom: 2px;
+      }
+      .swatch-hex {
+        font-family: monospace;
+        font-size: 11px;
+        color: rgba(28, 43, 42, 0.5);
+      }
+      .swatch-role {
+        font-size: 11px;
+        color: rgba(28, 43, 42, 0.4);
+        margin-top: 3px;
+        line-height: 1.3;
+      }
+
+      .swatch-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      /* SEMANTIC COLOUR SECTION */
+      .semantic-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .semantic-card {
+        border-radius: 10px;
+        padding: 20px 22px;
+        background: white;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .semantic-swatch {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+      }
+      .semantic-label {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--h);
+        margin-bottom: 6px;
+      }
+      .semantic-desc {
+        font-size: 13px;
+        color: rgba(28, 43, 42, 0.55);
+        line-height: 1.6;
+      }
+      .semantic-examples {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .sem-ex {
+        font-size: 11px;
+        font-family: "Space Grotesk", sans-serif;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+
+      /* ── TYPOGRAPHY ── */
+      .type-system {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .type-row {
+        display: flex;
+        gap: 40px;
+        align-items: flex-start;
+        padding: 28px 0;
+        border-bottom: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .type-row:last-child {
+        border-bottom: none;
+      }
+      .type-sample {
+        flex: 1;
+      }
+      .type-spec {
+        width: 220px;
+        flex-shrink: 0;
+        padding-top: 4px;
+      }
+      .type-spec-name {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--h);
+        margin-bottom: 3px;
+      }
+      .type-spec-detail {
+        font-size: 12px;
+        color: rgba(28, 43, 42, 0.45);
+        line-height: 1.6;
+      }
+
+      .type-pair-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 20px;
+      }
+      .type-pair-card {
+        border-radius: 10px;
+        padding: 22px 24px;
+        background: white;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .type-pair-label {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(28, 43, 42, 0.35);
+        margin-bottom: 16px;
+      }
+      .type-rule {
+        font-size: 12px;
+        color: rgba(28, 43, 42, 0.5);
+        line-height: 1.7;
+      }
+
+      /* ── LOGO ── */
+      .logo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .logo-box {
+        border-radius: 10px;
+        height: 130px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .logo-context {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 11px;
+        color: rgba(28, 43, 42, 0.4);
+        text-align: center;
+        margin-top: 8px;
+      }
+
+      .logo-dont-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .dont-box {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .dont-visual {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--cr2);
+        position: relative;
+      }
+      .dont-strike {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 18px;
+        height: 18px;
+        background: var(--err);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .dont-label {
+        padding: 8px 12px;
+        background: white;
+        font-size: 11px;
+        color: rgba(28, 43, 42, 0.5);
+        line-height: 1.4;
+      }
+
+      /* ── MOTIF SECTION ── */
+      .motif-uses {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .motif-card {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .motif-card-top {
+        padding: 12px 16px;
+        background: white;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(28, 43, 42, 0.4);
+      }
+      .motif-card-body {
+        padding: 14px 16px;
+        background: var(--cr2);
+      }
+      .motif-card-desc {
+        font-size: 12px;
+        color: rgba(28, 43, 42, 0.5);
+        line-height: 1.6;
+        margin-top: 10px;
+        padding: 0 4px;
+        background: white;
+        padding: 10px 14px;
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(28, 43, 42, 0.5);
+      }
+
+      .size-variants {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .size-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .size-label {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 11px;
+        width: 200px;
+        flex-shrink: 0;
+        color: rgba(28, 43, 42, 0.5);
+      }
+      .size-strip-wrap {
+        flex: 1;
+      }
+
+      /* ── SPACING ── */
+      .spacing-scale {
+        display: flex;
+        align-items: flex-end;
+        gap: 16px;
+      }
+      .sp-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+      .sp-bar {
+        background: var(--p);
+        border-radius: 3px;
+        width: 32px;
+      }
+      .sp-val {
+        font-family: monospace;
+        font-size: 11px;
+        color: rgba(28, 43, 42, 0.6);
+      }
+      .sp-name {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        color: rgba(28, 43, 42, 0.4);
+      }
+
+      /* ── GRID & RADIUS ── */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+      .rule-card {
+        background: white;
+        border-radius: 10px;
+        padding: 22px 24px;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .rule-card-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--h);
+        margin-bottom: 12px;
+      }
+      .rule-card ul {
+        padding-left: 18px;
+      }
+      .rule-card li {
+        font-size: 13px;
+        color: rgba(28, 43, 42, 0.6);
+        line-height: 1.8;
+      }
+      .rule-card p {
+        font-size: 13px;
+        color: rgba(28, 43, 42, 0.6);
+        line-height: 1.7;
+      }
+
+      .radius-demo {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .rad-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+      .rad-shape {
+        width: 56px;
+        height: 56px;
+        background: rgba(184, 98, 42, 0.15);
+        border: 1.5px solid var(--p);
+      }
+      .rad-label {
+        font-family: monospace;
+        font-size: 10px;
+        color: rgba(28, 43, 42, 0.5);
+      }
+
+      /* ── COMPONENTS ── */
+      .comp-section {
+        margin-bottom: 40px;
+      }
+      .comp-section-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--h);
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+
+      .btn-showcase {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .btn-sg {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 10px 22px;
+        border-radius: 6px;
+        display: inline-block;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: var(--p);
+        color: #fbf7f1;
+        border: none;
+      }
+      .btn-secondary {
+        background: transparent;
+        border: 1.5px solid var(--p);
+        color: var(--p);
+      }
+      .btn-ghost {
+        background: transparent;
+        border: 1px solid rgba(28, 43, 42, 0.2);
+        color: rgba(28, 43, 42, 0.6);
+      }
+      .btn-teal {
+        background: var(--tl);
+        color: var(--h);
+        border: none;
+      }
+      .btn-danger {
+        background: var(--err);
+        color: white;
+        border: none;
+      }
+      .btn-sm {
+        padding: 7px 16px;
+        font-size: 12px;
+      }
+      .btn-lg {
+        padding: 13px 28px;
+        font-size: 15px;
+      }
+
+      .badge-showcase {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .badge-sg {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 4px;
+      }
+      .badge-success {
+        background: rgba(0, 196, 170, 0.15);
+        color: #007a68;
+      }
+      .badge-warning {
+        background: rgba(212, 168, 67, 0.18);
+        color: #7a5a00;
+      }
+      .badge-danger {
+        background: rgba(224, 85, 85, 0.15);
+        color: #8b0000;
+      }
+      .badge-neutral {
+        background: rgba(28, 43, 42, 0.08);
+        color: rgba(28, 43, 42, 0.5);
+      }
+      .badge-brand {
+        background: rgba(184, 98, 42, 0.15);
+        color: var(--p);
+      }
+
+      .input-showcase {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        max-width: 420px;
+      }
+      .input-wrap label {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(28, 43, 42, 0.5);
+        display: block;
+        margin-bottom: 6px;
+      }
+      .input-sg {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid rgba(28, 43, 42, 0.2);
+        border-radius: 6px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 14px;
+        color: var(--h);
+        background: white;
+        outline: none;
+      }
+      .input-sg:focus {
+        border-color: var(--p);
+        box-shadow: 0 0 0 3px rgba(184, 98, 42, 0.1);
+      }
+      .input-sg.success {
+        border-color: var(--tl);
+      }
+      .input-sg.error {
+        border-color: var(--err);
+      }
+      .input-helper {
+        font-size: 12px;
+        margin-top: 5px;
+      }
+      .input-helper.success {
+        color: var(--tl);
+      }
+      .input-helper.error {
+        color: var(--err);
+      }
+
+      .card-showcase {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+      .ui-card {
+        border-radius: 10px;
+        padding: 16px 18px;
+        background: var(--h);
+        border: 0.5px solid rgba(240, 235, 224, 0.08);
+      }
+      .ui-card-label {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(240, 235, 224, 0.35);
+        margin-bottom: 8px;
+      }
+      .ui-card-amt {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+      }
+      .ui-card-sub {
+        font-size: 12px;
+        color: rgba(240, 235, 224, 0.4);
+        margin-top: 4px;
+      }
+      .bar-bg-ui {
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 10px 0 4px;
+      }
+      .bar-fg-ui {
+        height: 4px;
+        border-radius: 2px;
+        margin-top: -14px;
+      }
+
+      /* ── VOICE ── */
+      .voice-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .voice-card {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .voice-card-header {
+        padding: 12px 16px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .voice-card-body {
+        padding: 16px;
+        background: white;
+      }
+      .voice-example {
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .voice-do .voice-card-header {
+        background: rgba(0, 196, 170, 0.12);
+        color: #007a68;
+      }
+      .voice-dont .voice-card-header {
+        background: rgba(224, 85, 85, 0.1);
+        color: #8b0000;
+      }
+      .voice-note {
+        font-size: 12px;
+        color: rgba(28, 43, 42, 0.4);
+        margin-top: 10px;
+        font-style: italic;
+      }
+
+      .trait-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      .trait-card {
+        background: white;
+        border-radius: 10px;
+        padding: 18px 16px;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .trait-name {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--h);
+        margin-bottom: 6px;
+      }
+      .trait-desc {
+        font-size: 12px;
+        color: rgba(28, 43, 42, 0.5);
+        line-height: 1.6;
+      }
+      .trait-not {
+        font-size: 11px;
+        color: rgba(28, 43, 42, 0.35);
+        margin-top: 8px;
+        font-style: italic;
+      }
+
+      /* ── DARK SURFACES ── */
+      .dark-content {
+        background: var(--h);
+        border-radius: 12px;
+        padding: 32px;
+        margin-bottom: 32px;
+      }
+
+      /* ── COVER PAGE MOTIF ── */
+      .cover-motif-bar div:nth-child(1) {
+        background: #1c2b2a;
+      }
+      .cover-motif-bar div:nth-child(2) {
+        background: #b8622a;
+      }
+      .cover-motif-bar div:nth-child(3) {
+        background: #00c4aa;
+      }
+      .cover-motif-bar div:nth-child(4) {
+        background: #3a6b52;
+      }
+      .cover-motif-bar div:nth-child(5) {
+        background: #d4a843;
+      }
+      .cover-motif-bar div:nth-child(6) {
+        background: #d4845a;
+      }
+      .cover-motif-bar div:nth-child(7) {
+        background: #1c2b2a;
+      }
+      .cover-motif-bar div:nth-child(8) {
+        background: #00c4aa;
+      }
+      .cover-motif-bar div:nth-child(9) {
+        background: #b8622a;
+      }
+      .cover-motif-bar div:nth-child(10) {
+        background: #3a6b52;
+      }
+      .cover-motif-bar div:nth-child(11) {
+        background: #d4a843;
+      }
+      .cover-motif-bar div:nth-child(12) {
+        background: #1c2b2a;
+      }
+
+      /* ── FOOTER ── */
+      .page-footer {
+        background: var(--h);
+        padding: 40px 80px;
+        margin-top: 80px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .footer-wordmark {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 22px;
+        font-weight: 600;
+        color: #f0ebe0;
+        letter-spacing: -0.5px;
+      }
+      .footer-wordmark span {
+        color: var(--p);
+      }
+      .footer-meta {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 11px;
+        color: rgba(240, 235, 224, 0.3);
+        text-align: right;
+        line-height: 2;
+      }
+
+      /* ── LIGHT/DARK MODE PANELS ── */
+      .mode-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        margin-bottom: 40px;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .mode-panel-l {
+        background: #fbf7f1;
+        padding: 28px;
+      }
+      .mode-panel-d {
+        background: #1c2b2a;
+        padding: 28px;
+        border-left: 0.5px solid rgba(240, 235, 224, 0.08);
+      }
+      .mode-title-l {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1c2b2a;
+        margin-bottom: 4px;
+      }
+      .mode-title-d {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: #f0ebe0;
+        margin-bottom: 4px;
+      }
+      .mode-badge-l {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 9px;
+        border-radius: 4px;
+        background: rgba(184, 98, 42, 0.12);
+        color: #7a3a0a;
+        display: inline-block;
+        margin-bottom: 18px;
+      }
+      .mode-badge-d {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 9px;
+        border-radius: 4px;
+        background: rgba(240, 235, 224, 0.08);
+        color: rgba(240, 235, 224, 0.45);
+        display: inline-block;
+        margin-bottom: 18px;
+      }
+      .mode-section-lbl {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin: 16px 0 10px;
+      }
+
+      /* TOKEN TABLE */
+      .token-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-bottom: 24px;
+      }
+      .token-table th {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 8px 12px;
+        text-align: left;
+      }
+      .token-table td {
+        padding: 10px 12px;
+        vertical-align: middle;
+      }
+      .token-table tr + tr td {
+        border-top: 1px solid;
+      }
+      .tt-light th {
+        color: rgba(28, 43, 42, 0.35);
+        border-bottom: 1px solid rgba(28, 43, 42, 0.1);
+      }
+      .tt-light td {
+        color: rgba(28, 43, 42, 0.7);
+      }
+      .tt-light tr + tr td {
+        border-color: rgba(28, 43, 42, 0.07);
+      }
+      .tt-dark th {
+        color: rgba(240, 235, 224, 0.3);
+        border-bottom: 1px solid rgba(240, 235, 224, 0.08);
+      }
+      .tt-dark td {
+        color: rgba(240, 235, 224, 0.6);
+      }
+      .tt-dark tr + tr td {
+        border-color: rgba(240, 235, 224, 0.07);
+      }
+      .tsw {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+        border: 0.5px solid rgba(0, 0, 0, 0.08);
+      }
+      .tok {
+        font-family: monospace;
+        font-size: 11px;
+      }
+      .hex {
+        font-family: monospace;
+        font-size: 11px;
+      }
+
+      /* SHARED COLOUR SECTION */
+      .shared-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .shared-card {
+        background: white;
+        border-radius: 10px;
+        padding: 16px;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .shared-swatches {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+      }
+      .shared-sw {
+        width: 24px;
+        height: 24px;
+        border-radius: 5px;
+        border: 0.5px solid rgba(0, 0, 0, 0.08);
+      }
+      .shared-name {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--h);
+        margin-bottom: 5px;
+      }
+      .shared-desc {
+        font-size: 12px;
+        color: rgba(28, 43, 42, 0.55);
+        line-height: 1.55;
+      }
+
+      /* CONTRAST CALLOUT */
+      .contrast-note {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .cn-card {
+        border-radius: 8px;
+        padding: 14px 16px;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      /* PREVIEW STRIPS */
+      .preview-strip {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .ps-light {
+        background: #fbf7f1;
+        border-radius: 10px;
+        padding: 16px;
+        border: 0.5px solid rgba(28, 43, 42, 0.1);
+      }
+      .ps-dark {
+        background: #141e1d;
+        border-radius: 10px;
+        padding: 16px;
+        border: 0.5px solid rgba(240, 235, 224, 0.06);
+      }
+
+      /* ── PRINT ── */
+      @media print {
+        body {
+          background: white;
+        }
+        .cover {
+          page-break-after: always;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ══════════════════ COVER ══════════════════ -->
+    <div class="cover">
+      <div class="cover-geo"></div>
+      <div class="cover-circle"></div>
+
+      <div class="cover-top">
+        <div class="cover-eyebrow">Foracle · Brand Identity System</div>
+        <div class="cover-wordmark">for<span>acle</span></div>
+        <div class="cover-tagline">your financial home, in Singapore</div>
+      </div>
+
+      <div
+        class="cover-motif motif h8 cover-motif-bar"
+        style="
+          margin: 48px 0 40px;
+          border-radius: 4px;
+          overflow: hidden;
+          display: flex;
+        ">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+
+      <div class="cover-bottom">
+        <div class="cover-title">Brand Guide<br />Version 1.0</div>
+        <div class="cover-meta">
+          Foracle Pte. Ltd.<br />
+          Singapore<br />
+          2025 · Confidential
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ 01 · BRAND FOUNDATIONS ══════════════════ -->
+    <div style="padding: 80px 80px 0">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 40px;
+        ">
+        <span
+          style="
+            font-family: &quot;Space Grotesk&quot;, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--p);
+          "
+          >01</span
+        >
+        <div
+          style="
+            flex: 1;
+            height: 1px;
+            background: rgba(28, 43, 42, 0.15);
+          "></div>
+      </div>
+      <div
+        style="
+          font-family: &quot;Space Grotesk&quot;, sans-serif;
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--h);
+          letter-spacing: -0.5px;
+          margin-bottom: 40px;
+        ">
+        Brand Foundations
+      </div>
+    </div>
+    <div class="content">
+      <!-- TAGLINE -->
+      <div class="block">
+        <div class="block-label">Tagline</div>
+        <div
+          style="
+            font-family: &quot;Lora&quot;, serif;
+            font-style: italic;
+            font-size: 32px;
+            color: var(--p);
+            line-height: 1.2;
+            margin-bottom: 10px;
+          ">
+          your financial home, in Singapore
+        </div>
+        <div
+          style="
+            font-size: 13px;
+            color: rgba(28, 43, 42, 0.5);
+            max-width: 600px;
+            line-height: 1.7;
+          ">
+          Personal, grounded, and specific. Not a generic fintech promise — a
+          place that belongs to you. The lowercase and comma pause are
+          intentional: they make it feel human, not corporate. Always in Lora
+          italic. Never modified.
+        </div>
+      </div>
+
+      <!-- MISSION + VISION -->
+      <div class="block">
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 840px;
+          ">
+          <div
+            style="
+              background: var(--h);
+              border-radius: 12px;
+              padding: 26px 28px;
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 10px;
+                font-weight: 600;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+                color: rgba(240, 235, 224, 0.3);
+                margin-bottom: 14px;
+              ">
+              Mission — what we do
+            </div>
+            <div
+              style="
+                font-family: &quot;Lora&quot;, serif;
+                font-size: 17px;
+                color: #f0ebe0;
+                line-height: 1.55;
+                margin-bottom: 12px;
+              ">
+              To give every Singaporean a complete, clear view of their
+              financial life — and the confidence to act on it.
+            </div>
+            <div
+              style="
+                height: 1px;
+                background: rgba(240, 235, 224, 0.1);
+                margin: 14px 0;
+              "></div>
+            <div
+              style="
+                font-size: 13px;
+                color: rgba(240, 235, 224, 0.5);
+                line-height: 1.65;
+              ">
+              We help people understand and improve their financial habits over
+              time.
+            </div>
+          </div>
+          <div
+            style="
+              background: #fbf7f1;
+              border-radius: 12px;
+              padding: 26px 28px;
+              border: 0.5px solid rgba(184, 98, 42, 0.15);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 10px;
+                font-weight: 600;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+                color: rgba(28, 43, 42, 0.3);
+                margin-bottom: 14px;
+              ">
+              Vision — where we're going
+            </div>
+            <div
+              style="
+                font-family: &quot;Lora&quot;, serif;
+                font-size: 17px;
+                color: var(--h);
+                line-height: 1.55;
+                margin-bottom: 12px;
+              ">
+              Financial clarity for everyone.
+            </div>
+            <div
+              style="
+                height: 1px;
+                background: rgba(28, 43, 42, 0.08);
+                margin: 14px 0;
+              "></div>
+            <div
+              style="
+                font-size: 13px;
+                color: rgba(28, 43, 42, 0.5);
+                line-height: 1.65;
+              ">
+              A world where people feel in control of their money — not afraid
+              of it.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POSITIONING -->
+      <div class="block">
+        <div class="block-label">Brand positioning — value proposition</div>
+        <div
+          style="
+            background: var(--h);
+            border-radius: 12px;
+            padding: 28px 32px;
+            max-width: 800px;
+          ">
+          <div
+            style="
+              font-family: &quot;Lora&quot;, serif;
+              font-style: italic;
+              font-size: 19px;
+              color: #f0ebe0;
+              line-height: 1.6;
+              margin-bottom: 16px;
+            ">
+            "A modern, minimal, and approachable money companion that helps
+            Singaporeans stay in control — without stress or judgment."
+          </div>
+          <div
+            style="
+              height: 1px;
+              background: rgba(240, 235, 224, 0.08);
+              margin-bottom: 16px;
+            "></div>
+          <div
+            style="
+              font-size: 13px;
+              color: rgba(240, 235, 224, 0.5);
+              line-height: 1.7;
+            ">
+            We want something clean, modern, and useful — but still human and
+            approachable. A no-nonsense money tool that feels simple and
+            friendly, not stressful or intimidating.
+          </div>
+        </div>
+      </div>
+
+      <!-- BRAND CHARACTER / ARCHETYPE -->
+      <div class="block">
+        <div class="block-label">Brand character — the guided companion</div>
+        <div class="block-desc">
+          Foracle is best understood as a <strong>Guided Companion</strong> — a
+          financial co-pilot that works quietly in the background, surfacing
+          just-in-time insights that reveal themselves over time. The name
+          itself signals this: <em>Oracle</em> = quiet intelligence. Not loud,
+          not pushy, not preachy. Just there when you need it, with the right
+          information at the right moment.
+        </div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            max-width: 840px;
+          ">
+          <div
+            style="
+              background: white;
+              border-radius: 10px;
+              padding: 18px;
+              border: 0.5px solid rgba(28, 43, 42, 0.1);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--p);
+                margin-bottom: 8px;
+              ">
+              Guided Companion
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(28, 43, 42, 0.55);
+                line-height: 1.65;
+              ">
+              "Foracle is a guided companion that knows you — and guides you to
+              make better money decisions over time."
+            </div>
+          </div>
+          <div
+            style="
+              background: white;
+              border-radius: 10px;
+              padding: 18px;
+              border: 0.5px solid rgba(28, 43, 42, 0.1);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--g);
+                margin-bottom: 8px;
+              ">
+              Financial Co-pilot
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(28, 43, 42, 0.55);
+                line-height: 1.65;
+              ">
+              "Foracle is a financial co-pilot that helps you see and improve
+              your financial habits over time."
+            </div>
+          </div>
+          <div
+            style="
+              background: white;
+              border-radius: 10px;
+              padding: 18px;
+              border: 0.5px solid rgba(28, 43, 42, 0.1);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--tl);
+                margin-bottom: 8px;
+              ">
+              Calm Intelligence
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(28, 43, 42, 0.55);
+                line-height: 1.65;
+              ">
+              Oracle = quiet intelligence in the background. Just-in-time
+              insights that reveal themselves naturally — never overwhelming.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TONE + VISUAL STYLE -->
+      <div class="block">
+        <div class="block-label">Tone & visual style</div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 840px;
+          ">
+          <div>
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: rgba(28, 43, 42, 0.4);
+                margin-bottom: 12px;
+              ">
+              Tone of voice
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: white;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(28, 43, 42, 0.08);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--tl);
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--h);
+                    ">
+                    Friendly
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Warm and personal — like a trusted friend, not a bank.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: white;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(28, 43, 42, 0.08);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--tl);
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--h);
+                    ">
+                    Calm
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Reduces financial anxiety. Never alarmist, never panicked.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: white;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(28, 43, 42, 0.08);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--tl);
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--h);
+                    ">
+                    Slightly encouraging
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Gently motivates. Grounded optimism, not cheerleading.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: #fbf7f1;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(224, 85, 85, 0.12);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: #e05555;
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: #8b0000;
+                    ">
+                    Not preachy
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Never lectures. Never implies the user is doing it wrong.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: #fbf7f1;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(224, 85, 85, 0.12);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: #e05555;
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: #8b0000;
+                    ">
+                    Not overly clever
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Wit is fine, but clarity always comes first.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: rgba(28, 43, 42, 0.4);
+                margin-bottom: 12px;
+              ">
+              Visual style
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: white;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(28, 43, 42, 0.08);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--p);
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--h);
+                    ">
+                    Minimal base
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Clean layouts, generous white space, no unnecessary
+                    decoration.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: white;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(28, 43, 42, 0.08);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--p);
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--h);
+                    ">
+                    Warm accents
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Terracotta, gold, and teal add life without overwhelming the
+                    UI.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: white;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(28, 43, 42, 0.08);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--p);
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--h);
+                    ">
+                    Clean UI + light personality
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Function-first, but the tile motif and Lora moments add
+                    soul.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: white;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(28, 43, 42, 0.08);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--p);
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--h);
+                    ">
+                    Soft shapes in logo
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Slightly rounded forms — approachable, not hard-edged or
+                    cold.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 10px;
+                  padding: 12px 14px;
+                  background: white;
+                  border-radius: 8px;
+                  border: 0.5px solid rgba(28, 43, 42, 0.08);
+                ">
+                <div
+                  style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--p);
+                    margin-top: 5px;
+                    flex-shrink: 0;
+                  "></div>
+                <div>
+                  <div
+                    style="
+                      font-family: &quot;Space Grotesk&quot;, sans-serif;
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--h);
+                    ">
+                    Soft teals + warm neutrals
+                  </div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      color: rgba(28, 43, 42, 0.5);
+                      margin-top: 2px;
+                    ">
+                    Colour palette reflects calm intelligence — never loud or
+                    demanding.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERSONALITY TRAITS -->
+      <div class="block">
+        <div class="block-label">Brand personality — four traits</div>
+        <div class="trait-grid">
+          <div class="trait-card">
+            <div class="trait-name">Warm</div>
+            <div class="trait-desc">
+              We speak like a trusted friend who understands money. Never
+              clinical, never distant.
+            </div>
+            <div class="trait-not">Not: sentimental or soft</div>
+          </div>
+          <div class="trait-card">
+            <div class="trait-name">Calm</div>
+            <div class="trait-desc">
+              Money is stressful. Foracle removes that friction with clarity,
+              reassurance, and the right information at the right moment.
+            </div>
+            <div class="trait-not">Not: passive or indifferent</div>
+          </div>
+          <div class="trait-card">
+            <div class="trait-name">Rooted</div>
+            <div class="trait-desc">
+              Deeply Singaporean — we understand CPF, HDB, hawker culture, and
+              the family-first mindset.
+            </div>
+            <div class="trait-not">Not: nostalgic or niche</div>
+          </div>
+          <div class="trait-card">
+            <div class="trait-name">Intelligent</div>
+            <div class="trait-desc">
+              The oracle beneath the surface. Quiet, perceptive, and always
+              learning — surfacing insights before you think to ask.
+            </div>
+            <div class="trait-not">Not: showy or over-explaining</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HYBRID PHILOSOPHY -->
+      <div class="block">
+        <div class="block-label">Design philosophy</div>
+        <div class="block-desc">
+          Foracle's visual identity sits at the intersection of two qualities:
+          the warmth of Singapore's Nanyang heritage and the precision of a
+          modern, minimal product. The brand resolves this tension by assigning
+          each quality to a distinct system — warmth lives in the colour
+          palette, typography choices, and voice; precision lives in the layout
+          grid, spacing system, and data presentation.
+        </div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            max-width: 720px;
+          ">
+          <div
+            style="
+              padding: 18px 20px;
+              background: white;
+              border-radius: 10px;
+              border-left: 3px solid var(--p);
+              border: 0.5px solid rgba(184, 98, 42, 0.2);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--p);
+                margin-bottom: 8px;
+              ">
+              The soul — Nanyang warmth
+            </div>
+            <div
+              style="
+                font-size: 13px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 1.7;
+              ">
+              Earthy terracotta primary · Kaya gold · Jungle green · Warm cream
+              backgrounds · Lora serif for emotional moments · Peranakan tile
+              motif signature
+            </div>
+          </div>
+          <div
+            style="
+              padding: 18px 20px;
+              background: white;
+              border-radius: 10px;
+              border-left: 3px solid var(--g);
+              border: 0.5px solid rgba(58, 107, 82, 0.2);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--g);
+                margin-bottom: 8px;
+              ">
+              The discipline — minimal SG
+            </div>
+            <div
+              style="
+                font-size: 13px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 1.7;
+              ">
+              Space Grotesk for all UI · Soft, approachable shapes · Clean
+              minimal layouts · Teal reserved for positive states only · Precise
+              8px grid
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ 02 · COLOUR ══════════════════ -->
+    <div style="padding: 80px 80px 0; margin-top: 40px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 40px;
+        ">
+        <span
+          style="
+            font-family: &quot;Space Grotesk&quot;, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--p);
+          "
+          >02</span
+        >
+        <div
+          style="
+            flex: 1;
+            height: 1px;
+            background: rgba(28, 43, 42, 0.15);
+          "></div>
+      </div>
+      <div
+        style="
+          font-family: &quot;Space Grotesk&quot;, sans-serif;
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--h);
+          letter-spacing: -0.5px;
+          margin-bottom: 40px;
+        ">
+        Colour System
+      </div>
+    </div>
+    <div class="content">
+      <!-- PHILOSOPHY -->
+      <div class="block">
+        <div class="block-label">Philosophy — light-first, dark-supported</div>
+        <div class="block-desc">
+          Light mode is Foracle's primary, default experience. It reflects the
+          brand's warmth and approachability — open, calm, and friendly. Dark
+          mode is a supported option for users who prefer it during evening use
+          or extended financial review sessions. Both modes share the same
+          accent colours and semantic rules; only the surface and text tokens
+          change.
+        </div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            max-width: 800px;
+            margin-bottom: 12px;
+          ">
+          <div
+            style="
+              background: rgba(184, 98, 42, 0.07);
+              border: 0.5px solid rgba(184, 98, 42, 0.2);
+              border-radius: 8px;
+              padding: 14px 16px;
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                color: #7a3a0a;
+                margin-bottom: 6px;
+              ">
+              Terracotta family
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 1.6;
+              ">
+              The standout accent. CTAs, active states, logo. Shifts one step
+              lighter in dark mode for contrast.
+            </div>
+          </div>
+          <div
+            style="
+              background: rgba(0, 196, 170, 0.07);
+              border: 0.5px solid rgba(0, 196, 170, 0.2);
+              border-radius: 8px;
+              padding: 14px 16px;
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                color: #006b5c;
+                margin-bottom: 6px;
+              ">
+              Teal Flash — locked
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 1.6;
+              ">
+              Identical hex in both modes. Its meaning (positive progress) must
+              never feel different between modes.
+            </div>
+          </div>
+          <div
+            style="
+              background: rgba(212, 168, 67, 0.07);
+              border: 0.5px solid rgba(212, 168, 67, 0.2);
+              border-radius: 8px;
+              padding: 14px 16px;
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                color: #6b5000;
+                margin-bottom: 6px;
+              ">
+              Kaya Gold — locked
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 1.6;
+              ">
+              Identical hex in both modes. Warning and attention states must
+              feel consistent regardless of mode.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE-BY-SIDE MODE PANELS -->
+      <div class="block">
+        <div class="block-label">Light mode — primary default</div>
+        <div class="mode-grid">
+          <!-- LIGHT -->
+          <div class="mode-panel-l">
+            <div class="mode-title-l">Light mode</div>
+            <div class="mode-badge-l">Primary / Default</div>
+
+            <div class="mode-section-lbl" style="color: rgba(28, 43, 42, 0.35)">
+              Backgrounds
+            </div>
+            <table class="token-table tt-light">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Colour</th>
+                  <th>Hex</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="tok">bg-page</span></td>
+                  <td>
+                    <span class="tsw" style="background: #fbf7f1"></span>Warm
+                    White
+                  </td>
+                  <td><span class="hex">#FBF7F1</span></td>
+                  <td>Page canvas — base of everything</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">bg-surface</span></td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="
+                        background: #ffffff;
+                        border-color: rgba(0, 0, 0, 0.1);
+                      "></span
+                    >Pure White
+                  </td>
+                  <td><span class="hex">#FFFFFF</span></td>
+                  <td>Cards, panels, sidebar</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">bg-muted</span></td>
+                  <td>
+                    <span class="tsw" style="background: #f0ebe0"></span>Bak
+                    Chang Cream
+                  </td>
+                  <td><span class="hex">#F0EBE0</span></td>
+                  <td>Subtle fills, hover, input bg</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="mode-section-lbl" style="color: rgba(28, 43, 42, 0.35)">
+              Text
+            </div>
+            <table class="token-table tt-light">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Colour</th>
+                  <th>Hex / Opacity</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="tok">text-primary</span></td>
+                  <td>
+                    <span class="tsw" style="background: #1c2b2a"></span>Deep
+                    Forest
+                  </td>
+                  <td><span class="hex">#1C2B2A</span></td>
+                  <td>Headings, key data, labels</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">text-secondary</span></td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="background: rgba(28, 43, 42, 0.55)"></span
+                    >Forest 55%
+                  </td>
+                  <td><span class="hex">55% opacity</span></td>
+                  <td>Body copy, descriptions</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">text-muted</span></td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="background: rgba(28, 43, 42, 0.35)"></span
+                    >Forest 35%
+                  </td>
+                  <td><span class="hex">35% opacity</span></td>
+                  <td>Metadata, dates, disabled</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="mode-section-lbl" style="color: rgba(28, 43, 42, 0.35)">
+              Borders
+            </div>
+            <table class="token-table tt-light">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th></th>
+                  <th>Value</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="tok">border-default</span></td>
+                  <td></td>
+                  <td><span class="hex">rgba(28,43,42,0.10)</span></td>
+                  <td>Cards, panels, dividers</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">border-strong</span></td>
+                  <td></td>
+                  <td><span class="hex">rgba(28,43,42,0.20)</span></td>
+                  <td>Inputs, active emphasis</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="mode-section-lbl" style="color: rgba(28, 43, 42, 0.35)">
+              Accent / brand
+            </div>
+            <table class="token-table tt-light">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Colour</th>
+                  <th>Hex</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="tok">accent-primary</span></td>
+                  <td>
+                    <span class="tsw" style="background: #b8622a"></span
+                    >Terracotta
+                  </td>
+                  <td><span class="hex">#B8622A</span></td>
+                  <td>CTA buttons, active nav, logo, links, focus rings</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">accent-primary-hover</span></td>
+                  <td>
+                    <span class="tsw" style="background: #d4845a"></span>Prawn
+                    Coral
+                  </td>
+                  <td><span class="hex">#D4845A</span></td>
+                  <td>Terracotta hover state</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">accent-positive</span></td>
+                  <td>
+                    <span class="tsw" style="background: #00c4aa"></span>Teal
+                    Flash
+                  </td>
+                  <td><span class="hex">#00C4AA</span></td>
+                  <td>On track, under budget, goal hit — ONLY</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">accent-warning</span></td>
+                  <td>
+                    <span class="tsw" style="background: #d4a843"></span>Kaya
+                    Gold
+                  </td>
+                  <td><span class="hex">#D4A843</span></td>
+                  <td>Renewals, approaching limit, attention</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">accent-secondary</span></td>
+                  <td>
+                    <span class="tsw" style="background: #3a6b52"></span>Jungle
+                    Green
+                  </td>
+                  <td><span class="hex">#3A6B52</span></td>
+                  <td>Chart categories, secondary data points</td>
+                </tr>
+                <tr>
+                  <td><span class="tok">accent-danger</span></td>
+                  <td>
+                    <span class="tsw" style="background: #e05555"></span>Alert
+                    Red
+                  </td>
+                  <td><span class="hex">#E05555</span></td>
+                  <td>Errors, overspent, destructive actions</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- DARK -->
+          <div class="mode-panel-d">
+            <div class="mode-title-d">Dark mode</div>
+            <div class="mode-badge-d">Optional / Toggle</div>
+
+            <div
+              class="mode-section-lbl"
+              style="color: rgba(240, 235, 224, 0.3)">
+              Backgrounds
+            </div>
+            <table class="token-table tt-dark">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Colour</th>
+                  <th>Hex</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >bg-page</span
+                    >
+                  </td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="
+                        background: #141e1d;
+                        border-color: rgba(255, 255, 255, 0.08);
+                      "></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Nightfall</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#141E1D</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Deepest canvas, page base
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >bg-surface</span
+                    >
+                  </td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="
+                        background: #1c2b2a;
+                        border-color: rgba(255, 255, 255, 0.06);
+                      "></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Deep Forest</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#1C2B2A</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Sidebar, main panels, top nav
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >bg-elevated</span
+                    >
+                  </td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="
+                        background: #243332;
+                        border-color: rgba(255, 255, 255, 0.05);
+                      "></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Dark Surface</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#243332</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Cards, modals, elevated panels
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >bg-muted</span
+                    >
+                  </td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="
+                        background: #2c3e3d;
+                        border-color: rgba(255, 255, 255, 0.04);
+                      "></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Forest Mid</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#2C3E3D</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Hover states, subtle fills
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div
+              class="mode-section-lbl"
+              style="color: rgba(240, 235, 224, 0.3)">
+              Text
+            </div>
+            <table class="token-table tt-dark">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Colour</th>
+                  <th>Hex / Opacity</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >text-primary</span
+                    >
+                  </td>
+                  <td>
+                    <span class="tsw" style="background: #f0ebe0"></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Bak Chang Cream</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#F0EBE0</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Headings, key figures, labels
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >text-secondary</span
+                    >
+                  </td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="
+                        background: rgba(240, 235, 224, 0.55);
+                        border-color: rgba(255, 255, 255, 0.06);
+                      "></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Cream 55%</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >55% opacity</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Body copy, descriptions
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >text-muted</span
+                    >
+                  </td>
+                  <td>
+                    <span
+                      class="tsw"
+                      style="
+                        background: rgba(240, 235, 224, 0.3);
+                        border-color: rgba(255, 255, 255, 0.05);
+                      "></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Cream 30%</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >30% opacity</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Metadata, dates, placeholders
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div
+              class="mode-section-lbl"
+              style="color: rgba(240, 235, 224, 0.3)">
+              Borders
+            </div>
+            <table class="token-table tt-dark">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th></th>
+                  <th>Value</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >border-default</span
+                    >
+                  </td>
+                  <td></td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >rgba(240,235,224,0.08)</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Cards, panels, dividers
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >border-strong</span
+                    >
+                  </td>
+                  <td></td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >rgba(240,235,224,0.18)</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Inputs, active emphasis
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div
+              class="mode-section-lbl"
+              style="color: rgba(240, 235, 224, 0.3)">
+              Accent / brand
+            </div>
+            <table class="token-table tt-dark">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Colour</th>
+                  <th>Hex</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >accent-primary</span
+                    >
+                  </td>
+                  <td>
+                    <span class="tsw" style="background: #d4845a"></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Prawn Coral</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#D4845A</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    CTA buttons, active states — lighter for contrast on dark bg
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >accent-primary-border</span
+                    >
+                  </td>
+                  <td>
+                    <span class="tsw" style="background: #b8622a"></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Terracotta</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#B8622A</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Tinted borders, fills on dark accent elements
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >accent-positive</span
+                    >
+                  </td>
+                  <td>
+                    <span class="tsw" style="background: #00c4aa"></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Teal Flash</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#00C4AA ← same</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    On track, under budget, goal hit — ONLY
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >accent-warning</span
+                    >
+                  </td>
+                  <td>
+                    <span class="tsw" style="background: #d4a843"></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Kaya Gold</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#D4A843 ← same</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Renewals, approaching limit, attention
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >accent-secondary</span
+                    >
+                  </td>
+                  <td>
+                    <span class="tsw" style="background: #5a9470"></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Sage Green</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#5A9470</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Jungle Green lightened — chart categories
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="tok" style="color: rgba(240, 235, 224, 0.55)"
+                      >accent-danger</span
+                    >
+                  </td>
+                  <td>
+                    <span class="tsw" style="background: #e07070"></span
+                    ><span style="color: rgba(240, 235, 224, 0.6)"
+                      >Alert Red (light)</span
+                    >
+                  </td>
+                  <td>
+                    <span class="hex" style="color: rgba(240, 235, 224, 0.4)"
+                      >#E07070</span
+                    >
+                  </td>
+                  <td style="color: rgba(240, 235, 224, 0.45)">
+                    Lightened from #E05555 for legibility on dark bg
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHARED SEMANTIC RULES -->
+      <div class="block">
+        <div class="block-label">Colours locked across both modes</div>
+        <div class="block-desc">
+          These three accent colours carry semantic meaning that must feel
+          identical whether a user is in light or dark mode. Using different
+          shades would break the emotional signal system.
+        </div>
+        <div class="shared-grid">
+          <div class="shared-card">
+            <div class="shared-swatches">
+              <div class="shared-sw" style="background: #00c4aa"></div>
+              <div class="shared-sw" style="background: #33d4bc"></div>
+            </div>
+            <div class="shared-name">Teal Flash — #00C4AA</div>
+            <div class="shared-desc">
+              Positive financial progress. On track, under budget, goal reached,
+              savings milestone. Never used for actions or navigation. Same in
+              both modes — its meaning must never feel different.
+            </div>
+          </div>
+          <div class="shared-card">
+            <div class="shared-swatches">
+              <div class="shared-sw" style="background: #d4a843"></div>
+              <div class="shared-sw" style="background: #efc060"></div>
+            </div>
+            <div class="shared-name">Kaya Gold — #D4A843</div>
+            <div class="shared-desc">
+              Attention and warning. Renewals due, 80%+ of budget, review
+              needed, policy expiring. Same in both modes — the "pay attention"
+              signal must be consistent.
+            </div>
+          </div>
+          <div class="shared-card">
+            <div class="shared-swatches">
+              <div class="shared-sw" style="background: #e05555"></div>
+              <div class="shared-sw" style="background: #e07070"></div>
+            </div>
+            <div class="shared-name">Alert Red — shifted slightly</div>
+            <div class="shared-desc">
+              #E05555 in light mode, #E07070 in dark. The same family, slightly
+              lightened for legibility on dark surfaces. This is the only
+              semantic colour that adjusts — and only for contrast, never for
+              meaning.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEMANTIC TEAL RULE -->
+      <div class="block">
+        <div class="block-label">Semantic colour rules — the teal rule</div>
+        <div class="block-desc">
+          Teal (#00C4AA) has one job: signal positive financial progress. It
+          must never appear on primary buttons, navigation, or neutral UI
+          elements. This deliberate scarcity gives it weight — when a user sees
+          teal, they know something good has happened.
+        </div>
+        <div class="semantic-grid">
+          <div class="semantic-card">
+            <div class="semantic-swatch" style="background: #00c4aa"></div>
+            <div class="semantic-label" style="color: #007a68">
+              Teal — positive states only
+            </div>
+            <div class="semantic-desc">
+              Used exclusively when something is going well financially.
+            </div>
+            <div class="semantic-examples">
+              <span
+                class="sem-ex"
+                style="background: rgba(0, 196, 170, 0.15); color: #007a68"
+                >On track</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(0, 196, 170, 0.15); color: #007a68"
+                >Under budget</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(0, 196, 170, 0.15); color: #007a68"
+                >Goal reached</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(0, 196, 170, 0.15); color: #007a68"
+                >Savings milestone</span
+              >
+            </div>
+          </div>
+          <div class="semantic-card">
+            <div class="semantic-swatch" style="background: #d4a843"></div>
+            <div class="semantic-label" style="color: #7a5a00">
+              Kaya Gold — attention states
+            </div>
+            <div class="semantic-desc">
+              Used for warnings, renewals due, approaching limits.
+            </div>
+            <div class="semantic-examples">
+              <span
+                class="sem-ex"
+                style="background: rgba(212, 168, 67, 0.18); color: #7a5a00"
+                >Renewal due</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(212, 168, 67, 0.18); color: #7a5a00"
+                >80% of budget</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(212, 168, 67, 0.18); color: #7a5a00"
+                >Review needed</span
+              >
+            </div>
+          </div>
+          <div class="semantic-card">
+            <div class="semantic-swatch" style="background: #e05555"></div>
+            <div class="semantic-label" style="color: #8b0000">
+              Red — negative states
+            </div>
+            <div class="semantic-desc">
+              Used only for overspending, errors, and missed deadlines.
+            </div>
+            <div class="semantic-examples">
+              <span
+                class="sem-ex"
+                style="background: rgba(224, 85, 85, 0.15); color: #8b0000"
+                >Overspent</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(224, 85, 85, 0.15); color: #8b0000"
+                >Policy lapsed</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(224, 85, 85, 0.15); color: #8b0000"
+                >Error</span
+              >
+            </div>
+          </div>
+          <div class="semantic-card">
+            <div class="semantic-swatch" style="background: #b8622a"></div>
+            <div class="semantic-label" style="color: var(--p)">
+              Terracotta — brand / actions
+            </div>
+            <div class="semantic-desc">
+              Primary brand colour. CTAs, interactive elements, the logo accent.
+              Shifts to Prawn Coral in dark mode.
+            </div>
+            <div class="semantic-examples">
+              <span
+                class="sem-ex"
+                style="background: rgba(184, 98, 42, 0.15); color: var(--p)"
+                >Primary button</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(184, 98, 42, 0.15); color: var(--p)"
+                >Active nav</span
+              >
+              <span
+                class="sem-ex"
+                style="background: rgba(184, 98, 42, 0.15); color: var(--p)"
+                >Focus ring</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE BY SIDE PREVIEW -->
+      <div class="block">
+        <div class="block-label">Component preview — light vs dark</div>
+        <div class="preview-strip">
+          <div class="ps-light">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 10px;
+                font-weight: 600;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: rgba(28, 43, 42, 0.3);
+                margin-bottom: 12px;
+              ">
+              Light mode
+            </div>
+            <div
+              style="
+                background: white;
+                border-radius: 10px;
+                padding: 14px;
+                border: 0.5px solid rgba(28, 43, 42, 0.08);
+                margin-bottom: 10px;
+              ">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 9px;
+                  font-weight: 500;
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  color: rgba(28, 43, 42, 0.35);
+                  margin-bottom: 4px;
+                ">
+                Total expenses
+              </div>
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 22px;
+                  font-weight: 600;
+                  color: #b8622a;
+                  letter-spacing: -0.5px;
+                ">
+                S$3,740
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  color: rgba(28, 43, 42, 0.4);
+                  margin-top: 2px;
+                ">
+                68% of November budget
+              </div>
+              <div
+                style="
+                  background: rgba(28, 43, 42, 0.07);
+                  height: 3px;
+                  border-radius: 2px;
+                  margin-top: 10px;
+                ">
+                <div
+                  style="
+                    background: #b8622a;
+                    height: 3px;
+                    border-radius: 2px;
+                    width: 68%;
+                    margin-top: -3px;
+                  "></div>
+              </div>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 10px;
+              ">
+              <div
+                style="
+                  background: rgba(0, 196, 170, 0.08);
+                  border: 0.5px solid rgba(0, 196, 170, 0.2);
+                  border-radius: 8px;
+                  padding: 10px;
+                ">
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 9px;
+                    font-weight: 500;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: rgba(0, 100, 80, 0.6);
+                    margin-bottom: 3px;
+                  ">
+                  BTO goal
+                </div>
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 17px;
+                    font-weight: 600;
+                    color: #00c4aa;
+                    letter-spacing: -0.3px;
+                  ">
+                  69%
+                </div>
+                <div style="font-size: 10px; color: #007a68">On track</div>
+              </div>
+              <div
+                style="
+                  background: rgba(212, 168, 67, 0.08);
+                  border: 0.5px solid rgba(212, 168, 67, 0.2);
+                  border-radius: 8px;
+                  padding: 10px;
+                ">
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 9px;
+                    font-weight: 500;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: rgba(100, 80, 0, 0.6);
+                    margin-bottom: 3px;
+                  ">
+                  Insurance
+                </div>
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 17px;
+                    font-weight: 600;
+                    color: #d4a843;
+                    letter-spacing: -0.3px;
+                  ">
+                  1 due
+                </div>
+                <div style="font-size: 10px; color: #7a5a00">Review needed</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px">
+              <div
+                style="
+                  flex: 1;
+                  background: #b8622a;
+                  border-radius: 6px;
+                  padding: 8px;
+                  text-align: center;
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 11px;
+                  font-weight: 500;
+                  color: #fbf7f1;
+                ">
+                Add transaction
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  border: 1.5px solid #b8622a;
+                  border-radius: 6px;
+                  padding: 8px;
+                  text-align: center;
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 11px;
+                  font-weight: 500;
+                  color: #b8622a;
+                ">
+                View budget
+              </div>
+            </div>
+          </div>
+          <div class="ps-dark">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 10px;
+                font-weight: 600;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: rgba(240, 235, 224, 0.25);
+                margin-bottom: 12px;
+              ">
+              Dark mode
+            </div>
+            <div
+              style="
+                background: #243332;
+                border-radius: 10px;
+                padding: 14px;
+                border: 0.5px solid rgba(240, 235, 224, 0.06);
+                margin-bottom: 10px;
+              ">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 9px;
+                  font-weight: 500;
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  color: rgba(240, 235, 224, 0.3);
+                  margin-bottom: 4px;
+                ">
+                Total expenses
+              </div>
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 22px;
+                  font-weight: 600;
+                  color: #d4845a;
+                  letter-spacing: -0.5px;
+                ">
+                S$3,740
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  color: rgba(240, 235, 224, 0.4);
+                  margin-top: 2px;
+                ">
+                68% of November budget
+              </div>
+              <div
+                style="
+                  background: rgba(255, 255, 255, 0.08);
+                  height: 3px;
+                  border-radius: 2px;
+                  margin-top: 10px;
+                ">
+                <div
+                  style="
+                    background: #d4845a;
+                    height: 3px;
+                    border-radius: 2px;
+                    width: 68%;
+                    margin-top: -3px;
+                  "></div>
+              </div>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 10px;
+              ">
+              <div
+                style="
+                  background: rgba(0, 196, 170, 0.08);
+                  border: 0.5px solid rgba(0, 196, 170, 0.18);
+                  border-radius: 8px;
+                  padding: 10px;
+                ">
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 9px;
+                    font-weight: 500;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: rgba(0, 196, 170, 0.45);
+                    margin-bottom: 3px;
+                  ">
+                  BTO goal
+                </div>
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 17px;
+                    font-weight: 600;
+                    color: #00c4aa;
+                    letter-spacing: -0.3px;
+                  ">
+                  69%
+                </div>
+                <div style="font-size: 10px; color: #33d4bc">On track</div>
+              </div>
+              <div
+                style="
+                  background: rgba(212, 168, 67, 0.08);
+                  border: 0.5px solid rgba(212, 168, 67, 0.16);
+                  border-radius: 8px;
+                  padding: 10px;
+                ">
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 9px;
+                    font-weight: 500;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: rgba(212, 168, 67, 0.45);
+                    margin-bottom: 3px;
+                  ">
+                  Insurance
+                </div>
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 17px;
+                    font-weight: 600;
+                    color: #d4a843;
+                    letter-spacing: -0.3px;
+                  ">
+                  1 due
+                </div>
+                <div style="font-size: 10px; color: #c8a030">Review needed</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px">
+              <div
+                style="
+                  flex: 1;
+                  background: #d4845a;
+                  border-radius: 6px;
+                  padding: 8px;
+                  text-align: center;
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 11px;
+                  font-weight: 500;
+                  color: #141e1d;
+                ">
+                Add transaction
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  border: 1.5px solid #d4845a;
+                  border-radius: 6px;
+                  padding: 8px;
+                  text-align: center;
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 11px;
+                  font-weight: 500;
+                  color: #d4845a;
+                ">
+                View budget
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          style="
+            margin-top: 12px;
+            font-size: 13px;
+            color: rgba(28, 43, 42, 0.5);
+            background: rgba(28, 43, 42, 0.04);
+            padding: 12px 16px;
+            border-radius: 6px;
+            max-width: 760px;
+            line-height: 1.7;
+          ">
+          Note: The teal goal card and gold insurance card are pixel-identical
+          between modes — same hex, same opacity fills. Only the surrounding
+          surface, expense card colour (#B8622A → #D4845A), and button treatment
+          change. This is how consistent semantic meaning is maintained across
+          modes.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ 03 · TYPOGRAPHY ══════════════════ -->
+    <div style="padding: 80px 80px 0; margin-top: 40px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 40px;
+        ">
+        <span
+          style="
+            font-family: &quot;Space Grotesk&quot;, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--p);
+          "
+          >03</span
+        >
+        <div
+          style="
+            flex: 1;
+            height: 1px;
+            background: rgba(28, 43, 42, 0.15);
+          "></div>
+      </div>
+      <div
+        style="
+          font-family: &quot;Space Grotesk&quot;, sans-serif;
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--h);
+          letter-spacing: -0.5px;
+          margin-bottom: 40px;
+        ">
+        Typography
+      </div>
+    </div>
+    <div class="content">
+      <div class="block">
+        <div class="block-label">Type system — two fonts, two roles</div>
+        <div class="block-desc">
+          Foracle uses exactly two typefaces. Space Grotesk handles all
+          functional, data-facing, and UI type. Lora italic is reserved
+          exclusively for emotional, editorial, and brand moments. This creates
+          a clear rule:
+          <em
+            >if it's about doing, use Space Grotesk; if it's about feeling, use
+            Lora.</em
+          >
+        </div>
+
+        <div class="type-system">
+          <div class="type-row">
+            <div class="type-sample">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 48px;
+                  font-weight: 600;
+                  color: var(--h);
+                  letter-spacing: -2px;
+                  line-height: 1;
+                ">
+                foracle
+              </div>
+            </div>
+            <div class="type-spec">
+              <div class="type-spec-name">Wordmark · Space Grotesk 600</div>
+              <div class="type-spec-detail">
+                Always lowercase. Letter-spacing: -1.5px. The 'acle' suffix
+                carries the terracotta accent colour.
+              </div>
+            </div>
+          </div>
+          <div class="type-row">
+            <div class="type-sample">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 32px;
+                  font-weight: 600;
+                  color: var(--h);
+                  letter-spacing: -0.8px;
+                  line-height: 1.2;
+                ">
+                Your money, beautifully kept.
+              </div>
+            </div>
+            <div class="type-spec">
+              <div class="type-spec-name">Display H1 · Space Grotesk 600</div>
+              <div class="type-spec-detail">
+                32–40px. Marketing headlines, screen titles, onboarding headers.
+                Letter-spacing: -0.5px to -1px.
+              </div>
+            </div>
+          </div>
+          <div class="type-row">
+            <div class="type-sample">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 22px;
+                  font-weight: 600;
+                  color: var(--h);
+                  letter-spacing: -0.3px;
+                ">
+                Your complete financial picture.
+              </div>
+            </div>
+            <div class="type-spec">
+              <div class="type-spec-name">Heading H2 · Space Grotesk 600</div>
+              <div class="type-spec-detail">
+                20–24px. Section headers, feature titles, card headings.
+              </div>
+            </div>
+          </div>
+          <div class="type-row">
+            <div class="type-sample">
+              <div
+                style="
+                  font-family: &quot;Lora&quot;, serif;
+                  font-style: italic;
+                  font-size: 24px;
+                  color: var(--p);
+                  line-height: 1.4;
+                ">
+                your financial home, in Singapore.
+              </div>
+            </div>
+            <div class="type-spec">
+              <div class="type-spec-name">Editorial · Lora Italic</div>
+              <div class="type-spec-detail">
+                Reserved only for: taglines, marketing hero copy, brand moments,
+                and the positioning statement. Never use for UI copy or data
+                labels.
+              </div>
+            </div>
+          </div>
+          <div class="type-row">
+            <div class="type-sample">
+              <div
+                style="
+                  font-family: &quot;DM Sans&quot;, sans-serif;
+                  font-size: 16px;
+                  color: var(--h);
+                  line-height: 1.7;
+                ">
+                Track expenses, manage goals, and plan for your family — all in
+                one place, built for how Singaporeans really live and plan their
+                financial futures.
+              </div>
+            </div>
+            <div class="type-spec">
+              <div class="type-spec-name">Body · DM Sans 400</div>
+              <div class="type-spec-detail">
+                14–16px. All body copy, descriptions, onboarding text,
+                notifications. Line-height: 1.6–1.75.
+              </div>
+            </div>
+          </div>
+          <div class="type-row">
+            <div class="type-sample">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 11px;
+                  font-weight: 500;
+                  letter-spacing: 0.16em;
+                  text-transform: uppercase;
+                  color: rgba(28, 43, 42, 0.4);
+                ">
+                Monthly expenses · November 2025
+              </div>
+            </div>
+            <div class="type-spec">
+              <div class="type-spec-name">Label Caps · Space Grotesk 500</div>
+              <div class="type-spec-detail">
+                10–11px. All data labels, chart axes, metadata, section
+                sub-labels. Always uppercase. Letter-spacing: 0.14–0.18em.
+              </div>
+            </div>
+          </div>
+          <div class="type-row">
+            <div class="type-sample">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 32px;
+                  font-weight: 600;
+                  color: var(--h);
+                  letter-spacing: -0.5px;
+                ">
+                S$41,200
+              </div>
+            </div>
+            <div class="type-spec">
+              <div class="type-spec-name">Data Display · Space Grotesk 600</div>
+              <div class="type-spec-detail">
+                Currency and key numbers. Always Space Grotesk, never DM Sans.
+                Size scales with importance: 24–36px.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Typography rules</div>
+        <div class="type-pair-grid">
+          <div class="type-pair-card">
+            <div class="type-pair-label">Do</div>
+            <div class="type-rule">
+              Use Space Grotesk for all button labels, navigation items, data
+              labels, and UI copy.<br /><br />
+              Use Lora italic sparingly — maximum one instance per screen or
+              page.<br /><br />
+              Maintain hierarchy: Display > H2 > Body > Label. Never skip
+              levels.<br /><br />
+              Use negative letter-spacing on large display type (-0.5px to
+              -1.5px at 24px+).<br /><br />
+              All wordmark usage must be lowercase with no exceptions.
+            </div>
+          </div>
+          <div class="type-pair-card">
+            <div class="type-pair-label">Don't</div>
+            <div class="type-rule">
+              Never use Lora upright (non-italic) — it only appears in italic
+              form.<br /><br />
+              Never mix DM Sans and Space Grotesk in the same UI element (e.g. a
+              button).<br /><br />
+              Never use all-caps for Display or H2 type — only Label Caps are
+              capped.<br /><br />
+              Never use font sizes below 11px anywhere in the product.<br /><br />
+              Never use Lora for data, numbers, labels, or functional copy.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ 04 · LOGO & WORDMARK ══════════════════ -->
+    <div style="padding: 80px 80px 0; margin-top: 40px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 40px;
+        ">
+        <span
+          style="
+            font-family: &quot;Space Grotesk&quot;, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--p);
+          "
+          >04</span
+        >
+        <div
+          style="
+            flex: 1;
+            height: 1px;
+            background: rgba(28, 43, 42, 0.15);
+          "></div>
+      </div>
+      <div
+        style="
+          font-family: &quot;Space Grotesk&quot;, sans-serif;
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--h);
+          letter-spacing: -0.5px;
+          margin-bottom: 40px;
+        ">
+        Logo & Wordmark
+      </div>
+    </div>
+    <div class="content">
+      <div class="block">
+        <div class="block-label">Approved lockups</div>
+        <div class="logo-grid">
+          <div>
+            <div class="logo-box" style="background: var(--h)">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 32px;
+                  font-weight: 600;
+                  color: #f0ebe0;
+                  letter-spacing: -1px;
+                ">
+                for<span style="color: var(--p)">acle</span>
+              </div>
+            </div>
+            <div class="logo-context">Primary · dark backgrounds</div>
+          </div>
+          <div>
+            <div
+              class="logo-box"
+              style="
+                background: #fbf7f1;
+                border: 0.5px solid rgba(28, 43, 42, 0.1);
+              ">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 32px;
+                  font-weight: 600;
+                  color: var(--h);
+                  letter-spacing: -1px;
+                ">
+                for<span style="color: var(--p)">acle</span>
+              </div>
+            </div>
+            <div class="logo-context">Reversed · light backgrounds</div>
+          </div>
+          <div>
+            <div class="logo-box" style="background: var(--p)">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 32px;
+                  font-weight: 600;
+                  color: #fbf7f1;
+                  letter-spacing: -1px;
+                ">
+                foracle
+              </div>
+            </div>
+            <div class="logo-context">Mono light · brand colour bg</div>
+          </div>
+          <div>
+            <div class="logo-box" style="background: var(--h)">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 32px;
+                  font-weight: 600;
+                  color: #f0ebe0;
+                  letter-spacing: -1px;
+                  opacity: 0.9;
+                ">
+                foracle
+              </div>
+            </div>
+            <div class="logo-context">Mono · dark bg, no accent</div>
+          </div>
+          <div>
+            <div
+              class="logo-box"
+              style="
+                background: white;
+                border: 0.5px solid rgba(28, 43, 42, 0.08);
+              ">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 20px;
+                  font-weight: 600;
+                  color: var(--h);
+                  letter-spacing: -0.5px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: flex-start;
+                  gap: 2px;
+                ">
+                <div>for<span style="color: var(--p)">acle</span></div>
+                <div
+                  style="
+                    font-family: &quot;Lora&quot;, serif;
+                    font-style: italic;
+                    font-size: 11px;
+                    color: rgba(28, 43, 42, 0.4);
+                  ">
+                  your financial home
+                </div>
+              </div>
+            </div>
+            <div class="logo-context">With tagline · print & marketing</div>
+          </div>
+          <div>
+            <div class="logo-box" style="background: var(--h)">
+              <div
+                style="
+                  font-family: &quot;Space Grotesk&quot;, sans-serif;
+                  font-size: 20px;
+                  font-weight: 600;
+                  color: #f0ebe0;
+                  letter-spacing: -0.5px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: flex-start;
+                  gap: 2px;
+                ">
+                <div>for<span style="color: var(--p)">acle</span></div>
+                <div
+                  style="
+                    font-family: &quot;Lora&quot;, serif;
+                    font-style: italic;
+                    font-size: 11px;
+                    color: rgba(240, 235, 224, 0.35);
+                  ">
+                  your financial home
+                </div>
+              </div>
+            </div>
+            <div class="logo-context">With tagline · dark version</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Logo rules</div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 760px;
+          ">
+          <div
+            style="
+              background: white;
+              border-radius: 10px;
+              padding: 20px;
+              border: 0.5px solid rgba(28, 43, 42, 0.1);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--g);
+                margin-bottom: 10px;
+              ">
+              Always
+            </div>
+            <ul
+              style="
+                padding-left: 16px;
+                font-size: 13px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 2;
+              ">
+              <li>
+                Always lowercase — <strong>foracle</strong>, never Foracle
+              </li>
+              <li>
+                The 'acle' carries the terracotta accent on dark/light bgs
+              </li>
+              <li>Minimum size: 80px wide for digital, 18mm for print</li>
+              <li>Clear space: equal to the height of the 'f' on all sides</li>
+            </ul>
+          </div>
+          <div
+            style="
+              background: white;
+              border-radius: 10px;
+              padding: 20px;
+              border: 0.5px solid rgba(28, 43, 42, 0.1);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--err);
+                margin-bottom: 10px;
+              ">
+              Never
+            </div>
+            <ul
+              style="
+                padding-left: 16px;
+                font-size: 13px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 2;
+              ">
+              <li>Never stretch, skew, or rotate the wordmark</li>
+              <li>Never place on a busy photo without an overlay</li>
+              <li>Never use teal as the logo accent colour</li>
+              <li>Never recreate the wordmark in a different typeface</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ 05 · TILE MOTIF ══════════════════ -->
+    <div style="padding: 80px 80px 0; margin-top: 40px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 40px;
+        ">
+        <span
+          style="
+            font-family: &quot;Space Grotesk&quot;, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--p);
+          "
+          >05</span
+        >
+        <div
+          style="
+            flex: 1;
+            height: 1px;
+            background: rgba(28, 43, 42, 0.15);
+          "></div>
+      </div>
+      <div
+        style="
+          font-family: &quot;Space Grotesk&quot;, sans-serif;
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--h);
+          letter-spacing: -0.5px;
+          margin-bottom: 40px;
+        ">
+        The Tile Motif
+      </div>
+    </div>
+    <div class="content">
+      <div class="block">
+        <div class="block-label">What it is</div>
+        <div class="block-desc">
+          The tile motif is Foracle's brand signature element. It is a
+          horizontal strip of six equal-width colour blocks — one per brand
+          colour — tiled and repeating. The reference is the decorative border
+          band that runs along Peranakan shophouse facades and edges of nyonya
+          ceramics. Here it is completely abstracted into pure geometry: no
+          florals, no curves, just the colour rhythm. This is the hybrid in a
+          single element — Nanyang soul, modern execution.
+        </div>
+        <div style="margin-bottom: 16px">
+          <div
+            style="
+              font-family: &quot;Space Grotesk&quot;, sans-serif;
+              font-size: 11px;
+              color: rgba(28, 43, 42, 0.4);
+              margin-bottom: 8px;
+            ">
+            The base sequence — always in this order
+          </div>
+          <div class="motif h12" style="border-radius: 6px">
+            <div style="background: #1c2b2a; flex: 1"></div>
+            <div style="background: #b8622a; flex: 1"></div>
+            <div style="background: #00c4aa; flex: 1"></div>
+            <div style="background: #3a6b52; flex: 1"></div>
+            <div style="background: #d4a843; flex: 1"></div>
+            <div style="background: #d4845a; flex: 1"></div>
+            <div style="background: #1c2b2a; flex: 1"></div>
+            <div style="background: #b8622a; flex: 1"></div>
+            <div style="background: #00c4aa; flex: 1"></div>
+            <div style="background: #3a6b52; flex: 1"></div>
+            <div style="background: #d4a843; flex: 1"></div>
+            <div style="background: #1c2b2a; flex: 1"></div>
+          </div>
+        </div>
+        <div
+          style="
+            font-size: 13px;
+            color: rgba(28, 43, 42, 0.55);
+            background: rgba(184, 98, 42, 0.06);
+            border-left: 3px solid var(--p);
+            padding: 12px 16px;
+            border-radius: 0 6px 6px 0;
+            max-width: 600px;
+          ">
+          <strong>One fixed rule:</strong> The colour sequence never changes —
+          Deep Forest → Terracotta → Teal Flash → Jungle Green → Kaya Gold →
+          Prawn Coral → repeat. This consistency is what makes it a recognisable
+          system.
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Size variants</div>
+        <div class="size-variants">
+          <div class="size-row">
+            <div class="size-label">
+              <strong>Thick · 12px</strong><br />App splash, hero headers
+            </div>
+            <div class="size-strip-wrap">
+              <div class="motif h12" style="border-radius: 4px">
+                <div style="background: #1c2b2a; flex: 1"></div>
+                <div style="background: #b8622a; flex: 1"></div>
+                <div style="background: #00c4aa; flex: 1"></div>
+                <div style="background: #3a6b52; flex: 1"></div>
+                <div style="background: #d4a843; flex: 1"></div>
+                <div style="background: #d4845a; flex: 1"></div>
+                <div style="background: #1c2b2a; flex: 1"></div>
+                <div style="background: #b8622a; flex: 1"></div>
+                <div style="background: #00c4aa; flex: 1"></div>
+                <div style="background: #3a6b52; flex: 1"></div>
+                <div style="background: #d4a843; flex: 1"></div>
+                <div style="background: #1c2b2a; flex: 1"></div>
+              </div>
+            </div>
+          </div>
+          <div class="size-row">
+            <div class="size-label">
+              <strong>Standard · 6px</strong><br />Website section dividers
+            </div>
+            <div class="size-strip-wrap">
+              <div class="motif h8" style="border-radius: 3px">
+                <div style="background: #1c2b2a; flex: 1"></div>
+                <div style="background: #b8622a; flex: 1"></div>
+                <div style="background: #00c4aa; flex: 1"></div>
+                <div style="background: #3a6b52; flex: 1"></div>
+                <div style="background: #d4a843; flex: 1"></div>
+                <div style="background: #d4845a; flex: 1"></div>
+                <div style="background: #1c2b2a; flex: 1"></div>
+                <div style="background: #b8622a; flex: 1"></div>
+                <div style="background: #00c4aa; flex: 1"></div>
+                <div style="background: #3a6b52; flex: 1"></div>
+                <div style="background: #d4a843; flex: 1"></div>
+                <div style="background: #1c2b2a; flex: 1"></div>
+              </div>
+            </div>
+          </div>
+          <div class="size-row">
+            <div class="size-label">
+              <strong>Thin · 3px</strong><br />Marketing cards, email footers
+            </div>
+            <div class="size-strip-wrap">
+              <div class="motif h3">
+                <div style="background: #1c2b2a; flex: 1"></div>
+                <div style="background: #b8622a; flex: 1"></div>
+                <div style="background: #00c4aa; flex: 1"></div>
+                <div style="background: #3a6b52; flex: 1"></div>
+                <div style="background: #d4a843; flex: 1"></div>
+                <div style="background: #d4845a; flex: 1"></div>
+                <div style="background: #1c2b2a; flex: 1"></div>
+                <div style="background: #b8622a; flex: 1"></div>
+                <div style="background: #00c4aa; flex: 1"></div>
+                <div style="background: #3a6b52; flex: 1"></div>
+                <div style="background: #d4a843; flex: 1"></div>
+                <div style="background: #1c2b2a; flex: 1"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ 06 · SPACING & GRID ══════════════════ -->
+    <div style="padding: 80px 80px 0; margin-top: 40px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 40px;
+        ">
+        <span
+          style="
+            font-family: &quot;Space Grotesk&quot;, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--p);
+          "
+          >06</span
+        >
+        <div
+          style="
+            flex: 1;
+            height: 1px;
+            background: rgba(28, 43, 42, 0.15);
+          "></div>
+      </div>
+      <div
+        style="
+          font-family: &quot;Space Grotesk&quot;, sans-serif;
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--h);
+          letter-spacing: -0.5px;
+          margin-bottom: 40px;
+        ">
+        Spacing & Grid
+      </div>
+    </div>
+    <div class="content">
+      <div class="block">
+        <div class="block-label">Spacing scale — base 8px</div>
+        <div class="block-desc">
+          All spacing values are multiples of 8px. This creates consistent
+          visual rhythm across all layouts.
+        </div>
+        <div class="spacing-scale">
+          <div class="sp-item">
+            <div class="sp-bar" style="height: 4px"></div>
+            <div class="sp-val">4</div>
+            <div class="sp-name">xs</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-bar" style="height: 8px"></div>
+            <div class="sp-val">8</div>
+            <div class="sp-name">sm</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-bar" style="height: 16px"></div>
+            <div class="sp-val">16</div>
+            <div class="sp-name">md</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-bar" style="height: 24px"></div>
+            <div class="sp-val">24</div>
+            <div class="sp-name">lg</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-bar" style="height: 32px"></div>
+            <div class="sp-val">32</div>
+            <div class="sp-name">xl</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-bar" style="height: 48px"></div>
+            <div class="sp-val">48</div>
+            <div class="sp-name">2xl</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-bar" style="height: 64px"></div>
+            <div class="sp-val">64</div>
+            <div class="sp-name">3xl</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-bar" style="height: 80px"></div>
+            <div class="sp-val">80</div>
+            <div class="sp-name">4xl</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Border radius scale</div>
+        <div class="radius-demo">
+          <div class="rad-box">
+            <div class="rad-shape" style="border-radius: 4px"></div>
+            <div class="rad-label">4px · inputs</div>
+          </div>
+          <div class="rad-box">
+            <div class="rad-shape" style="border-radius: 6px"></div>
+            <div class="rad-label">6px · buttons</div>
+          </div>
+          <div class="rad-box">
+            <div class="rad-shape" style="border-radius: 8px"></div>
+            <div class="rad-label">8px · badges</div>
+          </div>
+          <div class="rad-box">
+            <div class="rad-shape" style="border-radius: 10px"></div>
+            <div class="rad-label">10px · cards</div>
+          </div>
+          <div class="rad-box">
+            <div class="rad-shape" style="border-radius: 16px"></div>
+            <div class="rad-label">16px · modals</div>
+          </div>
+          <div class="rad-box">
+            <div class="rad-shape" style="border-radius: 28px"></div>
+            <div class="rad-label">28px · phone shell</div>
+          </div>
+          <div class="rad-box">
+            <div
+              class="rad-shape"
+              style="border-radius: 999px; width: 56px; height: 24px"></div>
+            <div class="rad-label">999px · pills</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="two-col">
+          <div class="rule-card">
+            <div class="rule-card-title">Mobile grid</div>
+            <ul>
+              <li>4-column grid</li>
+              <li>16px gutters</li>
+              <li>16px outer margins</li>
+              <li>Bottom navigation: 64px height</li>
+              <li>Status bar: 48px (safe area)</li>
+            </ul>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Web grid</div>
+            <ul>
+              <li>12-column grid</li>
+              <li>24px gutters</li>
+              <li>Max content width: 1100px</li>
+              <li>Section vertical padding: 80px</li>
+              <li>Card inner padding: 24–32px</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ 07 · UI COMPONENTS ══════════════════ -->
+    <div style="padding: 80px 80px 0; margin-top: 40px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 40px;
+        ">
+        <span
+          style="
+            font-family: &quot;Space Grotesk&quot;, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--p);
+          "
+          >07</span
+        >
+        <div
+          style="
+            flex: 1;
+            height: 1px;
+            background: rgba(28, 43, 42, 0.15);
+          "></div>
+      </div>
+      <div
+        style="
+          font-family: &quot;Space Grotesk&quot;, sans-serif;
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--h);
+          letter-spacing: -0.5px;
+          margin-bottom: 40px;
+        ">
+        UI Components
+      </div>
+    </div>
+    <div class="content">
+      <div class="comp-section">
+        <div class="comp-section-title">Buttons</div>
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <div>
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(28, 43, 42, 0.4);
+                margin-bottom: 10px;
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+              ">
+              Standard sizes
+            </div>
+            <div class="btn-showcase">
+              <div class="btn-sg btn-primary btn-sm">Small</div>
+              <div class="btn-sg btn-primary">Default</div>
+              <div class="btn-sg btn-primary btn-lg">Large</div>
+            </div>
+          </div>
+          <div>
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(28, 43, 42, 0.4);
+                margin-bottom: 10px;
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+              ">
+              Button variants
+            </div>
+            <div class="btn-showcase">
+              <div class="btn-sg btn-primary">Add transaction</div>
+              <div class="btn-sg btn-secondary">View budget</div>
+              <div class="btn-sg btn-ghost">Export</div>
+              <div class="btn-sg btn-teal">Goal reached</div>
+              <div class="btn-sg btn-danger">Delete</div>
+            </div>
+          </div>
+        </div>
+        <div
+          style="
+            margin-top: 16px;
+            font-size: 13px;
+            color: rgba(28, 43, 42, 0.5);
+            background: rgba(28, 43, 42, 0.04);
+            padding: 12px 16px;
+            border-radius: 6px;
+            max-width: 600px;
+          ">
+          Teal buttons (btn-teal) appear only in success/completion flows — e.g.
+          after a savings goal is reached, a budget streak is achieved. Never
+          use as a primary CTA for standard actions.
+        </div>
+      </div>
+
+      <div class="comp-section">
+        <div class="comp-section-title">Status badges</div>
+        <div class="badge-showcase">
+          <div class="badge-sg badge-success">On track</div>
+          <div class="badge-sg badge-success">Under budget</div>
+          <div class="badge-sg badge-success">Goal reached</div>
+          <div class="badge-sg badge-warning">Renewal due</div>
+          <div class="badge-sg badge-warning">80% of budget</div>
+          <div class="badge-sg badge-danger">Overspent</div>
+          <div class="badge-sg badge-danger">Policy lapsed</div>
+          <div class="badge-sg badge-neutral">Inactive</div>
+          <div class="badge-sg badge-brand">Active</div>
+          <div class="badge-sg badge-brand">Premium</div>
+        </div>
+      </div>
+
+      <div class="comp-section">
+        <div class="comp-section-title">Form inputs</div>
+        <div class="input-showcase">
+          <div class="input-wrap">
+            <label>Monthly budget (S$)</label>
+            <input
+              class="input-sg"
+              type="text"
+              placeholder="e.g. 5,500"
+              value="" />
+          </div>
+          <div class="input-wrap">
+            <label>Savings goal name</label>
+            <input
+              class="input-sg success"
+              type="text"
+              value="BTO Down Payment" />
+            <div class="input-helper success">Looks good</div>
+          </div>
+          <div class="input-wrap">
+            <label>Target date</label>
+            <input class="input-sg error" type="text" value="31/02/2026" />
+            <div class="input-helper error">
+              Invalid date — please check and try again
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-section">
+        <div class="comp-section-title">Dashboard cards — dark canvas</div>
+        <div class="card-showcase">
+          <div class="ui-card">
+            <div class="ui-card-label">Total expenses</div>
+            <div class="ui-card-amt" style="color: #d4845a">S$3,240</div>
+            <div class="ui-card-sub">68% of monthly budget</div>
+            <div class="bar-bg-ui"></div>
+            <div
+              class="bar-fg-ui"
+              style="background: #b8622a; width: 68%"></div>
+          </div>
+          <div class="ui-card" style="border-color: rgba(0, 196, 170, 0.15)">
+            <div class="ui-card-label">BTO savings goal</div>
+            <div class="ui-card-amt" style="color: #00c4aa">S$41,200</div>
+            <div class="ui-card-sub">69% · on track</div>
+            <div class="bar-bg-ui"></div>
+            <div
+              class="bar-fg-ui"
+              style="background: #00c4aa; width: 69%"></div>
+          </div>
+          <div class="ui-card" style="border-color: rgba(212, 168, 67, 0.15)">
+            <div class="ui-card-label">Insurance policies</div>
+            <div class="ui-card-amt" style="color: #d4a843">4 active</div>
+            <div class="ui-card-sub">1 renewal in 23 days</div>
+          </div>
+        </div>
+        <div
+          style="
+            margin-top: 12px;
+            font-size: 13px;
+            color: rgba(28, 43, 42, 0.5);
+            background: rgba(28, 43, 42, 0.04);
+            padding: 12px 16px;
+            border-radius: 6px;
+            max-width: 700px;
+          ">
+          Note how teal (#00C4AA) only appears on the BTO card because it is "on
+          track." The expenses card uses terracotta (neutral/active), and the
+          insurance card uses gold (attention needed). Colour communicates
+          status without any additional iconography.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ 08 · VOICE & TONE ══════════════════ -->
+    <div style="padding: 80px 80px 0; margin-top: 40px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 40px;
+        ">
+        <span
+          style="
+            font-family: &quot;Space Grotesk&quot;, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--p);
+          "
+          >08</span
+        >
+        <div
+          style="
+            flex: 1;
+            height: 1px;
+            background: rgba(28, 43, 42, 0.15);
+          "></div>
+      </div>
+      <div
+        style="
+          font-family: &quot;Space Grotesk&quot;, sans-serif;
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--h);
+          letter-spacing: -0.5px;
+          margin-bottom: 40px;
+        ">
+        Voice & Tone
+      </div>
+    </div>
+    <div class="content">
+      <div class="block">
+        <div class="block-label">Brand voice — the four qualities</div>
+        <div class="trait-grid">
+          <div class="trait-card">
+            <div class="trait-name">Warm</div>
+            <div class="trait-desc">
+              We speak like a trusted friend — someone who gets it, not a
+              financial institution reading from a script.
+            </div>
+            <div class="trait-not">Not: overly casual or slangy</div>
+          </div>
+          <div class="trait-card">
+            <div class="trait-name">Direct</div>
+            <div class="trait-desc">
+              We say what we mean. No hedging, no jargon, no fine print buried
+              in the copy.
+            </div>
+            <div class="trait-not">Not: blunt or dismissive</div>
+          </div>
+          <div class="trait-card">
+            <div class="trait-name">Local</div>
+            <div class="trait-desc">
+              We speak Singaporean English when it fits. BTO, CPF, hawker — we
+              don't translate what our users already know.
+            </div>
+            <div class="trait-not">Not: parochial or exclusive</div>
+          </div>
+          <div class="trait-card">
+            <div class="trait-name">Encouraging</div>
+            <div class="trait-desc">
+              Money is stressful. We reduce that stress with clarity, not by
+              avoiding hard truths.
+            </div>
+            <div class="trait-not">Not: cheerleader-y or patronising</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Voice in practice</div>
+        <div class="voice-grid">
+          <div class="voice-card voice-do">
+            <div class="voice-card-header">Do write this</div>
+            <div class="voice-card-body">
+              <div class="voice-example" style="color: var(--h)">
+                "You've spent 68% of your November budget. You're on track —
+                just watch the dining category."
+              </div>
+              <div class="voice-note">
+                Clear, specific, helpful. Doesn't alarm unnecessarily.
+              </div>
+            </div>
+          </div>
+          <div class="voice-card voice-dont">
+            <div class="voice-card-header">Don't write this</div>
+            <div class="voice-card-body">
+              <div class="voice-example" style="color: rgba(28, 43, 42, 0.65)">
+                "Warning: 68.3% budget utilisation detected. Projected overspend
+                risk identified in F&B expenditure category."
+              </div>
+              <div class="voice-note">
+                Clinical, corporate, anxiety-inducing. Sounds like a bank
+                statement.
+              </div>
+            </div>
+          </div>
+          <div class="voice-card voice-do">
+            <div class="voice-card-header">Do write this</div>
+            <div class="voice-card-body">
+              <div class="voice-example" style="color: var(--h)">
+                "Your BTO goal is 69% there. At this rate, you'll hit your
+                target by March 2026."
+              </div>
+              <div class="voice-note">
+                Grounds hope in data. Specific and motivating.
+              </div>
+            </div>
+          </div>
+          <div class="voice-card voice-dont">
+            <div class="voice-card-header">Don't write this</div>
+            <div class="voice-card-body">
+              <div class="voice-example" style="color: rgba(28, 43, 42, 0.65)">
+                "Congratulations!!! You're SO close to your savings dream! Keep
+                going, superstar! 🎉🎉🎉"
+              </div>
+              <div class="voice-note">
+                Gimmicky, patronising. Undermines the seriousness of the
+                financial goal.
+              </div>
+            </div>
+          </div>
+          <div class="voice-card voice-do">
+            <div class="voice-card-header">Do write this</div>
+            <div class="voice-card-body">
+              <div class="voice-example" style="color: var(--h)">
+                "Your NTUC Income policy renews in 23 days. Want us to remind
+                you to review your coverage?"
+              </div>
+              <div class="voice-note">
+                SG-native (NTUC Income), proactive, respects user's time.
+              </div>
+            </div>
+          </div>
+          <div class="voice-card voice-dont">
+            <div class="voice-card-header">Don't write this</div>
+            <div class="voice-card-body">
+              <div class="voice-example" style="color: rgba(28, 43, 42, 0.65)">
+                "ACTION REQUIRED: Insurance policy expiry imminent. Failure to
+                renew may result in coverage lapse."
+              </div>
+              <div class="voice-note">
+                Fear-based, formal, sounds like a government notice.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">SG-specific language</div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            max-width: 760px;
+          ">
+          <div
+            style="
+              background: white;
+              border-radius: 10px;
+              padding: 20px;
+              border: 0.5px solid rgba(28, 43, 42, 0.1);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--g);
+                margin-bottom: 10px;
+              ">
+              Use freely
+            </div>
+            <ul
+              style="
+                padding-left: 16px;
+                font-size: 13px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 2.2;
+              ">
+              <li>BTO, HDB, CPF, OA, SA, MA, RA</li>
+              <li>SRS, CPFIS, MediShield Life</li>
+              <li>S$ (not SGD in UI copy)</li>
+              <li>Hawker, kopitiam, MRT</li>
+              <li>Kiasu (used warmly, not as stereotype)</li>
+            </ul>
+          </div>
+          <div
+            style="
+              background: white;
+              border-radius: 10px;
+              padding: 20px;
+              border: 0.5px solid rgba(28, 43, 42, 0.1);
+            ">
+            <div
+              style="
+                font-family: &quot;Space Grotesk&quot;, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--err);
+                margin-bottom: 10px;
+              ">
+              Use carefully
+            </div>
+            <ul
+              style="
+                padding-left: 16px;
+                font-size: 13px;
+                color: rgba(28, 43, 42, 0.6);
+                line-height: 2.2;
+              ">
+              <li>
+                Singlish particles (lah, lor) — sparingly, never in error
+                messages
+              </li>
+              <li>Racial or ethnic cultural references</li>
+              <li>Political references</li>
+              <li>
+                Avoid "we Singaporeans" — can feel exclusionary to PRs and
+                expats
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ FOOTER ══════════════════ -->
+    <div class="page-footer">
+      <div>
+        <div class="footer-wordmark">for<span>acle</span></div>
+        <div style="margin-top: 12px">
+          <div class="motif h3" style="width: 120px; border-radius: 2px">
+            <div style="background: #1c2b2a; flex: 1"></div>
+            <div style="background: #b8622a; flex: 1"></div>
+            <div style="background: #00c4aa; flex: 1"></div>
+            <div style="background: #3a6b52; flex: 1"></div>
+            <div style="background: #d4a843; flex: 1"></div>
+            <div style="background: #d4845a; flex: 1"></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-meta">
+        Brand Guide v1.0<br />
+        Foracle Pte. Ltd. · Singapore<br />
+        For internal use only<br />
+        2025
+      </div>
+    </div>
+  </body>
+</html>

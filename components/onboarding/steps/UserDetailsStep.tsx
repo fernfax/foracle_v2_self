@@ -75,7 +75,7 @@ export function UserDetailsStep({ data, onSave, onNext, onBack }: UserDetailsSte
         {/* Full Name */}
         <div className="space-y-2">
           <Label htmlFor="name">
-            Full Name <span className="text-red-500">*</span>
+            Full Name <span className="text-[#8B0000]">*</span>
           </Label>
           <Input
             id="name"
@@ -102,7 +102,7 @@ export function UserDetailsStep({ data, onSave, onNext, onBack }: UserDetailsSte
         {/* Date of Birth */}
         <div className="space-y-2">
           <Label>
-            Date of Birth <span className="text-red-500">*</span>
+            Date of Birth <span className="text-[#8B0000]">*</span>
           </Label>
           <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
             <PopoverTrigger asChild>
@@ -139,9 +139,9 @@ export function UserDetailsStep({ data, onSave, onNext, onBack }: UserDetailsSte
         </div>
 
         {/* Add More Later Info Box */}
-        <div className="flex gap-3 p-4 rounded-xl bg-[#eaeffc] border border-blue-200">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-            <Lightbulb className="h-4 w-4 text-amber-500" />
+        <div className="flex gap-3 p-4 rounded-xl bg-[#eaeffc] border border-[rgba(184,98,42,0.25)]">
+          <div className="w-8 h-8 rounded-full bg-[rgba(184,98,42,0.10)] flex items-center justify-center shrink-0">
+            <Lightbulb className="h-4 w-4 text-[#7A5A00]" />
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">

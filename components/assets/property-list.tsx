@@ -104,17 +104,17 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
     return (
       <>
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-            <Home className="h-8 w-8 text-gray-400" />
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Home className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No properties yet</h3>
+          <h3 className="text-lg font-medium text-foreground mb-2">No properties yet</h3>
           <p className="text-muted-foreground mb-6 max-w-sm">
             Add your first property to start tracking your real estate assets and loan progress.
           </p>
           <Button
             variant="outline"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Property
@@ -140,7 +140,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
           <Button
             variant="outline"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Property
@@ -173,8 +173,8 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                 <CardHeader className="pb-3 relative">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100">
-                        <Home className="h-5 w-5 text-blue-600" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+                        <Home className="h-5 w-5 text-[#7A3A0A]" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{property.propertyName}</h3>
@@ -203,7 +203,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="text-red-600"
+                          className="text-[#8B0000]"
                           onClick={(e) => {
                             e.stopPropagation();
                             setPropertyToDelete(property);
@@ -229,7 +229,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Outstanding Loan</p>
-                      <p className="text-2xl font-semibold tabular-nums text-amber-600">
+                      <p className="text-2xl font-semibold tabular-nums text-[#7A5A00]">
                         ${parseFloat(property.outstandingLoan).toLocaleString()}
                       </p>
                     </div>
@@ -240,14 +240,14 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Loan Progress</span>
-                        <span className="font-medium text-emerald-600">{progress.toFixed(1)}% paid</span>
+                        <span className="font-medium text-[#007A68]">{progress.toFixed(1)}% paid</span>
                       </div>
-                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-3 bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500 ease-out"
                           style={{
                             width: `${progress}%`,
-                            background: `linear-gradient(90deg, #10b981 0%, #34d399 100%)`,
+                            background: `linear-gradient(90deg, #00C4AA 0%, #5A9470 100%)`,
                           }}
                         />
                       </div>
@@ -275,27 +275,27 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                   </div>
 
                   {/* Footer with breakdown */}
-                  <div className="pt-3 border-t bg-gray-50/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
+                  <div className="pt-3 border-t bg-muted/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-4">
                         <div>
                           <span className="text-muted-foreground">Principal:</span>{" "}
-                          <span className="font-medium text-emerald-600">
+                          <span className="font-medium text-[#007A68]">
                             ${principalRepayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Interest:</span>{" "}
-                          <span className="font-medium text-amber-600">
+                          <span className="font-medium text-[#7A5A00]">
                             ${interestRepayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </span>
                         </div>
                       </div>
                       {cpfReturn > 0 && (
                         <div className="flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3 text-blue-500" />
+                          <TrendingUp className="h-3 w-3 text-[#7A3A0A]" />
                           <span className="text-muted-foreground">CPF Return:</span>{" "}
-                          <span className="font-medium text-blue-600">
+                          <span className="font-medium text-[#7A3A0A]">
                             ${cpfReturn.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </span>
                         </div>
@@ -332,7 +332,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
             <AlertDialogDescription>
               Are you sure you want to delete "{propertyToDelete?.propertyName}"?
               {propertyToDelete?.linkedExpenseId && (
-                <span className="block mt-2 text-amber-600">
+                <span className="block mt-2 text-[#7A5A00]">
                   This will also remove the linked monthly expense.
                 </span>
               )}
@@ -344,7 +344,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[#E05555] hover:bg-[#E05555]"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>

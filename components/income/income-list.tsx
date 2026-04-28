@@ -508,13 +508,13 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
             onClick={() => setIsBreakdownModalOpen(true)}
             data-tour="income-summary-card"
           >
-            <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
+            <Expand className="h-3.5 w-3.5 text-muted-foreground absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Annual Income
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-100">
-                <DollarSign className="h-5 w-5 text-teal-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+                <DollarSign className="h-5 w-5 text-[#007A68]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -554,8 +554,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Annual Income
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-100">
-                <DollarSign className="h-5 w-5 text-teal-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+                <DollarSign className="h-5 w-5 text-[#007A68]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -582,8 +582,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Monthly CPF Contributions
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-100">
-                <Briefcase className="h-5 w-5 text-orange-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+                <Briefcase className="h-5 w-5 text-[#7A3A0A]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -621,8 +621,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Monthly CPF Contributions
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-100">
-                <Briefcase className="h-5 w-5 text-orange-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+                <Briefcase className="h-5 w-5 text-[#7A3A0A]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -698,7 +698,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           variant="outline"
           size="sm"
           onClick={() => setIsAddDialogOpen(true)}
-          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           data-tour="add-income-btn"
         >
           <Plus className="h-4 w-4 mr-1.5" />
@@ -788,7 +788,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                     <TableCell className="capitalize">{income.frequency}</TableCell>
                     <TableCell>
                       {income.familyMember ? (
-                        <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                        <Badge variant="outline" className="bg-[rgba(184,98,42,0.10)] text-[#7A3A0A] border-[rgba(184,98,42,0.25)]">
                           <Link2 className="h-3 w-3 mr-1" />
                           {income.familyMember.name}
                         </Badge>
@@ -801,7 +801,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                         variant={income.isActive ? "default" : "secondary"}
                         className={
                           income.isActive
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                            ? "bg-[rgba(0,196,170,0.12)] text-[#007A68] hover:bg-[rgba(0,196,170,0.12)]"
                             : ""
                         }
                       >
@@ -821,7 +821,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => !income.familyMember && handleDeleteClick(income.id)}
-                            className={income.familyMember ? "text-muted-foreground cursor-not-allowed opacity-50" : "text-red-600"}
+                            className={income.familyMember ? "text-muted-foreground cursor-not-allowed opacity-50" : "text-[#8B0000]"}
                             disabled={!!income.familyMember}
                           >
                             {income.familyMember ? "🔒 Linked to Family Member" : "Delete"}
@@ -858,20 +858,20 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                             })()}
                           </div>
                           {income.subjectToCpf && income.employeeCpfContribution && (
-                            <div className="bg-blue-50 p-3 rounded-md space-y-2">
-                              <div className="font-semibold text-blue-900">CPF Breakdown (Monthly)</div>
+                            <div className="bg-[rgba(184,98,42,0.10)] p-3 rounded-md space-y-2">
+                              <div className="font-semibold text-[#7A3A0A]">CPF Breakdown (Monthly)</div>
                               <div className="grid grid-cols-3 gap-4 text-sm">
                                 <div>
-                                  <span className="text-blue-700">Employer Share (17%):</span>{" "}
+                                  <span className="text-[#7A3A0A]">Employer Share (17%):</span>{" "}
                                   <div className="font-medium">${parseFloat(income.employerCpfContribution || "0").toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
                                 </div>
                                 <div>
-                                  <span className="text-blue-700">Employee Share (20%):</span>{" "}
+                                  <span className="text-[#7A3A0A]">Employee Share (20%):</span>{" "}
                                   <div className="font-medium">${parseFloat(income.employeeCpfContribution).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
                                 </div>
                                 <div>
-                                  <span className="text-green-700">Nett Income:</span>{" "}
-                                  <div className="font-semibold text-green-700">${parseFloat(income.netTakeHome || "0").toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                                  <span className="text-[#007A68]">Nett Income:</span>{" "}
+                                  <div className="font-semibold text-[#007A68]">${parseFloat(income.netTakeHome || "0").toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
                                 </div>
                               </div>
                             </div>
@@ -996,8 +996,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                             }));
 
                             return (
-                              <div className="mt-6 pt-4 border-t border-gray-200">
-                                <div className="font-medium mb-4 text-gray-700">Income Timeline</div>
+                              <div className="mt-6 pt-4 border-t border-border">
+                                <div className="font-medium mb-4 text-foreground">Income Timeline</div>
                                 <div className="grid grid-cols-3 gap-8" style={{ height: 160 }}>
                                   {/* Left side - Timeline list (1/3 width) - scrollable */}
                                   <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: 160 }}>
@@ -1006,26 +1006,26 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                         <div
                                           className={`w-3 h-3 rounded-full flex-shrink-0 ${
                                             point.isPresent
-                                              ? 'bg-emerald-500'
+                                              ? 'bg-[#00C4AA]'
                                               : point.isPast
-                                                ? 'bg-gray-300'
-                                                : 'bg-violet-500'
+                                                ? 'bg-muted'
+                                                : 'bg-[#B8622A]'
                                           }`}
                                         />
                                         <div className="flex items-center gap-2 flex-wrap">
-                                          <span className={`text-sm ${point.isPresent ? 'text-gray-600' : point.isPast ? 'text-gray-500' : 'text-gray-900'}`}>
+                                          <span className={`text-sm ${point.isPresent ? 'text-foreground' : point.isPast ? 'text-foreground/400' : 'text-foreground'}`}>
                                             {point.label}
                                           </span>
-                                          <span className={`font-semibold ${point.isPresent ? 'text-gray-700' : point.isPast ? 'text-gray-600' : 'text-gray-900'}`}>
+                                          <span className={`font-semibold ${point.isPresent ? 'text-foreground' : point.isPast ? 'text-foreground' : 'text-foreground'}`}>
                                             ${point.amount.toLocaleString()}
                                           </span>
                                           {point.isPast && (
-                                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                                            <span className="text-xs bg-muted text-foreground/400 px-2 py-0.5 rounded-full">
                                               Past Income
                                             </span>
                                           )}
                                           {point.reason && (
-                                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                            <span className="text-xs bg-muted text-foreground px-2 py-0.5 rounded-full">
                                               {point.reason.charAt(0).toUpperCase() + point.reason.slice(1)}
                                             </span>
                                           )}
@@ -1035,17 +1035,17 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                   </div>
 
                                   {/* Right side - Income Chart using Recharts (2/3 width) - fills container height */}
-                                  <div className="col-span-2 relative bg-gray-50 rounded-xl overflow-hidden h-full">
+                                  <div className="col-span-2 relative bg-muted rounded-xl overflow-hidden h-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                       <AreaChart data={mergedChartData} margin={{ top: 20, right: 40, left: 50, bottom: 20 }}>
                                         <defs>
                                           <linearGradient id={`gradient-past-${income.id}`} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#6b7280" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#6b7280" stopOpacity={0.05} />
+                                            <stop offset="5%" stopColor="rgba(28,43,42,0.55)" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="rgba(28,43,42,0.55)" stopOpacity={0.05} />
                                           </linearGradient>
                                           <linearGradient id={`gradient-future-${income.id}`} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
-                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05} />
+                                            <stop offset="5%" stopColor="#D4845A" stopOpacity={0.25} />
+                                            <stop offset="95%" stopColor="#D4845A" stopOpacity={0.05} />
                                           </linearGradient>
                                         </defs>
                                         <XAxis dataKey="timestamp" type="number" domain={['dataMin', 'dataMax']} hide />
@@ -1054,7 +1054,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                         <Area
                                           type="stepAfter"
                                           dataKey="pastAmount"
-                                          stroke="#6b7280"
+                                          stroke="rgba(28,43,42,0.55)"
                                           strokeWidth={2}
                                           fill={`url(#gradient-past-${income.id})`}
                                           connectNulls={false}
@@ -1063,14 +1063,14 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                             dataKey="pastLabel"
                                             position="top"
                                             offset={8}
-                                            style={{ fontSize: 11, fontWeight: 500, fill: '#4b5563' }}
+                                            style={{ fontSize: 11, fontWeight: 500, fill: 'rgba(28,43,42,0.65)' }}
                                           />
                                         </Area>
                                         {/* Future - dashed violet line */}
                                         <Area
                                           type="stepAfter"
                                           dataKey="futureAmount"
-                                          stroke="#8b5cf6"
+                                          stroke="#D4845A"
                                           strokeWidth={2}
                                           strokeDasharray="6 4"
                                           fill={`url(#gradient-future-${income.id})`}
@@ -1080,7 +1080,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                             dataKey="futureLabel"
                                             position="top"
                                             offset={8}
-                                            style={{ fontSize: 11, fontWeight: 500, fill: '#4b5563' }}
+                                            style={{ fontSize: 11, fontWeight: 500, fill: 'rgba(28,43,42,0.65)' }}
                                           />
                                         </Area>
                                         {presentTimestamp && presentPoint && (
@@ -1088,11 +1088,11 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                             x={presentTimestamp}
                                             y={presentPoint.amount}
                                             r={6}
-                                            fill="#10b981"
-                                            stroke="#10b981"
+                                            fill="#00C4AA"
+                                            stroke="#00C4AA"
                                             strokeWidth={2}
                                             shape={(props: any) => (
-                                              <circle cx={props.cx} cy={props.cy} r={6} fill="#10b981" stroke="#10b981" strokeWidth={2}>
+                                              <circle cx={props.cx} cy={props.cy} r={6} fill="#00C4AA" stroke="#00C4AA" strokeWidth={2}>
                                                 <animate
                                                   attributeName="r"
                                                   values="5;7;5"
@@ -1218,7 +1218,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
             <AlertDialogDescription asChild>
               {deleteError ? (
                 <div className="space-y-2">
-                  <div className="text-red-600 font-medium">{deleteError}</div>
+                  <div className="text-[#8B0000] font-medium">{deleteError}</div>
                   <div className="text-sm">To delete this income, please delete the family member from the Family Members tab.</div>
                 </div>
               ) : (

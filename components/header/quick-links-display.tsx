@@ -94,7 +94,7 @@ function SortableQuickLink({ link, onNavigate }: SortableQuickLinkProps) {
       <Button
         variant="outline"
         size="sm"
-        className="h-8 px-3 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+        className="h-8 px-3.5 text-[13px] font-medium bg-transparent border-border/30 text-foreground/70 hover:bg-muted/70 dark:hover:bg-white/10 hover:border-border/60 hover:text-foreground rounded-full transition-all duration-200"
         onClick={handleClick}
       >
         {Icon && <Icon className="h-4 w-4 mr-1.5" />}

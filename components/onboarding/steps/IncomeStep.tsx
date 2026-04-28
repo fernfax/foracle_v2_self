@@ -206,7 +206,7 @@ export function IncomeStep({ familyMember, data, onSave, onNext, onBack }: Incom
         {/* Income Source Name */}
         <div className="space-y-2">
           <Label htmlFor="name">
-            Income Source Name <span className="text-red-500">*</span>
+            Income Source Name <span className="text-[#8B0000]">*</span>
           </Label>
           <Input
             id="name"
@@ -221,7 +221,7 @@ export function IncomeStep({ familyMember, data, onSave, onNext, onBack }: Incom
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>
-              Category <span className="text-red-500">*</span>
+              Category <span className="text-[#8B0000]">*</span>
             </Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="bg-background">
@@ -239,7 +239,7 @@ export function IncomeStep({ familyMember, data, onSave, onNext, onBack }: Incom
 
           <div className="space-y-2">
             <Label>
-              Frequency <span className="text-red-500">*</span>
+              Frequency <span className="text-[#8B0000]">*</span>
             </Label>
             <Select value={frequency} onValueChange={setFrequency}>
               <SelectTrigger className="bg-background">
@@ -259,7 +259,7 @@ export function IncomeStep({ familyMember, data, onSave, onNext, onBack }: Incom
         {/* Amount */}
         <div className="space-y-2">
           <Label htmlFor="amount">
-            Amount (SGD) <span className="text-red-500">*</span>
+            Amount (SGD) <span className="text-[#8B0000]">*</span>
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -366,7 +366,7 @@ export function IncomeStep({ familyMember, data, onSave, onNext, onBack }: Incom
                     variant="ghost"
                     size="sm"
                     onClick={() => removeBonusGroup(index)}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50 px-2"
+                    className="text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] px-2"
                     disabled={bonusGroups.length === 1}
                   >
                     Remove
@@ -403,9 +403,9 @@ export function IncomeStep({ familyMember, data, onSave, onNext, onBack }: Incom
         </div>
 
         {/* Add More Later Info Box */}
-        <div className="flex gap-3 p-4 rounded-xl bg-[#eaeffc] border border-blue-200">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-            <Lightbulb className="h-4 w-4 text-amber-500" />
+        <div className="flex gap-3 p-4 rounded-xl bg-[#eaeffc] border border-[rgba(184,98,42,0.25)]">
+          <div className="w-8 h-8 rounded-full bg-[rgba(184,98,42,0.10)] flex items-center justify-center shrink-0">
+            <Lightbulb className="h-4 w-4 text-[#7A5A00]" />
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">

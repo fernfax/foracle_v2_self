@@ -119,7 +119,7 @@ export function ExpenseHistoryModal({
             {/* Total Row */}
             <div className="flex items-center justify-between py-3 px-2 border-b">
               <span className="font-medium">Total</span>
-              <span className="text-lg font-semibold text-red-500">
+              <span className="text-lg font-semibold text-[#8B0000]">
                 {formatBudgetCurrency(totalAmount)}
               </span>
             </div>
@@ -146,7 +146,7 @@ export function ExpenseHistoryModal({
                         <span className="text-sm font-medium text-muted-foreground">
                           {format(parsedDate, "EEE, MMM d")}
                         </span>
-                        <span className="text-sm font-medium text-red-500">
+                        <span className="text-sm font-medium text-[#8B0000]">
                           OUT {formatBudgetCurrency(dayTotal)}
                         </span>
                       </div>
@@ -207,7 +207,7 @@ export function ExpenseHistoryModal({
                                 <div className="ml-auto text-right flex-shrink-0 pr-2">
                                   {expense.originalCurrency && expense.originalAmount ? (
                                     <>
-                                      <div className="font-semibold text-red-500">
+                                      <div className="font-semibold text-[#8B0000]">
                                         -{formatBudgetCurrency(parseFloat(expense.amount))}
                                       </div>
                                       <div className="text-xs text-muted-foreground">
@@ -219,7 +219,7 @@ export function ExpenseHistoryModal({
                                       </div>
                                     </>
                                   ) : (
-                                    <span className="font-semibold text-red-500">
+                                    <span className="font-semibold text-[#8B0000]">
                                       -{formatBudgetCurrency(parseFloat(expense.amount))}
                                     </span>
                                   )}

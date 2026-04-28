@@ -90,8 +90,8 @@ export function VehicleDetailsModal({
       >
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-100">
-              <Car className="h-6 w-6 text-amber-600" />
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[rgba(212,168,67,0.15)]">
+              <Car className="h-6 w-6 text-[#7A5A00]" />
             </div>
             <div>
               <DialogTitle className="text-xl">{vehicle.vehicleName}</DialogTitle>
@@ -101,7 +101,7 @@ export function VehicleDetailsModal({
               </p>
               <Badge
                 variant="outline"
-                className={`text-xs font-medium mt-2 ${vehicle.linkedExpenseId ? 'text-green-600 border-green-200' : 'text-gray-400 border-gray-200'}`}
+                className={`text-xs font-medium mt-2 ${vehicle.linkedExpenseId ? 'text-[#007A68] border-[rgba(0,196,170,0.25)]' : 'text-muted-foreground border-border'}`}
               >
                 {vehicle.linkedExpenseId ? <Check className="h-3 w-3 mr-1" /> : <X className="h-3 w-3 mr-1" />}
                 {vehicle.linkedExpenseId ? 'In Expenses' : 'Not in Expenses'}
@@ -113,21 +113,21 @@ export function VehicleDetailsModal({
         <div className="space-y-6 py-4">
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="border border-gray-200 rounded-lg p-4" style={{ backgroundColor: '#f9fafb' }}>
+            <div className="border border-border rounded-lg p-4" style={{ backgroundColor: '#F0EBE0' }}>
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Car className="h-4 w-4" />
                 <span className="text-sm">Purchase Price</span>
               </div>
-              <p className="text-2xl font-semibold tabular-nums text-gray-900">
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
                 ${parseFloat(vehicle.originalPurchasePrice).toLocaleString()}
               </p>
             </div>
-            <div className="border border-gray-200 rounded-lg p-4" style={{ backgroundColor: '#f9fafb' }}>
+            <div className="border border-border rounded-lg p-4" style={{ backgroundColor: '#F0EBE0' }}>
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Wallet className="h-4 w-4" />
                 <span className="text-sm">Loan Amount</span>
               </div>
-              <p className="text-2xl font-semibold tabular-nums text-gray-900">
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
                 ${loanTaken.toLocaleString()}
               </p>
             </div>
@@ -135,7 +135,7 @@ export function VehicleDetailsModal({
 
           {/* COE Expiry Section */}
           {vehicle.coeExpiryDate && coeCountdown && (
-            <div className="border border-gray-200 rounded-xl p-5" style={{ backgroundColor: '#ffffff' }}>
+            <div className="border border-border rounded-xl p-5" style={{ backgroundColor: '#ffffff' }}>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-semibold flex items-center gap-2" style={{ color: '#111827' }}>
                   <Clock className="h-4 w-4" />
@@ -144,10 +144,10 @@ export function VehicleDetailsModal({
                 <Badge
                   variant="secondary"
                   className={coeCountdown.expired
-                    ? "bg-red-100 text-red-700"
+                    ? "bg-[rgba(224,85,85,0.12)] text-[#8B0000]"
                     : coeCountdown.days && coeCountdown.days < 365
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-emerald-100 text-emerald-700"
+                      ? "bg-[rgba(212,168,67,0.15)] text-[#7A5A00]"
+                      : "bg-[rgba(0,196,170,0.12)] text-[#007A68]"
                   }
                 >
                   {coeCountdown.expired ? "Expired" : `${coeCountdown.text} remaining`}
@@ -156,7 +156,7 @@ export function VehicleDetailsModal({
               <div className="flex justify-between text-sm">
                 <div>
                   <span className="text-muted-foreground">Expiry Date: </span>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-foreground">
                     {format(new Date(vehicle.coeExpiryDate), "MMMM d, yyyy")}
                   </span>
                 </div>
@@ -166,30 +166,30 @@ export function VehicleDetailsModal({
 
           {/* Progress Section */}
           {loanTaken > 0 && (
-            <div className="border border-gray-200 rounded-xl p-5" style={{ backgroundColor: '#ffffff' }}>
+            <div className="border border-border rounded-xl p-5" style={{ backgroundColor: '#ffffff' }}>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-semibold" style={{ color: '#111827' }}>Loan Progress</h3>
-                <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                <Badge variant="secondary" className="bg-[rgba(0,196,170,0.12)] text-[#007A68] dark:bg-[#00C4AA] dark:text-[#00C4AA]">
                   {progress.toFixed(1)}% Complete
                 </Badge>
               </div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
+              <div className="h-4 bg-muted dark:bg-foreground/80 rounded-full overflow-hidden mb-3">
                 <div
                   className="h-full rounded-full transition-all duration-500 ease-out"
                   style={{
                     width: `${progress}%`,
-                    background: `linear-gradient(90deg, #a855f7 0%, #c084fc 100%)`,
+                    background: `linear-gradient(90deg, #D4845A 0%, #c084fc 100%)`,
                   }}
                 />
               </div>
               <div className="flex justify-between text-sm">
                 <div>
                   <span className="text-muted-foreground">Repaid: </span>
-                  <span className="font-semibold text-emerald-600">${loanRepaid.toLocaleString()}</span>
+                  <span className="font-semibold text-[#007A68]">${loanRepaid.toLocaleString()}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Remaining: </span>
-                  <span className="font-semibold text-amber-600">${outstandingLoan.toLocaleString()}</span>
+                  <span className="font-semibold text-[#7A5A00]">${outstandingLoan.toLocaleString()}</span>
                 </div>
               </div>
               {monthsRemaining > 0 && (
@@ -206,10 +206,10 @@ export function VehicleDetailsModal({
               <h3 className="font-semibold flex items-center gap-2" style={{ color: '#111827' }}>
                 Monthly Payment
               </h3>
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3" style={{ backgroundColor: '#ffffff' }}>
+              <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: '#ffffff' }}>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-800 font-medium">Monthly Loan Payment</span>
-                  <span className="text-xl font-semibold text-gray-900">${monthlyPayment.toLocaleString()}</span>
+                  <span className="text-foreground font-medium">Monthly Loan Payment</span>
+                  <span className="text-xl font-semibold text-foreground">${monthlyPayment.toLocaleString()}</span>
                 </div>
               </div>
             </div>

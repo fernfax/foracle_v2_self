@@ -121,8 +121,8 @@ export function InvestmentsClient({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-teal-100">
-                <DollarSign className="h-6 w-6 text-teal-600" />
+              <div className="p-3 rounded-lg bg-[rgba(0,196,170,0.12)]">
+                <DollarSign className="h-6 w-6 text-[#007A68]" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">
@@ -147,14 +147,14 @@ export function InvestmentsClient({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-green-100">
-                <Percent className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-lg bg-[rgba(0,196,170,0.12)]">
+                <Percent className="h-6 w-6 text-[#007A68]" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">
                   Avg. Annual Yield
                 </p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-[#007A68]">
                   {summary.averageYield.toFixed(2)}%
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -168,8 +168,8 @@ export function InvestmentsClient({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-blue-100">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
+              <div className="p-3 rounded-lg bg-[rgba(184,98,42,0.10)]">
+                <TrendingUp className="h-6 w-6 text-[#7A3A0A]" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">
@@ -264,7 +264,7 @@ export function InvestmentsClient({
             <AlertDialogAction
               onClick={handleDeleteInvestment}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[#E05555] hover:bg-[#E05555]"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>

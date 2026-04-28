@@ -194,7 +194,7 @@ export function ExpensesStep({ income, data, onSave, onNext, onBack, onSkip }: E
 
           <div className="space-y-2">
             <Label htmlFor="percentage">
-              Percentage of Income for Expenses <span className="text-red-500">*</span>
+              Percentage of Income for Expenses <span className="text-[#8B0000]">*</span>
             </Label>
             <div className="relative">
               <Input
@@ -267,7 +267,7 @@ export function ExpensesStep({ income, data, onSave, onNext, onBack, onSkip }: E
                         value={categoryAmounts[category.name] || ""}
                         readOnly
                         disabled
-                        className="h-8 pl-6 text-sm text-gray-500 bg-white cursor-default disabled:opacity-100"
+                        className="h-8 pl-6 text-sm text-foreground/400 bg-white cursor-default disabled:opacity-100"
                       />
                     </div>
                   )}
@@ -278,9 +278,9 @@ export function ExpensesStep({ income, data, onSave, onNext, onBack, onSkip }: E
         </div>
 
         {/* Customize Later Info Box */}
-        <div className="flex gap-3 p-4 rounded-xl bg-[#eaeffc] border border-blue-200 dark:border-blue-300/50">
-          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-            <Lightbulb className="h-4 w-4 text-amber-500" />
+        <div className="flex gap-3 p-4 rounded-xl bg-[#eaeffc] border border-[rgba(184,98,42,0.25)] dark:border-[rgba(184,98,42,0.25)]/50">
+          <div className="w-8 h-8 rounded-full bg-[rgba(184,98,42,0.10)] dark:bg-[#B8622A]/40 flex items-center justify-center shrink-0">
+            <Lightbulb className="h-4 w-4 text-[#7A5A00]" />
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">
