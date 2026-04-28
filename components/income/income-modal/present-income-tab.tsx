@@ -154,7 +154,7 @@ export function PresentIncomeTab({
       {/* Income Type Selector */}
       <div className="space-y-2">
         <Label htmlFor="income-type">
-          Income Type <span className="text-red-500">*</span>
+          Income Type <span className="text-[#8B0000]">*</span>
         </Label>
         <Select value={incomeCategory} onValueChange={setIncomeCategory}>
           <SelectTrigger className="bg-white">
@@ -180,17 +180,17 @@ export function PresentIncomeTab({
       {incomeCategory && (
       <>
       {/* Group 1: Basic Income Details */}
-      <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-        <div className="pb-3 border-b border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-900">Basic Income Details</h3>
-          <p className="text-xs text-gray-500 mt-1">Core information about the income source including amount, frequency, and CPF status</p>
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <div className="pb-3 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground">Basic Income Details</h3>
+          <p className="text-xs text-foreground/400 mt-1">Core information about the income source including amount, frequency, and CPF status</p>
         </div>
 
         {/* Row 1: Name and Category */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="name">
-              Income Source Name <span className="text-red-500">*</span>
+              Income Source Name <span className="text-[#8B0000]">*</span>
             </Label>
             <Input
               id="name"
@@ -202,7 +202,7 @@ export function PresentIncomeTab({
           </div>
           <div className="space-y-2">
             <Label htmlFor="category">
-              Income Category <span className="text-red-500">*</span>
+              Income Category <span className="text-[#8B0000]">*</span>
             </Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="bg-white">
@@ -223,10 +223,10 @@ export function PresentIncomeTab({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="amount">
-              Income Amount <span className="text-red-500">*</span>
+              Income Amount <span className="text-[#8B0000]">*</span>
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
               <Input
                 id="amount"
                 type="number"
@@ -241,7 +241,7 @@ export function PresentIncomeTab({
           </div>
           <div className="space-y-2">
             <Label htmlFor="frequency">
-              Income Frequency <span className="text-red-500">*</span>
+              Income Frequency <span className="text-[#8B0000]">*</span>
             </Label>
             <Select
               value={frequency}
@@ -273,7 +273,7 @@ export function PresentIncomeTab({
         {frequency === "custom" && (
           <div className="space-y-2">
             <Label>
-              Select Months <span className="text-red-500">*</span>
+              Select Months <span className="text-[#8B0000]">*</span>
             </Label>
             <div className="grid grid-cols-6 gap-2">
               {MONTHS.map((month) => (
@@ -287,7 +287,7 @@ export function PresentIncomeTab({
                     "h-10 font-medium",
                     selectedMonths.includes(month.value)
                       ? "bg-black text-white hover:bg-black/90 border-black"
-                      : "bg-white hover:bg-gray-50"
+                      : "bg-white hover:bg-muted"
                   )}
                 >
                   {month.label.slice(0, 3)}
@@ -307,7 +307,7 @@ export function PresentIncomeTab({
           <div className={cn("grid gap-4", incomeCategory === "one-off" ? "grid-cols-1" : "grid-cols-2")}>
             <div className="space-y-2">
               <Label>
-                {incomeCategory === "one-off" ? "Income Date" : "Start Date"} <span className="text-red-500">*</span>
+                {incomeCategory === "one-off" ? "Income Date" : "Start Date"} <span className="text-[#8B0000]">*</span>
               </Label>
               <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                 <PopoverAnchor asChild>
@@ -386,7 +386,7 @@ export function PresentIncomeTab({
               onCheckedChange={(checked) => setSubjectToCpf(checked as boolean)}
             />
             <Label htmlFor="cpf" className="text-sm font-medium leading-none">
-              Subject to CPF Deductions <span className="text-red-500">*</span>
+              Subject to CPF Deductions <span className="text-[#8B0000]">*</span>
             </Label>
           </div>
           <p className="text-xs text-muted-foreground ml-6">Enable if this income has CPF contributions (typically for Singapore employment income)</p>
@@ -395,10 +395,10 @@ export function PresentIncomeTab({
 
       {/* Group 2: Bonus Configuration - Hidden for one-off income */}
       {incomeCategory !== "one-off" && (
-      <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-        <div className="pb-3 border-b border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-900">Income Bonus Details</h3>
-          <p className="text-xs text-gray-500 mt-1">Set up bonus payments for specific months (e.g., 13th month bonus in December)</p>
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <div className="pb-3 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground">Income Bonus Details</h3>
+          <p className="text-xs text-foreground/400 mt-1">Set up bonus payments for specific months (e.g., 13th month bonus in December)</p>
         </div>
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -461,7 +461,7 @@ export function PresentIncomeTab({
                   size="sm"
                   onClick={() => removeBonusGroup(index)}
                   disabled={index === 0 && bonusGroups.length === 1}
-                  className="h-10 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-10 px-2 text-xs text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Remove
                 </Button>
@@ -479,8 +479,8 @@ export function PresentIncomeTab({
 
             {/* Bonus Summary */}
             {bonusGroups.length > 0 && amount && (
-              <div className="pt-2 border-t border-gray-200">
-                <div className="text-xs text-gray-600 space-y-1">
+              <div className="pt-2 border-t border-border">
+                <div className="text-xs text-foreground space-y-1">
                   <div>
                     <span className="font-medium">Total Bonus Months:</span>{" "}
                     <span className="font-bold">{bonusGroups.reduce((sum, group) => sum + (parseFloat(group.amount) || 0), 0).toFixed(2)} months</span>
@@ -498,10 +498,10 @@ export function PresentIncomeTab({
       )}
 
       {/* Group 3: Additional Information */}
-      <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-        <div className="pb-3 border-b border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-900">Additional Information</h3>
-          <p className="text-xs text-gray-500 mt-1">Optional notes and details about this income source</p>
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <div className="pb-3 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground">Additional Information</h3>
+          <p className="text-xs text-foreground/400 mt-1">Optional notes and details about this income source</p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="notes">Payment Notes</Label>

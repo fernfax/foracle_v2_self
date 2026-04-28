@@ -259,7 +259,7 @@ export function ExpenseReports({ expenses }: ExpenseReportsProps) {
                         labelLine={false}
                         label={renderCustomLabel}
                         outerRadius={150}
-                        fill="#8884d8"
+                        fill="#3A6B52"
                         dataKey="value"
                       >
                         {pieChartData.map((entry, index) => (

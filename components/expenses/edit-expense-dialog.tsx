@@ -77,10 +77,10 @@ const getIntegrationType = (expense: Expense | null): IntegrationType => {
 const integrationConfig = {
   policy: {
     icon: Shield,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    borderColor: "border-blue-200",
-    textColor: "text-blue-800",
+    color: "text-[#7A3A0A]",
+    bgColor: "bg-[rgba(184,98,42,0.10)]",
+    borderColor: "border-[rgba(184,98,42,0.25)]",
+    textColor: "text-[#7A3A0A]",
     title: "View Insurance Expense",
     description: "This expense is linked to an insurance policy. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to an insurance policy.",
@@ -89,10 +89,10 @@ const integrationConfig = {
   },
   property: {
     icon: Home,
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50",
-    borderColor: "border-emerald-200",
-    textColor: "text-emerald-800",
+    color: "text-[#007A68]",
+    bgColor: "bg-[rgba(0,196,170,0.12)]",
+    borderColor: "border-[rgba(0,196,170,0.25)]",
+    textColor: "text-[#007A68]",
     title: "View Property Expense",
     description: "This expense is linked to a property asset. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a property asset.",
@@ -101,10 +101,10 @@ const integrationConfig = {
   },
   vehicle: {
     icon: Car,
-    color: "text-amber-600",
-    bgColor: "bg-amber-50",
-    borderColor: "border-amber-200",
-    textColor: "text-amber-800",
+    color: "text-[#7A5A00]",
+    bgColor: "bg-[rgba(212,168,67,0.15)]",
+    borderColor: "border-[rgba(212,168,67,0.30)]",
+    textColor: "text-[#7A5A00]",
     title: "View Vehicle Expense",
     description: "This expense is linked to a vehicle asset. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a vehicle asset.",
@@ -113,10 +113,10 @@ const integrationConfig = {
   },
   goal: {
     icon: Target,
-    color: "text-violet-600",
-    bgColor: "bg-violet-50",
-    borderColor: "border-violet-200",
-    textColor: "text-violet-800",
+    color: "text-[#7A3A0A]",
+    bgColor: "bg-[rgba(184,98,42,0.10)]",
+    borderColor: "border-[rgba(184,98,42,0.25)]",
+    textColor: "text-[#7A3A0A]",
     title: "View Goal Contribution",
     description: "This expense is linked to a savings goal. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a savings goal.",
@@ -377,11 +377,11 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
         {/* Expense Type Selector */}
         <div className="space-y-2">
           <Label htmlFor="edit-expense-type" className="flex items-center gap-1">
-            Expense Type <span className="text-red-500">*</span>
+            Expense Type <span className="text-[#8B0000]">*</span>
             {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
           </Label>
           <Select value={expenseCategory} onValueChange={isLinked ? undefined : setExpenseCategory} disabled={isLinked}>
-            <SelectTrigger className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}>
+            <SelectTrigger className={cn("bg-white", isLinked && "bg-muted cursor-not-allowed")}>
               <SelectValue placeholder="Select expense type" />
             </SelectTrigger>
             <SelectContent>
@@ -417,7 +417,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-name" className="flex items-center gap-1">
-                Expense Name <span className="text-red-500">*</span>
+                Expense Name <span className="text-[#8B0000]">*</span>
                 {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <Input
@@ -425,7 +425,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 placeholder="e.g., Rent, Groceries"
                 value={name}
                 onChange={(e) => !isLinked && setName(e.target.value)}
-                className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}
+                className={cn("bg-white", isLinked && "bg-muted cursor-not-allowed")}
                 disabled={isLinked}
               />
               {isLinked && (
@@ -434,11 +434,11 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-category" className="flex items-center gap-1">
-                Category <span className="text-red-500">*</span>
+                Category <span className="text-[#8B0000]">*</span>
                 {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <Select value={category} onValueChange={isLinked ? undefined : setCategory} disabled={isLinked}>
-                <SelectTrigger className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}>
+                <SelectTrigger className={cn("bg-white", isLinked && "bg-muted cursor-not-allowed")}>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[400px] overflow-y-auto">
@@ -461,7 +461,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-amount" className="flex items-center gap-1">
-                Expense Amount <span className="text-red-500">*</span>
+                Expense Amount <span className="text-[#8B0000]">*</span>
                 {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <Input
@@ -472,7 +472,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 onChange={(e) => !isLinked && setAmount(e.target.value)}
                 min="0"
                 step="0.01"
-                className={cn("bg-white", isLinked && "bg-gray-100 cursor-not-allowed")}
+                className={cn("bg-white", isLinked && "bg-muted cursor-not-allowed")}
                 disabled={isLinked}
               />
               {isLinked && (
@@ -481,7 +481,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-frequency" className="flex items-center gap-1">
-                Expense Frequency <span className="text-red-500">*</span>
+                Expense Frequency <span className="text-[#8B0000]">*</span>
                 {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <Select
@@ -489,7 +489,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 onValueChange={isLinked || expenseCategory === "one-off" ? undefined : setFrequency}
                 disabled={isLinked || expenseCategory === "one-off"}
               >
-                <SelectTrigger className={cn("bg-white", (isLinked || expenseCategory === "one-off") && "bg-gray-100 cursor-not-allowed")}>
+                <SelectTrigger className={cn("bg-white", (isLinked || expenseCategory === "one-off") && "bg-muted cursor-not-allowed")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -514,7 +514,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
           {frequency.toLowerCase() === "custom" && (
             <div className="space-y-2">
               <Label className="flex items-center gap-1">
-                Select Months <span className="text-red-500">*</span>
+                Select Months <span className="text-[#8B0000]">*</span>
                 {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <div className="grid grid-cols-6 gap-2">
@@ -530,7 +530,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                       "h-10 font-medium",
                       selectedMonths.includes(month.value)
                         ? "bg-black text-white hover:bg-black/90 border-black"
-                        : "bg-white hover:bg-gray-50",
+                        : "bg-white hover:bg-muted",
                       isLinked && "cursor-not-allowed opacity-70"
                     )}
                   >
@@ -558,14 +558,14 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             <div className={cn("grid gap-4", expenseCategory === "one-off" ? "grid-cols-1" : "grid-cols-2")}>
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
-                  {expenseCategory === "one-off" ? "Expense Date" : "Start Date"} <span className="text-red-500">*</span>
+                  {expenseCategory === "one-off" ? "Expense Date" : "Start Date"} <span className="text-[#8B0000]">*</span>
                   {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </Label>
                 {isLinked ? (
                   <Button
                     variant="outline"
                     disabled
-                    className="w-full justify-start text-left font-normal bg-gray-100 cursor-not-allowed"
+                    className="w-full justify-start text-left font-normal bg-muted cursor-not-allowed"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
@@ -613,7 +613,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                     <Button
                       variant="outline"
                       disabled
-                      className="w-full justify-start text-left font-normal bg-gray-100 cursor-not-allowed"
+                      className="w-full justify-start text-left font-normal bg-muted cursor-not-allowed"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {endDate ? format(endDate, "MMMM do, yyyy") : "No end date"}

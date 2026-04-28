@@ -30,16 +30,16 @@ interface IconConfig {
 }
 
 const ICON_CONFIGS: IconConfig[] = [
-  { Icon: Wallet, bgClass: "bg-emerald-100", textClass: "text-emerald-600" },
-  { Icon: Target, bgClass: "bg-blue-100", textClass: "text-blue-600" },
-  { Icon: TrendingUp, bgClass: "bg-amber-100", textClass: "text-amber-600" },
-  { Icon: Shield, bgClass: "bg-pink-100", textClass: "text-pink-600" },
-  { Icon: Users, bgClass: "bg-purple-100", textClass: "text-purple-600" },
-  { Icon: BarChart3, bgClass: "bg-indigo-100", textClass: "text-indigo-600" },
-  { Icon: PiggyBank, bgClass: "bg-rose-100", textClass: "text-rose-600" },
-  { Icon: CreditCard, bgClass: "bg-cyan-100", textClass: "text-cyan-600" },
-  { Icon: Landmark, bgClass: "bg-slate-100", textClass: "text-slate-600" },
-  { Icon: Coins, bgClass: "bg-orange-100", textClass: "text-orange-600" },
+  { Icon: Wallet, bgClass: "bg-[rgba(0,196,170,0.12)]", textClass: "text-[#007A68]" },
+  { Icon: Target, bgClass: "bg-[rgba(184,98,42,0.10)]", textClass: "text-[#7A3A0A]" },
+  { Icon: TrendingUp, bgClass: "bg-[rgba(212,168,67,0.15)]", textClass: "text-[#7A5A00]" },
+  { Icon: Shield, bgClass: "bg-[rgba(224,85,85,0.12)]", textClass: "text-[#8B0000]" },
+  { Icon: Users, bgClass: "bg-[rgba(184,98,42,0.10)]", textClass: "text-[#7A3A0A]" },
+  { Icon: BarChart3, bgClass: "bg-[rgba(184,98,42,0.10)]", textClass: "text-[#7A3A0A]" },
+  { Icon: PiggyBank, bgClass: "bg-[rgba(224,85,85,0.12)]", textClass: "text-[#8B0000]" },
+  { Icon: CreditCard, bgClass: "bg-[rgba(0,196,170,0.12)]", textClass: "text-[#007A68]" },
+  { Icon: Landmark, bgClass: "bg-muted", textClass: "text-foreground" },
+  { Icon: Coins, bgClass: "bg-[rgba(184,98,42,0.10)]", textClass: "text-[#7A3A0A]" },
 ];
 
 interface FloatingIcon {
@@ -239,7 +239,7 @@ export function WelcomeHeroModal({
       <DialogContent className="sm:max-w-xl p-0 overflow-hidden border-0 gap-0">
         <DialogTitle className="sr-only">{content.title}</DialogTitle>
         {/* Animated background section */}
-        <div className="relative h-44 bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30 overflow-hidden">
+        <div className="relative h-44 bg-gradient-to-br from-muted via-[rgba(184,98,42,0.10)]/50 to-[rgba(184,98,42,0.10)]/30 overflow-hidden">
           <ModalFloatingIcons />
           {/* Gradient overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-white via-white/60 to-transparent z-10" />
@@ -250,7 +250,7 @@ export function WelcomeHeroModal({
           {/* Welcome text */}
           <div className="text-center space-y-3 mb-8">
             {isOverall ? (
-              <h2 className="text-3xl font-semibold text-slate-900 flex items-end justify-center gap-3">
+              <h2 className="text-3xl font-semibold text-foreground flex items-end justify-center gap-3">
                 Welcome to{" "}
                 <Image
                   src="/wordmark-168.png"
@@ -261,11 +261,11 @@ export function WelcomeHeroModal({
                 />
               </h2>
             ) : (
-              <h2 className="text-3xl font-semibold text-slate-900">
+              <h2 className="text-3xl font-semibold text-foreground">
                 {content.title}
               </h2>
             )}
-            <p className="text-slate-600 leading-relaxed">
+            <p className="text-foreground leading-relaxed">
               {content.description}
             </p>
           </div>
@@ -273,7 +273,7 @@ export function WelcomeHeroModal({
           {/* CTA Button */}
           <Button
             onClick={onGetStarted}
-            className="w-full h-12 text-base font-medium bg-[#387DF5] hover:bg-[#2d6ad4] shadow-lg shadow-blue-200/50 transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+            className="w-full h-12 text-base font-medium transition-all duration-200"
           >
             Get Started
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -282,7 +282,7 @@ export function WelcomeHeroModal({
           {/* Skip option */}
           <button
             onClick={() => onOpenChange(false)}
-            className="w-full mt-3 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            className="w-full mt-3 text-sm text-foreground/400 hover:text-foreground transition-colors"
           >
             Skip for now
           </button>

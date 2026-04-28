@@ -20,9 +20,9 @@ interface CategoryBudgetBarChartProps {
 }
 
 function getBarColor(percentUsed: number): string {
-  if (percentUsed >= 90) return "#ef4444"; // red
-  if (percentUsed >= 75) return "#f59e0b"; // amber
-  return "#3b82f6"; // blue
+  if (percentUsed >= 90) return "#E05555"; // red
+  if (percentUsed >= 75) return "#D4A843"; // amber
+  return "#3A6B52"; // blue
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,7 +33,7 @@ function CustomTooltip({ active, payload }: any) {
   if (!data) return null;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm">
+    <div className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm">
       <p className="font-semibold mb-1">{data.name}</p>
       <div className="space-y-0.5 text-muted-foreground">
         <p>Budget: <span className="text-foreground font-medium">${data.budget.toLocaleString()}</span></p>
@@ -96,12 +96,12 @@ export function CategoryBudgetBarChart({ budgetData }: CategoryBudgetBarChartPro
               data={chartData}
               margin={{ top: 0, right: 10, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(28,43,42,0.10)" />
               <XAxis
                 type="number"
                 tick={{ fontSize: 11 }}
                 tickLine={false}
-                axisLine={{ stroke: "#e5e7eb" }}
+                axisLine={{ stroke: "rgba(28,43,42,0.10)" }}
                 tickFormatter={(v) => `$${v}`}
               />
               <YAxis
@@ -118,7 +118,7 @@ export function CategoryBudgetBarChart({ budgetData }: CategoryBudgetBarChartPro
                   <Cell key={`spent-${index}`} fill={getBarColor(entry.percent)} />
                 ))}
               </Bar>
-              <Bar dataKey="remaining" stackId="a" fill="#e5e7eb" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="remaining" stackId="a" fill="rgba(28,43,42,0.10)" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -126,19 +126,19 @@ export function CategoryBudgetBarChart({ budgetData }: CategoryBudgetBarChartPro
         {/* Legend */}
         <div className="flex items-center justify-center gap-4 text-xs mt-3 text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm bg-blue-500" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-[#B8622A]" />
             <span>&lt;75%</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm bg-amber-500" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-[#D4A843]" />
             <span>75-90%</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm bg-red-500" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-[#E05555]" />
             <span>&gt;90%</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm bg-gray-200" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-muted" />
             <span>Remaining</span>
           </div>
         </div>

@@ -31,7 +31,7 @@ export function SinglishToggle({ enabled, onToggle, disabled }: SinglishTogglePr
             className={cn(
               "flex h-8 w-8 items-center justify-center rounded-md transition-all text-lg",
               enabled
-                ? "bg-emerald-100 ring-2 ring-emerald-500"
+                ? "bg-[rgba(0,196,170,0.12)] ring-2 ring-[#00C4AA]"
                 : "bg-muted hover:bg-muted/80 opacity-50 grayscale",
               (disabled || isPending) && "cursor-not-allowed opacity-40"
             )}

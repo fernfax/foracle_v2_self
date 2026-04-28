@@ -13,19 +13,19 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/overview", label: "Overview", icon: Home, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
-  { href: "/user", label: "User Homepage", icon: User, bgColor: "bg-purple-100", iconColor: "text-purple-600" },
-  { href: "/expenses", label: "Expenses", icon: Wallet, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
-  { href: "/assets", label: "Assets", icon: TrendingUp, bgColor: "bg-amber-100", iconColor: "text-amber-600" },
-  { href: "/policies", label: "Insurance", icon: Shield, bgColor: "bg-rose-100", iconColor: "text-rose-600" },
-  { href: "/goals", label: "Goals", icon: Target, bgColor: "bg-cyan-100", iconColor: "text-cyan-600" },
+  { href: "/overview", label: "Overview", icon: Home },
+  { href: "/user", label: "User Homepage", icon: User },
+  { href: "/expenses", label: "Expenses", icon: Wallet },
+  { href: "/assets", label: "Assets", icon: TrendingUp },
+  { href: "/policies", label: "Insurance", icon: Shield },
+  { href: "/goals", label: "Goals", icon: Target },
 ];
 
 export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-28 space-y-2">
+    <nav className="sticky top-28 space-y-1.5">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         const Icon = item.icon;
@@ -35,21 +35,19 @@ export function DashboardNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+              "group flex items-center gap-3 px-3.5 py-2.5 rounded-md transition-all duration-200 font-display text-sm font-medium",
               isActive
-                ? "bg-[#387DF5] text-white shadow-lg shadow-blue-200 border border-[#387DF5]"
-                : "bg-white text-slate-600 shadow-sm hover:shadow-md border border-slate-200"
+                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                : "bg-card text-foreground/65 border border-border/30 hover:bg-muted/70 hover:text-foreground hover:border-border/60"
             )}
           >
-            <div className={cn(
-              "p-2 rounded-lg transition-colors",
-              isActive
-                ? "bg-white/20"
-                : item.bgColor
-            )}>
-              <Icon className={cn("h-5 w-5", !isActive && item.iconColor)} />
-            </div>
-            <span className="font-semibold text-sm">{item.label}</span>
+            <Icon
+              className={cn(
+                "h-[18px] w-[18px] flex-shrink-0",
+                isActive ? "text-primary-foreground" : "text-foreground/55 group-hover:text-foreground"
+              )}
+            />
+            <span>{item.label}</span>
           </Link>
         );
       })}

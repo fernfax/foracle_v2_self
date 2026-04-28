@@ -227,14 +227,14 @@ export function AddVehicleDialog({
         <div className="space-y-6 py-4">
           {/* Vehicle Information */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Vehicle Information</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Vehicle Information</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-muted rounded-lg p-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="vehicleName">
-                    Vehicle Name <span className="text-red-500">*</span>
+                    Vehicle Name <span className="text-[#8B0000]">*</span>
                   </Label>
                   <Input
                     id="vehicleName"
@@ -246,7 +246,7 @@ export function AddVehicleDialog({
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    Purchase Date <span className="text-red-500">*</span>
+                    Purchase Date <span className="text-[#8B0000]">*</span>
                   </Label>
                   <Popover open={purchaseDateOpen} onOpenChange={setPurchaseDateOpen}>
                     <PopoverTrigger asChild>
@@ -313,17 +313,17 @@ export function AddVehicleDialog({
 
           {/* Purchase Details */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Purchase Details</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Purchase Details</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-muted rounded-lg p-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="originalPurchasePrice">
-                    Original Purchase Price <span className="text-red-500">*</span>
+                    Original Purchase Price <span className="text-[#8B0000]">*</span>
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="originalPurchasePrice"
                       type="number"
@@ -339,7 +339,7 @@ export function AddVehicleDialog({
                 <div className="space-y-2">
                   <Label htmlFor="loanAmountTaken">Loan Amount Taken</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="loanAmountTaken"
                       type="number"
@@ -358,15 +358,15 @@ export function AddVehicleDialog({
 
           {/* Loan Repayment */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Loan Repayment</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Loan Repayment</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-muted rounded-lg p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="loanAmountRepaid">Loan Amount Repaid</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="loanAmountRepaid"
                       type="number"
@@ -382,13 +382,13 @@ export function AddVehicleDialog({
                 <div className="space-y-2">
                   <Label htmlFor="outstandingLoan">Outstanding Loan</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="outstandingLoan"
                       type="number"
                       value={outstandingLoan.toFixed(2)}
                       disabled
-                      className="bg-gray-100 pl-7"
+                      className="bg-muted pl-7"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -401,7 +401,7 @@ export function AddVehicleDialog({
                 <div className="space-y-2">
                   <Label htmlFor="monthlyLoanPayment">Monthly Loan Payment</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       id="monthlyLoanPayment"
                       type="number"
@@ -420,16 +420,16 @@ export function AddVehicleDialog({
 
           {/* Expenditure Integration */}
           <div className="space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Expenditure Integration</h3>
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Expenditure Integration</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-muted rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Label htmlFor="addToExpenditures" className="text-sm font-semibold text-gray-900">
+                  <Label htmlFor="addToExpenditures" className="text-sm font-semibold text-foreground">
                     Add to expenditures
                   </Label>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-foreground/400 mt-1">
                     Enable this to automatically track this vehicle's monthly loan payment as a recurring expenditure
                   </p>
                 </div>
@@ -440,7 +440,7 @@ export function AddVehicleDialog({
                 />
               </div>
               {validationError && (
-                <div className="mt-3 text-sm text-red-600 bg-red-50 p-2 rounded">
+                <div className="mt-3 text-sm text-[#8B0000] bg-[rgba(224,85,85,0.12)] p-2 rounded">
                   {validationError}
                 </div>
               )}
@@ -488,18 +488,18 @@ export function AddVehicleDialog({
 
           {/* Display-only Details */}
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="text-gray-600">Vehicle:</div>
+            <div className="text-foreground">Vehicle:</div>
             <div className="font-medium">{vehicleName || "-"}</div>
 
-            <div className="text-gray-600">Monthly Payment:</div>
+            <div className="text-foreground">Monthly Payment:</div>
             <div className="font-medium">
               ${monthlyLoanPayment ? parseFloat(monthlyLoanPayment).toLocaleString() : "0"}
             </div>
 
-            <div className="text-gray-600">Frequency:</div>
+            <div className="text-foreground">Frequency:</div>
             <div className="font-medium">Monthly</div>
 
-            <div className="text-gray-600">Start Date:</div>
+            <div className="text-foreground">Start Date:</div>
             <div className="font-medium">
               {purchaseDate ? format(purchaseDate, "MMMM d, yyyy") : "-"}
             </div>

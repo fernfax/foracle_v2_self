@@ -254,8 +254,8 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
         <CardTitle className="text-sm font-medium text-muted-foreground">
           Net Savings
         </CardTitle>
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100">
-          <Wallet className="h-5 w-5 text-blue-600" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+          <Wallet className="h-5 w-5 text-[#7A3A0A]" />
         </div>
       </CardHeader>
       <CardContent>
@@ -275,7 +275,7 @@ export function NetSavingsCard({ netSavings, selectedMonth, slideDirection }: Ne
         </div>
         {(incomes.length > 0 || expenses.length > 0) && monthChange.amount !== 0 && (
           <div className={`flex items-center gap-1 mt-1 text-xs ${
-            monthChange.amount > 0 ? "text-emerald-600" : "text-red-500"
+            monthChange.amount > 0 ? "text-[#007A68]" : "text-[#8B0000]"
           }`}>
             {monthChange.amount > 0 ? (
               <TrendingUp className="h-3 w-3" />

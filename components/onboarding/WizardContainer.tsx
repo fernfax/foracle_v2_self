@@ -31,7 +31,7 @@ export function WizardContainer({
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
+      <header className="border-b border-border/30 bg-background/85 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -44,7 +44,7 @@ export function WizardContainer({
               />
             </div>
             {showProgress && currentStep >= 1 && (
-              <div className="text-sm text-muted-foreground">
+              <div className="font-display text-[11px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
                 Step {currentStep} of {totalSteps}
               </div>
             )}
@@ -54,9 +54,9 @@ export function WizardContainer({
 
       {/* Progress bar */}
       {showProgress && currentStep >= 1 && (
-        <div className="h-1 bg-muted">
+        <div className="h-1 bg-muted/70">
           <div
-            className="h-full bg-foreground transition-all duration-300 ease-out"
+            className="h-full bg-primary transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -88,13 +88,13 @@ export function WizardContainer({
             <div className="mb-8">
               <div className="flex items-center gap-4">
                 {Icon && iconBgColor && iconColor && (
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconBgColor}`}>
+                  <div className={`w-12 h-12 rounded-md flex items-center justify-center ${iconBgColor}`}>
                     <Icon className={`h-6 w-6 ${iconColor}`} />
                   </div>
                 )}
                 <div>
                   {title && (
-                    <h1 className="text-2xl font-semibold tracking-tight mb-1">
+                    <h1 className="font-display text-2xl font-semibold tracking-[-0.02em] mb-1">
                       {title}
                     </h1>
                   )}

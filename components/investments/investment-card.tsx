@@ -47,44 +47,44 @@ const INVESTMENT_TYPE_CONFIG: Record<
 > = {
   stock: {
     icon: TrendingUp,
-    color: "text-blue-600",
-    bgColor: "bg-blue-100",
+    color: "text-[#7A3A0A]",
+    bgColor: "bg-[rgba(184,98,42,0.10)]",
     label: "Stock",
   },
   cash: {
     icon: Banknote,
-    color: "text-green-600",
-    bgColor: "bg-green-100",
+    color: "text-[#007A68]",
+    bgColor: "bg-[rgba(0,196,170,0.12)]",
     label: "Cash",
   },
   bonds: {
     icon: FileText,
-    color: "text-amber-600",
-    bgColor: "bg-amber-100",
+    color: "text-[#7A5A00]",
+    bgColor: "bg-[rgba(212,168,67,0.15)]",
     label: "Bonds",
   },
   etf: {
     icon: BarChart3,
-    color: "text-indigo-600",
-    bgColor: "bg-indigo-100",
+    color: "text-[#7A3A0A]",
+    bgColor: "bg-[rgba(184,98,42,0.10)]",
     label: "ETF",
   },
   crypto: {
     icon: Bitcoin,
-    color: "text-orange-600",
-    bgColor: "bg-orange-100",
+    color: "text-[#7A3A0A]",
+    bgColor: "bg-[rgba(184,98,42,0.10)]",
     label: "Crypto",
   },
   mutual_fund: {
     icon: PieChart,
-    color: "text-purple-600",
-    bgColor: "bg-purple-100",
+    color: "text-[#7A3A0A]",
+    bgColor: "bg-[rgba(184,98,42,0.10)]",
     label: "Mutual Fund",
   },
   reit: {
     icon: Building2,
-    color: "text-slate-600",
-    bgColor: "bg-slate-100",
+    color: "text-foreground",
+    bgColor: "bg-muted",
     label: "REIT",
   },
 };
@@ -98,8 +98,8 @@ export function InvestmentCard({
 
   const config = INVESTMENT_TYPE_CONFIG[investment.type] || {
     icon: TrendingUp,
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
+    color: "text-foreground",
+    bgColor: "bg-muted",
     label: investment.type,
   };
   const Icon = config.icon;
@@ -122,11 +122,11 @@ export function InvestmentCard({
   return (
     <>
       <div
-        className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer"
+        className="bg-white rounded-lg border border-border p-4 hover:shadow-md transition-shadow relative cursor-pointer"
         onClick={() => setIsModalOpen(true)}
       >
         {/* Expand Icon */}
-        <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
+        <Expand className="h-3.5 w-3.5 text-muted-foreground absolute top-3 right-3" />
 
         {/* Header with Icon */}
         <div className="flex items-start gap-3 mb-3 pr-6">
@@ -134,7 +134,7 @@ export function InvestmentCard({
             <Icon className={`h-5 w-5 ${config.color}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">
+            <h3 className="font-semibold text-foreground truncate">
               {investment.name}
             </h3>
             <Badge
@@ -149,18 +149,18 @@ export function InvestmentCard({
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-2 text-sm">
           <div>
-            <p className="text-gray-500 text-xs uppercase tracking-wide">Capital</p>
-            <p className="font-semibold text-gray-900">
+            <p className="text-foreground/400 text-xs uppercase tracking-wide">Capital</p>
+            <p className="font-semibold text-foreground">
               ${capital.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </p>
           </div>
           <div>
-            <p className="text-gray-500 text-xs uppercase tracking-wide">Yield</p>
-            <p className="font-semibold text-green-600">{yield_.toFixed(1)}%</p>
+            <p className="text-foreground/400 text-xs uppercase tracking-wide">Yield</p>
+            <p className="font-semibold text-[#007A68]">{yield_.toFixed(1)}%</p>
           </div>
           <div>
-            <p className="text-gray-500 text-xs uppercase tracking-wide">Monthly</p>
-            <p className="font-semibold text-gray-900">
+            <p className="text-foreground/400 text-xs uppercase tracking-wide">Monthly</p>
+            <p className="font-semibold text-foreground">
               ${monthlyContribution.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </p>
           </div>
@@ -190,11 +190,11 @@ export function InvestmentCard({
                 {config.label}
               </Badge>
               {investment.isActive ? (
-                <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                <Badge variant="outline" className="text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
                   Active
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-gray-400 border-gray-200">
+                <Badge variant="outline" className="text-muted-foreground border-border">
                   Inactive
                 </Badge>
               )}
@@ -202,19 +202,19 @@ export function InvestmentCard({
 
             {/* Financial Details */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-xs text-foreground/400 uppercase tracking-wide mb-1">
                   Current Capital
                 </p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-foreground">
                   ${capital.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              <div className="bg-[rgba(0,196,170,0.12)] rounded-lg p-3">
+                <p className="text-xs text-foreground/400 uppercase tracking-wide mb-1">
                   Projected Yield
                 </p>
-                <p className="text-xl font-bold text-green-600">
+                <p className="text-xl font-bold text-[#007A68]">
                   {yield_.toFixed(2)}%
                 </p>
               </div>
@@ -222,29 +222,29 @@ export function InvestmentCard({
 
             {/* Contribution Details */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">Contributions</p>
-              <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-sm font-medium text-foreground">Contributions</p>
+              <div className="bg-muted rounded-lg p-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Amount</span>
+                  <span className="text-foreground">Amount</span>
                   <span className="font-semibold">
                     ${contribution.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-gray-600">Frequency</span>
+                  <span className="text-foreground">Frequency</span>
                   <span className="font-semibold capitalize">
                     {investment.contributionFrequency}
                     {investment.contributionFrequency === "custom" &&
                       investment.customMonths && (
-                        <span className="text-gray-500 font-normal ml-1">
+                        <span className="text-foreground/400 font-normal ml-1">
                           ({JSON.parse(investment.customMonths).length}x/year)
                         </span>
                       )}
                   </span>
                 </div>
                 {investment.contributionFrequency === "custom" && (
-                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
-                    <span className="text-gray-600">Avg. Monthly</span>
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-border">
+                    <span className="text-foreground">Avg. Monthly</span>
                     <span className="font-semibold">
                       ${monthlyContribution.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
@@ -268,7 +268,7 @@ export function InvestmentCard({
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="flex-1 text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
                 onClick={() => {
                   setIsModalOpen(false);
                   onDelete?.();

@@ -1,78 +1,208 @@
 @import "tailwindcss";
 
+/*
+  Foracle design tokens — see /design_guide/design_guide.md.
+  Two-layer system:
+    1) Brand vars (--brand-*, --p, --g, --go, --tl, --err, --cr, --h, --h2, --h3, --dk)
+       lifted verbatim from the brand guide.
+    2) Shadcn-compatible HSL tokens (--background, --primary, etc.) re-pointed at the
+       brand palette so existing utility classes (bg-primary, text-card-foreground,
+       border-border, etc.) automatically pick up the new look.
+*/
+
 @layer base {
   :root {
-    /* Sophisticated neutral palette */
-    --background: 0 0% 98%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 63.9%;
-    --radius: 1rem;
+    /* === Foracle brand vars (verbatim from design guide §2.1) === */
+    --brand-warm-white: #FBF7F1;     /* bg-page */
+    --brand-cream: #F0EBE0;          /* bg-muted */
+    --brand-deep-forest: #1C2B2A;    /* text-primary, sidebar surface */
+    --brand-dark-surface: #243332;
+    --brand-forest-mid: #2C3E3D;
+    --brand-nightfall: #141E1D;
+    --brand-terracotta: #B8622A;     /* primary CTA, accent */
+    --brand-coral: #D4845A;          /* hover / dark-mode CTA */
+    --brand-jungle: #3A6B52;         /* secondary, charts */
+    --brand-sage: #5A9470;           /* charts dark */
+    --brand-gold: #D4A843;           /* warning */
+    --brand-teal: #00C4AA;           /* positive — locked */
+    --brand-teal-light: #33D4BC;
+    --brand-alert-red: #E05555;
+    --brand-alert-red-dark: #E07070;
 
-    /* Chart colors - refined palette */
-    --chart-1: 142.1 76.2% 36.3%;
-    --chart-2: 221.2 83.2% 53.3%;
-    --chart-3: 47.9 95.8% 53.1%;
-    --chart-4: 262.1 83.3% 57.8%;
-    --chart-5: 0 84.2% 60.2%;
+    /* Verbatim aliases from brand guide */
+    --p: var(--brand-terracotta);
+    --p2: var(--brand-coral);
+    --g: var(--brand-jungle);
+    --g2: var(--brand-sage);
+    --go: var(--brand-gold);
+    --warn: var(--brand-gold);
+    --tl: var(--brand-teal);
+    --tl2: var(--brand-teal-light);
+    --cr: var(--brand-cream);
+    --cr2: var(--brand-warm-white);
+    --h: var(--brand-deep-forest);
+    --h2: var(--brand-dark-surface);
+    --h3: var(--brand-forest-mid);
+    --dk: var(--brand-nightfall);
+    --err: var(--brand-alert-red);
+    --err2: var(--brand-alert-red-dark);
+
+    /* Inline-only colors promoted to tokens (design guide §2.6) */
+    --text-on-success: #007A68;
+    --text-on-warning: #7A5A00;
+    --text-on-danger: #8B0000;
+    --text-on-brand: #7A3A0A;
+
+    /* === Shadcn HSL tokens, re-pointed at brand palette ===
+       Light mode (primary). Hex → HSL conversions kept verbatim so existing
+       hsl(var(--token)) consumers continue to work. */
+
+    /* #FBF7F1 warm white */
+    --background: 36 53% 97%;
+    /* #1C2B2A deep forest */
+    --foreground: 178 21% 14%;
+
+    /* Surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 178 21% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 178 21% 14%;
+
+    /* Primary = terracotta #B8622A */
+    --primary: 22 63% 44%;
+    --primary-foreground: 36 53% 97%;
+
+    /* Secondary = bak chang cream #F0EBE0 (subtle fill) */
+    --secondary: 38 36% 91%;
+    --secondary-foreground: 178 21% 14%;
+
+    /* Muted = cream */
+    --muted: 38 36% 91%;
+    --muted-foreground: 178 12% 32%;
+
+    /* Accent = jungle green #3A6B52 (used by Radix focus tints, hover bg) */
+    --accent: 38 36% 91%;
+    --accent-foreground: 178 21% 14%;
+
+    /* Destructive = alert red #E05555 */
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 36 53% 97%;
+
+    /* Borders / inputs / focus rings — hairlines per design guide */
+    --border: 178 21% 14%;
+    --input: 178 21% 14%;
+    --ring: 22 63% 44%;
+
+    /* Cards corner radius — guide uses 10px on cards */
+    --radius: 0.625rem;
+
+    /* Charts: jungle / terracotta / kaya gold / teal flash / sage */
+    --chart-1: 149 30% 32%;     /* #3A6B52 */
+    --chart-2: 22 63% 44%;      /* #B8622A */
+    --chart-3: 44 64% 55%;      /* #D4A843 */
+    --chart-4: 172 100% 38%;    /* #00C4AA */
+    --chart-5: 137 24% 46%;     /* #5A9470 */
+
+    /* Semantic surface aliases (extras the brand guide names but shadcn doesn't) */
+    --bg-page: var(--brand-warm-white);
+    --bg-surface: #FFFFFF;
+    --bg-muted: var(--brand-cream);
+    --bg-elevated: #FFFFFF;
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 142.1 70.6% 45.3%;
-    --chart-2: 217.2 91.2% 59.8%;
-    --chart-3: 47.9 95.8% 53.1%;
-    --chart-4: 262.1 83.3% 57.8%;
-    --chart-5: 0 84.2% 60.2%;
+    /* Dark mode per design guide §2.4 — Nightfall canvas, deep-forest surfaces */
+
+    /* #141E1D nightfall */
+    --background: 178 18% 9%;
+    /* #F0EBE0 cream */
+    --foreground: 38 36% 91%;
+
+    /* Surfaces */
+    --card: 178 21% 14%;            /* #1C2B2A */
+    --card-foreground: 38 36% 91%;
+    --popover: 178 16% 17%;         /* #243332 */
+    --popover-foreground: 38 36% 91%;
+
+    /* Primary = prawn coral #D4845A (lightened terracotta for dark) */
+    --primary: 20 58% 59%;
+    --primary-foreground: 178 18% 9%;
+
+    /* Secondary / muted = forest mid #2C3E3D */
+    --secondary: 178 16% 21%;
+    --secondary-foreground: 38 36% 91%;
+    --muted: 178 16% 21%;
+    --muted-foreground: 38 18% 70%;
+
+    /* Accent = forest mid (hover) */
+    --accent: 178 16% 21%;
+    --accent-foreground: 38 36% 91%;
+
+    /* Destructive = lighter alert red */
+    --destructive: 0 65% 66%;
+    --destructive-foreground: 38 36% 91%;
+
+    --border: 38 36% 91%;
+    --input: 38 36% 91%;
+    --ring: 20 58% 59%;
+
+    /* Charts shift to lighter variants for dark canvas */
+    --chart-1: 137 24% 46%;     /* sage */
+    --chart-2: 20 58% 59%;      /* coral */
+    --chart-3: 44 64% 55%;      /* gold */
+    --chart-4: 172 100% 38%;    /* teal */
+    --chart-5: 149 30% 32%;     /* jungle */
+
+    --bg-page: var(--brand-nightfall);
+    --bg-surface: var(--brand-deep-forest);
+    --bg-muted: var(--brand-forest-mid);
+    --bg-elevated: var(--brand-dark-surface);
   }
 }
 
 @layer base {
+  /*
+    Hairline border default — design guide treats borders, not shadows, as the
+    primary depth cue. Light mode: rgba(28,43,42,0.10). Dark: rgba(240,235,224,0.08).
+    Tailwind's `border` utility uses border-color: hsl(var(--border)); we override
+    with low-alpha variants so utility borders read as 0.5px hairlines.
+  */
   * {
-    border-color: hsl(var(--border));
+    border-color: hsla(var(--border) / 0.1);
   }
+  .dark * {
+    border-color: hsla(var(--border) / 0.08);
+  }
+
   html {
     scrollbar-gutter: stable;
   }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font-family: var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
     font-feature-settings: "rlig" 1, "calt" 1;
     scrollbar-gutter: stable;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Headings, data, and UI elements use Space Grotesk */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
+    color: hsl(var(--foreground));
+    letter-spacing: -0.01em;
+  }
+
+  /* Lora italic — editorial moments only (max one instance per screen per brand rule) */
+  .font-editorial {
+    font-family: var(--font-lora), "Lora", Georgia, serif;
+    font-style: italic;
+  }
+
   /* Prevent layout shift when Radix UI modals/dropdowns add overflow:hidden to body */
   body[data-scroll-locked] {
     scrollbar-gutter: stable;
@@ -81,7 +211,37 @@
   }
 }
 
-/* Responsive navigation helpers */
+/* === Brand-guide named utility classes (parity with foracle-brand-guide.html) === */
+@layer components {
+  /* Label-caps — for form labels, KPI labels, eyebrow text */
+  .label-caps {
+    font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Data display — currency / KPI numbers */
+  .data-display {
+    font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+
+  /* Section divider eyebrow */
+  .sec-num {
+    font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--brand-terracotta);
+  }
+}
+
+/* Responsive navigation helpers (preserve existing behavior) */
 @layer utilities {
   .sidebar-nav {
     display: none;

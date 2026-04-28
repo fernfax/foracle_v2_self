@@ -91,7 +91,7 @@ export function BudgetShiftHistory({ shifts, onShiftDeleted }: BudgetShiftHistor
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                className="h-8 w-8 text-muted-foreground hover:text-[#8B0000]"
                 onClick={() => handleDelete(shift.id)}
                 disabled={deletingId === shift.id}
               >

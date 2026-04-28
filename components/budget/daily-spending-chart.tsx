@@ -88,15 +88,15 @@ export function DailySpendingChart({
             {/* Legend */}
             <div className="flex items-center justify-center gap-4 text-xs mb-3">
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#B8622A]" />
                 <span className="text-muted-foreground">Daily Spending</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-0 border-t-2 border-dashed border-orange-400" />
+                <div className="w-3 h-0 border-t-2 border-dashed border-[rgba(184,98,42,0.25)]" />
                 <span className="text-muted-foreground">Daily Budget</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-0 border-t-2 border-dashed border-green-500" />
+                <div className="w-3 h-0 border-t-2 border-dashed border-[rgba(0,196,170,0.25)]" />
                 <span className="text-muted-foreground">Average</span>
               </div>
             </div>
@@ -110,27 +110,27 @@ export function DailySpendingChart({
                 >
                   <defs>
                     <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#3A6B52" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3A6B52" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
                   <XAxis
                     dataKey="day"
                     tick={{ fontSize: 11 }}
                     tickLine={false}
-                    axisLine={{ stroke: "#e5e7eb" }}
+                    axisLine={{ stroke: "rgba(28,43,42,0.10)" }}
                     label={{
                       value: `${monthName} (Days)`,
                       position: "bottom",
                       offset: 5,
-                      style: { fontSize: 11, fill: "#6b7280" },
+                      style: { fontSize: 11, fill: "rgba(28,43,42,0.55)" },
                     }}
                   />
                   <YAxis
                     tick={{ fontSize: 11 }}
                     tickLine={false}
-                    axisLine={{ stroke: "#e5e7eb" }}
+                    axisLine={{ stroke: "rgba(28,43,42,0.10)" }}
                     tickFormatter={(value) => `$${value}`}
                     domain={[0, maxValue]}
                     width={50}
@@ -140,7 +140,7 @@ export function DailySpendingChart({
                     labelFormatter={(label) => `Day ${label}`}
                     contentStyle={{
                       backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid rgba(28,43,42,0.10)",
                       borderRadius: "8px",
                       fontSize: "12px",
                     }}
@@ -148,7 +148,7 @@ export function DailySpendingChart({
                   {/* Daily Budget Reference Line */}
                   <ReferenceLine
                     y={dailyBudget}
-                    stroke="#f97316"
+                    stroke="#B8622A"
                     strokeDasharray="6 4"
                     strokeWidth={2}
                   />
@@ -165,11 +165,11 @@ export function DailySpendingChart({
                   <Area
                     type="monotone"
                     dataKey="spending"
-                    stroke="#3b82f6"
+                    stroke="#3A6B52"
                     strokeWidth={2}
                     fill={`url(#${gradientId})`}
-                    dot={{ fill: "#3b82f6", strokeWidth: 0, r: 3 }}
-                    activeDot={{ r: 5, stroke: "#3b82f6", strokeWidth: 2, fill: "white" }}
+                    dot={{ fill: "#3A6B52", strokeWidth: 0, r: 3 }}
+                    activeDot={{ r: 5, stroke: "#3A6B52", strokeWidth: 2, fill: "white" }}
                     connectNulls
                   />
                 </AreaChart>

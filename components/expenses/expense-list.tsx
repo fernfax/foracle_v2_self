@@ -81,16 +81,16 @@ const isLinkedExpense = (expense: Expense) => {
 // Helper function to get the integration icon and tooltip
 const getIntegrationInfo = (expense: Expense) => {
   if (expense.linkedPolicyId) {
-    return { icon: Shield, color: "text-blue-600", tooltip: "Linked to insurance policy" };
+    return { icon: Shield, color: "text-[#7A3A0A]", tooltip: "Linked to insurance policy" };
   }
   if (expense.linkedPropertyId) {
-    return { icon: Home, color: "text-emerald-600", tooltip: "Linked to property asset" };
+    return { icon: Home, color: "text-[#007A68]", tooltip: "Linked to property asset" };
   }
   if (expense.linkedVehicleId) {
-    return { icon: Car, color: "text-amber-600", tooltip: "Linked to vehicle asset" };
+    return { icon: Car, color: "text-[#7A5A00]", tooltip: "Linked to vehicle asset" };
   }
   if (expense.linkedGoalId) {
-    return { icon: Target, color: "text-violet-600", tooltip: "Linked to savings goal" };
+    return { icon: Target, color: "text-[#7A3A0A]", tooltip: "Linked to savings goal" };
   }
   return null;
 };
@@ -469,13 +469,13 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
         {/* Card 1: Expected Expenses */}
         {expenses.length > 0 ? (
           <Card className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative" onClick={() => setIsBreakdownModalOpen(true)} data-tour="expected-expenses-card">
-            <Expand className="h-3.5 w-3.5 text-gray-400 absolute top-3 right-3" />
+            <Expand className="h-3.5 w-3.5 text-muted-foreground absolute top-3 right-3" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Expected Expenses
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+                <DollarSign className="h-5 w-5 text-[#007A68]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -560,7 +560,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                               );
                             }}
                             outerRadius={80}
-                            fill="#8884d8"
+                            fill="#3A6B52"
                             dataKey="value"
                           >
                             {breakdownDetails.categories.map((cat, index) => (
@@ -572,9 +572,9 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                               if (active && payload && payload.length) {
                                 const data = payload[0].payload;
                                 return (
-                                  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
-                                    <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">{data.name}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                                  <div className="bg-white dark:bg-foreground/80 border border-border dark:border-border rounded-lg shadow-lg p-2">
+                                    <p className="text-xs font-semibold text-foreground dark:text-foreground/40">{data.name}</p>
+                                    <p className="text-xs text-foreground dark:text-muted-foreground">
                                       ${data.value.toLocaleString()}
                                     </p>
                                   </div>
@@ -597,8 +597,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Expected Expenses
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+                <DollarSign className="h-5 w-5 text-[#007A68]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -625,8 +625,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Top Category ({formatMonthDisplay(selectedMonth)})
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
-                <TrendingDown className="h-5 w-5 text-rose-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(224,85,85,0.12)]">
+                <TrendingDown className="h-5 w-5 text-[#8B0000]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -682,8 +682,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Top Category
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
-                <TrendingDown className="h-5 w-5 text-rose-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(224,85,85,0.12)]">
+                <TrendingDown className="h-5 w-5 text-[#8B0000]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -785,7 +785,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             variant="outline"
             size="sm"
             onClick={() => setManageCategoriesOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
             data-tour="manage-categories-btn"
           >
             <Settings2 className="h-4 w-4 mr-1.5" />
@@ -795,7 +795,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             variant="outline"
             size="sm"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
             data-tour="add-expense-btn"
           >
             <Plus className="h-4 w-4 mr-1.5" />
@@ -813,7 +813,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           <Button
             variant="outline"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <Plus className="h-4 w-4 mr-1.5" />
             Add Expense
@@ -905,7 +905,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                           {!isLinked && (
                             <DropdownMenuItem
                               onClick={() => handleDeleteClick(expense)}
-                              className="text-red-600"
+                              className="text-[#8B0000]"
                             >
                               Delete
                             </DropdownMenuItem>
@@ -1002,7 +1002,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-[#E05555] hover:bg-[#E05555]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

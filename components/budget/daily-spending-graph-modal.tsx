@@ -93,15 +93,15 @@ export function DailySpendingGraphModal({
         {/* Legend */}
         <div className="flex items-center justify-center gap-6 text-sm mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500" />
+            <div className="w-3 h-3 rounded-full bg-[#B8622A]" />
             <span className="text-muted-foreground">Daily Spending</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-0 border-t-2 border-dashed border-orange-400" />
+            <div className="w-4 h-0 border-t-2 border-dashed border-[rgba(184,98,42,0.25)]" />
             <span className="text-muted-foreground">Daily Budget</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-0 border-t-2 border-dashed border-green-500" />
+            <div className="w-4 h-0 border-t-2 border-dashed border-[rgba(0,196,170,0.25)]" />
             <span className="text-muted-foreground">Average Spending</span>
           </div>
         </div>
@@ -115,34 +115,34 @@ export function DailySpendingGraphModal({
             >
               <defs>
                 <linearGradient id="spendingGradient-modal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#3A6B52" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#3A6B52" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
               <XAxis
                 dataKey="day"
                 tick={{ fontSize: 12 }}
                 tickLine={false}
-                axisLine={{ stroke: "#e5e7eb" }}
+                axisLine={{ stroke: "rgba(28,43,42,0.10)" }}
                 label={{
                   value: `${monthName} (Days)`,
                   position: "bottom",
                   offset: 5,
-                  style: { fontSize: 12, fill: "#6b7280" },
+                  style: { fontSize: 12, fill: "rgba(28,43,42,0.55)" },
                 }}
               />
               <YAxis
                 tick={{ fontSize: 12 }}
                 tickLine={false}
-                axisLine={{ stroke: "#e5e7eb" }}
+                axisLine={{ stroke: "rgba(28,43,42,0.10)" }}
                 tickFormatter={(value) => `$${value}`}
                 domain={[0, maxValue]}
                 label={{
                   value: "Amount Spent",
                   angle: -90,
                   position: "insideLeft",
-                  style: { fontSize: 12, fill: "#6b7280", textAnchor: "middle" },
+                  style: { fontSize: 12, fill: "rgba(28,43,42,0.55)", textAnchor: "middle" },
                 }}
               />
               <Tooltip
@@ -150,7 +150,7 @@ export function DailySpendingGraphModal({
                 labelFormatter={(label) => `Day ${label}`}
                 contentStyle={{
                   backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid rgba(28,43,42,0.10)",
                   borderRadius: "8px",
                   fontSize: "12px",
                 }}
@@ -158,7 +158,7 @@ export function DailySpendingGraphModal({
               {/* Daily Budget Reference Line */}
               <ReferenceLine
                 y={dailyBudget}
-                stroke="#f97316"
+                stroke="#B8622A"
                 strokeDasharray="6 4"
                 strokeWidth={2}
               />
@@ -175,11 +175,11 @@ export function DailySpendingGraphModal({
               <Area
                 type="monotone"
                 dataKey="spending"
-                stroke="#3b82f6"
+                stroke="#3A6B52"
                 strokeWidth={2}
                 fill="url(#spendingGradient-modal)"
-                dot={{ fill: "#3b82f6", strokeWidth: 0, r: 4 }}
-                activeDot={{ r: 6, stroke: "#3b82f6", strokeWidth: 2, fill: "white" }}
+                dot={{ fill: "#3A6B52", strokeWidth: 0, r: 4 }}
+                activeDot={{ r: 6, stroke: "#3A6B52", strokeWidth: 2, fill: "white" }}
                 connectNulls
               />
             </AreaChart>

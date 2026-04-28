@@ -44,9 +44,9 @@ function getIconComponent(iconName: string | null, categoryName: string): Lucide
 }
 
 function getProgressColor(percentUsed: number): string {
-  if (percentUsed >= 100) return "bg-red-500";
-  if (percentUsed >= 80) return "bg-amber-500";
-  return "bg-emerald-500";
+  if (percentUsed >= 100) return "bg-[#E05555]";
+  if (percentUsed >= 80) return "bg-[#D4A843]";
+  return "bg-[#00C4AA]";
 }
 
 export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
@@ -75,12 +75,12 @@ export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
                 <span className="text-sm font-semibold">Overall</span>
                 <span className={cn(
                   "text-sm font-semibold",
-                  overallPercent >= 100 ? "text-red-600" : "text-muted-foreground"
+                  overallPercent >= 100 ? "text-[#8B0000]" : "text-muted-foreground"
                 )}>
                   {formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}
                 </span>
               </div>
-              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
                 <div
                   className={cn("h-full rounded-full transition-all", overallProgressColor)}
                   style={{ width: `${Math.min(overallPercent, 100)}%` }}
@@ -110,12 +110,12 @@ export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
                     </div>
                     <span className={cn(
                       "text-xs font-medium",
-                      isOverBudget ? "text-red-600" : "text-muted-foreground"
+                      isOverBudget ? "text-[#8B0000]" : "text-muted-foreground"
                     )}>
                       {Math.round(category.percentUsed)}%
                     </span>
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                     <div
                       className={cn("h-full rounded-full transition-all", progressColor)}
                       style={{ width: `${Math.min(category.percentUsed, 100)}%` }}

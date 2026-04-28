@@ -181,7 +181,7 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
           {/* Row 1: Full Name */}
           <div className="space-y-2">
             <Label htmlFor="edit-name">
-              Full Name <span className="text-red-500">*</span>
+              Full Name <span className="text-[#8B0000]">*</span>
             </Label>
             <Input
               id="edit-name"
@@ -195,7 +195,7 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
           {/* Row 2: Relationship */}
           <div className="space-y-2">
             <Label htmlFor="edit-relationship">
-              Relationship <span className="text-red-500">*</span>
+              Relationship <span className="text-[#8B0000]">*</span>
             </Label>
             <Select value={relationship} onValueChange={setRelationship}>
               <SelectTrigger className="bg-white">

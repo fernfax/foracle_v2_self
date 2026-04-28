@@ -121,8 +121,8 @@ export function TotalExpensesCard({ totalExpenses, selectedMonth, slideDirection
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Total Expenses
           </CardTitle>
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-100">
-            <TrendingDown className="h-5 w-5 text-rose-600" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(224,85,85,0.12)]">
+            <TrendingDown className="h-5 w-5 text-[#8B0000]" />
           </div>
         </CardHeader>
         <CardContent>
@@ -142,7 +142,7 @@ export function TotalExpensesCard({ totalExpenses, selectedMonth, slideDirection
           </div>
           {expenses.length > 0 && monthChange.amount !== 0 && (
             <div className={`flex items-center gap-1 mt-1 text-xs ${
-              monthChange.amount < 0 ? "text-emerald-600" : "text-red-500"
+              monthChange.amount < 0 ? "text-[#007A68]" : "text-[#8B0000]"
             }`}>
               {monthChange.amount < 0 ? (
                 <TrendingDown className="h-3 w-3" />

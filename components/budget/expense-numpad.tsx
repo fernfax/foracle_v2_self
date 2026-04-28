@@ -135,8 +135,8 @@ export function ExpenseNumpad({
                 className={cn(
                   "h-14 touch-manipulation",
                   isEnabled
-                    ? "bg-orange-500 hover:bg-orange-600 text-white border-orange-500"
-                    : "bg-gray-200 text-gray-400 border-gray-200"
+                    ? "bg-[#B8622A] hover:bg-[#B8622A] text-white border-[rgba(184,98,42,0.25)]"
+                    : "bg-muted text-muted-foreground border-border"
                 )}
                 onClick={onSubmit}
                 disabled={!isEnabled}

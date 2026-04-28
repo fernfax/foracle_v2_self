@@ -252,12 +252,12 @@ export function ManageCategoriesModal({
                 >
                   <div className={cn(
                     "font-medium",
-                    checkState === "unchecked" && "text-gray-400"
+                    checkState === "unchecked" && "text-muted-foreground"
                   )}>{category.name}</div>
                   {frequencies && (
                     <div className={cn(
                       "text-sm",
-                      checkState === "unchecked" ? "text-gray-400" : "text-muted-foreground"
+                      checkState === "unchecked" ? "text-muted-foreground" : "text-muted-foreground"
                     )}>{frequencies}</div>
                   )}
                 </div>
@@ -267,7 +267,7 @@ export function ManageCategoriesModal({
                   <div className="text-right">
                     <div className={cn(
                       "font-semibold",
-                      checkState === "unchecked" && "text-gray-400"
+                      checkState === "unchecked" && "text-muted-foreground"
                     )}>
                       ${categoryTotal.toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
@@ -317,10 +317,10 @@ export function ManageCategoriesModal({
                         <div className="flex-1">
                           <span className={cn(
                             "font-medium",
-                            !isSelected && "text-gray-400"
+                            !isSelected && "text-muted-foreground"
                           )}>{expense.name}</span>
                           <span className={cn(
-                            !isSelected ? "text-gray-400" : "text-muted-foreground"
+                            !isSelected ? "text-muted-foreground" : "text-muted-foreground"
                           )}>
                             {" "}${parseFloat(expense.amount).toLocaleString("en-SG", { minimumFractionDigits: 2 })} &bull; {formatFrequency(expense.frequency)}
                           </span>

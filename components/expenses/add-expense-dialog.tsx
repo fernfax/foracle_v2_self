@@ -212,7 +212,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
         {/* Expense Type Selector */}
         <div className="space-y-2">
           <Label htmlFor="expense-type">
-            Expense Type <span className="text-red-500">*</span>
+            Expense Type <span className="text-[#8B0000]">*</span>
           </Label>
           <Select value={expenseCategory} onValueChange={setExpenseCategory}>
             <SelectTrigger className="bg-white">
@@ -245,7 +245,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Expense Name <span className="text-red-500">*</span>
+                Expense Name <span className="text-[#8B0000]">*</span>
               </Label>
               <Input
                 id="name"
@@ -257,7 +257,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">
-                Category <span className="text-red-500">*</span>
+                Category <span className="text-[#8B0000]">*</span>
               </Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="bg-white">
@@ -279,7 +279,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="amount">
-                Expense Amount <span className="text-red-500">*</span>
+                Expense Amount <span className="text-[#8B0000]">*</span>
               </Label>
               <Input
                 id="amount"
@@ -294,7 +294,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
             </div>
             <div className="space-y-2">
               <Label htmlFor="frequency">
-                Expense Frequency <span className="text-red-500">*</span>
+                Expense Frequency <span className="text-[#8B0000]">*</span>
               </Label>
               <Select
                 value={frequency}
@@ -322,7 +322,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
           {frequency === "custom" && (
             <div className="space-y-2">
               <Label>
-                Select Months <span className="text-red-500">*</span>
+                Select Months <span className="text-[#8B0000]">*</span>
               </Label>
               <div className="grid grid-cols-6 gap-2">
                 {MONTHS.map((month) => (
@@ -336,7 +336,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                       "h-10 font-medium",
                       selectedMonths.includes(month.value)
                         ? "bg-black text-white hover:bg-black/90 border-black"
-                        : "bg-white hover:bg-gray-50"
+                        : "bg-white hover:bg-muted"
                     )}
                   >
                     {month.label}
@@ -360,7 +360,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
             <div className={cn("grid gap-4", expenseCategory === "one-off" ? "grid-cols-1" : "grid-cols-2")}>
               <div className="space-y-2">
                 <Label>
-                  {expenseCategory === "one-off" ? "Expense Date" : "Start Date"} <span className="text-red-500">*</span>
+                  {expenseCategory === "one-off" ? "Expense Date" : "Start Date"} <span className="text-[#8B0000]">*</span>
                 </Label>
                 <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                   <PopoverAnchor asChild>

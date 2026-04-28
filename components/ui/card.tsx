@@ -2,6 +2,11 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Card — see /design_guide/design_guide.md §10.4.
+ * Generic surface: white bg, 0.5px hairline border, 10px radius.
+ * Padding ranges 16–24px (consumer-controlled via composition).
+ */
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -9,7 +14,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-border/60 bg-card text-card-foreground shadow-sm transition-shadow duration-300 hover:shadow-md",
+      "rounded-lg border border-border/40 bg-card text-card-foreground transition-shadow duration-200",
       className
     )}
     {...props}
@@ -23,7 +28,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-8", className)}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
     {...props}
   />
 ));
@@ -36,7 +41,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
+      "font-display text-base font-semibold leading-tight tracking-tight",
       className
     )}
     {...props}
@@ -60,7 +65,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-8 pt-0", className)} {...props} />
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
 ));
 CardContent.displayName = "CardContent";
 

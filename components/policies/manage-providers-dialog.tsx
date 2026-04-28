@@ -201,7 +201,7 @@ export function ManageProvidersDialog({
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDelete(provider.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

@@ -76,14 +76,14 @@ const TIME_RANGES = [
 ];
 
 const MEMBER_COLORS = [
-  "#3b82f6", // blue
-  "#10b981", // emerald
-  "#f59e0b", // amber
-  "#8b5cf6", // violet
-  "#ec4899", // pink
-  "#06b6d4", // cyan
-  "#f97316", // orange
-  "#6366f1", // indigo
+  "#3A6B52", // blue
+  "#00C4AA", // emerald
+  "#D4A843", // amber
+  "#D4845A", // violet
+  "#D4845A", // pink
+  "#00C4AA", // cyan
+  "#B8622A", // orange
+  "#B8622A", // indigo
 ];
 
 function formatCurrency(value: number): string {
@@ -150,7 +150,7 @@ function getDataKeys(
       keys.push({
         key: householdKey,
         name: "Household Total",
-        color: "#8b5cf6", // violet-500
+        color: "#D4845A", // violet-500
       });
     } else {
       const oaKey =
@@ -162,18 +162,18 @@ function getDataKeys(
       keys.push({
         key: oaKey,
         name: "Household (OA)",
-        color: "#8b5cf6",
+        color: "#D4845A",
       });
       keys.push({
         key: saKey,
         name: "Household (SA)",
-        color: "#8b5cf6",
+        color: "#D4845A",
         strokeDasharray: "8 4",
       });
       keys.push({
         key: maKey,
         name: "Household (MA)",
-        color: "#8b5cf6",
+        color: "#D4845A",
         strokeDasharray: "2 2",
       });
     }
@@ -201,8 +201,8 @@ function CustomTooltip({
   const hasDeductions = householdDeduction > 0;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-xs">
-      <p className="font-semibold text-gray-900 mb-2">{data.month}</p>
+    <div className="bg-white border border-border rounded-lg shadow-lg p-4 max-w-xs">
+      <p className="font-semibold text-foreground mb-2">{data.month}</p>
       <div className="space-y-2 text-sm">
         {(inputs as CpfProjectionInput[]).map(
           (input: CpfProjectionInput, idx: number) => {
@@ -235,23 +235,23 @@ function CustomTooltip({
                 </div>
                 {breakdownMode === "total" ? (
                   loanDeduction > 0 ? (
-                    <div className="ml-4 text-gray-600 space-y-0.5">
-                      <p className="text-emerald-600">CPF Earned: {formatCurrency(earned)}</p>
-                      <p className="text-amber-600">Loan (OA): -{formatCurrency(loanDeduction)}</p>
-                      <p className="font-medium text-gray-900">Balance: {formatCurrency(total)}</p>
+                    <div className="ml-4 text-foreground space-y-0.5">
+                      <p className="text-[#007A68]">CPF Earned: {formatCurrency(earned)}</p>
+                      <p className="text-[#7A5A00]">Loan (OA): -{formatCurrency(loanDeduction)}</p>
+                      <p className="font-medium text-foreground">Balance: {formatCurrency(total)}</p>
                     </div>
                   ) : (
-                    <p className="ml-4 text-gray-600">
+                    <p className="ml-4 text-foreground">
                       Total: {formatCurrency(total)}
                     </p>
                   )
                 ) : (
-                  <div className="ml-4 text-gray-600 space-y-0.5">
+                  <div className="ml-4 text-foreground space-y-0.5">
                     {loanDeduction > 0 && (
                       <>
-                        <p className="text-emerald-600">CPF Earned: {formatCurrency(earned)}</p>
-                        <p className="text-amber-600">Loan (OA): -{formatCurrency(loanDeduction)}</p>
-                        <div className="h-px bg-gray-100 my-0.5" />
+                        <p className="text-[#007A68]">CPF Earned: {formatCurrency(earned)}</p>
+                        <p className="text-[#7A5A00]">Loan (OA): -{formatCurrency(loanDeduction)}</p>
+                        <div className="h-px bg-muted my-0.5" />
                       </>
                     )}
                     <p>OA: {formatCurrency(oa)}</p>
@@ -265,10 +265,10 @@ function CustomTooltip({
         )}
 
         {(inputs as CpfProjectionInput[]).length > 1 && (
-          <div className="pt-1.5 border-t border-gray-200">
+          <div className="pt-1.5 border-t border-border">
             {hasDeductions ? (
               <div className="space-y-0.5">
-                <p className="text-emerald-600">
+                <p className="text-[#007A68]">
                   Household Earned:{" "}
                   {formatCurrency(
                     ((viewMode === "cumulative"
@@ -276,10 +276,10 @@ function CustomTooltip({
                       : data.householdMonthlyTotal) as number) + householdDeduction
                   )}
                 </p>
-                <p className="text-amber-600">
+                <p className="text-[#7A5A00]">
                   Loan (OA): -{formatCurrency(householdDeduction)}
                 </p>
-                <p className="font-medium text-gray-900">
+                <p className="font-medium text-foreground">
                   Balance:{" "}
                   {formatCurrency(
                     (viewMode === "cumulative"
@@ -289,7 +289,7 @@ function CustomTooltip({
                 </p>
               </div>
             ) : (
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-foreground">
                 Household:{" "}
                 {formatCurrency(
                   (viewMode === "cumulative"
@@ -488,25 +488,25 @@ export function CpfProjectionGraph({
 
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-4">
-          <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-            <p className="text-xs text-gray-600 mb-0.5">
+          <div className="bg-muted rounded-lg p-2 sm:p-3">
+            <p className="text-xs text-foreground mb-0.5">
               Monthly Household CPF
             </p>
-            <p className="text-sm sm:text-lg font-semibold text-gray-900">
+            <p className="text-sm sm:text-lg font-semibold text-foreground">
               {formatCurrency(monthlyHouseholdCpf)}
             </p>
           </div>
-          <div className="bg-blue-50 rounded-lg p-2 sm:p-3">
-            <p className="text-xs text-gray-600 mb-0.5">
+          <div className="bg-[rgba(184,98,42,0.10)] rounded-lg p-2 sm:p-3">
+            <p className="text-xs text-foreground mb-0.5">
               Projected Cumulative
             </p>
-            <p className="text-sm sm:text-lg font-semibold text-blue-700">
+            <p className="text-sm sm:text-lg font-semibold text-[#7A3A0A]">
               {formatCurrency(projectedTotal)}
             </p>
           </div>
-          <div className="bg-green-50 rounded-lg p-2 sm:p-3">
-            <p className="text-xs text-gray-600 mb-0.5">Net Change</p>
-            <p className="text-sm sm:text-lg font-semibold text-green-700">
+          <div className="bg-[rgba(0,196,170,0.12)] rounded-lg p-2 sm:p-3">
+            <p className="text-xs text-foreground mb-0.5">Net Change</p>
+            <p className="text-sm sm:text-lg font-semibold text-[#007A68]">
               +{formatCurrency(projectedTotal)}
             </p>
           </div>
@@ -546,10 +546,10 @@ export function CpfProjectionGraph({
                   );
                 })}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
               <XAxis
                 dataKey="month"
-                stroke="#6b7280"
+                stroke="rgba(28,43,42,0.55)"
                 style={{ fontSize: "12px" }}
                 angle={-45}
                 textAnchor="end"
@@ -558,7 +558,7 @@ export function CpfProjectionGraph({
                 interval={xAxisInterval}
               />
               <YAxis
-                stroke="#6b7280"
+                stroke="rgba(28,43,42,0.55)"
                 style={{ fontSize: "12px" }}
                 tickFormatter={(value) => formatCurrency(value)}
                 domain={[yAxisMin, yAxisMax]}
@@ -591,7 +591,7 @@ export function CpfProjectionGraph({
                                 : `2px solid ${entry.color}`,
                             }}
                           />
-                          <span className="text-gray-600">{entry.value}</span>
+                          <span className="text-foreground">{entry.value}</span>
                         </div>
                       );
                     })}

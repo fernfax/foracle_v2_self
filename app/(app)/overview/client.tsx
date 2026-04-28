@@ -137,8 +137,8 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Active Goals
             </CardTitle>
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-cyan-100">
-              <Target className="h-5 w-5 text-cyan-600" />
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+              <Target className="h-5 w-5 text-[#007A68]" />
             </div>
           </CardHeader>
           <CardContent>
@@ -157,8 +157,8 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Family Members
             </CardTitle>
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-100">
-              <Users className="h-5 w-5 text-purple-600" />
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+              <Users className="h-5 w-5 text-[#7A3A0A]" />
             </div>
           </CardHeader>
           <CardContent>

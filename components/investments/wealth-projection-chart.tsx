@@ -76,19 +76,19 @@ function formatCurrencyFull(value: number): string {
 function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-        <p className="font-semibold text-gray-900 mb-2">{label}</p>
+      <div className="bg-white border border-border rounded-lg shadow-lg p-3">
+        <p className="font-semibold text-foreground mb-2">{label}</p>
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-teal-500" />
-            <span className="text-gray-600">With Contributions:</span>
+            <div className="w-3 h-3 rounded-sm bg-[#00C4AA]" />
+            <span className="text-foreground">With Contributions:</span>
             <span className="font-medium">
               {formatCurrencyFull(payload[0]?.value || 0)}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-gray-400" />
-            <span className="text-gray-600">Without Contributions:</span>
+            <div className="w-3 h-3 rounded-sm bg-muted" />
+            <span className="text-foreground">Without Contributions:</span>
             <span className="font-medium">
               {formatCurrencyFull(payload[1]?.value || 0)}
             </span>
@@ -322,13 +322,13 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
               <p className="text-xs text-muted-foreground">
                 {rangeDisplayLabel} estimate
               </p>
-              <p className="text-lg font-bold text-teal-600">
+              <p className="text-lg font-bold text-[#007A68]">
                 {formatCurrencyFull(projectedValue)}
               </p>
             </div>
 
             {/* Time Range Selector */}
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex gap-1 bg-muted rounded-lg p-1">
               {TIME_RANGES.map((range) => (
                 <button
                   key={range.value}
@@ -336,8 +336,8 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
                   className={cn(
                     "px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                     selectedRange === range.value
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-foreground hover:text-foreground"
                   )}
                 >
                   {range.label}
@@ -348,11 +348,11 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
         </div>
 
         {/* Mobile Projected Value */}
-        <div className="sm:hidden mt-2 p-3 bg-teal-50 rounded-lg">
+        <div className="sm:hidden mt-2 p-3 bg-[rgba(0,196,170,0.12)] rounded-lg">
           <p className="text-xs text-muted-foreground">
             {rangeDisplayLabel} estimate
           </p>
-          <p className="text-xl font-bold text-teal-600">
+          <p className="text-xl font-bold text-[#007A68]">
             {formatCurrencyFull(projectedValue)}
           </p>
         </div>
@@ -367,23 +367,23 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
             >
               <defs>
                 <linearGradient id="colorWith" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#5A9470" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#5A9470" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorWithout" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#9ca3af" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#9ca3af" stopOpacity={0} />
+                  <stop offset="5%" stopColor="rgba(28,43,42,0.45)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="rgba(28,43,42,0.45)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
               <XAxis
                 dataKey="periodLabel"
-                stroke="#6b7280"
+                stroke="rgba(28,43,42,0.55)"
                 style={{ fontSize: "12px" }}
                 tickLine={false}
               />
               <YAxis
-                stroke="#6b7280"
+                stroke="rgba(28,43,42,0.55)"
                 style={{ fontSize: "12px" }}
                 tickFormatter={formatCurrency}
                 tickLine={false}
@@ -393,14 +393,14 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
               <Legend
                 wrapperStyle={{ paddingTop: "10px" }}
                 formatter={(value) => (
-                  <span className="text-sm text-gray-600">{value}</span>
+                  <span className="text-sm text-foreground">{value}</span>
                 )}
               />
               <Area
                 type="monotone"
                 dataKey="withContributions"
                 name="With Contributions"
-                stroke="#14b8a6"
+                stroke="#5A9470"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorWith)"
@@ -409,7 +409,7 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
                 type="monotone"
                 dataKey="withoutContributions"
                 name="Without Contributions"
-                stroke="#9ca3af"
+                stroke="rgba(28,43,42,0.45)"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 fillOpacity={1}

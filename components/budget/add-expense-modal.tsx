@@ -368,14 +368,14 @@ export function AddExpenseModal({
                 {formatBudgetCurrency(categoryBudget.spent + sgdAmount)} /{" "}
                 {formatBudgetCurrency(categoryBudget.monthlyBudget)}
               </div>
-              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all ${
                     categoryBudget.percentUsed > 90
-                      ? "bg-red-500"
+                      ? "bg-[#E05555]"
                       : categoryBudget.percentUsed > 75
-                      ? "bg-yellow-500"
-                      : "bg-blue-500"
+                      ? "bg-[#D4A843]"
+                      : "bg-[#B8622A]"
                   }`}
                   style={{
                     width: `${Math.min(

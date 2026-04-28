@@ -36,22 +36,22 @@ export interface ExpenseBreakdown {
  */
 export function getCategoryColor(categoryName: string): string {
   const colors = [
-    "#ef4444", // red
-    "#f97316", // orange
-    "#f59e0b", // amber
+    "#E05555", // red
+    "#B8622A", // orange
+    "#D4A843", // amber
     "#eab308", // yellow
     "#84cc16", // lime
     "#22c55e", // green
-    "#10b981", // emerald
+    "#00C4AA", // emerald
     "#14b8a6", // teal
-    "#06b6d4", // cyan
+    "#00C4AA", // cyan
     "#0ea5e9", // sky
-    "#3b82f6", // blue
-    "#6366f1", // indigo
-    "#8b5cf6", // violet
-    "#a855f7", // purple
+    "#3A6B52", // blue
+    "#B8622A", // indigo
+    "#D4845A", // violet
+    "#D4845A", // purple
     "#d946ef", // fuchsia
-    "#ec4899", // pink
+    "#D4845A", // pink
     "#f43f5e", // rose
   ];
 

@@ -248,16 +248,16 @@ export function AddGoalDialog({
           <div className="space-y-6 py-4">
             {/* Basic Details */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900">
+              <div className="pb-3 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">
                   Goal Details
                 </h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <div className="bg-muted rounded-lg p-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="goalName">
-                      Goal Name <span className="text-red-500">*</span>
+                      Goal Name <span className="text-[#8B0000]">*</span>
                     </Label>
                     <Input
                       id="goalName"
@@ -269,7 +269,7 @@ export function AddGoalDialog({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="goalType">
-                      Goal Type <span className="text-red-500">*</span>
+                      Goal Type <span className="text-[#8B0000]">*</span>
                     </Label>
                     <Select value={goalType} onValueChange={(v) => setGoalType(v as "primary" | "secondary")}>
                       <SelectTrigger className="bg-white">
@@ -286,10 +286,10 @@ export function AddGoalDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="targetAmount">
-                      Target Amount <span className="text-red-500">*</span>
+                      Target Amount <span className="text-[#8B0000]">*</span>
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">
                         $
                       </span>
                       <Input
@@ -306,7 +306,7 @@ export function AddGoalDialog({
                   </div>
                   <div className="space-y-2">
                     <Label>
-                      Target Date <span className="text-red-500">*</span>
+                      Target Date <span className="text-[#8B0000]">*</span>
                     </Label>
                     <Popover open={targetDateOpen} onOpenChange={setTargetDateOpen}>
                       <PopoverTrigger asChild>
@@ -360,19 +360,19 @@ export function AddGoalDialog({
 
             {/* Progress Tracking */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900">
+              <div className="pb-3 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">
                   Progress Tracking
                 </h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <div className="bg-muted rounded-lg p-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentAmountSaved">
                       Current Amount Saved
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">
                         $
                       </span>
                       <Input
@@ -395,7 +395,7 @@ export function AddGoalDialog({
                       Monthly Contribution
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">
                         $
                       </span>
                       <Input
@@ -418,8 +418,8 @@ export function AddGoalDialog({
                 </div>
 
                 {projectedCompletion && (
-                  <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                    <p className="text-sm text-emerald-700">
+                  <div className="p-3 bg-[rgba(0,196,170,0.12)] rounded-lg border border-[rgba(0,196,170,0.25)]">
+                    <p className="text-sm text-[#007A68]">
                       At ${parseFloat(monthlyContribution).toLocaleString()}/month, you'll reach your goal by{" "}
                       <span className="font-semibold">
                         {format(projectedCompletion, "MMMM yyyy")}
@@ -432,21 +432,21 @@ export function AddGoalDialog({
 
             {/* Expenditure Integration */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900">
+              <div className="pb-3 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">
                   Expenditure Integration
                 </h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-muted rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <Label
                       htmlFor="addToExpenditures"
-                      className="text-sm font-semibold text-gray-900"
+                      className="text-sm font-semibold text-foreground"
                     >
                       Add to expenditures
                     </Label>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-foreground/400 mt-1">
                       Automatically track your monthly contribution as a
                       recurring expenditure
                     </p>
@@ -458,7 +458,7 @@ export function AddGoalDialog({
                   />
                 </div>
                 {validationError && (
-                  <div className="mt-3 text-sm text-red-600 bg-red-50 p-2 rounded">
+                  <div className="mt-3 text-sm text-[#8B0000] bg-[rgba(224,85,85,0.12)] p-2 rounded">
                     {validationError}
                   </div>
                 )}
@@ -513,10 +513,10 @@ export function AddGoalDialog({
 
             {/* Display-only Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-gray-600">Goal:</div>
+              <div className="text-foreground">Goal:</div>
               <div className="font-medium">{goalName || "-"}</div>
 
-              <div className="text-gray-600">Monthly Contribution:</div>
+              <div className="text-foreground">Monthly Contribution:</div>
               <div className="font-medium">
                 $
                 {monthlyContribution
@@ -524,10 +524,10 @@ export function AddGoalDialog({
                   : "0"}
               </div>
 
-              <div className="text-gray-600">Category:</div>
+              <div className="text-foreground">Category:</div>
               <div className="font-medium">Savings</div>
 
-              <div className="text-gray-600">Frequency:</div>
+              <div className="text-foreground">Frequency:</div>
               <div className="font-medium">Monthly</div>
             </div>
           </div>

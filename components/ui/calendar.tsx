@@ -94,7 +94,7 @@ function Calendar({
           </Button>
           <button
             onClick={handleHeaderClick}
-            className="text-sm font-medium bg-gray-100 hover:bg-gray-200 px-4 py-1.5 rounded-full transition-colors"
+            className="text-sm font-medium bg-muted hover:bg-muted/70 text-foreground px-4 py-1.5 rounded-full transition-colors"
           >
             {getHeaderLabel()}
           </button>
@@ -137,7 +137,7 @@ function Calendar({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-medium bg-gray-100 px-4 py-1.5 rounded-full">{getHeaderLabel()}</span>
+          <span className="text-sm font-medium bg-muted px-4 py-1.5 rounded-full">{getHeaderLabel()}</span>
           <Button
             variant="outline"
             className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
@@ -178,7 +178,7 @@ function Calendar({
         </Button>
         <button
           onClick={handleHeaderClick}
-          className="text-sm font-medium bg-gray-100 hover:bg-gray-200 px-4 py-1.5 rounded-full transition-colors"
+          className="text-sm font-medium bg-muted hover:bg-muted/70 text-foreground px-4 py-1.5 rounded-full transition-colors"
         >
           {getHeaderLabel()}
         </button>

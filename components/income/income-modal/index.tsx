@@ -377,7 +377,7 @@ export function IncomeModal({
                     Add income details for {familyMember.name}.{" "}
                     {familyMemberAge !== undefined ? `Age: ${familyMemberAge} years old.` : ""}
                   </div>
-                  <div className="text-blue-600 font-medium text-sm">
+                  <div className="text-[#7A3A0A] font-medium text-sm">
                     This income will be linked to {familyMember.name}
                   </div>
                 </div>
@@ -390,18 +390,18 @@ export function IncomeModal({
           <DialogBody>
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
-            <TabsList className="w-full h-auto p-0 bg-transparent border-b border-gray-200 rounded-none grid grid-cols-3">
+            <TabsList className="w-full h-auto p-0 bg-transparent border-b border-border rounded-none grid grid-cols-3">
               <TabsTrigger
                 value="past"
                 disabled={!incomeCategory || incomeCategory === "one-off"}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-gray-500"
+                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none text-foreground/400 hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-foreground/400"
               >
                 <History className="h-4 w-4" />
                 Past
               </TabsTrigger>
               <TabsTrigger
                 value="present"
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 transition-colors"
+                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none text-foreground/400 hover:text-foreground transition-colors"
               >
                 <DollarSign className="h-4 w-4" />
                 Present
@@ -409,7 +409,7 @@ export function IncomeModal({
               <TabsTrigger
                 value="future"
                 disabled={!incomeCategory || incomeCategory === "one-off"}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-gray-500"
+                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none text-foreground/400 hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-foreground/400"
               >
                 <TrendingUp className="h-4 w-4" />
                 Future

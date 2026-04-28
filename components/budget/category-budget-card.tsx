@@ -69,7 +69,7 @@ export function CategoryBudgetCard({
             percentUsed > 90
               ? "text-destructive"
               : percentUsed > 75
-              ? "text-yellow-600"
+              ? "text-[#7A5A00]"
               : "text-foreground"
           )}
         >
@@ -81,15 +81,15 @@ export function CategoryBudgetCard({
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-1">
+      <div className="w-full h-2 bg-muted rounded-full overflow-hidden mt-1">
         <div
           className={cn(
             "h-full rounded-full transition-all",
             percentUsed > 90
-              ? "bg-red-500"
+              ? "bg-[#E05555]"
               : percentUsed > 75
-              ? "bg-yellow-500"
-              : "bg-blue-500"
+              ? "bg-[#D4A843]"
+              : "bg-[#B8622A]"
           )}
           style={{ width: `${Math.max(Math.min(percentUsed, 100), 0)}%` }}
         />

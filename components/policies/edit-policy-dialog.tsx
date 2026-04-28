@@ -509,7 +509,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
         {isDataLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-border"></div>
             <span className="ml-3 text-muted-foreground">Loading policy details...</span>
           </div>
         ) : (
@@ -517,14 +517,14 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         <DialogBody>
         <form id="edit-policy-form" onSubmit={handleSubmit} className="space-y-6">
           {/* Policy Holder */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Policy Holder</h3>
-              <p className="text-xs text-gray-500 mt-1">Select which family member this policy covers</p>
+          <div className="bg-muted rounded-lg p-4 space-y-4">
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Policy Holder</h3>
+              <p className="text-xs text-foreground/400 mt-1">Select which family member this policy covers</p>
             </div>
             <div>
                 <Label htmlFor="familyMember">
-                  Family Member <span className="text-red-500">*</span>
+                  Family Member <span className="text-[#8B0000]">*</span>
                   {memberAge !== null && (
                     <span className="ml-2 text-sm text-muted-foreground">Age: {memberAge}</span>
                   )}
@@ -545,15 +545,15 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
           </div>
 
           {/* Policy Information */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Policy Information</h3>
-              <p className="text-xs text-gray-500 mt-1">Details about the insurance provider, policy type, and status</p>
+          <div className="bg-muted rounded-lg p-4 space-y-4">
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Policy Information</h3>
+              <p className="text-xs text-foreground/400 mt-1">Details about the insurance provider, policy type, and status</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="provider">
-                  Insurance Provider <span className="text-red-500">*</span>
+                  Insurance Provider <span className="text-[#8B0000]">*</span>
                 </Label>
                 <Select value={provider} onValueChange={setProvider} required>
                   <SelectTrigger id="provider">
@@ -582,7 +582,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
               <div>
                 <Label htmlFor="policyType">
-                  Policy Type <span className="text-red-500">*</span>
+                  Policy Type <span className="text-[#8B0000]">*</span>
                 </Label>
                 <Select value={policyType} onValueChange={setPolicyType} required>
                   <SelectTrigger id="policyType">
@@ -617,15 +617,15 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
           </div>
 
           {/* Policy Dates */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Policy Dates</h3>
-              <p className="text-xs text-gray-500 mt-1">Start date, coverage duration, and maturity information</p>
+          <div className="bg-muted rounded-lg p-4 space-y-4">
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Policy Dates</h3>
+              <p className="text-xs text-foreground/400 mt-1">Start date, coverage duration, and maturity information</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="startDate">
-                  Start Date <span className="text-red-500">*</span>
+                  Start Date <span className="text-[#8B0000]">*</span>
                 </Label>
                 <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                   <PopoverTrigger asChild>
@@ -705,15 +705,15 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
           </div>
 
           {/* Premium Details */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Premium Details</h3>
-              <p className="text-xs text-gray-500 mt-1">Premium amount, payment frequency, and total duration</p>
+          <div className="bg-muted rounded-lg p-4 space-y-4">
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Premium Details</h3>
+              <p className="text-xs text-foreground/400 mt-1">Premium amount, payment frequency, and total duration</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="premiumAmount">
-                  Premium Amount <span className="text-red-500">*</span>
+                  Premium Amount <span className="text-[#8B0000]">*</span>
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -734,7 +734,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
               <div>
                 <Label htmlFor="premiumFrequency">
-                  Premium Frequency <span className="text-red-500">*</span>
+                  Premium Frequency <span className="text-[#8B0000]">*</span>
                 </Label>
                 <Select value={premiumFrequency} onValueChange={(value) => {
                   setPremiumFrequency(value);
@@ -759,7 +759,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
               {premiumFrequency === "Custom" && (
                 <div className="md:col-span-2 space-y-2">
                   <Label>
-                    Select Months <span className="text-red-500">*</span>
+                    Select Months <span className="text-[#8B0000]">*</span>
                   </Label>
                   <div className="grid grid-cols-6 gap-2">
                     {MONTHS.map((month) => (
@@ -773,7 +773,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
                           "h-10 font-medium",
                           selectedMonths.includes(month.value)
                             ? "bg-black text-white hover:bg-black/90 border-black"
-                            : "bg-white hover:bg-gray-50"
+                            : "bg-white hover:bg-muted"
                         )}
                       >
                         {month.label}
@@ -812,10 +812,10 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
           </div>
 
           {/* Coverage & Benefits */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Coverage & Benefits</h3>
-              <p className="text-xs text-gray-500 mt-1">Optional coverage amounts for death, TPD, critical illness, and hospitalisation</p>
+          <div className="bg-muted rounded-lg p-4 space-y-4">
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Coverage & Benefits</h3>
+              <p className="text-xs text-foreground/400 mt-1">Optional coverage amounts for death, TPD, critical illness, and hospitalisation</p>
             </div>
 
               {/* Death Coverage */}
@@ -1008,13 +1008,13 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
           {/* Actions */}
           {/* Add to Expenses Toggle */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+          <div className="bg-muted rounded-lg p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <Label htmlFor="addToExpenditures" className="text-sm font-semibold text-gray-900">
+                <Label htmlFor="addToExpenditures" className="text-sm font-semibold text-foreground">
                   Add to Expenses
                 </Label>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-foreground/400 mt-1">
                   Automatically track this policy's premium in your expenses
                 </p>
               </div>
@@ -1025,7 +1025,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
               />
             </div>
             {validationError && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+              <div className="text-sm text-[#8B0000] bg-[rgba(224,85,85,0.12)] p-2 rounded">
                 {validationError}
               </div>
             )}
@@ -1078,18 +1078,18 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
             {/* Other Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-gray-600">Policy Type & Provider:</div>
+              <div className="text-foreground">Policy Type & Provider:</div>
               <div className="font-medium">{policyType} - {provider}</div>
 
-              <div className="text-gray-600">Premium Amount:</div>
+              <div className="text-foreground">Premium Amount:</div>
               <div className="font-medium">${premiumAmount}</div>
 
-              <div className="text-gray-600">Frequency:</div>
+              <div className="text-foreground">Frequency:</div>
               <div className="font-medium">{premiumFrequency}</div>
 
               {premiumFrequency === "Custom" && selectedMonths.length > 0 && (
                 <>
-                  <div className="text-gray-600">Selected Months:</div>
+                  <div className="text-foreground">Selected Months:</div>
                   <div className="font-medium">
                     {selectedMonths
                       .sort((a, b) => a - b)
@@ -1099,7 +1099,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
                 </>
               )}
 
-              <div className="text-gray-600">Start Date:</div>
+              <div className="text-foreground">Start Date:</div>
               <div className="font-medium">
                 {startDate ? format(startDate, "MMMM d, yyyy") : "-"}
               </div>
@@ -1142,18 +1142,18 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
             {/* Other Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-gray-600">Policy Type & Provider:</div>
+              <div className="text-foreground">Policy Type & Provider:</div>
               <div className="font-medium">{policyType} - {provider}</div>
 
-              <div className="text-gray-600">Premium Amount:</div>
+              <div className="text-foreground">Premium Amount:</div>
               <div className="font-medium">${premiumAmount}</div>
 
-              <div className="text-gray-600">Frequency:</div>
+              <div className="text-foreground">Frequency:</div>
               <div className="font-medium">{premiumFrequency}</div>
 
               {premiumFrequency === "Custom" && selectedMonths.length > 0 && (
                 <>
-                  <div className="text-gray-600">Selected Months:</div>
+                  <div className="text-foreground">Selected Months:</div>
                   <div className="font-medium">
                     {selectedMonths
                       .sort((a, b) => a - b)
@@ -1163,7 +1163,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
                 </>
               )}
 
-              <div className="text-gray-600">Start Date:</div>
+              <div className="text-foreground">Start Date:</div>
               <div className="font-medium">
                 {startDate ? format(startDate, "MMMM d, yyyy") : "-"}
               </div>
@@ -1193,7 +1193,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmRemoveFromExpenditures}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[#E05555] hover:bg-[#E05555]"
             >
               Remove from Expenses
             </AlertDialogAction>

@@ -93,10 +93,10 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
   const onTrack = isOnTrack();
 
   const getProgressColor = () => {
-    if (progress >= 75) return "bg-emerald-500";
-    if (progress >= 50) return "bg-blue-500";
-    if (progress >= 25) return "bg-amber-500";
-    return "bg-gray-400";
+    if (progress >= 75) return "bg-[#00C4AA]";
+    if (progress >= 50) return "bg-[#B8622A]";
+    if (progress >= 25) return "bg-[#D4A843]";
+    return "bg-muted";
   };
 
   return (
@@ -107,14 +107,14 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
             <div
               className={`flex items-center justify-center w-12 h-12 rounded-xl ${
                 goal.isAchieved
-                  ? "bg-emerald-100"
-                  : "bg-cyan-100"
+                  ? "bg-[rgba(0,196,170,0.12)]"
+                  : "bg-[rgba(0,196,170,0.12)]"
               }`}
             >
               {goal.isAchieved ? (
-                <Trophy className="h-6 w-6 text-emerald-600" />
+                <Trophy className="h-6 w-6 text-[#007A68]" />
               ) : (
-                <Target className="h-6 w-6 text-cyan-600" />
+                <Target className="h-6 w-6 text-[#007A68]" />
               )}
             </div>
             <div>
@@ -124,14 +124,14 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
                   variant="outline"
                   className={
                     goal.goalType === "primary"
-                      ? "border-violet-200 bg-violet-50 text-violet-700"
-                      : "border-gray-200 bg-gray-50 text-gray-600"
+                      ? "border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)] text-[#7A3A0A]"
+                      : "border-border bg-muted text-foreground"
                   }
                 >
                   {goal.goalType === "primary" ? "Primary Goal" : "Secondary Goal"}
                 </Badge>
                 {goal.isAchieved && (
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                  <Badge className="bg-[rgba(0,196,170,0.12)] text-[#007A68] border-[rgba(0,196,170,0.25)]">
                     Achieved
                   </Badge>
                 )}
@@ -159,14 +159,14 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
             </div>
 
             <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-4 bg-muted rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${getProgressColor()}`}
                   style={{ width: `${progress}%` }}
                 />
               </div>
               <div className="flex justify-between text-sm">
-                <span className="font-medium text-emerald-600">{progress.toFixed(1)}% complete</span>
+                <span className="font-medium text-[#007A68]">{progress.toFixed(1)}% complete</span>
                 <span className="text-muted-foreground">
                   ${remaining.toLocaleString()} remaining
                 </span>
@@ -176,7 +176,7 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
 
           {/* Details Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Calendar className="h-4 w-4" />
                 <span className="text-sm">Target Date</span>
@@ -184,14 +184,14 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
               <p className="font-semibold">{format(new Date(goal.targetDate), "MMMM d, yyyy")}</p>
               <p
                 className={`text-sm mt-1 ${
-                  timeRemaining.isOverdue ? "text-red-600" : "text-muted-foreground"
+                  timeRemaining.isOverdue ? "text-[#8B0000]" : "text-muted-foreground"
                 }`}
               >
                 {timeRemaining.text}
               </p>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Wallet className="h-4 w-4" />
                 <span className="text-sm">Monthly Contribution</span>
@@ -202,7 +202,7 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
                   : "Not set"}
               </p>
               {goal.linkedExpenseId && (
-                <p className="text-sm text-emerald-600 mt-1">Linked to expenses</p>
+                <p className="text-sm text-[#007A68] mt-1">Linked to expenses</p>
               )}
             </div>
           </div>
@@ -212,23 +212,23 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
             <div
               className={`p-4 rounded-lg border ${
                 onTrack
-                  ? "bg-emerald-50 border-emerald-200"
-                  : "bg-amber-50 border-amber-200"
+                  ? "bg-[rgba(0,196,170,0.12)] border-[rgba(0,196,170,0.25)]"
+                  : "bg-[rgba(212,168,67,0.15)] border-[rgba(212,168,67,0.30)]"
               }`}
             >
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp
-                  className={`h-4 w-4 ${onTrack ? "text-emerald-600" : "text-amber-600"}`}
+                  className={`h-4 w-4 ${onTrack ? "text-[#007A68]" : "text-[#7A5A00]"}`}
                 />
                 <span
                   className={`text-sm font-medium ${
-                    onTrack ? "text-emerald-700" : "text-amber-700"
+                    onTrack ? "text-[#007A68]" : "text-[#7A5A00]"
                   }`}
                 >
                   {onTrack ? "On Track" : "Behind Schedule"}
                 </span>
               </div>
-              <p className={`text-sm ${onTrack ? "text-emerald-700" : "text-amber-700"}`}>
+              <p className={`text-sm ${onTrack ? "text-[#007A68]" : "text-[#7A5A00]"}`}>
                 At your current rate of ${monthlyContribution.toLocaleString()}/month, you'll reach
                 your goal by{" "}
                 <span className="font-semibold">{format(projectedCompletion, "MMMM yyyy")}</span>.
@@ -245,7 +245,7 @@ export function GoalDetailsModal({ open, onOpenChange, goal }: GoalDetailsModalP
           {goal.description && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Notes</p>
-              <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
+              <p className="text-sm text-foreground bg-muted p-3 rounded-lg">
                 {goal.description}
               </p>
             </div>

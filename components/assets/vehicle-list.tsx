@@ -109,17 +109,17 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
     return (
       <>
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-            <Car className="h-8 w-8 text-gray-400" />
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Car className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles yet</h3>
+          <h3 className="text-lg font-medium text-foreground mb-2">No vehicles yet</h3>
           <p className="text-muted-foreground mb-6 max-w-sm">
             Add your first vehicle to start tracking your vehicle assets and loan progress.
           </p>
           <Button
             variant="outline"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Vehicle
@@ -145,7 +145,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
           <Button
             variant="outline"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Vehicle
@@ -178,8 +178,8 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                 <CardHeader className="pb-3 relative">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100">
-                        <Car className="h-5 w-5 text-amber-600" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(212,168,67,0.15)]">
+                        <Car className="h-5 w-5 text-[#7A5A00]" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{vehicle.vehicleName}</h3>
@@ -208,7 +208,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="text-red-600"
+                          className="text-[#8B0000]"
                           onClick={(e) => {
                             e.stopPropagation();
                             setVehicleToDelete(vehicle);
@@ -234,7 +234,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Outstanding Loan</p>
-                      <p className="text-2xl font-semibold tabular-nums text-amber-600">
+                      <p className="text-2xl font-semibold tabular-nums text-[#7A5A00]">
                         ${outstandingLoan.toLocaleString()}
                       </p>
                     </div>
@@ -248,10 +248,10 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                       <Badge
                         variant="secondary"
                         className={coeCountdown.expired
-                          ? "bg-red-100 text-red-700"
+                          ? "bg-[rgba(224,85,85,0.12)] text-[#8B0000]"
                           : coeCountdown.days < 365
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-emerald-100 text-emerald-700"
+                            ? "bg-[rgba(212,168,67,0.15)] text-[#7A5A00]"
+                            : "bg-[rgba(0,196,170,0.12)] text-[#007A68]"
                         }
                       >
                         {coeCountdown.expired ? "Expired" : `${coeCountdown.text} left`}
@@ -264,14 +264,14 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Loan Progress</span>
-                        <span className="font-medium text-emerald-600">{progress.toFixed(1)}% paid</span>
+                        <span className="font-medium text-[#007A68]">{progress.toFixed(1)}% paid</span>
                       </div>
-                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-3 bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500 ease-out"
                           style={{
                             width: `${progress}%`,
-                            background: `linear-gradient(90deg, #a855f7 0%, #c084fc 100%)`,
+                            background: `linear-gradient(90deg, #D4845A 0%, #c084fc 100%)`,
                           }}
                         />
                       </div>
@@ -284,10 +284,10 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
 
                   {/* Footer with Monthly Payment */}
                   {vehicle.monthlyLoanPayment && parseFloat(vehicle.monthlyLoanPayment) > 0 && (
-                    <div className="pt-3 border-t bg-gray-50/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
+                    <div className="pt-3 border-t bg-muted/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Monthly Payment:</span>
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-foreground">
                           ${parseFloat(vehicle.monthlyLoanPayment).toLocaleString()}
                         </span>
                       </div>
@@ -323,7 +323,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
             <AlertDialogDescription>
               Are you sure you want to delete "{vehicleToDelete?.vehicleName}"?
               {vehicleToDelete?.linkedExpenseId && (
-                <span className="block mt-2 text-amber-600">
+                <span className="block mt-2 text-[#7A5A00]">
                   This will also remove the linked monthly expense.
                 </span>
               )}
@@ -335,7 +335,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[#E05555] hover:bg-[#E05555]"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>

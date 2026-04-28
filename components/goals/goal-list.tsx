@@ -135,24 +135,24 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 75) return "bg-emerald-500";
-    if (progress >= 50) return "bg-blue-500";
-    if (progress >= 25) return "bg-amber-500";
-    return "bg-gray-400";
+    if (progress >= 75) return "bg-[#00C4AA]";
+    if (progress >= 50) return "bg-[#B8622A]";
+    if (progress >= 25) return "bg-[#D4A843]";
+    return "bg-muted";
   };
 
   if (goals.length === 0) {
     return (
       <>
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
             {isAchievedView ? (
-              <Trophy className="h-8 w-8 text-gray-400" />
+              <Trophy className="h-8 w-8 text-muted-foreground" />
             ) : (
-              <Target className="h-8 w-8 text-gray-400" />
+              <Target className="h-8 w-8 text-muted-foreground" />
             )}
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-lg font-medium text-foreground mb-2">
             {isAchievedView ? "No achieved goals yet" : "No goals yet"}
           </h3>
           <p className="text-muted-foreground mb-6 max-w-sm">
@@ -164,7 +164,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
             <Button
               variant="outline"
               onClick={() => setAddDialogOpen(true)}
-              className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+              className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Goal
@@ -192,7 +192,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
             <Button
               variant="outline"
               onClick={() => setAddDialogOpen(true)}
-              className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+              className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Goal
@@ -220,14 +220,14 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                       <div
                         className={`flex items-center justify-center w-10 h-10 rounded-xl ${
                           isAchievedView
-                            ? "bg-emerald-100"
-                            : "bg-cyan-100"
+                            ? "bg-[rgba(0,196,170,0.12)]"
+                            : "bg-[rgba(0,196,170,0.12)]"
                         }`}
                       >
                         {isAchievedView ? (
-                          <Trophy className="h-5 w-5 text-emerald-600" />
+                          <Trophy className="h-5 w-5 text-[#007A68]" />
                         ) : (
-                          <Target className="h-5 w-5 text-cyan-600" />
+                          <Target className="h-5 w-5 text-[#007A68]" />
                         )}
                       </div>
                       <div>
@@ -237,8 +237,8 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                             variant="outline"
                             className={
                               goal.goalType === "primary"
-                                ? "border-violet-200 bg-violet-50 text-violet-700"
-                                : "border-gray-200 bg-gray-50 text-gray-600"
+                                ? "border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)] text-[#7A3A0A]"
+                                : "border-border bg-muted text-foreground"
                             }
                           >
                             {goal.goalType === "primary" ? "Primary" : "Secondary"}
@@ -247,7 +247,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                             <span
                               className={`text-xs ${
                                 timeRemaining.isOverdue
-                                  ? "text-red-600"
+                                  ? "text-[#8B0000]"
                                   : "text-muted-foreground"
                               }`}
                             >
@@ -277,7 +277,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                               setAchieveDialogOpen(true);
                             }}
                           >
-                            <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-[#007A68]" />
                             Mark as Achieved
                           </DropdownMenuItem>
                         )}
@@ -291,7 +291,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="text-red-600"
+                          className="text-[#8B0000]"
                           onClick={(e) => {
                             e.stopPropagation();
                             setGoalToDelete(goal);
@@ -321,7 +321,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                       </p>
                       <p
                         className={`text-2xl font-semibold tabular-nums ${
-                          isAchievedView ? "text-emerald-600" : "text-amber-600"
+                          isAchievedView ? "text-[#007A68]" : "text-[#7A5A00]"
                         }`}
                       >
                         ${isAchievedView ? currentSaved.toLocaleString() : remaining.toLocaleString()}
@@ -333,9 +333,9 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium text-emerald-600">{progress.toFixed(1)}%</span>
+                      <span className="font-medium text-[#007A68]">{progress.toFixed(1)}%</span>
                     </div>
-                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ease-out ${getProgressColor(
                           progress
@@ -350,14 +350,14 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
                   </div>
 
                   {/* Footer with details */}
-                  <div className="pt-3 border-t bg-gray-50/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
+                  <div className="pt-3 border-t bg-muted/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-4">
                         {goal.monthlyContribution && (
                           <div className="flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3 text-emerald-500" />
+                            <TrendingUp className="h-3 w-3 text-[#007A68]" />
                             <span className="text-muted-foreground">Monthly:</span>{" "}
-                            <span className="font-medium text-emerald-600">
+                            <span className="font-medium text-[#007A68]">
                               ${parseFloat(goal.monthlyContribution).toLocaleString()}
                             </span>
                           </div>
@@ -401,7 +401,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
             <AlertDialogDescription>
               Are you sure you want to delete "{goalToDelete?.goalName}"?
               {goalToDelete?.linkedExpenseId && (
-                <span className="block mt-2 text-amber-600">
+                <span className="block mt-2 text-[#7A5A00]">
                   This will also remove the linked monthly expense.
                 </span>
               )}
@@ -413,7 +413,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[#E05555] hover:bg-[#E05555]"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
@@ -438,7 +438,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
             <AlertDialogAction
               onClick={handleMarkAchieved}
               disabled={isAchieving}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-[#00C4AA] hover:bg-[#00C4AA]"
             >
               {isAchieving ? "Saving..." : "Mark as Achieved"}
             </AlertDialogAction>

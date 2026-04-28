@@ -170,7 +170,7 @@ export function AddCpfDetailsDialog({
           <div className="space-y-2">
             <Label htmlFor="oa">Ordinary Account (OA)</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
               <Input
                 id="oa"
                 type="number"
@@ -192,7 +192,7 @@ export function AddCpfDetailsDialog({
           <div className="space-y-2">
             <Label htmlFor="sa">Special Account (SA)</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
               <Input
                 id="sa"
                 type="number"
@@ -214,7 +214,7 @@ export function AddCpfDetailsDialog({
           <div className="space-y-2">
             <Label htmlFor="ma">Medisave Account (MA)</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
               <Input
                 id="ma"
                 type="number"

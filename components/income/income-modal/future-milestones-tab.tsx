@@ -171,23 +171,23 @@ export function FutureMilestonesTab({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 pb-4 border-b">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-purple-50">
-          <TrendingUp className="h-5 w-5 text-purple-600" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(184,98,42,0.10)]">
+          <TrendingUp className="h-5 w-5 text-[#7A3A0A]" />
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900">Future Income Milestones</h3>
-          <p className="text-sm text-gray-500">Plan for expected income changes and growth</p>
+          <h3 className="font-semibold text-foreground">Future Income Milestones</h3>
+          <p className="text-sm text-foreground/400">Plan for expected income changes and growth</p>
         </div>
       </div>
 
       {/* Account for Future Change Toggle */}
-      <div className="flex items-center justify-between py-3 px-4 bg-blue-50 rounded-lg border border-blue-100">
+      <div className="flex items-center justify-between py-3 px-4 bg-[rgba(184,98,42,0.10)] rounded-lg border border-[rgba(184,98,42,0.25)]">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Account for Future Change</span>
+          <span className="text-sm font-medium text-foreground">Account for Future Change</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-blue-500 cursor-help" />
+                <Info className="h-4 w-4 text-[#7A3A0A] cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-[280px]">
                 <p className="text-sm">
@@ -205,12 +205,12 @@ export function FutureMilestonesTab({
 
       {/* New Milestone Form */}
       {isAddingNew && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
-          <div className="text-sm font-medium text-purple-800 mb-2">New Milestone</div>
+        <div className="bg-[rgba(184,98,42,0.10)] border border-[rgba(184,98,42,0.25)] rounded-lg p-4 space-y-3">
+          <div className="text-sm font-medium text-[#7A3A0A] mb-2">New Milestone</div>
           <div className="flex gap-3">
             {/* Target Month */}
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-gray-500">Target Month</Label>
+              <Label className="text-xs text-foreground/400">Target Month</Label>
               <Select
                 value={newMilestone.targetMonth}
                 onValueChange={(value) => setNewMilestone({ ...newMilestone, targetMonth: value })}
@@ -234,9 +234,9 @@ export function FutureMilestonesTab({
 
             {/* New Amount */}
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-gray-500">New Amount</Label>
+              <Label className="text-xs text-foreground/400">New Amount</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                 <Input
                   type="number"
                   placeholder="0.00"
@@ -253,7 +253,7 @@ export function FutureMilestonesTab({
           {/* Reason Selector */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs text-gray-500">Reason</Label>
+              <Label className="text-xs text-foreground/400">Reason</Label>
               <Select
                 value={newMilestone.reason || ""}
                 onValueChange={(value) => setNewMilestone({ ...newMilestone, reason: value })}
@@ -273,7 +273,7 @@ export function FutureMilestonesTab({
 
             {/* Notes */}
             <div className="space-y-1">
-              <Label className="text-xs text-gray-500">Notes (Optional)</Label>
+              <Label className="text-xs text-foreground/400">Notes (Optional)</Label>
               <Input
                 placeholder="Additional details..."
                 value={newMilestone.notes || ""}
@@ -299,7 +299,7 @@ export function FutureMilestonesTab({
               size="sm"
               onClick={saveNewMilestone}
               disabled={!newMilestone.targetMonth}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-[#B8622A] hover:bg-[#B8622A]"
             >
               Save Milestone
             </Button>
@@ -309,7 +309,7 @@ export function FutureMilestonesTab({
 
       {/* Milestones List */}
       {sortedMilestones.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground border rounded-lg bg-gray-50">
+        <div className="text-center py-8 text-muted-foreground border rounded-lg bg-muted">
           <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p>No milestones planned</p>
           <p className="text-sm">Add milestones to plan for future income changes</p>
@@ -319,12 +319,12 @@ export function FutureMilestonesTab({
           {sortedMilestones.map((milestone) => (
             <div
               key={milestone.id}
-              className="bg-gray-50 rounded-lg p-4 space-y-3"
+              className="bg-muted rounded-lg p-4 space-y-3"
             >
               <div className="flex gap-3">
                 {/* Target Month */}
                 <div className="flex-1 space-y-1">
-                  <Label className="text-xs text-gray-500">Target Month</Label>
+                  <Label className="text-xs text-foreground/400">Target Month</Label>
                   <Select
                     value={milestone.targetMonth}
                     onValueChange={(value) => updateMilestone(milestone.id, "targetMonth", value)}
@@ -348,9 +348,9 @@ export function FutureMilestonesTab({
 
                 {/* New Amount */}
                 <div className="flex-1 space-y-1">
-                  <Label className="text-xs text-gray-500">New Amount</Label>
+                  <Label className="text-xs text-foreground/400">New Amount</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                     <Input
                       type="number"
                       placeholder="0.00"
@@ -370,7 +370,7 @@ export function FutureMilestonesTab({
                     variant="ghost"
                     size="icon"
                     onClick={() => confirmRemoveMilestone(milestone.id)}
-                    className="h-10 w-10 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="h-10 w-10 text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -380,7 +380,7 @@ export function FutureMilestonesTab({
               {/* Reason Selector */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">Reason</Label>
+                  <Label className="text-xs text-foreground/400">Reason</Label>
                   <Select
                     value={milestone.reason || ""}
                     onValueChange={(value) => updateMilestone(milestone.id, "reason", value)}
@@ -400,7 +400,7 @@ export function FutureMilestonesTab({
 
                 {/* Notes */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">Notes (Optional)</Label>
+                  <Label className="text-xs text-foreground/400">Notes (Optional)</Label>
                   <Input
                     placeholder="Additional details..."
                     value={milestone.notes || ""}
@@ -412,11 +412,11 @@ export function FutureMilestonesTab({
 
               {/* Change Summary */}
               {currentAmount && (
-                <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
+                <div className="text-xs text-foreground/400 pt-2 border-t border-border">
                   {parseFloat(currentAmount) > 0 && (
                     <>
                       Change from current: {" "}
-                      <span className={milestone.amount > parseFloat(currentAmount) ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                      <span className={milestone.amount > parseFloat(currentAmount) ? "text-[#007A68] font-medium" : "text-[#8B0000] font-medium"}>
                         {milestone.amount > parseFloat(currentAmount) ? "+" : ""}
                         ${(milestone.amount - parseFloat(currentAmount)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         {" "}
@@ -446,24 +446,24 @@ export function FutureMilestonesTab({
 
       {/* Milestones Timeline Preview */}
       {sortedMilestones.length > 0 && (
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-sm font-medium text-gray-900 mb-3">Income Timeline</div>
+        <div className="bg-muted rounded-lg p-4">
+          <div className="text-sm font-medium text-foreground mb-3">Income Timeline</div>
           <div className="space-y-2">
             {/* Current */}
             <div className="flex items-center gap-3 text-sm">
-              <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-              <span className="text-gray-600">Now</span>
+              <div className="w-3 h-3 rounded-full bg-muted"></div>
+              <span className="text-foreground">Now</span>
               <span className="font-medium">${parseFloat(currentAmount || "0").toLocaleString()}</span>
             </div>
 
             {/* Milestones */}
             {sortedMilestones.map((milestone, index) => (
               <div key={milestone.id} className="flex items-center gap-3 text-sm">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span className="text-gray-600">{formatMonth(milestone.targetMonth)}</span>
+                <div className="w-3 h-3 rounded-full bg-[#B8622A]"></div>
+                <span className="text-foreground">{formatMonth(milestone.targetMonth)}</span>
                 <span className="font-medium">${milestone.amount.toLocaleString()}</span>
                 {milestone.reason && (
-                  <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">
+                  <span className="text-xs text-foreground/400 bg-muted px-2 py-0.5 rounded">
                     {MILESTONE_REASONS.find(r => r.value === milestone.reason)?.label || milestone.reason}
                   </span>
                 )}
@@ -484,7 +484,7 @@ export function FutureMilestonesTab({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={removeMilestone} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={removeMilestone} className="bg-[#E05555] hover:bg-[#E05555]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

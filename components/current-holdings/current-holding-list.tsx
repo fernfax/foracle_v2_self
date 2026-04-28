@@ -191,8 +191,8 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Holdings
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
-                <Wallet className="h-5 w-5 text-emerald-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+                <Wallet className="h-5 w-5 text-[#007A68]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -228,8 +228,8 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Holdings
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
-                <Wallet className="h-5 w-5 text-emerald-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+                <Wallet className="h-5 w-5 text-[#007A68]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -256,8 +256,8 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Top Bank
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100">
-                <Building2 className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+                <Building2 className="h-5 w-5 text-[#7A3A0A]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -279,8 +279,8 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Top Bank
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100">
-                <Building2 className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+                <Building2 className="h-5 w-5 text-[#7A3A0A]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
@@ -313,7 +313,7 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
             setHoldingToEdit(null);
             setIsAddDialogOpen(true);
           }}
-          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
         >
           <Plus className="h-4 w-4 mr-1.5" />
           Add Holding
@@ -329,7 +329,7 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
           <Button
             variant="outline"
             onClick={() => setIsAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <Plus className="h-4 w-4 mr-1.5" />
             Add Holding

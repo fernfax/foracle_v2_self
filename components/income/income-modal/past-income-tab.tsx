@@ -131,23 +131,23 @@ export function PastIncomeTab({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 pb-4 border-b">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50">
-          <History className="h-5 w-5 text-blue-600" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(184,98,42,0.10)]">
+          <History className="h-5 w-5 text-[#7A3A0A]" />
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900">Historical Income</h3>
-          <p className="text-sm text-gray-500">Track your past income to see trends over time</p>
+          <h3 className="font-semibold text-foreground">Historical Income</h3>
+          <p className="text-sm text-foreground/400">Track your past income to see trends over time</p>
         </div>
       </div>
 
       {/* New Entry Form */}
       {isAddingNew && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-          <div className="text-sm font-medium text-blue-800 mb-2">New Entry</div>
+        <div className="bg-[rgba(184,98,42,0.10)] border border-[rgba(184,98,42,0.25)] rounded-lg p-4 space-y-3">
+          <div className="text-sm font-medium text-[#7A3A0A] mb-2">New Entry</div>
           <div className="flex gap-3">
             {/* Period Selector */}
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-gray-500">Month</Label>
+              <Label className="text-xs text-foreground/400">Month</Label>
               <Select
                 value={newEntry.period}
                 onValueChange={(value) => setNewEntry({ ...newEntry, period: value })}
@@ -171,9 +171,9 @@ export function PastIncomeTab({
 
             {/* Amount Input */}
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-gray-500">Monthly Amount</Label>
+              <Label className="text-xs text-foreground/400">Monthly Amount</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                 <Input
                   type="number"
                   placeholder="0.00"
@@ -189,7 +189,7 @@ export function PastIncomeTab({
 
           {/* Notes Input */}
           <div className="space-y-1">
-            <Label className="text-xs text-gray-500">Notes (Optional)</Label>
+            <Label className="text-xs text-foreground/400">Notes (Optional)</Label>
             <Input
               placeholder="e.g., First year at company, included bonus..."
               value={newEntry.notes || ""}
@@ -214,7 +214,7 @@ export function PastIncomeTab({
               size="sm"
               onClick={saveNewEntry}
               disabled={!newEntry.period}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 bg-[#B8622A] hover:bg-[#B8622A]"
             >
               Save Entry
             </Button>
@@ -224,7 +224,7 @@ export function PastIncomeTab({
 
       {/* Entries List */}
       {sortedEntries.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground border rounded-lg bg-gray-50">
+        <div className="text-center py-8 text-muted-foreground border rounded-lg bg-muted">
           <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p>No historical data</p>
           <p className="text-sm">Add entries to track your income history</p>
@@ -238,12 +238,12 @@ export function PastIncomeTab({
             return (
               <div
                 key={`${entry.period}-${actualIndex}`}
-                className="bg-gray-50 rounded-lg p-4 space-y-3"
+                className="bg-muted rounded-lg p-4 space-y-3"
               >
                 <div className="flex gap-3">
                   {/* Period Selector */}
                   <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-gray-500">Month</Label>
+                    <Label className="text-xs text-foreground/400">Month</Label>
                     <Select
                       value={entry.period}
                       onValueChange={(value) => updateEntry(actualIndex, "period", value)}
@@ -267,9 +267,9 @@ export function PastIncomeTab({
 
                   {/* Amount Input */}
                   <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-gray-500">Monthly Amount</Label>
+                    <Label className="text-xs text-foreground/400">Monthly Amount</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
                       <Input
                         type="number"
                         placeholder="0.00"
@@ -289,7 +289,7 @@ export function PastIncomeTab({
                       variant="ghost"
                       size="icon"
                       onClick={() => confirmRemoveEntry(actualIndex)}
-                      className="h-10 w-10 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="h-10 w-10 text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -298,7 +298,7 @@ export function PastIncomeTab({
 
                 {/* Notes Input */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">Notes (Optional)</Label>
+                  <Label className="text-xs text-foreground/400">Notes (Optional)</Label>
                   <Input
                     placeholder="e.g., First year at company, included bonus..."
                     value={entry.notes || ""}
@@ -326,8 +326,8 @@ export function PastIncomeTab({
 
       {/* Summary */}
       {sortedEntries.length > 0 && (
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-sm text-blue-800">
+        <div className="bg-[rgba(184,98,42,0.10)] rounded-lg p-4">
+          <div className="text-sm text-[#7A3A0A]">
             <div className="font-medium mb-1">Summary</div>
             <div className="flex justify-between">
               <span>Total Entries:</span>
@@ -354,7 +354,7 @@ export function PastIncomeTab({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={removeEntry} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={removeEntry} className="bg-[#E05555] hover:bg-[#E05555]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

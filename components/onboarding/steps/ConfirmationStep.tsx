@@ -85,8 +85,8 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
       value: data.familyMember?.name || "Not set",
       subValue: data.familyMember?.relationship,
       isSet: !!data.familyMember,
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
+      bgColor: "bg-[rgba(184,98,42,0.10)]",
+      iconColor: "text-[#7A3A0A]",
     },
     {
       icon: DollarSign,
@@ -96,8 +96,8 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
         ? `$${parseFloat(data.income.amount).toLocaleString("en-SG")} / ${data.income.frequency}`
         : undefined,
       isSet: !!data.income,
-      bgColor: "bg-emerald-100",
-      iconColor: "text-emerald-600",
+      bgColor: "bg-[rgba(0,196,170,0.12)]",
+      iconColor: "text-[#007A68]",
     },
     {
       icon: PiggyBank,
@@ -107,8 +107,8 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
         ? `OA: $${parseFloat(data.cpf.cpfOrdinaryAccount).toLocaleString("en-SG")} | SA: $${parseFloat(data.cpf.cpfSpecialAccount).toLocaleString("en-SG")} | MA: $${parseFloat(data.cpf.cpfMedisaveAccount).toLocaleString("en-SG")}`
         : undefined,
       isSet: !!data.cpf && parseFloat(data.cpf.cpfOrdinaryAccount) > 0,
-      bgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
+      bgColor: "bg-[rgba(184,98,42,0.10)]",
+      iconColor: "text-[#7A3A0A]",
     },
     {
       icon: Building2,
@@ -124,8 +124,8 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
               .toLocaleString("en-SG")}`
           : undefined,
       isSet: dbHoldings.length > 0,
-      bgColor: "bg-amber-100",
-      iconColor: "text-amber-600",
+      bgColor: "bg-[rgba(212,168,67,0.15)]",
+      iconColor: "text-[#7A5A00]",
     },
     {
       icon: Receipt,
@@ -141,8 +141,8 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
               .toLocaleString("en-SG")} / monthly`
           : undefined,
       isSet: dbExpenses.length > 0,
-      bgColor: "bg-rose-100",
-      iconColor: "text-rose-600",
+      bgColor: "bg-[rgba(224,85,85,0.12)]",
+      iconColor: "text-[#8B0000]",
     },
   ];
 
@@ -151,8 +151,8 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
       <div className="flex-1 space-y-8">
         {/* Success Header */}
         <div className="text-center py-6">
-          <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="h-8 w-8 text-emerald-600" />
+          <div className="w-16 h-16 rounded-full bg-[rgba(0,196,170,0.12)] flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="h-8 w-8 text-[#007A68]" />
           </div>
           <h2 className="text-2xl font-semibold mb-2">Great job!</h2>
           <p className="text-muted-foreground">
@@ -189,7 +189,7 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
                 )}
               </div>
               {item.isSet && (
-                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-[#007A68] shrink-0" />
               )}
             </div>
           ))}
