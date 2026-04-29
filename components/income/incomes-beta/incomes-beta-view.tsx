@@ -1218,14 +1218,21 @@ function IncomeStreamRow({
                   )}
                   style={{
                     left: `${leftPct}%`,
-                    width: `${widthPct}%`,
                     height: "32px",
                     ...(isOngoingTail
                       ? {
+                          // Anchor right edge to the viewport's right edge by
+                          // canceling the parent translate. As parent slides
+                          // by --ts-x, the bar's right edge stays fixed in
+                          // viewport space, so the chevron tail tracks the
+                          // edge smoothly instead of stepping per month.
+                          right: "var(--ts-x, 0)",
                           clipPath:
                             "polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%)",
                         }
-                      : {}),
+                      : {
+                          width: `${widthPct}%`,
+                        }),
                   }}
                   aria-label={`Adjust ${income.name} amount, currently ${formatCurrency(seg.amount)}${isOngoingTail ? " (ongoing)" : ""}`}
                 >
