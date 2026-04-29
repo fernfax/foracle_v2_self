@@ -915,6 +915,7 @@ function TimelineStudio({
         onScrollToToday={onScrollToToday}
       />
 
+      <div className="relative">
       <div
         ref={dawRef}
         style={tsStyle}
@@ -1053,11 +1054,94 @@ function TimelineStudio({
           Add Income Stream
         </button>
       </div>
+
+      {/* Tooltip overlay — sibling of the DAW so it's not clipped by the
+          DAW's overflow-hidden. Translates with --ts-x to track the
+          hovered column. */}
+      {hoverIndex !== null && totals[hoverIndex] && (
+        <div
+          className="pointer-events-none absolute z-30"
+          style={{ left: `${tlConfig.headerPx}px`, right: 0, top: 0, bottom: 0 }}
+        >
+          <div
+            className="absolute inset-0 will-change-transform"
+            style={{ transform: "translateX(var(--ts-x, 0))" }}
+          >
+            <HoverTooltip
+              index={hoverIndex}
+              cell={cells[hoverIndex]}
+              breakdown={totals[hoverIndex].breakdown}
+              total={totals[hoverIndex].total}
+              totalCount={cells.length}
+            />
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 }
 
 const RIVER_BUFFER_MONTHS = 3;
+
+/**
+ * Monotone cubic spline (Fritsch-Carlson) — same curve type Recharts uses
+ * with `type="monotone"`. Produces smooth curves through the points without
+ * overshoot, so flat segments stay flat and step transitions ease in/out.
+ */
+function buildMonotonePath(points: Array<{ x: number; y: number }>): string {
+  const n = points.length;
+  if (n === 0) return "";
+  if (n === 1) return `M ${points[0].x} ${points[0].y}`;
+
+  // Secant slopes
+  const m: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const dx = points[i + 1].x - points[i].x;
+    const dy = points[i + 1].y - points[i].y;
+    m.push(dx === 0 ? 0 : dy / dx);
+  }
+
+  // Tangents (Fritsch-Carlson)
+  const t: number[] = new Array(n);
+  t[0] = m[0];
+  t[n - 1] = m[n - 2];
+  for (let i = 1; i < n - 1; i++) {
+    if (m[i - 1] * m[i] <= 0) {
+      t[i] = 0;
+    } else {
+      t[i] = (m[i - 1] + m[i]) / 2;
+    }
+  }
+  // Enforce monotonicity
+  for (let i = 0; i < n - 1; i++) {
+    if (m[i] === 0) {
+      t[i] = 0;
+      t[i + 1] = 0;
+    } else {
+      const alpha = t[i] / m[i];
+      const beta = t[i + 1] / m[i];
+      const sum = alpha * alpha + beta * beta;
+      if (sum > 9) {
+        const tau = 3 / Math.sqrt(sum);
+        t[i] = tau * alpha * m[i];
+        t[i + 1] = tau * beta * m[i];
+      }
+    }
+  }
+
+  // Cubic Bezier segments
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < n - 1; i++) {
+    const dx = points[i + 1].x - points[i].x;
+    const cp1x = points[i].x + dx / 3;
+    const cp1y = points[i].y + (t[i] * dx) / 3;
+    const cp2x = points[i + 1].x - dx / 3;
+    const cp2y = points[i + 1].y - (t[i + 1] * dx) / 3;
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${points[i + 1].x} ${points[i + 1].y}`;
+  }
+  return d;
+}
 
 interface RiverChartProps {
   cells: MonthCell[];
@@ -1124,9 +1208,7 @@ const RiverChart = memo(function RiverChart({
 
   if (extendedTotals.length === 0) return null;
 
-  const path = extendedTotals
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-    .join(" ");
+  const path = buildMonotonePath(extendedTotals);
   const fillStartX = extendedTotals[0].x;
   const fillEndX = extendedTotals[extendedTotals.length - 1].x;
   const fill = `${path} L ${fillEndX} ${height} L ${fillStartX} ${height} Z`;
@@ -1206,15 +1288,6 @@ const MonthAxis = memo(function MonthAxis({
           </div>
         ))}
       </div>
-      {hoverIndex !== null && (
-        <HoverTooltip
-          index={hoverIndex}
-          cell={cells[hoverIndex]}
-          breakdown={totals[hoverIndex].breakdown}
-          total={totals[hoverIndex].total}
-          totalCount={cells.length}
-        />
-      )}
     </div>
   );
 });
@@ -1232,17 +1305,23 @@ function HoverTooltip({
   total: number;
   totalCount: number;
 }) {
-  const leftPct = (index / Math.max(1, totalCount - 1)) * 100;
+  // Center the tooltip on the hovered column. At the edges, snap to the
+  // visible side so the card doesn't get clipped by the rack edge.
+  const centerPct = ((index + 0.5) / totalCount) * 100;
   const align =
-    leftPct < 15 ? "translate-x-0" : leftPct > 85 ? "-translate-x-full" : "-translate-x-1/2";
+    centerPct < 15
+      ? "translate-x-0"
+      : centerPct > 85
+        ? "-translate-x-full"
+        : "-translate-x-1/2";
 
   return (
     <div
       className={cn(
-        "absolute z-10 -top-44 w-56 rounded-xl border border-border/40 bg-popover text-popover-foreground px-4 py-3 shadow-lg pointer-events-none",
+        "absolute z-30 w-56 rounded-xl border border-border/40 bg-popover text-popover-foreground px-4 py-3 shadow-xl pointer-events-none",
         align
       )}
-      style={{ left: `${leftPct}%` }}
+      style={{ left: `${centerPct}%`, top: "12px" }}
     >
       <p className="font-display text-sm font-semibold">
         {format(cell.date, "MMM yy")}
