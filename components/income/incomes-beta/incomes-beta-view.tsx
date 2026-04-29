@@ -106,6 +106,45 @@ interface FutureMilestoneRaw {
 const TIMELINE_MONTHS = 24;
 const TIMELINE_START_OFFSET = -6;
 
+const MOBILE_TIMELINE_MONTHS = 8;
+const MOBILE_TIMELINE_START_OFFSET = -2;
+const MOBILE_HEADER_PX = 100;
+const DESKTOP_HEADER_PX = 180;
+const MOBILE_BREAKPOINT_PX = 640;
+
+interface TimelineConfig {
+  monthCount: number;
+  startOffset: number;
+  headerPx: number;
+  isMobile: boolean;
+}
+
+function useTimelineConfig(): TimelineConfig {
+  const [config, setConfig] = useState<TimelineConfig>({
+    monthCount: TIMELINE_MONTHS,
+    startOffset: TIMELINE_START_OFFSET,
+    headerPx: DESKTOP_HEADER_PX,
+    isMobile: false,
+  });
+
+  useEffect(() => {
+    const apply = () => {
+      const isMobile = window.innerWidth < MOBILE_BREAKPOINT_PX;
+      setConfig({
+        monthCount: isMobile ? MOBILE_TIMELINE_MONTHS : TIMELINE_MONTHS,
+        startOffset: isMobile ? MOBILE_TIMELINE_START_OFFSET : TIMELINE_START_OFFSET,
+        headerPx: isMobile ? MOBILE_HEADER_PX : DESKTOP_HEADER_PX,
+        isMobile,
+      });
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    return () => window.removeEventListener("resize", apply);
+  }, []);
+
+  return config;
+}
+
 // Soft fade at the left/right edges of each timeline viewport so bars and
 // the river chart slide in/out of view smoothly instead of hard-clipping
 // against the container edge.
@@ -190,10 +229,14 @@ interface MonthCell {
   yearLabel: string;
 }
 
-function buildMonthCells(windowOffsetMonths: number = 0): MonthCell[] {
+function buildMonthCells(
+  windowOffsetMonths: number = 0,
+  monthCount: number = TIMELINE_MONTHS,
+  startOffset: number = TIMELINE_START_OFFSET
+): MonthCell[] {
   const base = startOfMonth(new Date());
-  return Array.from({ length: TIMELINE_MONTHS }, (_, i) => {
-    const date = addMonths(base, TIMELINE_START_OFFSET + windowOffsetMonths + i);
+  return Array.from({ length: monthCount }, (_, i) => {
+    const date = addMonths(base, startOffset + windowOffsetMonths + i);
     return {
       date,
       key: format(date, "yyyy-MM"),
@@ -310,9 +353,12 @@ export function IncomesBetaView({
 
   const { incomes, mutate, error, clearError } = useOptimisticIncomes(activeRaw);
 
-  // Timeline scroll state — fractional months shifted from the default window
-  // (-6 .. +18 around today). Integer part drives cell construction; fractional
-  // part drives a CSS translateX so the view glides between month boundaries.
+  // Responsive timeline window — narrower on mobile so each month is readable.
+  const tlConfig = useTimelineConfig();
+
+  // Timeline scroll state — fractional months shifted from the default window.
+  // Integer part drives cell construction; fractional part drives a CSS
+  // translateX so the view glides between month boundaries.
   const [windowOffset, setWindowOffset] = useState(0);
   const windowOffsetMonths = Math.floor(windowOffset);
   const subMonthFraction = windowOffset - windowOffsetMonths;
@@ -334,8 +380,8 @@ export function IncomesBetaView({
     : null;
 
   const cells = useMemo(
-    () => buildMonthCells(windowOffsetMonths),
-    [windowOffsetMonths]
+    () => buildMonthCells(windowOffsetMonths, tlConfig.monthCount, tlConfig.startOffset),
+    [windowOffsetMonths, tlConfig.monthCount, tlConfig.startOffset]
   );
 
   // RAF-driven animation for button-triggered jumps. Wheel scrolling does NOT
@@ -508,6 +554,7 @@ export function IncomesBetaView({
           onHover={setHoverIndex}
           windowOffsetMonths={windowOffsetMonths}
           subMonthFraction={subMonthFraction}
+          tlConfig={tlConfig}
           onScrollPrev={scrollPrev}
           onScrollNext={scrollNext}
           onScrollToToday={scrollToToday}
@@ -527,6 +574,7 @@ export function IncomesBetaView({
           onHover={setHoverIndex}
           windowOffsetMonths={windowOffsetMonths}
           subMonthFraction={subMonthFraction}
+          tlConfig={tlConfig}
           onScrollPrev={scrollPrev}
           onScrollNext={scrollNext}
           onScrollToToday={scrollToToday}
@@ -791,6 +839,7 @@ function TimelineStudio({
   onHover,
   windowOffsetMonths,
   subMonthFraction,
+  tlConfig,
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
@@ -808,6 +857,7 @@ function TimelineStudio({
   onHover: (i: number | null) => void;
   windowOffsetMonths: number;
   subMonthFraction: number;
+  tlConfig: TimelineConfig;
   onScrollPrev: () => void;
   onScrollNext: () => void;
   onScrollToToday: () => void;
@@ -838,14 +888,21 @@ function TimelineStudio({
   });
 
   const dawRef = useRef<HTMLDivElement | null>(null);
-  useHorizontalWheelScroll(dawRef, onShiftWindow);
+  useHorizontalWheelScroll(dawRef, onShiftWindow, tlConfig.headerPx, tlConfig.monthCount);
 
   // CSS variable used by every translated child (river chart, month axis,
   // gridlines/now overlay, each lane's bars area). Expressed as a percentage
   // of the child's own width — each child fills the 1fr right column.
-  const translatePct = -(subMonthFraction / TIMELINE_MONTHS) * 100;
+  const translatePct = -(subMonthFraction / cells.length) * 100;
   const tsStyle = {
     "--ts-x": `${translatePct}%`,
+    "--ts-header-px": `${tlConfig.headerPx}px`,
+  } as React.CSSProperties;
+  const gridColsStyle = {
+    gridTemplateColumns: `${tlConfig.headerPx}px 1fr`,
+  } as React.CSSProperties;
+  const cellGridStyle = {
+    gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))`,
   } as React.CSSProperties;
 
   return (
@@ -864,7 +921,10 @@ function TimelineStudio({
         className="rounded-2xl border border-border/30 bg-card shadow-sm overflow-hidden overscroll-x-contain"
       >
         {/* Master river chart */}
-        <div className="px-6 pt-6 pb-2 grid grid-cols-[180px_1fr] gap-0">
+        <div
+          className="px-3 pt-4 pb-2 grid gap-0 sm:px-6 sm:pt-6"
+          style={gridColsStyle}
+        >
           <div className="flex items-end pb-1">
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
               Master
@@ -881,13 +941,17 @@ function TimelineStudio({
                 peakTotal={peakTotal}
                 hoverIndex={hoverIndex}
                 incomes={incomes}
+                isMobile={tlConfig.isMobile}
               />
             </div>
           </div>
         </div>
 
         {/* Month axis — aligned with the timeline grid below */}
-        <div className="grid grid-cols-[180px_1fr] gap-0 border-b border-border/30">
+        <div
+          className="grid gap-0 border-b border-border/30"
+          style={gridColsStyle}
+        >
           <div className="border-r border-border/30" />
           <div className="overflow-hidden" style={EDGE_FADE_STYLE}>
             <div
@@ -908,15 +972,18 @@ function TimelineStudio({
         <div className="relative">
           {/* Overlay viewport — clips translated content and applies edge fade */}
           <div
-            className="pointer-events-none absolute inset-y-0 left-[180px] right-0 overflow-hidden"
-            style={EDGE_FADE_STYLE}
+            className="pointer-events-none absolute inset-y-0 right-0 overflow-hidden"
+            style={{ left: `${tlConfig.headerPx}px`, ...EDGE_FADE_STYLE }}
           >
             <div
               className="absolute inset-0 will-change-transform"
               style={{ transform: "translateX(var(--ts-x, 0))" }}
             >
               {/* Vertical month gridlines spanning every track */}
-              <div className="absolute inset-0 grid grid-cols-[repeat(24,minmax(0,1fr))]">
+              <div
+                className="absolute inset-0 grid"
+                style={cellGridStyle}
+              >
                 {cells.map((cell) => (
                   <div
                     key={cell.key}
@@ -945,6 +1012,7 @@ function TimelineStudio({
               cells={cells}
               isFirst={i === 0}
               alternate={i % 2 === 1}
+              tlConfig={tlConfig}
               onAmountChange={onAmountChange}
               onRequestDelete={onRequestDelete}
               onOpenDetail={onOpenDetail}
@@ -974,6 +1042,7 @@ interface RiverChartProps {
   peakTotal: number;
   hoverIndex: number | null;
   incomes: Income[];
+  isMobile?: boolean;
 }
 
 const RiverChart = memo(function RiverChart({
@@ -982,6 +1051,7 @@ const RiverChart = memo(function RiverChart({
   peakTotal,
   hoverIndex,
   incomes,
+  isMobile = false,
 }: RiverChartProps) {
   const width = 1080;
   const height = 160;
@@ -1043,7 +1113,7 @@ const RiverChart = memo(function RiverChart({
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       style={{ overflow: "visible" }}
-      className="w-full h-40"
+      className={cn("w-full", isMobile ? "h-20" : "h-40")}
       aria-hidden
     >
       <defs>
@@ -1094,7 +1164,10 @@ const MonthAxis = memo(function MonthAxis({
 }: MonthAxisProps) {
   return (
     <div className="relative mt-2">
-      <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-px text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div
+        className="grid gap-px text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+        style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}
+      >
         {cells.map((cell, i) => (
           <div
             key={cell.key}
@@ -1191,6 +1264,7 @@ interface IncomeStreamRowProps {
   cells: MonthCell[];
   isFirst?: boolean;
   alternate?: boolean;
+  tlConfig: TimelineConfig;
   onAmountChange: (income: Income, amount: number) => void;
   onRequestDelete: (income: Income) => void;
   onOpenDetail: (id: string) => void;
@@ -1201,6 +1275,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   cells,
   isFirst = false,
   alternate = false,
+  tlConfig,
   onAmountChange,
   onRequestDelete,
   onOpenDetail,
@@ -1212,15 +1287,16 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
 
   return (
     <div
+      style={{ gridTemplateColumns: `${tlConfig.headerPx}px 1fr` }}
       className={cn(
-        "group relative grid grid-cols-[180px_1fr] items-stretch transition-colors",
+        "group relative grid items-stretch transition-colors",
         !isFirst && "border-t border-border/20",
         alternate ? "bg-muted/25" : "bg-transparent",
         "hover:bg-brand-jungle/[0.04]"
       )}
     >
       {/* Track header column */}
-      <div className="flex flex-col justify-center gap-0.5 border-r border-border/30 px-4 py-3 min-w-0">
+      <div className="flex flex-col justify-center gap-0.5 border-r border-border/30 px-2 py-2 min-w-0 sm:px-4 sm:py-3">
         <div
           className={cn(
             "flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em]",
@@ -1337,6 +1413,7 @@ interface ActionCardsViewProps {
   onHover: (i: number | null) => void;
   windowOffsetMonths: number;
   subMonthFraction: number;
+  tlConfig: TimelineConfig;
   onScrollPrev: () => void;
   onScrollNext: () => void;
   onScrollToToday: () => void;
@@ -1362,6 +1439,7 @@ function ActionCardsView({
   onHover,
   windowOffsetMonths,
   subMonthFraction,
+  tlConfig,
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
@@ -1385,9 +1463,9 @@ function ActionCardsView({
 
   const riverRef = useRef<HTMLDivElement | null>(null);
   // ActionCards river card has no fixed track-header, so use 0 for headerPx.
-  useHorizontalWheelScroll(riverRef, onShiftWindow, 0);
+  useHorizontalWheelScroll(riverRef, onShiftWindow, 0, tlConfig.monthCount);
 
-  const translatePct = -(subMonthFraction / TIMELINE_MONTHS) * 100;
+  const translatePct = -(subMonthFraction / cells.length) * 100;
   const tsStyle = {
     "--ts-x": `${translatePct}%`,
   } as React.CSSProperties;
@@ -1412,7 +1490,7 @@ function ActionCardsView({
             className="will-change-transform"
             style={{ transform: "translateX(var(--ts-x, 0))" }}
           >
-            <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} incomes={incomes} />
+            <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} incomes={incomes} isMobile={tlConfig.isMobile} />
             <MonthAxis cells={cells} hoverIndex={hoverIndex} onHover={onHover} totals={totals} />
           </div>
         </div>
