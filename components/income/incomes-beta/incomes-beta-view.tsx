@@ -300,8 +300,12 @@ export function IncomesBetaView({
 
   const { incomes, mutate, error, clearError } = useOptimisticIncomes(activeRaw);
 
-  // Timeline scroll state — months shifted from the default window (-6 .. +18 around today)
-  const [windowOffsetMonths, setWindowOffsetMonths] = useState(0);
+  // Timeline scroll state — fractional months shifted from the default window
+  // (-6 .. +18 around today). Integer part drives cell construction; fractional
+  // part drives a CSS translateX so the view glides between month boundaries.
+  const [windowOffset, setWindowOffset] = useState(0);
+  const windowOffsetMonths = Math.floor(windowOffset);
+  const subMonthFraction = windowOffset - windowOffsetMonths;
 
   // Modal/drawer state
   const [creatorOpen, setCreatorOpen] = useState(false);
@@ -324,11 +328,11 @@ export function IncomesBetaView({
     [windowOffsetMonths]
   );
 
-  const scrollPrev = () => setWindowOffsetMonths((o) => o - 6);
-  const scrollNext = () => setWindowOffsetMonths((o) => o + 6);
-  const scrollToToday = () => setWindowOffsetMonths(0);
+  const scrollPrev = () => setWindowOffset((o) => Math.round(o) - 6);
+  const scrollNext = () => setWindowOffset((o) => Math.round(o) + 6);
+  const scrollToToday = () => setWindowOffset(0);
   const shiftWindowMonths = (delta: number) =>
-    setWindowOffsetMonths((o) => o + delta);
+    setWindowOffset((o) => o + delta);
 
   const monthlyTotals = useMemo(() => {
     return cells.map((cell) => {
@@ -459,6 +463,7 @@ export function IncomesBetaView({
           hoverIndex={hoverIndex}
           onHover={setHoverIndex}
           windowOffsetMonths={windowOffsetMonths}
+          subMonthFraction={subMonthFraction}
           onScrollPrev={scrollPrev}
           onScrollNext={scrollNext}
           onScrollToToday={scrollToToday}
@@ -477,6 +482,7 @@ export function IncomesBetaView({
           hoverIndex={hoverIndex}
           onHover={setHoverIndex}
           windowOffsetMonths={windowOffsetMonths}
+          subMonthFraction={subMonthFraction}
           onScrollPrev={scrollPrev}
           onScrollNext={scrollNext}
           onScrollToToday={scrollToToday}
@@ -607,25 +613,26 @@ function ViewToggle({
 /**
  * Trackpad-friendly horizontal wheel-scroll hook.
  *
- * Captures wheel events on the given element, accumulates horizontal delta,
- * and calls onShift(±N) when the threshold is crossed (one month per ~40px
- * of accumulated horizontal scroll). Only intercepts events where horizontal
- * intent dominates vertical, so vertical page scrolling still works on the
- * timeline. Uses a non-passive listener so preventDefault works.
+ * Captures wheel events on the given element and emits fractional-month deltas
+ * (deltaX divided by the measured month-column width). The consumer adds these
+ * to a float offset and renders the integer part as data + the fractional part
+ * as a CSS translateX so the timeline glides smoothly between month boundaries.
+ * Only intercepts events where horizontal intent dominates vertical, so
+ * vertical page scrolling still works. Uses a non-passive listener so
+ * preventDefault works.
  */
 function useHorizontalWheelScroll(
   ref: React.RefObject<HTMLElement | null>,
-  onShift: (delta: number) => void,
-  threshold: number = 40
+  onShiftMonths: (deltaMonths: number) => void,
+  headerPx: number = 180,
+  monthCount: number = TIMELINE_MONTHS
 ) {
-  const onShiftRef = useRef(onShift);
-  onShiftRef.current = onShift;
+  const onShiftRef = useRef(onShiftMonths);
+  onShiftRef.current = onShiftMonths;
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
-    let accumulator = 0;
 
     const handler = (e: WheelEvent) => {
       const ax = Math.abs(e.deltaX);
@@ -636,22 +643,16 @@ function useHorizontalWheelScroll(
         ax > ay ? e.deltaX : e.shiftKey && ay > 0 ? e.deltaY : 0;
       if (useDelta === 0) return;
       e.preventDefault();
-      accumulator += useDelta;
-      let shift = 0;
-      while (accumulator >= threshold) {
-        shift += 1;
-        accumulator -= threshold;
-      }
-      while (accumulator <= -threshold) {
-        shift -= 1;
-        accumulator += threshold;
-      }
-      if (shift !== 0) onShiftRef.current(shift);
+      const monthWidthPx = Math.max(
+        1,
+        (el.clientWidth - headerPx) / monthCount
+      );
+      onShiftRef.current(useDelta / monthWidthPx);
     };
 
     el.addEventListener("wheel", handler, { passive: false });
     return () => el.removeEventListener("wheel", handler);
-  }, [ref, threshold]);
+  }, [ref, headerPx, monthCount]);
 }
 
 function TimelineHeader({
@@ -730,6 +731,7 @@ function TimelineStudio({
   hoverIndex,
   onHover,
   windowOffsetMonths,
+  subMonthFraction,
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
@@ -746,6 +748,7 @@ function TimelineStudio({
   hoverIndex: number | null;
   onHover: (i: number | null) => void;
   windowOffsetMonths: number;
+  subMonthFraction: number;
   onScrollPrev: () => void;
   onScrollNext: () => void;
   onScrollToToday: () => void;
@@ -778,6 +781,14 @@ function TimelineStudio({
   const dawRef = useRef<HTMLDivElement | null>(null);
   useHorizontalWheelScroll(dawRef, onShiftWindow);
 
+  // CSS variable used by every translated child (river chart, month axis,
+  // gridlines/now overlay, each lane's bars area). Expressed as a percentage
+  // of the child's own width — each child fills the 1fr right column.
+  const translatePct = -(subMonthFraction / TIMELINE_MONTHS) * 100;
+  const tsStyle = {
+    "--ts-x": `${translatePct}%`,
+  } as React.CSSProperties;
+
   return (
     <div className="space-y-4">
       <TimelineHeader
@@ -790,6 +801,7 @@ function TimelineStudio({
 
       <div
         ref={dawRef}
+        style={tsStyle}
         className="rounded-2xl border border-border/30 bg-card shadow-sm overflow-hidden overscroll-x-contain"
       >
         {/* Master river chart */}
@@ -799,7 +811,10 @@ function TimelineStudio({
               Master
             </span>
           </div>
-          <div>
+          <div
+            className="will-change-transform"
+            style={{ transform: "translateX(var(--ts-x, 0))" }}
+          >
             <RiverChart
               cells={cells}
               totals={totals}
@@ -812,7 +827,10 @@ function TimelineStudio({
         {/* Month axis — aligned with the timeline grid below */}
         <div className="grid grid-cols-[180px_1fr] gap-0 border-b border-border/30">
           <div className="border-r border-border/30" />
-          <div className="px-0">
+          <div
+            className="px-0 will-change-transform"
+            style={{ transform: "translateX(var(--ts-x, 0))" }}
+          >
             <MonthAxis
               cells={cells}
               hoverIndex={hoverIndex}
@@ -825,7 +843,10 @@ function TimelineStudio({
         {/* Track lanes — DAW-style stacked tracks sharing one continuous timeline */}
         <div className="relative">
           {/* Overlay container that spans only the timeline grid (not the track header) */}
-          <div className="pointer-events-none absolute inset-y-0 left-[180px] right-0">
+          <div
+            className="pointer-events-none absolute inset-y-0 left-[180px] right-0 will-change-transform"
+            style={{ transform: "translateX(var(--ts-x, 0))" }}
+          >
             {/* Vertical month gridlines spanning every track */}
             <div className="absolute inset-0 grid grid-cols-[repeat(24,minmax(0,1fr))]">
               {cells.map((cell) => (
@@ -1117,7 +1138,10 @@ function IncomeStreamRow({
       </div>
 
       {/* Bars area — gridlines come from the parent overlay */}
-      <div className="relative h-14">
+      <div
+        className="relative h-14 will-change-transform"
+        style={{ transform: "translateX(var(--ts-x, 0))" }}
+      >
         {segments.map((seg, i) => {
           const leftPct = (seg.startIndex / cells.length) * 100;
           const widthPct = (seg.spanCount / cells.length) * 100;
@@ -1179,6 +1203,7 @@ interface ActionCardsViewProps {
   hoverIndex: number | null;
   onHover: (i: number | null) => void;
   windowOffsetMonths: number;
+  subMonthFraction: number;
   onScrollPrev: () => void;
   onScrollNext: () => void;
   onScrollToToday: () => void;
@@ -1203,6 +1228,7 @@ function ActionCardsView({
   hoverIndex,
   onHover,
   windowOffsetMonths,
+  subMonthFraction,
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
@@ -1225,7 +1251,13 @@ function ActionCardsView({
   }>;
 
   const riverRef = useRef<HTMLDivElement | null>(null);
-  useHorizontalWheelScroll(riverRef, onShiftWindow);
+  // ActionCards river card has no fixed track-header, so use 0 for headerPx.
+  useHorizontalWheelScroll(riverRef, onShiftWindow, 0);
+
+  const translatePct = -(subMonthFraction / TIMELINE_MONTHS) * 100;
+  const tsStyle = {
+    "--ts-x": `${translatePct}%`,
+  } as React.CSSProperties;
 
   return (
     <div className="space-y-6">
@@ -1239,10 +1271,16 @@ function ActionCardsView({
 
       <div
         ref={riverRef}
-        className="relative rounded-2xl border border-border/30 bg-card p-6 shadow-sm overscroll-x-contain"
+        style={tsStyle}
+        className="relative rounded-2xl border border-border/30 bg-card p-6 shadow-sm overflow-hidden overscroll-x-contain"
       >
-        <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} />
-        <MonthAxis cells={cells} hoverIndex={hoverIndex} onHover={onHover} totals={totals} />
+        <div
+          className="will-change-transform"
+          style={{ transform: "translateX(var(--ts-x, 0))" }}
+        >
+          <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} />
+          <MonthAxis cells={cells} hoverIndex={hoverIndex} onHover={onHover} totals={totals} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
