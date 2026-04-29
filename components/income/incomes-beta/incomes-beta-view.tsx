@@ -961,23 +961,36 @@ function IncomeStreamRow({
         {segments.map((seg, i) => {
           const leftPct = (seg.startIndex / cells.length) * 100;
           const widthPct = (seg.spanCount / cells.length) * 100;
+          const isLastSegment = i === segments.length - 1;
+          const reachesEnd = seg.startIndex + seg.spanCount >= cells.length;
+          const isOngoingTail =
+            archetype === "recurring" && !income.endDate && isLastSegment && reachesEnd;
           return (
             <Popover key={i}>
               <PopoverTrigger asChild>
                 <button
                   type="button"
                   className={cn(
-                    "absolute top-1/2 -translate-y-1/2 flex items-center justify-center rounded-md px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                    "absolute top-1/2 -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                    isOngoingTail ? "rounded-l-md rounded-r-none" : "rounded-md",
                     meta.bar
                   )}
                   style={{
                     left: `${leftPct}%`,
                     width: `${widthPct}%`,
                     height: "32px",
+                    ...(isOngoingTail
+                      ? {
+                          clipPath:
+                            "polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%)",
+                        }
+                      : {}),
                   }}
-                  aria-label={`Adjust ${income.name} amount, currently ${formatCurrency(seg.amount)}`}
+                  aria-label={`Adjust ${income.name} amount, currently ${formatCurrency(seg.amount)}${isOngoingTail ? " (ongoing)" : ""}`}
                 >
-                  <span className="truncate">{formatCurrency(seg.amount)}</span>
+                  <span className={cn("truncate", isOngoingTail && "pr-3")}>
+                    {formatCurrency(seg.amount)}
+                  </span>
                 </button>
               </PopoverTrigger>
               <PopoverContent
