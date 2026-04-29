@@ -106,6 +106,16 @@ interface FutureMilestoneRaw {
 const TIMELINE_MONTHS = 24;
 const TIMELINE_START_OFFSET = -6;
 
+// Soft fade at the left/right edges of each timeline viewport so bars and
+// the river chart slide in/out of view smoothly instead of hard-clipping
+// against the container edge.
+const TIMELINE_EDGE_FADE =
+  "linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)";
+const EDGE_FADE_STYLE: React.CSSProperties = {
+  maskImage: TIMELINE_EDGE_FADE,
+  WebkitMaskImage: TIMELINE_EDGE_FADE,
+};
+
 const ARCHETYPE_META: Record<
   Archetype,
   { label: string; icon: typeof InfinityIcon; tone: string; bar: string; pill: string; rail: string }
@@ -328,11 +338,45 @@ export function IncomesBetaView({
     [windowOffsetMonths]
   );
 
-  const scrollPrev = () => setWindowOffset((o) => Math.round(o) - 6);
-  const scrollNext = () => setWindowOffset((o) => Math.round(o) + 6);
-  const scrollToToday = () => setWindowOffset(0);
-  const shiftWindowMonths = (delta: number) =>
+  // RAF-driven animation for button-triggered jumps. Wheel scrolling does NOT
+  // use this — wheel events already provide their own continuous motion.
+  const animationRef = useRef<number | null>(null);
+  const animateTo = (target: number) => {
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    const start = performance.now();
+    setWindowOffset((startOffset) => {
+      const from = startOffset;
+      const distance = target - from;
+      const duration = Math.min(550, 220 + Math.abs(distance) * 28);
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / duration);
+        // ease-out cubic
+        const eased = 1 - Math.pow(1 - t, 3);
+        setWindowOffset(from + distance * eased);
+        if (t < 1) {
+          animationRef.current = requestAnimationFrame(tick);
+        } else {
+          animationRef.current = null;
+        }
+      };
+      animationRef.current = requestAnimationFrame(tick);
+      return startOffset;
+    });
+  };
+
+  const scrollPrev = () => animateTo(Math.round(windowOffset) - 6);
+  const scrollNext = () => animateTo(Math.round(windowOffset) + 6);
+  const scrollToToday = () => animateTo(0);
+  const shiftWindowMonths = (delta: number) => {
+    // Cancel any running button animation when the user touches the trackpad.
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
     setWindowOffset((o) => o + delta);
+  };
 
   const monthlyTotals = useMemo(() => {
     return cells.map((cell) => {
@@ -811,62 +855,71 @@ function TimelineStudio({
               Master
             </span>
           </div>
-          <div
-            className="will-change-transform"
-            style={{ transform: "translateX(var(--ts-x, 0))" }}
-          >
-            <RiverChart
-              cells={cells}
-              totals={totals}
-              peakTotal={peakTotal}
-              hoverIndex={hoverIndex}
-            />
+          <div className="overflow-hidden" style={EDGE_FADE_STYLE}>
+            <div
+              className="will-change-transform"
+              style={{ transform: "translateX(var(--ts-x, 0))" }}
+            >
+              <RiverChart
+                cells={cells}
+                totals={totals}
+                peakTotal={peakTotal}
+                hoverIndex={hoverIndex}
+              />
+            </div>
           </div>
         </div>
 
         {/* Month axis — aligned with the timeline grid below */}
         <div className="grid grid-cols-[180px_1fr] gap-0 border-b border-border/30">
           <div className="border-r border-border/30" />
-          <div
-            className="px-0 will-change-transform"
-            style={{ transform: "translateX(var(--ts-x, 0))" }}
-          >
-            <MonthAxis
-              cells={cells}
-              hoverIndex={hoverIndex}
-              onHover={onHover}
-              totals={totals}
-            />
+          <div className="overflow-hidden" style={EDGE_FADE_STYLE}>
+            <div
+              className="px-0 will-change-transform"
+              style={{ transform: "translateX(var(--ts-x, 0))" }}
+            >
+              <MonthAxis
+                cells={cells}
+                hoverIndex={hoverIndex}
+                onHover={onHover}
+                totals={totals}
+              />
+            </div>
           </div>
         </div>
 
         {/* Track lanes — DAW-style stacked tracks sharing one continuous timeline */}
         <div className="relative">
-          {/* Overlay container that spans only the timeline grid (not the track header) */}
+          {/* Overlay viewport — clips translated content and applies edge fade */}
           <div
-            className="pointer-events-none absolute inset-y-0 left-[180px] right-0 will-change-transform"
-            style={{ transform: "translateX(var(--ts-x, 0))" }}
+            className="pointer-events-none absolute inset-y-0 left-[180px] right-0 overflow-hidden"
+            style={EDGE_FADE_STYLE}
           >
-            {/* Vertical month gridlines spanning every track */}
-            <div className="absolute inset-0 grid grid-cols-[repeat(24,minmax(0,1fr))]">
-              {cells.map((cell) => (
-                <div
-                  key={cell.key}
-                  className="border-l border-border/15 first:border-l-0"
-                />
-              ))}
-            </div>
-            {/* Now playhead */}
-            {nowLeftPct !== null && (
-              <div
-                className="absolute top-0 bottom-0 w-px bg-brand-terracotta/50 z-10"
-                style={{ left: `${nowLeftPct * 100}%` }}
-              >
-                <span className="absolute -top-1 -translate-x-1/2 left-0 rounded-sm bg-brand-terracotta px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white">
-                  Now
-                </span>
+            <div
+              className="absolute inset-0 will-change-transform"
+              style={{ transform: "translateX(var(--ts-x, 0))" }}
+            >
+              {/* Vertical month gridlines spanning every track */}
+              <div className="absolute inset-0 grid grid-cols-[repeat(24,minmax(0,1fr))]">
+                {cells.map((cell) => (
+                  <div
+                    key={cell.key}
+                    className="border-l border-border/15 first:border-l-0"
+                  />
+                ))}
               </div>
-            )}
+              {/* Now playhead */}
+              {nowLeftPct !== null && (
+                <div
+                  className="absolute top-0 bottom-0 w-px bg-brand-terracotta/50 z-10"
+                  style={{ left: `${nowLeftPct * 100}%` }}
+                >
+                  <span className="absolute -top-1 -translate-x-1/2 left-0 rounded-sm bg-brand-terracotta px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white">
+                    Now
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {sortedIncomes.map((income, i) => (
@@ -1139,10 +1192,14 @@ function IncomeStreamRow({
 
       {/* Bars area — gridlines come from the parent overlay */}
       <div
-        className="relative h-14 will-change-transform"
-        style={{ transform: "translateX(var(--ts-x, 0))" }}
+        className="relative h-14 overflow-hidden"
+        style={EDGE_FADE_STYLE}
       >
-        {segments.map((seg, i) => {
+        <div
+          className="absolute inset-0 will-change-transform"
+          style={{ transform: "translateX(var(--ts-x, 0))" }}
+        >
+          {segments.map((seg, i) => {
           const leftPct = (seg.startIndex / cells.length) * 100;
           const widthPct = (seg.spanCount / cells.length) * 100;
           const isLastSegment = i === segments.length - 1;
@@ -1190,6 +1247,7 @@ function IncomeStreamRow({
             </Popover>
           );
         })}
+        </div>
       </div>
     </div>
   );
@@ -1274,12 +1332,14 @@ function ActionCardsView({
         style={tsStyle}
         className="relative rounded-2xl border border-border/30 bg-card p-6 shadow-sm overflow-hidden overscroll-x-contain"
       >
-        <div
-          className="will-change-transform"
-          style={{ transform: "translateX(var(--ts-x, 0))" }}
-        >
-          <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} />
-          <MonthAxis cells={cells} hoverIndex={hoverIndex} onHover={onHover} totals={totals} />
+        <div className="overflow-hidden" style={EDGE_FADE_STYLE}>
+          <div
+            className="will-change-transform"
+            style={{ transform: "translateX(var(--ts-x, 0))" }}
+          >
+            <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} />
+            <MonthAxis cells={cells} hoverIndex={hoverIndex} onHover={onHover} totals={totals} />
+          </div>
         </div>
       </div>
 
