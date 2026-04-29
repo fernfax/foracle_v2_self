@@ -1738,9 +1738,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         e.stopPropagation();
                         handleClickCapture(e);
                       }}
-                      className="absolute left-0 top-0 bottom-0 w-2.5 cursor-ew-resize touch-none flex items-center justify-start"
+                      className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize touch-none flex items-center justify-center"
                     >
-                      <span className="ml-0.5 h-4 w-0.5 rounded-full bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span className="h-5 w-px rounded-full bg-white/35 group-hover:bg-white/85 transition-colors" />
                     </span>
                   )}
                   {showRightHandle && (
@@ -1767,9 +1767,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         e.stopPropagation();
                         handleClickCapture(e);
                       }}
-                      className="absolute right-0 top-0 bottom-0 w-2.5 cursor-ew-resize touch-none flex items-center justify-end"
+                      className="absolute right-0 top-0 bottom-0 w-1.5 cursor-ew-resize touch-none flex items-center justify-center"
                     >
-                      <span className="mr-0.5 h-4 w-0.5 rounded-full bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span className="h-5 w-px rounded-full bg-white/35 group-hover:bg-white/85 transition-colors" />
                     </span>
                   )}
                 </button>
