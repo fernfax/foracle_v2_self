@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../tailwind.config.ts";
 
 /*
   Foracle design tokens — see /design_guide/design_guide.md.
