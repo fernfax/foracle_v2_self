@@ -865,6 +865,7 @@ function TimelineStudio({
                 totals={totals}
                 peakTotal={peakTotal}
                 hoverIndex={hoverIndex}
+                incomes={incomes}
               />
             </div>
           </div>
@@ -950,16 +951,20 @@ function TimelineStudio({
   );
 }
 
+const RIVER_BUFFER_MONTHS = 3;
+
 function RiverChart({
   cells,
   totals,
   peakTotal,
   hoverIndex,
+  incomes,
 }: {
   cells: MonthCell[];
   totals: Array<{ cell: MonthCell; total: number; breakdown: Array<{ income: Income; amount: number }> }>;
   peakTotal: number;
   hoverIndex: number | null;
+  incomes: Income[];
 }) {
   const width = 1080;
   const height = 160;
@@ -970,15 +975,57 @@ function RiverChart({
     return height - 4 - (val / peakTotal) * (height - 24);
   };
 
-  const path = cells
-    .map((_, i) => `${i === 0 ? "M" : "L"} ${i * stepX} ${yFor(totals[i].total)}`)
+  // Extend the path with buffer months on each side so the visible portion
+  // never reaches a hard endpoint as the timeline scrolls. The SVG sets
+  // overflow:visible so the buffer renders beyond the viewBox; the parent's
+  // overflow-hidden + edge-fade mask handles the actual visual cropping.
+  const buffer = RIVER_BUFFER_MONTHS;
+  const extendedTotals = useMemo(() => {
+    if (cells.length === 0) return [] as Array<{ x: number; y: number }>;
+    const beforeCells = Array.from({ length: buffer }, (_, k) => {
+      const d = addMonths(cells[0].date, -(buffer - k));
+      return {
+        date: d,
+        key: format(d, "yyyy-MM"),
+        label: format(d, "MMM"),
+        yearLabel: format(d, "yy"),
+      } satisfies MonthCell;
+    });
+    const afterCells = Array.from({ length: buffer }, (_, k) => {
+      const d = addMonths(cells[cells.length - 1].date, k + 1);
+      return {
+        date: d,
+        key: format(d, "yyyy-MM"),
+        label: format(d, "MMM"),
+        yearLabel: format(d, "yy"),
+      } satisfies MonthCell;
+    });
+    const allCells = [...beforeCells, ...cells, ...afterCells];
+    return allCells.map((c, idx) => {
+      const isVisible = idx >= buffer && idx < buffer + cells.length;
+      const total = isVisible
+        ? totals[idx - buffer].total
+        : incomes.reduce((sum, inc) => sum + getAmountForMonth(inc, c), 0);
+      const x = (idx - buffer) * stepX;
+      return { x, y: yFor(total) };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cells, totals, peakTotal, incomes]);
+
+  if (extendedTotals.length === 0) return null;
+
+  const path = extendedTotals
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
     .join(" ");
-  const fill = `${path} L ${(cells.length - 1) * stepX} ${height} L 0 ${height} Z`;
+  const fillStartX = extendedTotals[0].x;
+  const fillEndX = extendedTotals[extendedTotals.length - 1].x;
+  const fill = `${path} L ${fillEndX} ${height} L ${fillStartX} ${height} Z`;
 
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
+      style={{ overflow: "visible" }}
       className="w-full h-40"
       aria-hidden
     >
@@ -1344,7 +1391,7 @@ function ActionCardsView({
             className="will-change-transform"
             style={{ transform: "translateX(var(--ts-x, 0))" }}
           >
-            <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} />
+            <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} incomes={incomes} />
             <MonthAxis cells={cells} hoverIndex={hoverIndex} onHover={onHover} totals={totals} />
           </div>
         </div>
