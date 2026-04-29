@@ -353,6 +353,20 @@ export function IncomesBetaView({
 
   const { incomes, mutate, error, clearError } = useOptimisticIncomes(activeRaw);
 
+  // Live preview while dragging a bar — applies a patch to one income so the
+  // chart and bars update together without spamming the server. Cleared on
+  // pointerup; the actual mutate happens then.
+  const [dragPreview, setDragPreview] = useState<
+    { id: string; patch: Partial<Income> } | null
+  >(null);
+
+  const effectiveIncomes = useMemo(() => {
+    if (!dragPreview) return incomes;
+    return incomes.map((i) =>
+      i.id === dragPreview.id ? ({ ...i, ...dragPreview.patch } as Income) : i
+    );
+  }, [incomes, dragPreview]);
+
   // Responsive timeline window — narrower on mobile so each month is readable.
   const tlConfig = useTimelineConfig();
 
@@ -373,10 +387,10 @@ export function IncomesBetaView({
   const [deleteContext, setDeleteContext] = useState<Income | null>(null);
 
   const detailIncome = detailIncomeId
-    ? incomes.find((i) => i.id === detailIncomeId) ?? null
+    ? effectiveIncomes.find((i) => i.id === detailIncomeId) ?? null
     : null;
   const futureChangeIncome = futureChangeContext
-    ? incomes.find((i) => i.id === futureChangeContext.incomeId) ?? null
+    ? effectiveIncomes.find((i) => i.id === futureChangeContext.incomeId) ?? null
     : null;
 
   const cells = useMemo(
@@ -426,14 +440,14 @@ export function IncomesBetaView({
 
   const monthlyTotals = useMemo(() => {
     return cells.map((cell) => {
-      const breakdown = incomes.map((income) => ({
+      const breakdown = effectiveIncomes.map((income) => ({
         income,
         amount: getAmountForMonth(income, cell),
       }));
       const total = breakdown.reduce((sum, b) => sum + b.amount, 0);
       return { cell, breakdown: breakdown.filter((b) => b.amount > 0), total };
     });
-  }, [cells, incomes]);
+  }, [cells, effectiveIncomes]);
 
   const peakTotal = useMemo(
     () => monthlyTotals.reduce((max, m) => Math.max(max, m.total), 0),
@@ -477,6 +491,86 @@ export function IncomesBetaView({
         })
     );
   }, [mutate]);
+
+  // Bar drag commit handlers — fired on pointerup, after the live preview
+  // has already shown the user where the bar is moving. Each shifts dates
+  // (and milestones, where appropriate) by integer-month deltas.
+  const handleMoveBar = useCallback(
+    (income: Income, deltaMonths: number) => {
+      if (deltaMonths === 0) return;
+      const newStart = format(
+        addMonths(parseISO(income.startDate), deltaMonths),
+        "yyyy-MM-dd"
+      );
+      const newEnd = income.endDate
+        ? format(addMonths(parseISO(income.endDate), deltaMonths), "yyyy-MM-dd")
+        : null;
+      // Shift any milestone targetMonths by the same delta
+      const milestones = safeParseMilestones(income.futureMilestones);
+      const shifted = milestones.map((m) => ({
+        ...m,
+        targetMonth: format(
+          addMonths(parseISO(`${m.targetMonth}-01`), deltaMonths),
+          "yyyy-MM"
+        ),
+      }));
+      const newMilestonesJson = shifted.length > 0 ? JSON.stringify(shifted) : null;
+      mutate(
+        {
+          kind: "update",
+          id: income.id,
+          patch: {
+            startDate: newStart,
+            endDate: newEnd,
+            futureMilestones: newMilestonesJson,
+          },
+        },
+        () =>
+          updateIncome(income.id, {
+            startDate: newStart,
+            endDate: newEnd,
+            futureMilestones: newMilestonesJson,
+          })
+      );
+    },
+    [mutate]
+  );
+
+  const handleResizeStart = useCallback(
+    (income: Income, deltaMonths: number) => {
+      if (deltaMonths === 0) return;
+      let newStart = addMonths(parseISO(income.startDate), deltaMonths);
+      // Don't let the new start cross the end date.
+      if (income.endDate) {
+        const end = parseISO(income.endDate);
+        if (newStart >= end) newStart = end;
+      }
+      const iso = format(newStart, "yyyy-MM-dd");
+      mutate(
+        { kind: "update", id: income.id, patch: { startDate: iso } },
+        () => updateIncome(income.id, { startDate: iso })
+      );
+    },
+    [mutate]
+  );
+
+  const handleResizeEnd = useCallback(
+    (income: Income, deltaMonths: number) => {
+      if (deltaMonths === 0) return;
+      const baseEnd = income.endDate
+        ? parseISO(income.endDate)
+        : parseISO(income.startDate);
+      let newEnd = addMonths(baseEnd, deltaMonths);
+      const start = parseISO(income.startDate);
+      if (newEnd < start) newEnd = start;
+      const iso = format(newEnd, "yyyy-MM-dd");
+      mutate(
+        { kind: "update", id: income.id, patch: { endDate: iso } },
+        () => updateIncome(income.id, { endDate: iso })
+      );
+    },
+    [mutate]
+  );
 
   const handleSaveMilestone = (income: Income, milestone: FutureMilestone) => {
     const existing = safeParseMilestones(income.futureMilestones);
@@ -547,7 +641,7 @@ export function IncomesBetaView({
       ) : view === "timeline" ? (
         <TimelineStudio
           cells={cells}
-          incomes={incomes}
+          incomes={effectiveIncomes}
           monthlyTotals={monthlyTotals}
           peakTotal={peakTotal}
           hoverIndex={hoverIndex}
@@ -563,11 +657,15 @@ export function IncomesBetaView({
           onRequestDelete={setDeleteContext}
           onOpenCreator={() => setCreatorOpen(true)}
           onOpenDetail={setDetailIncomeId}
+          onDragPreview={setDragPreview}
+          onMoveBar={handleMoveBar}
+          onResizeStart={handleResizeStart}
+          onResizeEnd={handleResizeEnd}
         />
       ) : (
         <ActionCardsView
           cells={cells}
-          incomes={incomes}
+          incomes={effectiveIncomes}
           monthlyTotals={monthlyTotals}
           peakTotal={peakTotal}
           hoverIndex={hoverIndex}
@@ -848,6 +946,10 @@ function TimelineStudio({
   onRequestDelete,
   onOpenCreator,
   onOpenDetail,
+  onDragPreview,
+  onMoveBar,
+  onResizeStart,
+  onResizeEnd,
 }: {
   cells: MonthCell[];
   incomes: Income[];
@@ -866,6 +968,10 @@ function TimelineStudio({
   onRequestDelete: (income: Income) => void;
   onOpenCreator: () => void;
   onOpenDetail: (id: string) => void;
+  onDragPreview: (preview: { id: string; patch: Partial<Income> } | null) => void;
+  onMoveBar: (income: Income, deltaMonths: number) => void;
+  onResizeStart: (income: Income, deltaMonths: number) => void;
+  onResizeEnd: (income: Income, deltaMonths: number) => void;
 }) {
   const totals = monthlyTotals as Array<{
     cell: MonthCell;
@@ -1040,6 +1146,10 @@ function TimelineStudio({
               onAmountChange={onAmountChange}
               onRequestDelete={onRequestDelete}
               onOpenDetail={onOpenDetail}
+              onDragPreview={onDragPreview}
+              onMoveBar={onMoveBar}
+              onResizeStart={onResizeStart}
+              onResizeEnd={onResizeEnd}
             />
           ))}
         </div>
@@ -1370,6 +1480,21 @@ interface IncomeStreamRowProps {
   onAmountChange: (income: Income, amount: number) => void;
   onRequestDelete: (income: Income) => void;
   onOpenDetail: (id: string) => void;
+  onDragPreview: (preview: { id: string; patch: Partial<Income> } | null) => void;
+  onMoveBar: (income: Income, deltaMonths: number) => void;
+  onResizeStart: (income: Income, deltaMonths: number) => void;
+  onResizeEnd: (income: Income, deltaMonths: number) => void;
+}
+
+type BarDragKind = "move" | "resize-left" | "resize-right";
+
+interface BarDragState {
+  kind: BarDragKind;
+  startPointerX: number;
+  startStart: Date;
+  startEnd: Date | null;
+  monthWidthPx: number;
+  hasMoved: boolean;
 }
 
 const IncomeStreamRow = memo(function IncomeStreamRow({
@@ -1381,11 +1506,106 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   onAmountChange,
   onRequestDelete,
   onOpenDetail,
+  onDragPreview,
+  onMoveBar,
+  onResizeStart,
+  onResizeEnd,
 }: IncomeStreamRowProps) {
   const archetype = getArchetype(income);
   const meta = ARCHETYPE_META[archetype];
   const Icon = meta.icon;
   const segments = useMemo(() => buildBarSegments(income, cells), [income, cells]);
+  const lanesAreaRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<BarDragState | null>(null);
+  // Set on pointerup if drag occurred — used to suppress the synthetic click
+  // event so the QuickAdjustPad popover doesn't open after a drag.
+  const justDraggedRef = useRef(false);
+
+  const computeDeltaMonths = (clientX: number) => {
+    const drag = dragRef.current;
+    if (!drag) return 0;
+    return Math.round((clientX - drag.startPointerX) / drag.monthWidthPx);
+  };
+
+  const computePatch = (kind: BarDragKind, deltaMonths: number): Partial<Income> => {
+    const drag = dragRef.current;
+    if (!drag) return {};
+    if (kind === "move") {
+      let newStart = addMonths(drag.startStart, deltaMonths);
+      let newEnd = drag.startEnd ? addMonths(drag.startEnd, deltaMonths) : null;
+      return {
+        startDate: format(newStart, "yyyy-MM-dd"),
+        endDate: newEnd ? format(newEnd, "yyyy-MM-dd") : null,
+      };
+    }
+    if (kind === "resize-left") {
+      let newStart = addMonths(drag.startStart, deltaMonths);
+      if (drag.startEnd && newStart >= drag.startEnd) newStart = drag.startEnd;
+      return { startDate: format(newStart, "yyyy-MM-dd") };
+    }
+    // resize-right
+    const baseEnd = drag.startEnd ?? drag.startStart;
+    let newEnd = addMonths(baseEnd, deltaMonths);
+    if (newEnd < drag.startStart) newEnd = drag.startStart;
+    return { endDate: format(newEnd, "yyyy-MM-dd") };
+  };
+
+  const handlePointerDown = (e: React.PointerEvent, kind: BarDragKind) => {
+    // Only primary button / single touch
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.stopPropagation();
+    const lane = lanesAreaRef.current;
+    const monthWidthPx = lane ? lane.clientWidth / cells.length : 40;
+    dragRef.current = {
+      kind,
+      startPointerX: e.clientX,
+      startStart: parseISO(income.startDate),
+      startEnd: income.endDate ? parseISO(income.endDate) : null,
+      monthWidthPx,
+      hasMoved: false,
+    };
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const dx = e.clientX - drag.startPointerX;
+    if (Math.abs(dx) > 4) drag.hasMoved = true;
+    const deltaMonths = computeDeltaMonths(e.clientX);
+    onDragPreview({ id: income.id, patch: computePatch(drag.kind, deltaMonths) });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const dx = e.clientX - drag.startPointerX;
+    const moved = Math.abs(dx) > 4;
+    const deltaMonths = computeDeltaMonths(e.clientX);
+    dragRef.current = null;
+    onDragPreview(null);
+    if (moved && deltaMonths !== 0) {
+      justDraggedRef.current = true;
+      if (drag.kind === "move") onMoveBar(income, deltaMonths);
+      else if (drag.kind === "resize-left") onResizeStart(income, deltaMonths);
+      else if (drag.kind === "resize-right") onResizeEnd(income, deltaMonths);
+    }
+  };
+
+  const handlePointerCancel = () => {
+    if (!dragRef.current) return;
+    dragRef.current = null;
+    onDragPreview(null);
+  };
+
+  // Suppress popover open when click is the tail of a drag.
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (justDraggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      justDraggedRef.current = false;
+    }
+  };
 
   return (
     <div
@@ -1438,6 +1658,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
 
       {/* Bars area — gridlines come from the parent overlay */}
       <div
+        ref={lanesAreaRef}
         className="relative h-14 overflow-hidden"
         style={EDGE_FADE_STYLE}
       >
@@ -1449,16 +1670,28 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
           const leftPct = (seg.startIndex / cells.length) * 100;
           const widthPct = (seg.spanCount / cells.length) * 100;
           const isLastSegment = i === segments.length - 1;
+          const isFirstSegment = i === 0;
           const reachesEnd = seg.startIndex + seg.spanCount >= cells.length;
           const isOngoingTail =
             archetype === "recurring" && !income.endDate && isLastSegment && reachesEnd;
+          // Resize handles only on the outermost edges of the income — the
+          // first segment's left edge maps to startDate, the last segment's
+          // right edge maps to endDate. Middle segment edges are milestones,
+          // not yet draggable.
+          const showLeftHandle = isFirstSegment;
+          const showRightHandle = isLastSegment && !isOngoingTail;
           return (
             <Popover key={i}>
               <PopoverTrigger asChild>
                 <button
                   type="button"
+                  onPointerDown={(e) => handlePointerDown(e, "move")}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerCancel}
+                  onClickCapture={handleClickCapture}
                   className={cn(
-                    "absolute top-1/2 -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                    "absolute top-1/2 -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 cursor-grab active:cursor-grabbing touch-none select-none",
                     isOngoingTail ? "rounded-l-md rounded-r-none" : "rounded-md",
                     meta.bar
                   )}
@@ -1467,11 +1700,6 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                     height: "32px",
                     ...(isOngoingTail
                       ? {
-                          // Anchor right edge to the viewport's right edge by
-                          // canceling the parent translate. As parent slides
-                          // by --ts-x, the bar's right edge stays fixed in
-                          // viewport space, so the chevron tail tracks the
-                          // edge smoothly instead of stepping per month.
                           right: "var(--ts-x, 0)",
                           clipPath:
                             "polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%)",
@@ -1485,6 +1713,65 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                   <span className={cn("truncate", isOngoingTail && "pr-3")}>
                     {formatCurrency(seg.amount)}
                   </span>
+
+                  {showLeftHandle && (
+                    <span
+                      role="slider"
+                      aria-label={`Drag to change ${income.name} start date`}
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        handlePointerDown(e, "resize-left");
+                      }}
+                      onPointerMove={(e) => {
+                        e.stopPropagation();
+                        handlePointerMove(e);
+                      }}
+                      onPointerUp={(e) => {
+                        e.stopPropagation();
+                        handlePointerUp(e);
+                      }}
+                      onPointerCancel={(e) => {
+                        e.stopPropagation();
+                        handlePointerCancel();
+                      }}
+                      onClickCapture={(e) => {
+                        e.stopPropagation();
+                        handleClickCapture(e);
+                      }}
+                      className="absolute left-0 top-0 bottom-0 w-2.5 cursor-ew-resize touch-none flex items-center justify-start"
+                    >
+                      <span className="ml-0.5 h-4 w-0.5 rounded-full bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </span>
+                  )}
+                  {showRightHandle && (
+                    <span
+                      role="slider"
+                      aria-label={`Drag to change ${income.name} end date`}
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        handlePointerDown(e, "resize-right");
+                      }}
+                      onPointerMove={(e) => {
+                        e.stopPropagation();
+                        handlePointerMove(e);
+                      }}
+                      onPointerUp={(e) => {
+                        e.stopPropagation();
+                        handlePointerUp(e);
+                      }}
+                      onPointerCancel={(e) => {
+                        e.stopPropagation();
+                        handlePointerCancel();
+                      }}
+                      onClickCapture={(e) => {
+                        e.stopPropagation();
+                        handleClickCapture(e);
+                      }}
+                      className="absolute right-0 top-0 bottom-0 w-2.5 cursor-ew-resize touch-none flex items-center justify-end"
+                    >
+                      <span className="mr-0.5 h-4 w-0.5 rounded-full bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </span>
+                  )}
                 </button>
               </PopoverTrigger>
               <PopoverContent
