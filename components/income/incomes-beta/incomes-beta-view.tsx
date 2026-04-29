@@ -10,6 +10,9 @@ import {
   X,
   Settings2,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
+  LocateFixed,
 } from "lucide-react";
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -177,10 +180,10 @@ interface MonthCell {
   yearLabel: string;
 }
 
-function buildMonthCells(): MonthCell[] {
+function buildMonthCells(windowOffsetMonths: number = 0): MonthCell[] {
   const base = startOfMonth(new Date());
   return Array.from({ length: TIMELINE_MONTHS }, (_, i) => {
-    const date = addMonths(base, TIMELINE_START_OFFSET + i);
+    const date = addMonths(base, TIMELINE_START_OFFSET + windowOffsetMonths + i);
     return {
       date,
       key: format(date, "yyyy-MM"),
@@ -297,6 +300,9 @@ export function IncomesBetaView({
 
   const { incomes, mutate, error, clearError } = useOptimisticIncomes(activeRaw);
 
+  // Timeline scroll state — months shifted from the default window (-6 .. +18 around today)
+  const [windowOffsetMonths, setWindowOffsetMonths] = useState(0);
+
   // Modal/drawer state
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [detailIncomeId, setDetailIncomeId] = useState<string | null>(null);
@@ -313,7 +319,14 @@ export function IncomesBetaView({
     ? incomes.find((i) => i.id === futureChangeContext.incomeId) ?? null
     : null;
 
-  const cells = useMemo(buildMonthCells, []);
+  const cells = useMemo(
+    () => buildMonthCells(windowOffsetMonths),
+    [windowOffsetMonths]
+  );
+
+  const scrollPrev = () => setWindowOffsetMonths((o) => o - 6);
+  const scrollNext = () => setWindowOffsetMonths((o) => o + 6);
+  const scrollToToday = () => setWindowOffsetMonths(0);
 
   const monthlyTotals = useMemo(() => {
     return cells.map((cell) => {
@@ -443,6 +456,10 @@ export function IncomesBetaView({
           peakTotal={peakTotal}
           hoverIndex={hoverIndex}
           onHover={setHoverIndex}
+          windowOffsetMonths={windowOffsetMonths}
+          onScrollPrev={scrollPrev}
+          onScrollNext={scrollNext}
+          onScrollToToday={scrollToToday}
           onAmountChange={handleAmountChange}
           onRequestDelete={setDeleteContext}
           onOpenCreator={() => setCreatorOpen(true)}
@@ -456,6 +473,10 @@ export function IncomesBetaView({
           peakTotal={peakTotal}
           hoverIndex={hoverIndex}
           onHover={setHoverIndex}
+          windowOffsetMonths={windowOffsetMonths}
+          onScrollPrev={scrollPrev}
+          onScrollNext={scrollNext}
+          onScrollToToday={scrollToToday}
           onAmountChange={handleAmountChange}
           onNameChange={handleNameChange}
           onStartDateChange={handleStartDateChange}
@@ -579,6 +600,74 @@ function ViewToggle({
   );
 }
 
+function TimelineHeader({
+  cells,
+  windowOffsetMonths,
+  onScrollPrev,
+  onScrollNext,
+  onScrollToToday,
+}: {
+  cells: MonthCell[];
+  windowOffsetMonths: number;
+  onScrollPrev: () => void;
+  onScrollNext: () => void;
+  onScrollToToday: () => void;
+}) {
+  const first = cells[0];
+  const last = cells[cells.length - 1];
+  const rangeLabel = first && last ? `${format(first.date, "MMM yy")} – ${format(last.date, "MMM yy")}` : "";
+  const atToday = windowOffsetMonths === 0;
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <TrendingUp className="h-5 w-5 text-brand-jungle" />
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+          Projected Income River
+        </h2>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="hidden sm:inline-block min-w-[140px] text-right font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          {rangeLabel}
+        </span>
+        <div className="inline-flex items-center rounded-full border border-border/40 bg-card p-0.5 shadow-sm">
+          <button
+            type="button"
+            onClick={onScrollPrev}
+            className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Scroll timeline 6 months earlier"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onScrollToToday}
+            disabled={atToday}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2.5 h-7 text-[11px] font-semibold uppercase tracking-wider transition-colors",
+              atToday
+                ? "text-muted-foreground/50 cursor-not-allowed"
+                : "text-brand-terracotta hover:bg-brand-terracotta/10"
+            )}
+            aria-label="Reset timeline to today"
+          >
+            <LocateFixed className="h-3.5 w-3.5" />
+            Today
+          </button>
+          <button
+            type="button"
+            onClick={onScrollNext}
+            className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Scroll timeline 6 months later"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TimelineStudio({
   cells,
   incomes,
@@ -586,6 +675,10 @@ function TimelineStudio({
   peakTotal,
   hoverIndex,
   onHover,
+  windowOffsetMonths,
+  onScrollPrev,
+  onScrollNext,
+  onScrollToToday,
   onAmountChange,
   onRequestDelete,
   onOpenCreator,
@@ -597,6 +690,10 @@ function TimelineStudio({
   peakTotal: number;
   hoverIndex: number | null;
   onHover: (i: number | null) => void;
+  windowOffsetMonths: number;
+  onScrollPrev: () => void;
+  onScrollNext: () => void;
+  onScrollToToday: () => void;
   onAmountChange: (income: Income, amount: number) => void;
   onRequestDelete: (income: Income) => void;
   onOpenCreator: () => void;
@@ -624,12 +721,13 @@ function TimelineStudio({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <TrendingUp className="h-5 w-5 text-brand-jungle" />
-        <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-          Projected Income River
-        </h2>
-      </div>
+      <TimelineHeader
+        cells={cells}
+        windowOffsetMonths={windowOffsetMonths}
+        onScrollPrev={onScrollPrev}
+        onScrollNext={onScrollNext}
+        onScrollToToday={onScrollToToday}
+      />
 
       <div className="rounded-2xl border border-border/30 bg-card shadow-sm overflow-hidden">
         {/* Master river chart */}
@@ -1018,6 +1116,10 @@ interface ActionCardsViewProps {
   peakTotal: number;
   hoverIndex: number | null;
   onHover: (i: number | null) => void;
+  windowOffsetMonths: number;
+  onScrollPrev: () => void;
+  onScrollNext: () => void;
+  onScrollToToday: () => void;
   onAmountChange: (income: Income, amount: number) => void;
   onNameChange: (income: Income, name: string) => void;
   onStartDateChange: (income: Income, next: Date) => void;
@@ -1037,6 +1139,10 @@ function ActionCardsView({
   peakTotal,
   hoverIndex,
   onHover,
+  windowOffsetMonths,
+  onScrollPrev,
+  onScrollNext,
+  onScrollToToday,
   onAmountChange,
   onNameChange,
   onStartDateChange,
@@ -1056,12 +1162,13 @@ function ActionCardsView({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <TrendingUp className="h-5 w-5 text-brand-jungle" />
-        <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-          Projected Income River
-        </h2>
-      </div>
+      <TimelineHeader
+        cells={cells}
+        windowOffsetMonths={windowOffsetMonths}
+        onScrollPrev={onScrollPrev}
+        onScrollNext={onScrollNext}
+        onScrollToToday={onScrollToToday}
+      />
 
       <div className="relative rounded-2xl border border-border/30 bg-card p-6 shadow-sm">
         <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} />
