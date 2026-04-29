@@ -130,6 +130,7 @@ export async function updateIncome(
     accountForFutureChange?: boolean;
     description?: string;
     isActive?: boolean;
+    familyMemberId?: string | null;
     familyMemberAge?: number;
     cpfOrdinaryAccount?: number;
     cpfSpecialAccount?: number;
@@ -167,6 +168,7 @@ export async function updateIncome(
   if (data.accountForFutureChange !== undefined) updateData.accountForFutureChange = data.accountForFutureChange;
   if (data.description !== undefined) updateData.description = data.description;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.familyMemberId !== undefined) updateData.familyMemberId = data.familyMemberId || null;
   if (data.cpfOrdinaryAccount !== undefined) updateData.cpfOrdinaryAccount = data.cpfOrdinaryAccount.toString();
   if (data.cpfSpecialAccount !== undefined) updateData.cpfSpecialAccount = data.cpfSpecialAccount.toString();
   if (data.cpfMedisaveAccount !== undefined) updateData.cpfMedisaveAccount = data.cpfMedisaveAccount.toString();
@@ -180,9 +182,11 @@ export async function updateIncome(
     let userAge = data.familyMemberAge ?? 30; // Use provided age or default to 30
 
     // If age not provided but income is linked to a family member, fetch their age
-    if (!data.familyMemberAge && existing.familyMemberId) {
+    const effectiveFamilyMemberId =
+      data.familyMemberId !== undefined ? data.familyMemberId : existing.familyMemberId;
+    if (!data.familyMemberAge && effectiveFamilyMemberId) {
       const familyMember = await db.query.familyMembers.findFirst({
-        where: eq(familyMembers.id, existing.familyMemberId),
+        where: eq(familyMembers.id, effectiveFamilyMemberId),
       });
 
       if (familyMember?.dateOfBirth) {
