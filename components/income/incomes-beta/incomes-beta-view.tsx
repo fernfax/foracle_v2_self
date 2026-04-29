@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Infinity as InfinityIcon,
   Target,
@@ -394,31 +394,31 @@ export function IncomesBetaView({
     [monthlyTotals]
   );
 
-  // ─── handlers ────────────────────────────────────────────────────────────
+  // ─── handlers (useCallback so React.memo'd children don't re-render) ──────
 
-  const handleAmountChange = (income: Income, nextAmount: number) => {
+  const handleAmountChange = useCallback((income: Income, nextAmount: number) => {
     mutate(
       { kind: "update", id: income.id, patch: { amount: nextAmount.toString() } },
       () => updateIncome(income.id, { amount: nextAmount })
     );
-  };
+  }, [mutate]);
 
-  const handleNameChange = (income: Income, name: string) => {
+  const handleNameChange = useCallback((income: Income, name: string) => {
     mutate(
       { kind: "update", id: income.id, patch: { name } },
       () => updateIncome(income.id, { name })
     );
-  };
+  }, [mutate]);
 
-  const handleStartDateChange = (income: Income, next: Date) => {
+  const handleStartDateChange = useCallback((income: Income, next: Date) => {
     const iso = format(startOfMonth(next), "yyyy-MM-dd");
     mutate(
       { kind: "update", id: income.id, patch: { startDate: iso } },
       () => updateIncome(income.id, { startDate: iso })
     );
-  };
+  }, [mutate]);
 
-  const handleEndDateChange = (income: Income, next: Date | null) => {
+  const handleEndDateChange = useCallback((income: Income, next: Date | null) => {
     const iso = next ? format(startOfMonth(next), "yyyy-MM-dd") : null;
     const archetypeAfter = next ? "temporary" : "recurring";
     mutate(
@@ -430,7 +430,7 @@ export function IncomesBetaView({
             archetypeAfter === "recurring" ? "current-recurring" : "current-recurring",
         })
     );
-  };
+  }, [mutate]);
 
   const handleSaveMilestone = (income: Income, milestone: FutureMilestone) => {
     const existing = safeParseMilestones(income.futureMilestones);
@@ -657,10 +657,9 @@ function ViewToggle({
 /**
  * Trackpad-friendly horizontal wheel-scroll hook.
  *
- * Captures wheel events on the given element and emits fractional-month deltas
- * (deltaX divided by the measured month-column width). The consumer adds these
- * to a float offset and renders the integer part as data + the fractional part
- * as a CSS translateX so the timeline glides smoothly between month boundaries.
+ * Wheel events fire at ~120Hz on Mac trackpads — running React renders on
+ * each one wastes work, since the screen repaints at 60Hz at most. We
+ * accumulate horizontal deltas and flush them once per animation frame.
  * Only intercepts events where horizontal intent dominates vertical, so
  * vertical page scrolling still works. Uses a non-passive listener so
  * preventDefault works.
@@ -678,6 +677,16 @@ function useHorizontalWheelScroll(
     const el = ref.current;
     if (!el) return;
 
+    let pendingDelta = 0;
+    let rafId: number | null = null;
+
+    const flush = () => {
+      rafId = null;
+      const d = pendingDelta;
+      pendingDelta = 0;
+      if (d !== 0) onShiftRef.current(d);
+    };
+
     const handler = (e: WheelEvent) => {
       const ax = Math.abs(e.deltaX);
       const ay = Math.abs(e.deltaY);
@@ -691,11 +700,17 @@ function useHorizontalWheelScroll(
         1,
         (el.clientWidth - headerPx) / monthCount
       );
-      onShiftRef.current(useDelta / monthWidthPx);
+      pendingDelta += useDelta / monthWidthPx;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(flush);
+      }
     };
 
     el.addEventListener("wheel", handler, { passive: false });
-    return () => el.removeEventListener("wheel", handler);
+    return () => {
+      el.removeEventListener("wheel", handler);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, [ref, headerPx, monthCount]);
 }
 
@@ -953,19 +968,21 @@ function TimelineStudio({
 
 const RIVER_BUFFER_MONTHS = 3;
 
-function RiverChart({
-  cells,
-  totals,
-  peakTotal,
-  hoverIndex,
-  incomes,
-}: {
+interface RiverChartProps {
   cells: MonthCell[];
   totals: Array<{ cell: MonthCell; total: number; breakdown: Array<{ income: Income; amount: number }> }>;
   peakTotal: number;
   hoverIndex: number | null;
   incomes: Income[];
-}) {
+}
+
+const RiverChart = memo(function RiverChart({
+  cells,
+  totals,
+  peakTotal,
+  hoverIndex,
+  incomes,
+}: RiverChartProps) {
   const width = 1080;
   const height = 160;
   const stepX = width / Math.max(1, cells.length - 1);
@@ -1060,19 +1077,21 @@ function RiverChart({
       )}
     </svg>
   );
-}
+});
 
-function MonthAxis({
-  cells,
-  hoverIndex,
-  onHover,
-  totals,
-}: {
+interface MonthAxisProps {
   cells: MonthCell[];
   hoverIndex: number | null;
   onHover: (i: number | null) => void;
   totals: Array<{ cell: MonthCell; total: number; breakdown: Array<{ income: Income; amount: number }> }>;
-}) {
+}
+
+const MonthAxis = memo(function MonthAxis({
+  cells,
+  hoverIndex,
+  onHover,
+  totals,
+}: MonthAxisProps) {
   return (
     <div className="relative mt-2">
       <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-px text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1102,7 +1121,7 @@ function MonthAxis({
       )}
     </div>
   );
-}
+});
 
 function HoverTooltip({
   index,
@@ -1167,15 +1186,7 @@ function HoverTooltip({
   );
 }
 
-function IncomeStreamRow({
-  income,
-  cells,
-  isFirst = false,
-  alternate = false,
-  onAmountChange,
-  onRequestDelete,
-  onOpenDetail,
-}: {
+interface IncomeStreamRowProps {
   income: Income;
   cells: MonthCell[];
   isFirst?: boolean;
@@ -1183,11 +1194,21 @@ function IncomeStreamRow({
   onAmountChange: (income: Income, amount: number) => void;
   onRequestDelete: (income: Income) => void;
   onOpenDetail: (id: string) => void;
-}) {
+}
+
+const IncomeStreamRow = memo(function IncomeStreamRow({
+  income,
+  cells,
+  isFirst = false,
+  alternate = false,
+  onAmountChange,
+  onRequestDelete,
+  onOpenDetail,
+}: IncomeStreamRowProps) {
   const archetype = getArchetype(income);
   const meta = ARCHETYPE_META[archetype];
   const Icon = meta.icon;
-  const segments = buildBarSegments(income, cells);
+  const segments = useMemo(() => buildBarSegments(income, cells), [income, cells]);
 
   return (
     <div
@@ -1305,7 +1326,7 @@ function IncomeStreamRow({
       </div>
     </div>
   );
-}
+});
 
 interface ActionCardsViewProps {
   cells: MonthCell[];
