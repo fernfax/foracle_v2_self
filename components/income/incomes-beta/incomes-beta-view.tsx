@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Infinity as InfinityIcon,
   Target,
@@ -327,6 +327,8 @@ export function IncomesBetaView({
   const scrollPrev = () => setWindowOffsetMonths((o) => o - 6);
   const scrollNext = () => setWindowOffsetMonths((o) => o + 6);
   const scrollToToday = () => setWindowOffsetMonths(0);
+  const shiftWindowMonths = (delta: number) =>
+    setWindowOffsetMonths((o) => o + delta);
 
   const monthlyTotals = useMemo(() => {
     return cells.map((cell) => {
@@ -460,6 +462,7 @@ export function IncomesBetaView({
           onScrollPrev={scrollPrev}
           onScrollNext={scrollNext}
           onScrollToToday={scrollToToday}
+          onShiftWindow={shiftWindowMonths}
           onAmountChange={handleAmountChange}
           onRequestDelete={setDeleteContext}
           onOpenCreator={() => setCreatorOpen(true)}
@@ -477,6 +480,7 @@ export function IncomesBetaView({
           onScrollPrev={scrollPrev}
           onScrollNext={scrollNext}
           onScrollToToday={scrollToToday}
+          onShiftWindow={shiftWindowMonths}
           onAmountChange={handleAmountChange}
           onNameChange={handleNameChange}
           onStartDateChange={handleStartDateChange}
@@ -600,6 +604,56 @@ function ViewToggle({
   );
 }
 
+/**
+ * Trackpad-friendly horizontal wheel-scroll hook.
+ *
+ * Captures wheel events on the given element, accumulates horizontal delta,
+ * and calls onShift(±N) when the threshold is crossed (one month per ~40px
+ * of accumulated horizontal scroll). Only intercepts events where horizontal
+ * intent dominates vertical, so vertical page scrolling still works on the
+ * timeline. Uses a non-passive listener so preventDefault works.
+ */
+function useHorizontalWheelScroll(
+  ref: React.RefObject<HTMLElement | null>,
+  onShift: (delta: number) => void,
+  threshold: number = 40
+) {
+  const onShiftRef = useRef(onShift);
+  onShiftRef.current = onShift;
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let accumulator = 0;
+
+    const handler = (e: WheelEvent) => {
+      const ax = Math.abs(e.deltaX);
+      const ay = Math.abs(e.deltaY);
+      // Trackpad horizontal swipe → deltaX dominant.
+      // Mouse-wheel + Shift → deltaY dominant but treated as horizontal.
+      const useDelta =
+        ax > ay ? e.deltaX : e.shiftKey && ay > 0 ? e.deltaY : 0;
+      if (useDelta === 0) return;
+      e.preventDefault();
+      accumulator += useDelta;
+      let shift = 0;
+      while (accumulator >= threshold) {
+        shift += 1;
+        accumulator -= threshold;
+      }
+      while (accumulator <= -threshold) {
+        shift -= 1;
+        accumulator += threshold;
+      }
+      if (shift !== 0) onShiftRef.current(shift);
+    };
+
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, [ref, threshold]);
+}
+
 function TimelineHeader({
   cells,
   windowOffsetMonths,
@@ -679,6 +733,7 @@ function TimelineStudio({
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
+  onShiftWindow,
   onAmountChange,
   onRequestDelete,
   onOpenCreator,
@@ -694,6 +749,7 @@ function TimelineStudio({
   onScrollPrev: () => void;
   onScrollNext: () => void;
   onScrollToToday: () => void;
+  onShiftWindow: (delta: number) => void;
   onAmountChange: (income: Income, amount: number) => void;
   onRequestDelete: (income: Income) => void;
   onOpenCreator: () => void;
@@ -719,6 +775,9 @@ function TimelineStudio({
     return a.name.localeCompare(b.name);
   });
 
+  const dawRef = useRef<HTMLDivElement | null>(null);
+  useHorizontalWheelScroll(dawRef, onShiftWindow);
+
   return (
     <div className="space-y-4">
       <TimelineHeader
@@ -729,7 +788,10 @@ function TimelineStudio({
         onScrollToToday={onScrollToToday}
       />
 
-      <div className="rounded-2xl border border-border/30 bg-card shadow-sm overflow-hidden">
+      <div
+        ref={dawRef}
+        className="rounded-2xl border border-border/30 bg-card shadow-sm overflow-hidden overscroll-x-contain"
+      >
         {/* Master river chart */}
         <div className="px-6 pt-6 pb-2 grid grid-cols-[180px_1fr] gap-0">
           <div className="flex items-end pb-1">
@@ -1120,6 +1182,7 @@ interface ActionCardsViewProps {
   onScrollPrev: () => void;
   onScrollNext: () => void;
   onScrollToToday: () => void;
+  onShiftWindow: (delta: number) => void;
   onAmountChange: (income: Income, amount: number) => void;
   onNameChange: (income: Income, name: string) => void;
   onStartDateChange: (income: Income, next: Date) => void;
@@ -1143,6 +1206,7 @@ function ActionCardsView({
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
+  onShiftWindow,
   onAmountChange,
   onNameChange,
   onStartDateChange,
@@ -1160,6 +1224,9 @@ function ActionCardsView({
     total: number;
   }>;
 
+  const riverRef = useRef<HTMLDivElement | null>(null);
+  useHorizontalWheelScroll(riverRef, onShiftWindow);
+
   return (
     <div className="space-y-6">
       <TimelineHeader
@@ -1170,7 +1237,10 @@ function ActionCardsView({
         onScrollToToday={onScrollToToday}
       />
 
-      <div className="relative rounded-2xl border border-border/30 bg-card p-6 shadow-sm">
+      <div
+        ref={riverRef}
+        className="relative rounded-2xl border border-border/30 bg-card p-6 shadow-sm overscroll-x-contain"
+      >
         <RiverChart cells={cells} totals={totals} peakTotal={peakTotal} hoverIndex={hoverIndex} />
         <MonthAxis cells={cells} hoverIndex={hoverIndex} onHover={onHover} totals={totals} />
       </div>
