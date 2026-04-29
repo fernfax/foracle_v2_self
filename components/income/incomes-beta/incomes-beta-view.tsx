@@ -991,19 +991,42 @@ function TimelineStudio({
                   />
                 ))}
               </div>
-              {/* Now playhead */}
+              {/* Now playhead line (chip lives in a separate overlay so it's not clipped) */}
               {nowLeftPct !== null && (
                 <div
                   className="absolute top-0 bottom-0 w-px bg-brand-terracotta/50 z-10"
                   style={{ left: `${nowLeftPct * 100}%` }}
-                >
-                  <span className="absolute -top-1 -translate-x-1/2 left-0 rounded-sm bg-brand-terracotta px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white">
-                    Now
-                  </span>
-                </div>
+                />
               )}
             </div>
           </div>
+
+          {/* Now chip overlay — sibling of the gridlines overlay so it can
+              extend above the lanes wrapper without being clipped. Uses the
+              same --ts-x translate so the chip stays anchored to the line. */}
+          {nowLeftPct !== null && (
+            <div
+              className="pointer-events-none absolute right-0 z-20 overflow-hidden"
+              style={{
+                left: `${tlConfig.headerPx}px`,
+                top: "-12px",
+                height: "26px",
+                ...EDGE_FADE_STYLE,
+              }}
+            >
+              <div
+                className="absolute inset-0 will-change-transform"
+                style={{ transform: "translateX(var(--ts-x, 0))" }}
+              >
+                <span
+                  className="absolute top-1 -translate-x-1/2 rounded-sm bg-brand-terracotta px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-sm"
+                  style={{ left: `${nowLeftPct * 100}%` }}
+                >
+                  Now
+                </span>
+              </div>
+            </div>
+          )}
 
           {sortedIncomes.map((income, i) => (
             <IncomeStreamRow
