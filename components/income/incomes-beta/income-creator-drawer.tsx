@@ -67,6 +67,7 @@ export function IncomeCreatorDrawer({
 }: IncomeCreatorDrawerProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [archetype, setArchetype] = useState<Archetype>("recurring");
+  const [recurringStatus, setRecurringStatus] = useState<"current" | "past">("current");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [startDate, setStartDate] = useState<Date>(() => startOfMonth(new Date()));
@@ -85,6 +86,7 @@ export function IncomeCreatorDrawer({
     if (open) {
       setStep(1);
       setArchetype("recurring");
+      setRecurringStatus("current");
       setName("");
       setAmount("");
       setStartDate(startOfMonth(new Date()));
@@ -97,6 +99,12 @@ export function IncomeCreatorDrawer({
       setError(null);
     }
   }, [open]);
+
+  // Whenever archetype changes, reset recurringStatus to current and clear endDate.
+  useEffect(() => {
+    if (archetype !== "recurring") setRecurringStatus("current");
+    if (archetype === "recurring" && recurringStatus === "current") setEndDate(null);
+  }, [archetype, recurringStatus]);
 
   useEffect(() => {
     // CPF only applies to recurring or temporary income (monthly wages).
@@ -120,6 +128,10 @@ export function IncomeCreatorDrawer({
         ? Math.max(0, new Date().getFullYear() - new Date(member.dateOfBirth).getFullYear())
         : undefined;
 
+      const wantsEndDate =
+        archetype === "temporary" ||
+        (archetype === "recurring" && recurringStatus === "past");
+
       await createIncome({
         name: name.trim(),
         category,
@@ -128,10 +140,7 @@ export function IncomeCreatorDrawer({
         frequency: archetype === "one-off" ? "one-time" : "monthly",
         subjectToCpf,
         startDate: format(startDate, "yyyy-MM-dd"),
-        endDate:
-          archetype === "temporary" && endDate
-            ? format(endDate, "yyyy-MM-dd")
-            : undefined,
+        endDate: wantsEndDate && endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         description: description.trim() || undefined,
         familyMemberId: familyMemberId || undefined,
         familyMemberAge,
@@ -226,10 +235,54 @@ export function IncomeCreatorDrawer({
               </div>
             </div>
 
+            {archetype === "recurring" && (
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Status
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRecurringStatus("current")}
+                    className={cn(
+                      "rounded-lg border-2 px-3 py-2.5 text-left transition-all",
+                      recurringStatus === "current"
+                        ? "border-brand-jungle bg-brand-jungle/10"
+                        : "border-border/40 bg-card hover:border-border/70"
+                    )}
+                  >
+                    <p className="text-sm font-semibold text-foreground">Currently active</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      I&apos;m still receiving this income.
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRecurringStatus("past")}
+                    className={cn(
+                      "rounded-lg border-2 px-3 py-2.5 text-left transition-all",
+                      recurringStatus === "past"
+                        ? "border-muted-foreground/60 bg-muted"
+                        : "border-border/40 bg-card hover:border-border/70"
+                    )}
+                  >
+                    <p className="text-sm font-semibold text-foreground">No longer active</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      I had this income but it&apos;s ended.
+                    </p>
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {archetype === "one-off" ? "Payment month" : "Starting"}
+                  {archetype === "one-off"
+                    ? "Payment month"
+                    : archetype === "recurring" && recurringStatus === "past"
+                      ? "Started on"
+                      : "Starting"}
                 </Label>
                 <Popover open={startCalOpen} onOpenChange={setStartCalOpen}>
                   <PopoverTrigger asChild>
@@ -254,10 +307,11 @@ export function IncomeCreatorDrawer({
                 </Popover>
               </div>
 
-              {archetype === "temporary" && (
+              {(archetype === "temporary" ||
+                (archetype === "recurring" && recurringStatus === "past")) && (
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Until
+                    {archetype === "recurring" ? "Ended on" : "Until"}
                   </Label>
                   <Popover open={endCalOpen} onOpenChange={setEndCalOpen}>
                     <PopoverTrigger asChild>
@@ -369,7 +423,13 @@ export function IncomeCreatorDrawer({
             <Button
               type="button"
               onClick={() => setStep((step + 1) as 2 | 3)}
-              disabled={step === 2 ? !canStep2 || (archetype === "temporary" && !endDate) : false}
+              disabled={
+                step === 2
+                  ? !canStep2 ||
+                    (archetype === "temporary" && !endDate) ||
+                    (archetype === "recurring" && recurringStatus === "past" && !endDate)
+                  : false
+              }
               className="bg-brand-jungle hover:bg-brand-jungle/90 text-white"
             >
               Next <ArrowRight className="ml-1 h-4 w-4" />
