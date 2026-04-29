@@ -11,14 +11,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, Users, Building2, Briefcase } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DollarSign, Users, Building2, Briefcase, Sparkles } from "lucide-react";
 import { IncomeList } from "@/components/income/income-list";
+import { IncomesBetaView } from "@/components/income/incomes-beta/incomes-beta-view";
 import { FamilyMemberList } from "@/components/family-members/family-member-list";
 import { CpfList } from "@/components/cpf/cpf-list";
 import { CpfProjectionGraph } from "@/components/cpf/cpf-projection-graph";
 import { CurrentHoldingList } from "@/components/current-holdings/current-holding-list";
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
 import { CurrentHolding } from "@/lib/actions/current-holdings";
+import { cn } from "@/lib/utils";
 
 type Policy = {
   id: string;
@@ -112,34 +115,70 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "family");
+  const [incomeView, setIncomeView] = useState<"standard" | "beta">(
+    searchParams.get("view") === "beta" ? "beta" : "standard"
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Sync activeTab with URL search params when they change
+  // Sync activeTab + incomeView with URL search params when they change
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab") || "family";
     if (tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
     }
+    const viewFromUrl = searchParams.get("view") === "beta" ? "beta" : "standard";
+    if (viewFromUrl !== incomeView) {
+      setIncomeView(viewFromUrl);
+    }
   }, [searchParams]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    // Switching tabs always returns to the standard view
     router.push(`/user?tab=${value}`, { scroll: false });
+  };
+
+  const handleToggleIncomeView = () => {
+    const next = incomeView === "beta" ? "standard" : "beta";
+    setIncomeView(next);
+    const params = new URLSearchParams();
+    params.set("tab", "incomes");
+    if (next === "beta") params.set("view", "beta");
+    router.push(`/user?${params.toString()}`, { scroll: false });
   };
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-          Profile
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">User Homepage</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your personal financial information
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
+            Profile
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight">User Homepage</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your personal financial information
+          </p>
+        </div>
+        {activeTab === "incomes" && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleToggleIncomeView}
+            className={cn(
+              "h-9 px-4 rounded-full text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm",
+              incomeView === "beta"
+                ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90 hover:border-brand-terracotta"
+                : "border-brand-terracotta/40 bg-brand-terracotta/10 text-brand-terracotta hover:bg-brand-terracotta/15 hover:border-brand-terracotta/60"
+            )}
+          >
+            <Sparkles className="h-4 w-4 mr-1.5" />
+            {incomeView === "beta" ? "Standard View" : "Beta View"}
+          </Button>
+        )}
       </div>
 
       {!mounted ? (
@@ -169,7 +208,14 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
         </TabsContent>
 
         <TabsContent value="incomes" className="mt-4">
-          <IncomeList initialIncomes={initialIncomes} />
+          {incomeView === "beta" ? (
+            <IncomesBetaView
+              incomes={initialIncomes}
+              familyMembers={initialFamilyMembers}
+            />
+          ) : (
+            <IncomeList initialIncomes={initialIncomes} />
+          )}
         </TabsContent>
 
         <TabsContent value="cpf" className="mt-4">
