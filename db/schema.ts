@@ -35,19 +35,48 @@ export const users = pgTable("users", {
   onboardingCompleted: boolean("onboarding_completed").default(false),
   tourCompletedAt: text("tour_completed_at"), // JSON: {"dashboard":"2024-01-15T...","incomes":null,"expenses":null}
   singlishMode: boolean("singlish_mode").default(false),
+  // familyId: which Family this user belongs to. Nullable during the initial backfill;
+  // a follow-up migration will set NOT NULL once every user has been assigned to a family.
+  familyId: varchar("family_id", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Family members table
+// Families table - groups multiple Clerk users into a single shared account.
+// Every user belongs to exactly one family (one-family-per-user, v1).
+// All user-scoped data tables carry both `userId` (createdBy) and `familyId`
+// (data ownership). Reads filter by familyId; writes set both.
+export const families = pgTable("families", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  // The Master User can invite/remove members. Use `set null` so removing the master's
+  // Clerk account does not orphan-delete the family — admin promotion is a separate flow.
+  masterUserId: varchar("master_user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }),
+  name: varchar("name", { length: 255 }), // Optional household name
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Family members table.
+// Two row kinds coexist:
+//   1. Informational rows (no clerkUserId) — e.g. "Child" with no email. status='informational' or 'active' for legacy "Self".
+//   2. Clerk-linked rows — populated by the invite flow. status='pending' before acceptance, 'active' after.
 export const familyMembers = pgTable("family_members", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
+  // clerkUserId: present only for invited members who accepted. `set null` so a Clerk
+  // user deletion demotes the row to informational rather than removing it.
+  clerkUserId: varchar("clerk_user_id", { length: 255 }).unique().references(() => users.id, { onDelete: "set null" }),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active | pending | revoked | informational
+  invitedEmail: varchar("invited_email", { length: 255 }),
+  clerkInvitationId: varchar("clerk_invitation_id", { length: 255 }),
   name: varchar("name", { length: 255 }).notNull(),
-  relationship: varchar("relationship", { length: 100 }), // spouse, child, dependent, etc.
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
+  relationship: varchar("relationship", { length: 100 }), // see lib/family-relationships.ts for canonical values
   dateOfBirth: date("date_of_birth"),
-  isContributing: boolean("is_contributing").default(false), // Consider this member's income into the total income
-  notes: text("notes"), // Additional notes about family member
+  isContributing: boolean("is_contributing").default(false),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -56,6 +85,7 @@ export const familyMembers = pgTable("family_members", {
 export const incomes = pgTable("incomes", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Optional link to family member
   name: varchar("name", { length: 255 }).notNull(), // Income source name (e.g., "Primary Income", "Monthly Salary")
   category: varchar("category", { length: 100 }).notNull(), // salary, freelance, business, investment, etc.
@@ -87,6 +117,7 @@ export const incomes = pgTable("incomes", {
 export const expenseCategories = pgTable("expense_categories", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   name: varchar("name", { length: 100 }).notNull(),
   icon: varchar("icon", { length: 50 }), // lucide icon name (e.g., "utensils", "car", "home")
   isDefault: boolean("is_default").default(false), // System default categories
@@ -99,6 +130,7 @@ export const expenseCategories = pgTable("expense_categories", {
 export const expenseSubcategories = pgTable("expense_subcategories", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   categoryId: varchar("category_id", { length: 255 }).notNull().references(() => expenseCategories.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -109,6 +141,7 @@ export const expenseSubcategories = pgTable("expense_subcategories", {
 export const insuranceProviders = pgTable("insurance_providers", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   name: varchar("name", { length: 100 }).notNull(),
   isDefault: boolean("is_default").default(false), // System default providers
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -119,6 +152,7 @@ export const insuranceProviders = pgTable("insurance_providers", {
 export const expenses = pgTable("expenses", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   linkedPolicyId: varchar("linked_policy_id", { length: 255 }), // Link to insurance policy if expense is auto-generated from policy
   linkedPropertyId: varchar("linked_property_id", { length: 255 }), // Link to property asset if expense is auto-generated from property
   linkedVehicleId: varchar("linked_vehicle_id", { length: 255 }), // Link to vehicle asset if expense is auto-generated from vehicle
@@ -142,6 +176,7 @@ export const expenses = pgTable("expenses", {
 export const dailyExpenses = pgTable("daily_expenses", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   categoryId: varchar("category_id", { length: 255 }).references(() => expenseCategories.id, { onDelete: "set null" }),
   categoryName: varchar("category_name", { length: 100 }).notNull(), // Store category name for historical reference
   subcategoryId: varchar("subcategory_id", { length: 255 }).references(() => expenseSubcategories.id, { onDelete: "set null" }),
@@ -160,6 +195,7 @@ export const dailyExpenses = pgTable("daily_expenses", {
 export const assets = pgTable("assets", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   type: varchar("type", { length: 100 }).notNull(), // property, vehicle, investment, savings, etc.
   name: varchar("name", { length: 255 }).notNull(),
   currentValue: decimal("current_value", { precision: 15, scale: 2 }).notNull(),
@@ -174,6 +210,7 @@ export const assets = pgTable("assets", {
 export const propertyAssets = pgTable("property_assets", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   linkedExpenseId: varchar("linked_expense_id", { length: 255 }),
 
   // Property Information
@@ -207,6 +244,7 @@ export const propertyAssets = pgTable("property_assets", {
 export const vehicleAssets = pgTable("vehicle_assets", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   linkedExpenseId: varchar("linked_expense_id", { length: 255 }),
 
   // Vehicle Information
@@ -232,6 +270,7 @@ export const vehicleAssets = pgTable("vehicle_assets", {
 export const policies = pgTable("policies", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Policy holder
   linkedExpenseId: varchar("linked_expense_id", { length: 255 }), // Link to auto-generated expense if policy is tracked in expenditures
 
@@ -265,6 +304,7 @@ export const policies = pgTable("policies", {
 export const goals = pgTable("goals", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   linkedExpenseId: varchar("linked_expense_id", { length: 255 }), // Link to auto-generated expense if goal contribution is tracked
 
   // Basic Details
@@ -289,6 +329,7 @@ export const goals = pgTable("goals", {
 export const currentHoldings = pgTable("current_holdings", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Account holder
   bankName: varchar("bank_name", { length: 255 }).notNull(),
   holdingAmount: decimal("holding_amount", { precision: 15, scale: 2 }).notNull(),
@@ -301,6 +342,7 @@ export const holdingAmountHistory = pgTable("holding_amount_history", {
   id: varchar("id", { length: 255 }).primaryKey(),
   holdingId: varchar("holding_id", { length: 255 }).notNull().references(() => currentHoldings.id, { onDelete: "cascade" }),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   recordedAt: timestamp("recorded_at").defaultNow().notNull(),
 });
@@ -309,6 +351,7 @@ export const holdingAmountHistory = pgTable("holding_amount_history", {
 export const quickLinks = pgTable("quick_links", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   linkKey: varchar("link_key", { length: 100 }).notNull(), // e.g., "expenses-graph", "user-incomes"
   label: varchar("label", { length: 100 }).notNull(),
   href: varchar("href", { length: 255 }).notNull(),
@@ -322,6 +365,7 @@ export const quickLinks = pgTable("quick_links", {
 export const investmentPolicies = pgTable("investment_policies", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
 
   // Core fields
   name: varchar("name", { length: 255 }).notNull(),
@@ -348,6 +392,7 @@ export const investmentPolicies = pgTable("investment_policies", {
 export const budgetShifts = pgTable("budget_shifts", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   year: integer("year").notNull(),
   month: integer("month").notNull(), // 1-12
   fromCategoryName: varchar("from_category_name", { length: 100 }).notNull(), // Source category
@@ -391,6 +436,7 @@ export const kbChunks = pgTable("kb_chunks", {
 export const userChunks = pgTable("user_chunks", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
   docId: varchar("doc_id", { length: 255 }).notNull(), // Document identifier within user's namespace
   chunkIndex: integer("chunk_index").notNull(), // Position of this chunk in the document
   content: text("content").notNull(), // The actual text content
@@ -408,6 +454,11 @@ export const userChunks = pgTable("user_chunks", {
 ]);
 
 // Relations
+export const familiesRelations = relations(families, ({ many }) => ({
+  users: many(users),
+  familyMembers: many(familyMembers),
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
   incomes: many(incomes),

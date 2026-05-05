@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useUser, UserButton } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
+import { ClerkUserButton } from "@/components/clerk-user-button";
 import {
   Home,
   User,
@@ -184,7 +185,7 @@ export function Sidebar() {
           <div className="py-3 border-t border-[rgba(240,235,224,0.06)] px-3 flex items-center gap-3">
             {isLoaded && user ? (
               <>
-                <UserButton
+                <ClerkUserButton
                   afterSignOutUrl="/"
                   appearance={{
                     elements: {

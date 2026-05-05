@@ -28,6 +28,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { createFamilyMember } from "@/lib/actions/family-members";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RELATIONSHIPS } from "@/lib/family-relationships";
 
 interface FamilyMember {
   id: string;
@@ -46,15 +47,6 @@ interface AddFamilyMemberDialogProps {
   onMemberAdded: (member: FamilyMember) => void;
   onContributingMemberAdded?: (member: FamilyMember) => void;
 }
-
-const RELATIONSHIPS = [
-  { value: "Self", label: "Self" },
-  { value: "Child", label: "Child" },
-  { value: "Parent", label: "Parent" },
-  { value: "Sibling", label: "Sibling" },
-  { value: "Spouse", label: "Spouse" },
-  { value: "Others", label: "Others" },
-];
 
 export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onContributingMemberAdded }: AddFamilyMemberDialogProps) {
   const [name, setName] = useState("");
