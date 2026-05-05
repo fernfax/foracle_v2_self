@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Plus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,13 @@ export function BudgetClient({
 
   // Manage categories modal state
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
+
+  // Track when the component is mounted on the client so we can portal the
+  // floating "+" button to <body>. The button must escape an ancestor with
+  // `contain: layout paint` (in DashboardShell) — that property creates a
+  // containing block and would otherwise pin `position: fixed` to it.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Auto-fetch daily spending data for inline chart
   useEffect(() => {
@@ -267,23 +275,28 @@ export function BudgetClient({
         </div>
       </div>
 
-      {/* Floating Add Button - Centered relative to content */}
-      <div className="fixed bottom-28 md:bottom-8 left-0 md:left-[72px] right-0 z-40 pointer-events-none">
-        <div className="max-w-lg mx-auto flex justify-center md:max-w-none md:px-8 md:justify-start">
-          <Button
-            size="lg"
-            variant="outline"
-            className="rounded-full w-14 h-14 shadow-lg pointer-events-auto bg-background/95 backdrop-blur-sm hover:bg-accent transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-bottom-4"
-            onClick={() => {
-              setEditingExpense(null);
-              setPreselectedCategoryName(null);
-              setAddExpenseOpen(true);
-            }}
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        </div>
-      </div>
+      {/* Floating Add Button - portaled to <body> so it stays fixed to the viewport
+          (an ancestor uses `contain: layout paint` which would otherwise scope it). */}
+      {mounted &&
+        createPortal(
+          <div className="fixed bottom-28 md:bottom-8 left-0 md:left-[72px] right-0 z-40 pointer-events-none">
+            <div className="max-w-lg mx-auto flex justify-center md:max-w-none md:px-8 md:justify-start">
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full w-14 h-14 shadow-lg pointer-events-auto bg-background/95 backdrop-blur-sm hover:bg-accent transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-bottom-4"
+                onClick={() => {
+                  setEditingExpense(null);
+                  setPreselectedCategoryName(null);
+                  setAddExpenseOpen(true);
+                }}
+              >
+                <Plus className="h-6 w-6" />
+              </Button>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Add Expense Modal - only show categories that are in the budget (have tracked expenses) */}
       <AddExpenseModal

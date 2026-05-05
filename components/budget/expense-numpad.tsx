@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Delete } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -98,12 +99,23 @@ export function ExpenseNumpad({
   const total = calculateExpressionTotal(value);
   const canSubmit = total > 0;
 
+  // Drives a brief tap-flash overlay so each numpad press has visible feedback.
+  const [flashKey, setFlashKey] = useState<string | null>(null);
+  const flash = (key: string) => {
+    setFlashKey(key);
+    window.setTimeout(() => {
+      setFlashKey((current) => (current === key ? null : current));
+    }, 140);
+  };
+
   const numpadButtons = [
     ["7", "8", "9", "delete"],
     ["4", "5", "6", ""],
     ["1", "2", "3", "+"],
     ["00", "0", ".", "submit"],
   ];
+
+  const flashOverlayClass = "pointer-events-none absolute inset-0 rounded-md bg-[#B8622A]/35 opacity-0 transition-opacity duration-150 data-[flashing=true]:opacity-100 data-[flashing=true]:duration-0";
 
   return (
     <div className="grid grid-cols-4 gap-2">
@@ -118,10 +130,12 @@ export function ExpenseNumpad({
               <Button
                 key={btn}
                 variant="outline"
-                className="h-14 text-lg font-medium bg-muted/50 touch-manipulation"
+                className="relative h-14 text-lg font-medium bg-muted/50 touch-manipulation overflow-hidden active:scale-[0.97] transition-transform"
+                onPointerDown={() => flash(btn)}
                 onClick={handleDelete}
               >
                 <Delete className="h-5 w-5" />
+                <span aria-hidden className={flashOverlayClass} data-flashing={flashKey === btn} />
               </Button>
             );
           }
@@ -133,11 +147,12 @@ export function ExpenseNumpad({
                 key={btn}
                 variant="outline"
                 className={cn(
-                  "h-14 touch-manipulation",
+                  "relative h-14 touch-manipulation overflow-hidden active:scale-[0.97] transition-transform",
                   isEnabled
                     ? "bg-[#B8622A] hover:bg-[#B8622A] text-white border-[rgba(184,98,42,0.25)]"
                     : "bg-muted text-muted-foreground border-border"
                 )}
+                onPointerDown={() => isEnabled && flash(btn)}
                 onClick={onSubmit}
                 disabled={!isEnabled}
               >
@@ -154,6 +169,11 @@ export function ExpenseNumpad({
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 rounded-md bg-white/40 opacity-0 transition-opacity duration-150 data-[flashing=true]:opacity-100 data-[flashing=true]:duration-0"
+                  data-flashing={flashKey === btn}
+                />
               </Button>
             );
           }
@@ -165,11 +185,13 @@ export function ExpenseNumpad({
               <Button
                 key={btn}
                 variant="outline"
-                className="h-14 text-lg font-medium bg-muted/50 touch-manipulation"
+                className="relative h-14 text-lg font-medium bg-muted/50 touch-manipulation overflow-hidden active:scale-[0.97] transition-transform"
+                onPointerDown={() => !plusDisabled && flash(btn)}
                 onClick={handleAdd}
                 disabled={plusDisabled}
               >
                 +
+                <span aria-hidden className={flashOverlayClass} data-flashing={flashKey === btn} />
               </Button>
             );
           }
@@ -178,10 +200,12 @@ export function ExpenseNumpad({
             <Button
               key={btn}
               variant="outline"
-              className="h-14 text-xl font-medium touch-manipulation"
+              className="relative h-14 text-xl font-medium touch-manipulation overflow-hidden active:scale-[0.97] transition-transform"
+              onPointerDown={() => flash(btn)}
               onClick={() => handleNumberPress(btn)}
             >
               {btn}
+              <span aria-hidden className={flashOverlayClass} data-flashing={flashKey === btn} />
             </Button>
           );
         })
