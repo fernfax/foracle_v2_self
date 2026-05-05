@@ -28,6 +28,7 @@ import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import { updateFamilyMember } from "@/lib/actions/family-members";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RELATIONSHIPS } from "@/lib/family-relationships";
 import { StepIndicator } from "@/components/ui/step-indicator";
 import {
   AlertDialog,
@@ -58,15 +59,6 @@ interface EditFamilyMemberDialogProps {
   onMemberUpdated: (member: FamilyMember) => void;
   onContributingMemberUpdated?: (member: FamilyMember) => void;
 }
-
-const RELATIONSHIPS = [
-  { value: "Self", label: "Self" },
-  { value: "Child", label: "Child" },
-  { value: "Parent", label: "Parent" },
-  { value: "Sibling", label: "Sibling" },
-  { value: "Spouse", label: "Spouse" },
-  { value: "Others", label: "Others" },
-];
 
 export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpdated, onContributingMemberUpdated }: EditFamilyMemberDialogProps) {
   const [name, setName] = useState("");
