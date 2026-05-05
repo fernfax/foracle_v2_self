@@ -2,7 +2,7 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, families, familyMembers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -47,18 +47,74 @@ export async function POST(req: Request) {
   const eventType = evt.type;
 
   if (eventType === "user.created") {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
+    const { id, email_addresses, first_name, last_name, image_url, public_metadata } = evt.data;
 
     try {
+      // Two paths diverge here:
+      //   (a) Invited via Foracle's Family invite flow — public_metadata carries
+      //       foracleFamilyMemberId. We attach the new Clerk user to that
+      //       existing pending family_members row + family.
+      //   (b) Self-signup — create a fresh family-of-1 with this user as master.
+      const invitedRowId =
+        typeof public_metadata?.foracleFamilyMemberId === "string"
+          ? public_metadata.foracleFamilyMemberId
+          : null;
+
+      const primaryEmail = email_addresses[0].email_address;
+      let familyId: string | null = null;
+      let onboardingCompleted = false;
+
+      if (invitedRowId) {
+        const invitedRow = await db.query.familyMembers.findFirst({
+          where: eq(familyMembers.id, invitedRowId),
+        });
+
+        // Email-match check guards against tampered metadata.
+        if (
+          invitedRow &&
+          invitedRow.status === "pending" &&
+          invitedRow.familyId &&
+          invitedRow.invitedEmail &&
+          invitedRow.invitedEmail.toLowerCase() === primaryEmail.toLowerCase()
+        ) {
+          familyId = invitedRow.familyId;
+          onboardingCompleted = true; // Invited members inherit the family's setup.
+        }
+      }
+
+      if (!familyId) {
+        familyId = `fam_${id}`;
+        await db
+          .insert(families)
+          .values({
+            id: familyId,
+            masterUserId: id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .onConflictDoNothing();
+      }
+
       await db.insert(users).values({
-        id: id,
-        email: email_addresses[0].email_address,
+        id,
+        email: primaryEmail,
         firstName: first_name || null,
         lastName: last_name || null,
         imageUrl: image_url || null,
+        familyId,
+        onboardingCompleted,
       });
 
-      console.log("User created in database:", id);
+      // Link the family_members row to the new Clerk user (only after the user
+      // row exists, so the FK on clerk_user_id resolves).
+      if (invitedRowId && onboardingCompleted) {
+        await db
+          .update(familyMembers)
+          .set({ clerkUserId: id, status: "active", updatedAt: new Date() })
+          .where(eq(familyMembers.id, invitedRowId));
+      }
+
+      console.log("User created in database:", id, { familyId, invited: Boolean(invitedRowId && onboardingCompleted) });
     } catch (error) {
       console.error("Error creating user:", error);
       return new Response("Error creating user", { status: 500 });
