@@ -66,7 +66,10 @@ export const familyMembers = pgTable("family_members", {
   familyId: varchar("family_id", { length: 255 }),
   // clerkUserId: present only for invited members who accepted. `set null` so a Clerk
   // user deletion demotes the row to informational rather than removing it.
-  clerkUserId: varchar("clerk_user_id", { length: 255 }).unique().references(() => users.id, { onDelete: "set null" }),
+  // Uniqueness is enforced by a partial index `family_members_clerk_user_id_unique`
+  // (in 0003_family_id_additive.sql) — partial because we want many NULL rows
+  // (informational members) but at most one Clerk-linked row per user.
+  clerkUserId: varchar("clerk_user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("active"), // active | pending | revoked | informational
   invitedEmail: varchar("invited_email", { length: 255 }),
   clerkInvitationId: varchar("clerk_invitation_id", { length: 255 }),
