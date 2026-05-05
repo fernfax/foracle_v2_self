@@ -1,0 +1,33 @@
+<!--
+  Minimal Clerk invitation email — paste this FIRST to verify the validator
+  accepts {{action_url}} at all. If this passes, swap in the full branded
+  version (clerk-invitation-email.html). If even this errors, the issue is
+  with Clerk's editor sanitization, not our HTML.
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <body style="margin:0; padding:40px; background-color:#F0EBE0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#1C2B2A;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" style="background-color:#FBF7F1; border-radius:14px; padding:40px;">
+            <tr>
+              <td>
+                <h1 style="margin:0 0 16px 0; font-size:22px; color:#1C2B2A;">You've been invited to {{app.name}}</h1>
+                <p style="margin:0 0 24px 0; font-size:15px; color:rgba(28,43,42,0.75);">
+                  Click below to accept your invitation. This link expires in 30 days.
+                </p>
+                <p style="margin:0 0 24px 0;">
+                  <a href="{{action_url}}" style="display:inline-block; padding:12px 24px; background-color:#B8622A; color:#FBF7F1; text-decoration:none; border-radius:8px; font-weight:600;">Accept invitation</a>
+                </p>
+                <p style="margin:0; font-size:12px; color:rgba(28,43,42,0.55); word-break:break-all;">
+                  Or paste this link into your browser: {{action_url}}
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
