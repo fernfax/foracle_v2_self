@@ -1,0 +1,127 @@
+<!--
+  Clerk invitation email — branded for Foracle.
+
+  How to install:
+    1. Clerk Dashboard → Customization → Emails → Invitation
+    2. Switch to the HTML editor (icon next to the rich-text editor)
+    3. Paste the entire contents of this file
+    4. Save → "Send test email" to your own address to verify rendering
+
+  Why so much inline style: email clients (Gmail, Outlook, Apple Mail) strip
+  <head><style> blocks and ignore most CSS. Inline styles on every element +
+  table-based layout is the only thing that renders consistently.
+
+  Brand tokens used (kept in sync with app/globals.css):
+    Warm white  #FBF7F1  page background
+    Cream       #F0EBE0  divider / muted
+    Deep forest #1C2B2A  primary text
+    Terracotta  #B8622A  CTA, accent
+    Subtle text rgba(28,43,42,0.55)
+
+  Suggested subject line in Clerk Dashboard:
+    {{requesting_user.name}} invited you to share their Foracle account
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <body style="margin:0; padding:0; background-color:#F0EBE0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#1C2B2A;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F0EBE0; padding:40px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="background-color:#FBF7F1; border-radius:14px; border:1px solid rgba(28,43,42,0.08); overflow:hidden; max-width:560px; width:100%;">
+
+            <!-- Wordmark / header -->
+            <tr>
+              <td style="padding:36px 40px 8px 40px;">
+                <div style="font-family: Georgia, 'Times New Roman', serif; font-style:italic; font-size:30px; line-height:1; color:#1C2B2A; letter-spacing:-0.5px;">
+                  Foracle
+                </div>
+              </td>
+            </tr>
+
+            <!-- Brand divider strip -->
+            <tr>
+              <td style="padding:20px 40px 0 40px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td height="3" style="background-color:#B8622A; width:32px;">&nbsp;</td>
+                    <td height="3" style="background-color:#3A6B52; width:24px;">&nbsp;</td>
+                    <td height="3" style="background-color:#D4A843; width:18px;">&nbsp;</td>
+                    <td height="3" style="background-color:rgba(28,43,42,0.10);">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Headline -->
+            <tr>
+              <td style="padding:28px 40px 0 40px;">
+                <h1 style="margin:0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size:24px; font-weight:600; line-height:1.25; color:#1C2B2A; letter-spacing:-0.3px;">
+                  You've been invited to share a Foracle account
+                </h1>
+              </td>
+            </tr>
+
+            <!-- Body copy -->
+            <tr>
+              <td style="padding:16px 40px 0 40px;">
+                <p style="margin:0 0 14px 0; font-size:15px; line-height:1.6; color:rgba(28,43,42,0.75);">
+                  {{app.name}} is a household-shared personal finance dashboard. By accepting this invitation, you'll get access to the same budget, expenses, assets, and goals as the person who invited you — no separate setup needed.
+                </p>
+                <p style="margin:0; font-size:15px; line-height:1.6; color:rgba(28,43,42,0.75);">
+                  This link expires in {{ttl_days}} days.
+                </p>
+              </td>
+            </tr>
+
+            <!-- CTA button -->
+            <tr>
+              <td style="padding:28px 40px 0 40px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="background-color:#B8622A; border-radius:10px;">
+                      <a href="{{action_url}}" style="display:inline-block; padding:14px 28px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size:15px; font-weight:600; color:#FBF7F1; text-decoration:none; letter-spacing:0.2px;">
+                        Accept invitation
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Fallback link -->
+            <tr>
+              <td style="padding:24px 40px 0 40px;">
+                <p style="margin:0; font-size:13px; line-height:1.6; color:rgba(28,43,42,0.55);">
+                  Button not working? Paste this into your browser:
+                </p>
+                <p style="margin:6px 0 0 0; font-size:13px; line-height:1.6; word-break:break-all;">
+                  <a href="{{action_url}}" style="color:#B8622A; text-decoration:underline;">{{action_url}}</a>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Quiet divider -->
+            <tr>
+              <td style="padding:32px 40px 0 40px;">
+                <div style="height:1px; background-color:rgba(28,43,42,0.10); width:100%;"></div>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding:20px 40px 36px 40px;">
+                <p style="margin:0; font-size:12px; line-height:1.6; color:rgba(28,43,42,0.45);">
+                  If you weren't expecting this invitation, you can safely ignore this email — no account will be created.
+                </p>
+                <p style="margin:8px 0 0 0; font-size:12px; line-height:1.6; color:rgba(28,43,42,0.45);">
+                  &copy; {{date.year}} Foracle &middot; Personal finance, simplified.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

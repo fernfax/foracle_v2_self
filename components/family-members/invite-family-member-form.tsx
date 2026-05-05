@@ -1,16 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { RELATIONSHIPS, type RelationshipValue } from "@/lib/family-relationships";
 import { inviteFamilyMember } from "@/lib/actions/family-invitations";
 import { cn } from "@/lib/utils";
@@ -44,11 +38,13 @@ export function InviteFamilyMemberForm({
 
     setStatus("submitting");
     setErrorMessage("");
+    const recipientName = `${firstName.trim()} ${lastName.trim()}`;
+    const recipientEmail = email.trim();
     try {
       await inviteFamilyMember({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        email: email.trim(),
+        email: recipientEmail,
         relationship: relationship as RelationshipValue,
       });
       setStatus("success");
@@ -56,10 +52,16 @@ export function InviteFamilyMemberForm({
       setLastName("");
       setEmail("");
       setRelationship("");
+      toast.success(`Invitation sent to ${recipientName}`, {
+        description: `${recipientEmail} will appear as Pending in your Family tab until they accept.`,
+        duration: 6000,
+      });
       onSuccess?.();
     } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
       setStatus("error");
-      setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
+      setErrorMessage(message);
+      toast.error("Could not send invitation", { description: message });
     }
   };
 
@@ -103,22 +105,29 @@ export function InviteFamilyMemberForm({
 
       <div className="space-y-1.5">
         <Label htmlFor="invite-relationship">Relationship</Label>
-        <Select
+        {/* Native <select> — Radix Select portals to body and gets covered by
+            Clerk's UserProfile modal overlay. Native is z-index-immune. */}
+        <select
+          id="invite-relationship"
           value={relationship}
-          onValueChange={(v) => setRelationship(v as RelationshipValue)}
+          onChange={(e) => setRelationship(e.target.value as RelationshipValue)}
           disabled={status === "submitting"}
+          className={cn(
+            "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            relationship === "" && "text-muted-foreground"
+          )}
         >
-          <SelectTrigger id="invite-relationship">
-            <SelectValue placeholder="Select relationship" />
-          </SelectTrigger>
-          <SelectContent>
-            {RELATIONSHIPS.filter((r) => r.value !== "Self").map((r) => (
-              <SelectItem key={r.value} value={r.value}>
-                {r.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="" disabled>
+            Select relationship
+          </option>
+          {RELATIONSHIPS.filter((r) => r.value !== "Self").map((r) => (
+            <option key={r.value} value={r.value} className="text-foreground">
+              {r.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {status === "error" && (
