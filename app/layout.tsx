@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, DM_Sans, Lora } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -82,6 +83,17 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: "#FBF7F1",
+                  border: "1px solid rgba(28,43,42,0.10)",
+                  color: "#1C2B2A",
+                  fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                },
+              }}
+            />
           </ThemeProvider>
         </body>
       </html>
