@@ -398,6 +398,32 @@ export function IncomesBetaView({
     [windowOffsetMonths, tlConfig.monthCount, tlConfig.startOffset]
   );
 
+  // The range of cell indices the dragged bar will occupy on release. Drives a
+  // vertical column-highlight overlay in the timeline so the user can see the
+  // exact months the bar will snap to. Clamped to the visible window — bars
+  // that extend past either edge get a flush-clamp on that side.
+  const dragHighlight = useMemo(() => {
+    if (!dragPreview || cells.length === 0) return null;
+    const target = incomes.find((i) => i.id === dragPreview.id);
+    if (!target) return null;
+    const merged = { ...target, ...dragPreview.patch } as Income;
+
+    const firstWindowKey = cells[0].key;
+    const lastWindowKey = cells[cells.length - 1].key;
+    const startKey = format(startOfMonth(parseISO(merged.startDate)), "yyyy-MM");
+    const endKey = merged.endDate
+      ? format(startOfMonth(parseISO(merged.endDate)), "yyyy-MM")
+      : lastWindowKey;
+    if (endKey < firstWindowKey || startKey > lastWindowKey) return null;
+
+    const clampedStartKey = startKey < firstWindowKey ? firstWindowKey : startKey;
+    const clampedEndKey = endKey > lastWindowKey ? lastWindowKey : endKey;
+    const firstIdx = cells.findIndex((c) => c.key === clampedStartKey);
+    const lastIdx = cells.findIndex((c) => c.key === clampedEndKey);
+    if (firstIdx === -1 || lastIdx === -1) return null;
+    return { firstIdx, lastIdx };
+  }, [dragPreview, cells, incomes]);
+
   // RAF-driven animation for button-triggered jumps. Wheel scrolling does NOT
   // use this — wheel events already provide their own continuous motion.
   const animationRef = useRef<number | null>(null);
@@ -658,6 +684,7 @@ export function IncomesBetaView({
           onOpenCreator={() => setCreatorOpen(true)}
           onOpenDetail={setDetailIncomeId}
           onDragPreview={setDragPreview}
+          dragHighlight={dragHighlight}
           onMoveBar={handleMoveBar}
           onResizeStart={handleResizeStart}
           onResizeEnd={handleResizeEnd}
@@ -947,6 +974,7 @@ function TimelineStudio({
   onOpenCreator,
   onOpenDetail,
   onDragPreview,
+  dragHighlight,
   onMoveBar,
   onResizeStart,
   onResizeEnd,
@@ -969,6 +997,7 @@ function TimelineStudio({
   onOpenCreator: () => void;
   onOpenDetail: (id: string) => void;
   onDragPreview: (preview: { id: string; patch: Partial<Income> } | null) => void;
+  dragHighlight: { firstIdx: number; lastIdx: number } | null;
   onMoveBar: (income: Income, deltaMonths: number) => void;
   onResizeStart: (income: Income, deltaMonths: number) => void;
   onResizeEnd: (income: Income, deltaMonths: number) => void;
@@ -1098,6 +1127,18 @@ function TimelineStudio({
                   />
                 ))}
               </div>
+              {/* Drag-target column highlight — vertical strip across every
+                  lane covering the months the dragged bar will snap to.
+                  Renders only while a drag is active. */}
+              {dragHighlight && (
+                <div
+                  className="pointer-events-none absolute inset-y-0 bg-brand-terracotta/10 ring-1 ring-inset ring-brand-terracotta/40 transition-[left,width] duration-75"
+                  style={{
+                    left: `${(dragHighlight.firstIdx / cells.length) * 100}%`,
+                    width: `${((dragHighlight.lastIdx - dragHighlight.firstIdx + 1) / cells.length) * 100}%`,
+                  }}
+                />
+              )}
               {/* Now playhead line (chip lives in a separate overlay so it's not clipped) */}
               {nowLeftPct !== null && (
                 <div
@@ -1488,13 +1529,47 @@ interface IncomeStreamRowProps {
 
 type BarDragKind = "move" | "resize-left" | "resize-right";
 
+// Captured at pointerdown and held constant for the entire drag. The drag
+// math is anchored to the bar's *actual visible edge* (in viewport-X) — not
+// to the cursor's click point — so snap-to-month fires when the cursor
+// crosses the bar's half-month boundary regardless of where on the handle the
+// user happened to click. This matches the resize behavior of every modern
+// DAW (Logic, Ableton, Reaper, Pro Tools): the edge tracks the cursor, and
+// the click offset within the handle is meaningless.
 interface BarDragState {
   kind: BarDragKind;
-  startPointerX: number;
+  monthWidthPx: number;
+  // Viewport-X of the bar's relevant edge at pointerdown. Left edge for
+  // 'move' and 'resize-left'; right edge for 'resize-right'. Read from the
+  // bar element's getBoundingClientRect, so it already accounts for the
+  // timeline's translateX (sub-month scroll offset).
+  edgeAnchorViewportX: number;
+  // For 'move' only: cursor offset from the bar's left edge at pointerdown,
+  // in pixels. Preserved through the drag so the grab point stays under the
+  // cursor (modulo snap). 0 for resize.
+  grabOffsetPx: number;
+  // Snapshot of the income at pointerdown — *before* any drag preview is
+  // applied. Critical: the row's `income` prop is the *previewed* income
+  // during a drag (because the parent merges dragPreview into effectiveIncomes
+  // and the row re-renders with the patched copy). If we passed that copy
+  // through to the commit handler, the commit would apply the delta on top of
+  // the preview's already-shifted dates, double-counting the move. Using
+  // this snapshot keeps commit math anchored to where the bar actually was
+  // when the user grabbed it.
+  originalIncome: Income;
   startStart: Date;
   startEnd: Date | null;
-  monthWidthPx: number;
+  // For the click-vs-drag threshold and the drag tooltip's screen position.
+  startPointerX: number;
   hasMoved: boolean;
+}
+
+// While dragging, a small floating chip near the cursor shows the dates
+// the bar will commit to. Same pattern as DAW clip-drag tooltips.
+interface DragTooltip {
+  x: number;
+  y: number;
+  text: string;
 }
 
 const IncomeStreamRow = memo(function IncomeStreamRow({
@@ -1517,30 +1592,84 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   const segments = useMemo(() => buildBarSegments(income, cells), [income, cells]);
   const lanesAreaRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<BarDragState | null>(null);
+  const [dragTooltip, setDragTooltip] = useState<DragTooltip | null>(null);
   // Set on pointerup if drag occurred — used to suppress the synthetic click
   // event so the QuickAdjustPad popover doesn't open after a drag.
   const justDraggedRef = useRef(false);
 
+  // The bar's actual edge (start / end) is off-screen if its date is outside
+  // the visible window. In that case the visible segment edge isn't the real
+  // edge — it's just where the bar gets clipped by the viewport — so we hide
+  // the resize handle to avoid confusing semantics. The user can scroll to
+  // bring the real edge into view, then resize.
+  const startKey = format(startOfMonth(parseISO(income.startDate)), "yyyy-MM");
+  const endKey = income.endDate
+    ? format(startOfMonth(parseISO(income.endDate)), "yyyy-MM")
+    : null;
+  const startInWindow =
+    cells.length > 0 && startKey >= cells[0].key;
+  const endInWindow =
+    cells.length > 0 &&
+    endKey !== null &&
+    endKey <= cells[cells.length - 1].key;
+
+  // Snap rule. Two rules in play because they're optimal for different
+  // gestures:
+  //   - 'move' uses Math.round (nearest-cell snap from the grab point). The
+  //     grab offset preserves the user's pinch-point on the bar, so we want
+  //     symmetric half-cell hysteresis around it. Floor here would cause
+  //     1-pixel cursor jitter to flip the bar a full month whenever the grab
+  //     point lands near a cell boundary.
+  //   - 'resize-*' uses Math.floor (the cell containing the cursor wins).
+  //     The user's mental model when dragging an edge is "cursor in March, so
+  //     bar ends in March" — floor matches that. Round would require the
+  //     cursor to cross half the cell past the bar's edge before snapping,
+  //     which feels laggy and is the "jumps to a wrong month" complaint.
+  // The +1 on resize-right is because the bar's right edge sits on gridline
+  // (endIndex+1), one past the last included cell.
   const computeDeltaMonths = (clientX: number) => {
     const drag = dragRef.current;
     if (!drag) return 0;
-    return Math.round((clientX - drag.startPointerX) / drag.monthWidthPx);
+    const distance =
+      (clientX - drag.edgeAnchorViewportX - drag.grabOffsetPx) /
+      drag.monthWidthPx;
+    if (drag.kind === "move") return Math.round(distance);
+    if (drag.kind === "resize-right") return Math.floor(distance) + 1;
+    return Math.floor(distance);
   };
 
   const computePatch = (kind: BarDragKind, deltaMonths: number): Partial<Income> => {
     const drag = dragRef.current;
     if (!drag) return {};
     if (kind === "move") {
-      let newStart = addMonths(drag.startStart, deltaMonths);
-      let newEnd = drag.startEnd ? addMonths(drag.startEnd, deltaMonths) : null;
+      const newStart = addMonths(drag.startStart, deltaMonths);
+      const newEnd = drag.startEnd ? addMonths(drag.startEnd, deltaMonths) : null;
+      // Shift any milestone targetMonths by the same delta — otherwise the
+      // amount-change boundary stays at its original calendar month while
+      // the bar slides past, fragmenting the preview into wrong-colored
+      // segments. Read milestones from the original snapshot, not the row's
+      // current `income` prop (which has already been preview-shifted).
+      const milestones = safeParseMilestones(
+        drag.originalIncome.futureMilestones
+      );
+      const shifted = milestones.map((m) => ({
+        ...m,
+        targetMonth: format(
+          addMonths(parseISO(`${m.targetMonth}-01`), deltaMonths),
+          "yyyy-MM"
+        ),
+      }));
+      const futureMilestones =
+        shifted.length > 0 ? JSON.stringify(shifted) : null;
       return {
         startDate: format(newStart, "yyyy-MM-dd"),
         endDate: newEnd ? format(newEnd, "yyyy-MM-dd") : null,
+        futureMilestones,
       };
     }
     if (kind === "resize-left") {
       let newStart = addMonths(drag.startStart, deltaMonths);
-      if (drag.startEnd && newStart >= drag.startEnd) newStart = drag.startEnd;
+      if (drag.startEnd && newStart > drag.startEnd) newStart = drag.startEnd;
       return { startDate: format(newStart, "yyyy-MM-dd") };
     }
     // resize-right
@@ -1550,18 +1679,54 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
     return { endDate: format(newEnd, "yyyy-MM-dd") };
   };
 
+  const formatTooltip = (kind: BarDragKind, deltaMonths: number) => {
+    const drag = dragRef.current;
+    if (!drag) return "";
+    if (kind === "resize-left") {
+      const newStart = addMonths(drag.startStart, deltaMonths);
+      return format(newStart, "MMM yyyy");
+    }
+    if (kind === "resize-right") {
+      const baseEnd = drag.startEnd ?? drag.startStart;
+      const newEnd = addMonths(baseEnd, deltaMonths);
+      return format(newEnd, "MMM yyyy");
+    }
+    // move — show the date range
+    const newStart = addMonths(drag.startStart, deltaMonths);
+    if (!drag.startEnd) return format(newStart, "MMM yyyy");
+    const newEnd = addMonths(drag.startEnd, deltaMonths);
+    return `${format(newStart, "MMM yyyy")} → ${format(newEnd, "MMM yyyy")}`;
+  };
+
   const handlePointerDown = (e: React.PointerEvent, kind: BarDragKind) => {
     // Only primary button / single touch
     if (e.pointerType === "mouse" && e.button !== 0) return;
     e.stopPropagation();
     const lane = lanesAreaRef.current;
-    const monthWidthPx = lane ? lane.clientWidth / cells.length : 40;
+    if (!lane) return;
+    // For 'move', currentTarget is the bar's segment <button>. For 'resize-*',
+    // currentTarget is the handle <span>, whose parentElement is the segment
+    // button. Either way, we want the segment button's rendered rect — that's
+    // the source of truth for the bar's visible edge in viewport coordinates,
+    // accounting for any translateX from sub-month scrolling.
+    const target = e.currentTarget as HTMLElement;
+    const barEl = kind === "move" ? target : target.parentElement;
+    if (!barEl) return;
+    const barRect = barEl.getBoundingClientRect();
+    const monthWidthPx = lane.clientWidth / cells.length;
+    const edgeAnchorViewportX =
+      kind === "resize-right" ? barRect.right : barRect.left;
+    const grabOffsetPx =
+      kind === "move" ? e.clientX - edgeAnchorViewportX : 0;
     dragRef.current = {
       kind,
-      startPointerX: e.clientX,
+      monthWidthPx,
+      edgeAnchorViewportX,
+      grabOffsetPx,
+      originalIncome: income,
       startStart: parseISO(income.startDate),
       startEnd: income.endDate ? parseISO(income.endDate) : null,
-      monthWidthPx,
+      startPointerX: e.clientX,
       hasMoved: false,
     };
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
@@ -1571,24 +1736,38 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
     const drag = dragRef.current;
     if (!drag) return;
     const dx = e.clientX - drag.startPointerX;
-    if (Math.abs(dx) > 4) drag.hasMoved = true;
+    // 8px is the standard click-vs-drag threshold (Apple HIG / Material).
+    // We deliberately suppress the live preview, the drag tooltip, AND the
+    // column highlight until the user has *intentionally* dragged. Otherwise
+    // the floor-based resize snap would visibly fire a month on accidental
+    // 1-2px jitter at the moment of click.
+    if (Math.abs(dx) > 8) drag.hasMoved = true;
+    if (!drag.hasMoved) return;
     const deltaMonths = computeDeltaMonths(e.clientX);
     onDragPreview({ id: income.id, patch: computePatch(drag.kind, deltaMonths) });
+    setDragTooltip({
+      x: e.clientX,
+      y: e.clientY,
+      text: formatTooltip(drag.kind, deltaMonths),
+    });
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     const drag = dragRef.current;
     if (!drag) return;
-    const dx = e.clientX - drag.startPointerX;
-    const moved = Math.abs(dx) > 4;
-    const deltaMonths = computeDeltaMonths(e.clientX);
+    const moved = drag.hasMoved;
+    const deltaMonths = moved ? computeDeltaMonths(e.clientX) : 0;
     dragRef.current = null;
     onDragPreview(null);
+    setDragTooltip(null);
     if (moved && deltaMonths !== 0) {
       justDraggedRef.current = true;
-      if (drag.kind === "move") onMoveBar(income, deltaMonths);
-      else if (drag.kind === "resize-left") onResizeStart(income, deltaMonths);
-      else if (drag.kind === "resize-right") onResizeEnd(income, deltaMonths);
+      // Pass the snapshot, not the closure's `income` (which is previewed).
+      // See note on BarDragState.originalIncome.
+      const original = drag.originalIncome;
+      if (drag.kind === "move") onMoveBar(original, deltaMonths);
+      else if (drag.kind === "resize-left") onResizeStart(original, deltaMonths);
+      else if (drag.kind === "resize-right") onResizeEnd(original, deltaMonths);
     }
   };
 
@@ -1596,6 +1775,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
     if (!dragRef.current) return;
     dragRef.current = null;
     onDragPreview(null);
+    setDragTooltip(null);
   };
 
   // Suppress popover open when click is the tail of a drag.
@@ -1677,9 +1857,12 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
           // Resize handles only on the outermost edges of the income — the
           // first segment's left edge maps to startDate, the last segment's
           // right edge maps to endDate. Middle segment edges are milestones,
-          // not yet draggable.
-          const showLeftHandle = isFirstSegment;
-          const showRightHandle = isLastSegment && !isOngoingTail;
+          // not yet draggable. We also hide handles when the corresponding
+          // actual edge is off-window: the visible segment edge there is just
+          // a viewport clip, not the real edge, so resizing it would set a
+          // date the user can't see and didn't intend.
+          const showLeftHandle = isFirstSegment && startInWindow;
+          const showRightHandle = isLastSegment && !isOngoingTail && endInWindow;
           return (
             <Popover key={i}>
               <PopoverTrigger asChild>
@@ -1789,6 +1972,16 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
         })}
         </div>
       </div>
+
+      {dragTooltip && (
+        <div
+          role="status"
+          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-[calc(100%+8px)] whitespace-nowrap rounded-md bg-foreground px-2 py-1 font-display text-[11px] font-semibold text-background shadow-lg"
+          style={{ left: dragTooltip.x, top: dragTooltip.y }}
+        >
+          {dragTooltip.text}
+        </div>
+      )}
     </div>
   );
 });
