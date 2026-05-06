@@ -110,7 +110,12 @@ export async function POST(req: Request) {
       if (invitedRowId && onboardingCompleted) {
         await db
           .update(familyMembers)
-          .set({ clerkUserId: id, status: "active", updatedAt: new Date() })
+          .set({
+            clerkUserId: id,
+            status: "active",
+            emailInvitationAccepted: true,
+            updatedAt: new Date(),
+          })
           .where(eq(familyMembers.id, invitedRowId));
       }
 

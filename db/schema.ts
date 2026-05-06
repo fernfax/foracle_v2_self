@@ -73,6 +73,10 @@ export const familyMembers = pgTable("family_members", {
   status: varchar("status", { length: 20 }).notNull().default("active"), // active | pending | revoked | informational
   invitedEmail: varchar("invited_email", { length: 255 }),
   clerkInvitationId: varchar("clerk_invitation_id", { length: 255 }),
+  // True once the invitee clicks the Clerk email link and completes signup.
+  // Redundant with `status='active'` for invited rows but exposed as a discrete
+  // boolean so reports/queries don't need to match against the status enum.
+  emailInvitationAccepted: boolean("email_invitation_accepted").notNull().default(false),
   name: varchar("name", { length: 255 }).notNull(),
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
