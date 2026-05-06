@@ -32,13 +32,40 @@ else
   echo "pre-push: SKIP_BUILD set, skipping build."
 fi
 
-# 2) E2E smoke tests
+# 2) E2E smoke tests against the production build on a separate port.
+# We do NOT touch the user's dev server on :3000 — it may be running and
+# spawning a second `next dev` would fight over .next/dev/lock.
 if [ -z "$SKIP_E2E" ]; then
-  echo "pre-push: running e2e smoke tests..."
-  npm run test:e2e
-  if [ $? -ne 0 ]; then
+  SMOKE_PORT="${SMOKE_PORT:-3100}"
+  SERVER_LOG="$(mktemp -t foracle-prepush-server.XXXXXX.log)"
+  echo "pre-push: starting next start on :$SMOKE_PORT for smoke tests..."
+  npx next start -p "$SMOKE_PORT" > "$SERVER_LOG" 2>&1 &
+  SERVER_PID=$!
+  trap 'kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null; rm -f "$SERVER_LOG"' EXIT INT TERM
+
+  # Wait up to 30s for the server to respond.
+  for i in $(seq 1 30); do
+    if curl -fs --max-time 1 "http://localhost:$SMOKE_PORT/" > /dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
+  if ! curl -fs --max-time 2 "http://localhost:$SMOKE_PORT/" > /dev/null 2>&1; then
+    echo ""
+    echo "pre-push: next start did not come up on :$SMOKE_PORT in 30s. Push aborted."
+    echo "  - Server log: $SERVER_LOG"
+    cat "$SERVER_LOG" | tail -20
+    exit 1
+  fi
+
+  echo "pre-push: running smoke tests against http://localhost:$SMOKE_PORT ..."
+  PLAYWRIGHT_BASE_URL="http://localhost:$SMOKE_PORT" npm run test:e2e
+  status=$?
+
+  if [ $status -ne 0 ]; then
     echo ""
     echo "pre-push: smoke tests failed. Push aborted."
+    echo "  - Server log: $SERVER_LOG"
     echo "  - Fix the failing test, or set SKIP_E2E=1 to bypass."
     exit 1
   fi
