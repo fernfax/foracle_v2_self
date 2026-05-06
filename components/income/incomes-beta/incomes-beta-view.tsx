@@ -332,6 +332,31 @@ function buildBarSegments(income: Income, cells: MonthCell[]): BarSegment[] {
   return segments;
 }
 
+interface YearSegment {
+  year: string;
+  startIndex: number;
+  spanCount: number;
+}
+
+// Group consecutive cells by calendar year so the timeline header can render
+// one year label per contiguous year span. With a 24-month window this is
+// usually 2-3 segments.
+function buildYearSegments(cells: MonthCell[]): YearSegment[] {
+  const segments: YearSegment[] = [];
+  let current: YearSegment | null = null;
+  cells.forEach((cell, i) => {
+    const year = format(cell.date, "yyyy");
+    if (current && current.year === year) {
+      current.spanCount += 1;
+    } else {
+      if (current) segments.push(current);
+      current = { year, startIndex: i, spanCount: 1 };
+    }
+  });
+  if (current) segments.push(current);
+  return segments;
+}
+
 interface IncomesBetaViewProps {
   incomes: Income[];
   familyMembers: FamilyMember[];
@@ -1418,11 +1443,34 @@ const MonthAxis = memo(function MonthAxis({
   onHover,
   totals,
 }: MonthAxisProps) {
+  const yearSegments = useMemo(() => buildYearSegments(cells), [cells]);
+  const gridCols = {
+    gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))`,
+  } as React.CSSProperties;
   return (
     <div className="relative mt-2">
+      {/* Year strip — one label per contiguous calendar-year span, sized to
+          its month range via grid-column. Same column template as the month
+          row below so labels stay aligned with their months. */}
+      <div
+        className="grid mb-0.5 text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/70"
+        style={gridCols}
+      >
+        {yearSegments.map((seg) => (
+          <div
+            key={`${seg.year}-${seg.startIndex}`}
+            className="flex items-center justify-center py-1"
+            style={{
+              gridColumn: `${seg.startIndex + 1} / span ${seg.spanCount}`,
+            }}
+          >
+            {seg.year}
+          </div>
+        ))}
+      </div>
       <div
         className="grid gap-px text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-        style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}
+        style={gridCols}
       >
         {cells.map((cell, i) => (
           <div
