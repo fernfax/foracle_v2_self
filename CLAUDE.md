@@ -15,7 +15,7 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 - Drizzle ORM + Postgres (`drizzle.config.ts`, schemas in `db/`)
 - Clerk auth (provider in `app/layout.tsx`, route protection in `app/(app)/layout.tsx`)
 - Recharts for all data viz
-- shadcn-style primitives in `components/ui/`
+- shadcn-style primitives in `components/ui/`2
 
 ## Design system
 
@@ -36,3 +36,12 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 ## Out of scope by default
 
 - `docs/` updates, schema changes, and unrelated branch state are not part of UI/UX tasks. Don't bundle them into a UI commit.
+
+## QA expectations
+
+For any UI/UX change — especially in `components/income/`, `components/expenses/`, or anywhere a live preview gets committed on release (drag-to-commit, debounced inputs, optimistic UI):
+
+1. Use the gstack `browse` skill to dogfood the actual user gesture against the dev server before reporting the task complete. Type checking and build success do not verify feature correctness.
+2. If preview state can diverge from committed state, screenshot or read DOM/network state **before** and **after** the gesture and verify both agree. The Mar→Feb drag bug shipped because preview math was correct in isolation but the commit pipeline double-applied the delta — only an end-to-end gesture test would have caught it.
+3. For substantial features, proactively suggest `/qa` so the user can opt into the full test-fix-verify loop.
+4. If you can't browser-test the change (no dev server, headless dependencies missing, auth flow blocking), say so explicitly rather than claiming success.
