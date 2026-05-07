@@ -103,6 +103,9 @@ type PropertyAssetForCpf = {
 
 interface UserHomepageClientProps {
   initialIncomes: Income[];
+  // The Beta view is wired to its own `incomes_beta` table. Empty until the
+  // user creates rows via the new beta CRUD flow.
+  initialIncomesBeta: Income[];
   initialFamilyMembers: FamilyMember[];
   initialCpfData: CpfByFamilyMember[];
   initialCurrentHoldings: CurrentHolding[];
@@ -110,7 +113,7 @@ interface UserHomepageClientProps {
   initialPropertyAssets: PropertyAssetForCpf[];
 }
 
-export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets }: UserHomepageClientProps) {
+export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets }: UserHomepageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -210,7 +213,7 @@ export function UserHomepageClient({ initialIncomes, initialFamilyMembers, initi
         <TabsContent value="incomes" className="mt-4">
           {incomeView === "beta" ? (
             <IncomesBetaView
-              incomes={initialIncomes}
+              incomes={initialIncomesBeta}
               familyMembers={initialFamilyMembers}
             />
           ) : (

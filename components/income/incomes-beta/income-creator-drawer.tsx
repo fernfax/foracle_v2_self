@@ -32,7 +32,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { createIncome } from "@/lib/actions/income";
+import { createIncomeBeta as createIncome } from "@/lib/actions/incomes-beta";
 
 type Archetype = "recurring" | "one-off" | "temporary";
 

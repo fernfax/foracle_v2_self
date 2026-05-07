@@ -506,6 +506,65 @@ export const incomesRelations = relations(incomes, ({ one }) => ({
   }),
 }));
 
+// Parallel incomes table that powers the Beta view. Same column set as
+// `incomes` minus `frequency` / `custom_months` (beta assumes monthly
+// recurring), and with a simpler `income_category` discriminator
+// (past | current | future). CPF computed fields follow the same write rule
+// as `incomes`: populated server-side via `calculateCPF` when
+// subject_to_cpf = true; cleared to null otherwise.
+export const incomesBeta = pgTable("incomes_beta", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 })
+    .notNull()
+    .references(() => families.id, { onDelete: "cascade" }),
+  familyMemberId: varchar("family_member_id", { length: 255 }).references(
+    () => familyMembers.id,
+    { onDelete: "cascade" }
+  ),
+  name: varchar("name", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  incomeCategory: varchar("income_category", { length: 20 })
+    .notNull()
+    .default("current"),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  subjectToCpf: boolean("subject_to_cpf").default(false),
+  accountForBonus: boolean("account_for_bonus").default(false),
+  bonusGroups: text("bonus_groups"),
+  employeeCpfContribution: decimal("employee_cpf_contribution", { precision: 12, scale: 2 }),
+  employerCpfContribution: decimal("employer_cpf_contribution", { precision: 12, scale: 2 }),
+  netTakeHome: decimal("net_take_home", { precision: 12, scale: 2 }),
+  cpfOrdinaryAccount: decimal("cpf_ordinary_account", { precision: 12, scale: 2 }),
+  cpfSpecialAccount: decimal("cpf_special_account", { precision: 12, scale: 2 }),
+  cpfMedisaveAccount: decimal("cpf_medisave_account", { precision: 12, scale: 2 }),
+  description: text("description"),
+  pastIncomeHistory: text("past_income_history"),
+  futureMilestones: text("future_milestones"),
+  accountForFutureChange: boolean("account_for_future_change").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const incomesBetaRelations = relations(incomesBeta, ({ one }) => ({
+  user: one(users, {
+    fields: [incomesBeta.userId],
+    references: [users.id],
+  }),
+  family: one(families, {
+    fields: [incomesBeta.familyId],
+    references: [families.id],
+  }),
+  familyMember: one(familyMembers, {
+    fields: [incomesBeta.familyMemberId],
+    references: [familyMembers.id],
+  }),
+}));
+
 export const expensesRelations = relations(expenses, ({ one }) => ({
   user: one(users, {
     fields: [expenses.userId],
