@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { HelpCircle, Compass, LayoutDashboard, DollarSign, Receipt } from "lucide-react";
+import { HelpCircle, Compass, LayoutDashboard, DollarSign, Receipt, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -236,6 +236,14 @@ export function HelpButton() {
           >
             <Receipt className="mr-2 h-4 w-4" />
             Expenses Tour
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => router.push("/onboarding-preview")}
+            className="cursor-pointer transition-colors hover:bg-accent focus:bg-accent"
+          >
+            <GraduationCap className="mr-2 h-4 w-4" />
+            Onboarding View
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
