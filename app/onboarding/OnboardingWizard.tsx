@@ -87,7 +87,18 @@ const STEP_CONFIG: StepConfig[] = [
   { title: "You're all set!", subtitle: "Review your information and complete setup", displayStep: 6, icon: CheckCircle2, iconBgColor: "bg-[rgba(0,196,170,0.15)]", iconColor: "text-[#007A68]" },
 ];
 
-export function OnboardingWizard() {
+interface OnboardingWizardProps {
+  // When true, the wizard runs in a sandboxed walkthrough mode used by
+  // /onboarding-preview. Internal step state replaces router-driven
+  // navigation, on-completion routes nowhere, and the caller is expected to
+  // wrap renderStep() in `pointer-events-none` so nested submit buttons can
+  // never fire. The whole wizard tree (including step components) is shared
+  // between real onboarding and preview to guarantee they stay in sync —
+  // when the real flow changes, the preview reflects it automatically.
+  previewMode?: boolean;
+}
+
+export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialStep = parseInt(searchParams.get("step") || "1", 10);
@@ -105,11 +116,15 @@ export function OnboardingWizard() {
     expenses: null,
   });
 
-  // Navigation handlers
+  // Navigation handlers — in preview mode the URL is never updated so the
+  // user can leave the preview cleanly, and we don't accidentally interact
+  // with the real onboarding-status routing logic.
   const goToStep = useCallback((step: number) => {
     setCurrentStep(step);
-    router.push(`/onboarding?step=${step}`, { scroll: false });
-  }, [router]);
+    if (!previewMode) {
+      router.push(`/onboarding?step=${step}`, { scroll: false });
+    }
+  }, [router, previewMode]);
 
   const handleNext = useCallback(() => {
     if (currentStep < TOTAL_STEPS) {
@@ -152,8 +167,13 @@ export function OnboardingWizard() {
   }, []);
 
   const handleComplete = useCallback(() => {
+    if (previewMode) {
+      // Loop back to the start so the previewer can step through repeatedly.
+      goToStep(1);
+      return;
+    }
     router.push("/overview");
-  }, [router]);
+  }, [router, previewMode, goToStep]);
 
   const config = STEP_CONFIG[currentStep - 1];
 
@@ -225,6 +245,60 @@ export function OnboardingWizard() {
         return <WelcomeStep onNext={handleNext} />;
     }
   };
+
+  if (previewMode) {
+    return (
+      <div className="relative">
+        {/* Top banner reminding the user this is a sandboxed walkthrough. */}
+        <div className="fixed inset-x-0 top-0 z-50 bg-brand-terracotta text-white text-xs font-semibold uppercase tracking-[0.18em] py-2 text-center shadow-md">
+          Preview · no data is saved
+        </div>
+        {/* Visual wizard, completely inert. The real Continue / Save buttons
+            inside each step are visible (so the preview matches the real
+            layout) but cannot fire because the whole subtree is
+            pointer-events-none. */}
+        <div className="pt-10">
+          <div className="pointer-events-none select-none">
+            <WizardContainer
+              currentStep={config.displayStep}
+              totalSteps={DISPLAYED_STEPS}
+              title={config.title}
+              subtitle={config.subtitle}
+              showProgress={config.showProgress !== false}
+              icon={config.icon}
+              iconBgColor={config.iconBgColor}
+              iconColor={config.iconColor}
+            >
+              {renderStep()}
+            </WizardContainer>
+          </div>
+        </div>
+        {/* External navigation — sole interactive surface in preview mode. */}
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border/40 bg-background/95 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-3">
+            <button
+              type="button"
+              onClick={handleBack}
+              disabled={currentStep <= 1}
+              className="rounded-md px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              ← Back
+            </button>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Step {currentStep} of {TOTAL_STEPS}
+            </span>
+            <button
+              type="button"
+              onClick={currentStep < TOTAL_STEPS ? handleNext : handleComplete}
+              className="rounded-md bg-brand-terracotta px-4 py-2 text-sm font-semibold text-white hover:bg-brand-terracotta/90"
+            >
+              {currentStep < TOTAL_STEPS ? "Next →" : "Restart preview"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <WizardContainer
