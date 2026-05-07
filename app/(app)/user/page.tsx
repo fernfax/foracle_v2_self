@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 export const dynamic = 'force-dynamic';
 
 import { getIncomes } from "@/lib/actions/income";
+import { getIncomesBeta } from "@/lib/actions/incomes-beta";
 import { getFamilyMembers } from "@/lib/actions/family-members";
 import { getCpfByFamilyMember } from "@/lib/actions/cpf";
 import { getCurrentHoldings } from "@/lib/actions/current-holdings";
@@ -17,8 +18,9 @@ export default async function UserHomepage() {
     return null;
   }
 
-  const [incomes, familyMembers, cpfData, currentHoldings, policies, propertyAssets] = await Promise.all([
+  const [incomes, incomesBeta, familyMembers, cpfData, currentHoldings, policies, propertyAssets] = await Promise.all([
     getIncomes(),
+    getIncomesBeta(),
     getFamilyMembers(),
     getCpfByFamilyMember(),
     getCurrentHoldings(),
@@ -26,5 +28,5 @@ export default async function UserHomepage() {
     getPropertyAssets(),
   ]);
 
-  return <UserHomepageClient initialIncomes={incomes} initialFamilyMembers={familyMembers} initialCpfData={cpfData} initialCurrentHoldings={currentHoldings} initialPolicies={policies} initialPropertyAssets={propertyAssets} />;
+  return <UserHomepageClient initialIncomes={incomes} initialIncomesBeta={incomesBeta} initialFamilyMembers={familyMembers} initialCpfData={cpfData} initialCurrentHoldings={currentHoldings} initialPolicies={policies} initialPropertyAssets={propertyAssets} />;
 }

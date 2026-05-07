@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Infinity as InfinityIcon,
   Target,
@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LocateFixed,
+  Pencil,
 } from "lucide-react";
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { updateIncome, deleteIncome } from "@/lib/actions/income";
+import {
+  updateIncomeBeta as updateIncome,
+  deleteIncomeBeta as deleteIncome,
+  createIncomeBeta,
+} from "@/lib/actions/incomes-beta";
 import { useOptimisticIncomes } from "./use-optimistic-incomes";
 import { QuickAdjustPad } from "./quick-adjust-pad";
 import {
@@ -93,7 +98,7 @@ type FamilyMember = {
   updatedAt: Date;
 };
 
-type Archetype = "recurring" | "one-off" | "temporary";
+type Archetype = "recurring" | "one-off" | "temporary" | "future";
 
 interface FutureMilestoneRaw {
   id: string;
@@ -183,12 +188,27 @@ const ARCHETYPE_META: Record<
     pill: "bg-[#D4A843]/15 text-[#7A5A00] border-[#D4A843]/40",
     rail: "bg-[#D4A843]",
   },
+  // Future incomes — start date hasn't arrived yet. Brand-deep-forest into
+  // brand-jungle so it reads as "projected, not yet in flight" while staying
+  // distinct from current (recurring).
+  future: {
+    label: "FUTURE",
+    icon: InfinityIcon,
+    tone: "text-[#1C2B2A]",
+    bar: "bg-gradient-to-r from-[#1C2B2A] to-[#3A6B52]",
+    pill: "bg-[#1C2B2A]/10 text-[#1C2B2A] border-[#1C2B2A]/30",
+    rail: "bg-[#1C2B2A]",
+  },
 };
 
 function getArchetype(income: Income): Archetype {
   if (income.incomeCategory === "one-off" || income.frequency === "one-time") {
     return "one-off";
   }
+  // Future takes precedence over the end-date check so a future-recurring or
+  // future-with-end income reads as "future" (deep forest), not as
+  // recurring/temporary.
+  if (income.incomeCategory === "future") return "future";
   if (income.endDate) return "temporary";
   return "recurring";
 }
@@ -338,6 +358,59 @@ interface YearSegment {
   spanCount: number;
 }
 
+// Synthetic income rows used purely as decoration behind the empty state. The
+// goal is to give first-time users a glimpse of the timeline studio so they
+// understand what creating their first income unlocks. Never persisted; never
+// exposed via interactive surfaces (the backdrop is always pointer-events:none).
+function buildPlaceholderIncomes(): Income[] {
+  const today = new Date();
+  const monthIso = (offset: number) =>
+    format(addMonths(startOfMonth(today), offset), "yyyy-MM-dd");
+  const make = (
+    id: string,
+    name: string,
+    category: string,
+    amount: number,
+    startOffset: number,
+    endOffset: number | null
+  ): Income => ({
+    id,
+    userId: "_placeholder",
+    name,
+    category,
+    incomeCategory: "current",
+    amount: amount.toString(),
+    frequency: "monthly",
+    customMonths: null,
+    subjectToCpf: false,
+    accountForBonus: false,
+    bonusGroups: null,
+    employeeCpfContribution: null,
+    employerCpfContribution: null,
+    netTakeHome: null,
+    cpfOrdinaryAccount: null,
+    cpfSpecialAccount: null,
+    cpfMedisaveAccount: null,
+    description: null,
+    startDate: monthIso(startOffset),
+    endDate: endOffset !== null ? monthIso(endOffset) : null,
+    pastIncomeHistory: null,
+    futureMilestones: null,
+    accountForFutureChange: false,
+    isActive: true,
+    familyMemberId: null,
+    familyMember: null,
+    createdAt: today,
+    updatedAt: today,
+  });
+  return [
+    make("_p1", "Primary salary", "salary", 5000, -3, null),
+    make("_p2", "Rental income", "investment", 2200, -5, null),
+    make("_p3", "Side gig", "freelance", 1500, -1, 6),
+    make("_p4", "Year-end bonus", "salary", 8000, 5, 5),
+  ];
+}
+
 // Group consecutive cells by calendar year so the timeline header can render
 // one year label per contiguous year span. With a 24-month window this is
 // usually 2-3 segments.
@@ -410,6 +483,51 @@ export function IncomesBetaView({
     milestone?: FutureMilestone;
   } | null>(null);
   const [deleteContext, setDeleteContext] = useState<Income | null>(null);
+
+  // Draw mode state — pencil tool. drawingMode means the lane areas accept
+  // pointerdown to start a new bar. drawState tracks the in-progress drag.
+  // drawCommit is the post-pointerup popup card the user fills in to save.
+  //
+  // Anchoring by *date key* (yyyy-MM) instead of cells-index means the
+  // dashed bar stays at the same calendar month when the user scrolls the
+  // timeline horizontally — the indices are recomputed from the keys against
+  // whatever `cells` currently holds.
+  const [drawingMode, setDrawingMode] = useState(false);
+  const [drawState, setDrawState] = useState<
+    | {
+        rowIncomeId: string;
+        anchorKey: string;
+        endKey: string;
+      }
+    | null
+  >(null);
+  const [drawCommit, setDrawCommit] = useState<
+    | {
+        rowIncome: Income;
+        startKey: string;
+        endKey: string;
+        // Detected via the row-relative rule:
+        // if the source row has a current income and the new bar ends before
+        // it → 'past'; if start is after today → 'future'; else 'current'.
+        // 'unknown' means we couldn't pin it down (no current income on the
+        // row) and the popup must show a current/not-current toggle.
+        detectedCategory: "past" | "current" | "future" | "unknown";
+        // Position of the bar's center in viewport-X for popup placement.
+        viewportX: number;
+        viewportY: number;
+      }
+    | null
+  >(null);
+
+  const handleToggleDrawing = useCallback(() => {
+    setDrawingMode((p) => {
+      const next = !p;
+      if (!next) {
+        setDrawState(null);
+      }
+      return next;
+    });
+  }, []);
 
   const detailIncome = detailIncomeId
     ? effectiveIncomes.find((i) => i.id === detailIncomeId) ?? null
@@ -503,6 +621,32 @@ export function IncomesBetaView({
   const peakTotal = useMemo(
     () => monthlyTotals.reduce((max, m) => Math.max(max, m.total), 0),
     [monthlyTotals]
+  );
+
+  // Placeholder data for the empty-state backdrop. Computed only when there
+  // are no real incomes — for users who already have streams these never
+  // build. The backdrop reuses the real TimelineStudio so the preview is
+  // pixel-accurate; only the surrounding wrapper makes it non-interactive.
+  const showEmptyBackdrop = incomes.length === 0;
+  const placeholderIncomes = useMemo(
+    () => (showEmptyBackdrop ? buildPlaceholderIncomes() : []),
+    [showEmptyBackdrop]
+  );
+  const placeholderMonthlyTotals = useMemo(() => {
+    if (!showEmptyBackdrop) return monthlyTotals;
+    return cells.map((cell) => {
+      const breakdown = placeholderIncomes.map((income) => ({
+        income,
+        amount: getAmountForMonth(income, cell),
+      }));
+      const total = breakdown.reduce((sum, b) => sum + b.amount, 0);
+      return { cell, breakdown: breakdown.filter((b) => b.amount > 0), total };
+    });
+  }, [showEmptyBackdrop, cells, placeholderIncomes, monthlyTotals]);
+  const placeholderPeak = useMemo(
+    () =>
+      placeholderMonthlyTotals.reduce((max, m) => Math.max(max, m.total), 0),
+    [placeholderMonthlyTotals]
   );
 
   // ─── handlers (useCallback so React.memo'd children don't re-render) ──────
@@ -671,6 +815,166 @@ export function IncomesBetaView({
     setDeleteContext(null);
   };
 
+  // ─── draw-mode handlers ──────────────────────────────────────────────────
+  // Per-row callbacks. The row reports its income identity + the cells index
+  // under the cursor; the parent owns the drag state so commit + popup can
+  // be coordinated globally.
+  const handleDrawStart = useCallback(
+    (income: Income, cellIdx: number) => {
+      if (!drawingMode) return;
+      // The previous bar's commit popup is still open — don't let a click on
+      // another lane wipe out the user's in-flight draft.
+      if (drawCommit) return;
+      const clamped = Math.max(0, Math.min(cells.length - 1, cellIdx));
+      const k = cells[clamped].key;
+      setDrawState({
+        rowIncomeId: income.id,
+        anchorKey: k,
+        endKey: k,
+      });
+    },
+    [drawingMode, cells, drawCommit]
+  );
+
+  const handleDrawMove = useCallback(
+    (income: Income, cellIdx: number) => {
+      // Once the popup is open the drag is done — don't let stray pointermove
+      // events reshape the dashed bar.
+      if (drawCommit) return;
+      setDrawState((prev) => {
+        if (!prev || prev.rowIncomeId !== income.id) return prev;
+        const clamped = Math.max(0, Math.min(cells.length - 1, cellIdx));
+        const k = cells[clamped].key;
+        return k === prev.endKey ? prev : { ...prev, endKey: k };
+      });
+    },
+    [cells, drawCommit]
+  );
+
+  const handleDrawEnd = useCallback(
+    (income: Income, finalCellIdx: number, viewportX: number, viewportY: number) => {
+      setDrawState((prev) => {
+        if (!prev || prev.rowIncomeId !== income.id) return prev;
+        const clamped = Math.max(0, Math.min(cells.length - 1, finalCellIdx));
+        const finalKey = cells[clamped].key;
+        const startKey =
+          finalKey < prev.anchorKey ? finalKey : prev.anchorKey;
+        const endKey =
+          finalKey > prev.anchorKey ? finalKey : prev.anchorKey;
+
+        // Detect past / current / future per the user's rule.
+        const todayKey = format(startOfMonth(new Date()), "yyyy-MM");
+        const sourceArchetype = getArchetype(income);
+        const sourceIsCurrent =
+          sourceArchetype === "recurring" ||
+          (income.endDate
+            ? format(startOfMonth(parseISO(income.endDate)), "yyyy-MM") >= todayKey
+            : false);
+        let detected: "past" | "current" | "future" | "unknown";
+        if (sourceIsCurrent) {
+          const sourceStartKey = format(
+            startOfMonth(parseISO(income.startDate)),
+            "yyyy-MM"
+          );
+          if (endKey < sourceStartKey) detected = "past";
+          else if (startKey > todayKey) detected = "future";
+          else detected = "current";
+        } else if (startKey > todayKey) {
+          detected = "future";
+        } else if (endKey < todayKey) {
+          detected = "past";
+        } else {
+          // Source row has no current income and the new bar straddles today
+          // — let the user choose.
+          detected = "unknown";
+        }
+
+        setDrawCommit({
+          rowIncome: income,
+          startKey,
+          endKey,
+          detectedCategory: detected,
+          viewportX,
+          viewportY,
+        });
+        // Keep the dashed bar visible while the popup is open — user reads
+        // the date range from the bar; clearing it would yank away the
+        // visual reference. Normalize the keys (anchor = start) so any
+        // post-pointerup logic (e.g. live re-render through scroll) sees a
+        // consistent ordering.
+        return { ...prev, anchorKey: startKey, endKey };
+      });
+    },
+    [cells]
+  );
+
+  const handleDrawSave = useCallback(
+    async (data: {
+      name: string;
+      amount: number;
+      isCurrent: boolean | null;
+    }) => {
+      if (!drawCommit) return;
+      const { startKey, endKey } = drawCommit;
+      // If the popup forced a toggle (detectedCategory === 'unknown') the
+      // user's pick wins; otherwise the auto-detected category sticks.
+      let category: "past" | "current" | "future";
+      if (drawCommit.detectedCategory === "unknown") {
+        category = data.isCurrent ? "current" : "past";
+      } else {
+        category = drawCommit.detectedCategory;
+      }
+      // Current incomes auto-extend forever (no endDate, like the existing
+      // recurring archetype).
+      const endDate = category === "current" ? null : `${endKey}-01`;
+      await createIncomeBeta({
+        name: data.name,
+        category: drawCommit.rowIncome.category,
+        incomeCategory: category,
+        amount: data.amount,
+        subjectToCpf: false,
+        accountForBonus: false,
+        startDate: `${startKey}-01`,
+        endDate: endDate ?? undefined,
+        familyMemberId: drawCommit.rowIncome.familyMemberId ?? undefined,
+      });
+      setDrawCommit(null);
+      setDrawState(null);
+      // Stay in drawing mode so the user can keep adding bars without
+      // re-clicking the pencil — matches Figma/Photoshop tool behaviour.
+    },
+    [drawCommit, cells]
+  );
+
+  const handleDrawDiscard = useCallback(() => {
+    setDrawCommit(null);
+    setDrawState(null);
+  }, []);
+
+  // Called by the dashed bar's drag handles (lateral move + resize-left +
+  // resize-right). The row computes the new keys from the cursor; we just
+  // mirror them into both drawState (so the bar re-renders at the new
+  // position) and drawCommit (so the popup, whose rAF loop reads from the
+  // bar's current rect, follows along).
+  const handleDraftReshape = useCallback(
+    (newAnchorKey: string, newEndKey: string) => {
+      setDrawState((prev) =>
+        prev
+          ? { ...prev, anchorKey: newAnchorKey, endKey: newEndKey }
+          : prev
+      );
+      setDrawCommit((prev) => {
+        if (!prev) return prev;
+        const lo =
+          newAnchorKey < newEndKey ? newAnchorKey : newEndKey;
+        const hi =
+          newAnchorKey > newEndKey ? newAnchorKey : newEndKey;
+        return { ...prev, startKey: lo, endKey: hi };
+      });
+    },
+    []
+  );
+
   return (
     <div className="space-y-6">
       <ViewToggle view={view} onChangeView={setView} />
@@ -688,7 +992,73 @@ export function IncomesBetaView({
       )}
 
       {incomes.length === 0 ? (
-        <EmptyState onCreate={() => setCreatorOpen(true)} />
+        <div className="relative">
+          {/* Backdrop: a faded, non-interactive preview of whichever view the
+              user has selected, populated with placeholder incomes.
+              Communicates "this is what you'll unlock once you add your
+              first stream." */}
+          <div
+            aria-hidden
+            className="pointer-events-none select-none opacity-40 blur-[1.5px]"
+          >
+            {view === "timeline" ? (
+              <TimelineStudio
+                cells={cells}
+                incomes={placeholderIncomes}
+                monthlyTotals={placeholderMonthlyTotals}
+                peakTotal={placeholderPeak}
+                hoverIndex={null}
+                onHover={() => {}}
+                windowOffsetMonths={windowOffsetMonths}
+                subMonthFraction={subMonthFraction}
+                tlConfig={tlConfig}
+                onScrollPrev={() => {}}
+                onScrollNext={() => {}}
+                onScrollToToday={() => {}}
+                onShiftWindow={() => {}}
+                onAmountChange={() => {}}
+                onRequestDelete={() => {}}
+                onOpenCreator={() => {}}
+                onOpenDetail={() => {}}
+                onDragPreview={() => {}}
+                dragHighlight={null}
+                onMoveBar={() => {}}
+                onResizeStart={() => {}}
+                onResizeEnd={() => {}}
+              />
+            ) : (
+              <ActionCardsView
+                cells={cells}
+                incomes={placeholderIncomes}
+                monthlyTotals={placeholderMonthlyTotals}
+                peakTotal={placeholderPeak}
+                hoverIndex={null}
+                onHover={() => {}}
+                windowOffsetMonths={windowOffsetMonths}
+                subMonthFraction={subMonthFraction}
+                tlConfig={tlConfig}
+                onScrollPrev={() => {}}
+                onScrollNext={() => {}}
+                onScrollToToday={() => {}}
+                onShiftWindow={() => {}}
+                onAmountChange={() => {}}
+                onNameChange={() => {}}
+                onStartDateChange={() => {}}
+                onEndDateChange={() => {}}
+                onAddMilestone={() => {}}
+                onEditMilestone={() => {}}
+                onDeleteMilestone={() => {}}
+                onRequestDelete={() => {}}
+                onOpenCreator={() => {}}
+                onOpenDetail={() => {}}
+              />
+            )}
+          </div>
+          {/* Foreground: the real empty-state CTA, centered over the backdrop. */}
+          <div className="absolute inset-0 flex items-center justify-center px-4">
+            <EmptyState onCreate={() => setCreatorOpen(true)} />
+          </div>
+        </div>
       ) : view === "timeline" ? (
         <TimelineStudio
           cells={cells}
@@ -713,6 +1083,16 @@ export function IncomesBetaView({
           onMoveBar={handleMoveBar}
           onResizeStart={handleResizeStart}
           onResizeEnd={handleResizeEnd}
+          drawingMode={drawingMode}
+          onToggleDrawing={handleToggleDrawing}
+          drawState={drawState}
+          drawCommit={drawCommit}
+          onDrawStart={handleDrawStart}
+          onDrawMove={handleDrawMove}
+          onDrawEnd={handleDrawEnd}
+          onDrawSave={handleDrawSave}
+          onDrawDiscard={handleDrawDiscard}
+          onDraftReshape={handleDraftReshape}
         />
       ) : (
         <ActionCardsView
@@ -918,12 +1298,16 @@ function TimelineHeader({
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
+  drawingMode,
+  onToggleDrawing,
 }: {
   cells: MonthCell[];
   windowOffsetMonths: number;
   onScrollPrev: () => void;
   onScrollNext: () => void;
   onScrollToToday: () => void;
+  drawingMode?: boolean;
+  onToggleDrawing?: () => void;
 }) {
   const first = cells[0];
   const last = cells[cells.length - 1];
@@ -942,6 +1326,23 @@ function TimelineHeader({
         <span className="hidden sm:inline-block min-w-[140px] text-right font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {rangeLabel}
         </span>
+        {onToggleDrawing && (
+          <button
+            type="button"
+            onClick={onToggleDrawing}
+            aria-pressed={drawingMode}
+            aria-label={drawingMode ? "Exit draw mode" : "Draw a new income"}
+            className={cn(
+              "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-semibold uppercase tracking-wider transition-colors shadow-sm",
+              drawingMode
+                ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90"
+                : "border-border/40 bg-card text-foreground hover:bg-muted"
+            )}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            {drawingMode ? "Drawing…" : "Draw"}
+          </button>
+        )}
         <div className="inline-flex items-center rounded-full border border-border/40 bg-card p-0.5 shadow-sm">
           <button
             type="button"
@@ -1003,6 +1404,16 @@ function TimelineStudio({
   onMoveBar,
   onResizeStart,
   onResizeEnd,
+  drawingMode = false,
+  onToggleDrawing,
+  drawState,
+  drawCommit,
+  onDrawStart,
+  onDrawMove,
+  onDrawEnd,
+  onDrawSave,
+  onDrawDiscard,
+  onDraftReshape,
 }: {
   cells: MonthCell[];
   incomes: Income[];
@@ -1026,6 +1437,36 @@ function TimelineStudio({
   onMoveBar: (income: Income, deltaMonths: number) => void;
   onResizeStart: (income: Income, deltaMonths: number) => void;
   onResizeEnd: (income: Income, deltaMonths: number) => void;
+  drawingMode?: boolean;
+  onToggleDrawing?: () => void;
+  drawState?: {
+    rowIncomeId: string;
+    anchorKey: string;
+    endKey: string;
+  } | null;
+  drawCommit?: {
+    rowIncome: Income;
+    startKey: string;
+    endKey: string;
+    detectedCategory: "past" | "current" | "future" | "unknown";
+    viewportX: number;
+    viewportY: number;
+  } | null;
+  onDrawStart?: (income: Income, cellIdx: number) => void;
+  onDrawMove?: (income: Income, cellIdx: number) => void;
+  onDrawEnd?: (
+    income: Income,
+    cellIdx: number,
+    viewportX: number,
+    viewportY: number
+  ) => void;
+  onDrawSave?: (data: {
+    name: string;
+    amount: number;
+    isCurrent: boolean | null;
+  }) => void;
+  onDrawDiscard?: () => void;
+  onDraftReshape?: (newAnchorKey: string, newEndKey: string) => void;
 }) {
   const totals = monthlyTotals as Array<{
     cell: MonthCell;
@@ -1038,9 +1479,10 @@ function TimelineStudio({
   const nowIndex = cells.findIndex((c) => c.key === nowKey);
   const nowLeftPct = nowIndex >= 0 ? (nowIndex + 0.5) / cells.length : null;
 
-  // Sort tracks: RECURRING first, then TEMPORARY, then ONE-OFF — name-stable within each group
+  // Sort tracks: RECURRING (current) first, then FUTURE, then TEMPORARY (past),
+  // then ONE-OFF — name-stable within each group.
   const sortedIncomes = [...incomes].sort((a, b) => {
-    const order = { recurring: 0, temporary: 1, "one-off": 2 } as const;
+    const order = { recurring: 0, future: 1, temporary: 2, "one-off": 3 } as const;
     const oa = order[getArchetype(a)];
     const ob = order[getArchetype(b)];
     if (oa !== ob) return oa - ob;
@@ -1073,6 +1515,8 @@ function TimelineStudio({
         onScrollPrev={onScrollPrev}
         onScrollNext={onScrollNext}
         onScrollToToday={onScrollToToday}
+        drawingMode={drawingMode}
+        onToggleDrawing={onToggleDrawing}
       />
 
       <div className="relative">
@@ -1206,6 +1650,7 @@ function TimelineStudio({
               key={income.id}
               income={income}
               cells={cells}
+              subMonthFraction={subMonthFraction}
               isFirst={i === 0}
               alternate={i % 2 === 1}
               tlConfig={tlConfig}
@@ -1216,6 +1661,16 @@ function TimelineStudio({
               onMoveBar={onMoveBar}
               onResizeStart={onResizeStart}
               onResizeEnd={onResizeEnd}
+              drawingMode={drawingMode}
+              drawState={
+                drawState && drawState.rowIncomeId === income.id
+                  ? drawState
+                  : null
+              }
+              onDrawStart={onDrawStart}
+              onDrawMove={onDrawMove}
+              onDrawEnd={onDrawEnd}
+              onDraftReshape={onDraftReshape}
             />
           ))}
         </div>
@@ -1254,6 +1709,31 @@ function TimelineStudio({
         </div>
       )}
       </div>
+      {/* Pencil-tool commit popup — fixed-position, lives outside the DAW so
+          it can extend beyond the rack edge without being clipped. */}
+      {drawCommit && onDrawSave && onDrawDiscard && (() => {
+        // Derive current cell indices for the popup's bar-anchor math from
+        // the stable date keys + the current cells window. As the timeline
+        // scrolls horizontally, indices shift but the keys (and hence the
+        // bar's actual date) stay constant.
+        const sIdx = cells.findIndex((c) => c.key === drawCommit.startKey);
+        const eIdx = cells.findIndex((c) => c.key === drawCommit.endKey);
+        if (sIdx === -1 || eIdx === -1) return null;
+        return (
+          <DrawCommitCard
+            rowIncome={drawCommit.rowIncome}
+            startKey={drawCommit.startKey}
+            endKey={drawCommit.endKey}
+            detectedCategory={drawCommit.detectedCategory}
+            startIdx={sIdx}
+            endIdx={eIdx}
+            cellsLength={cells.length}
+            subMonthFraction={subMonthFraction}
+            onSave={onDrawSave}
+            onDiscard={onDrawDiscard}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -1560,9 +2040,300 @@ function HoverTooltip({
   );
 }
 
+// Floating popup card that appears after the user finishes drawing a new
+// bar with the pencil tool. Positioned absolutely near the cursor's
+// pointerup location (offset above the bar so it doesn't block the bar
+// itself). Form is intentionally minimal — name + amount only — with
+// optional current/past toggle when the detection rule couldn't decide.
+function DrawCommitCard({
+  rowIncome,
+  startKey,
+  endKey,
+  detectedCategory,
+  startIdx,
+  endIdx,
+  cellsLength,
+  subMonthFraction,
+  onSave,
+  onDiscard,
+}: {
+  rowIncome: Income;
+  startKey: string;
+  endKey: string;
+  detectedCategory: "past" | "current" | "future" | "unknown";
+  // The bar's exact viewport coords are derived live from the lane DOM and
+  // these cell-index inputs, so the popup tracks the bar through scroll +
+  // resize instead of getting stranded at its pointerup-time snapshot.
+  startIdx: number;
+  endIdx: number;
+  cellsLength: number;
+  subMonthFraction: number;
+  onSave: (data: { name: string; amount: number; isCurrent: boolean | null }) => void;
+  onDiscard: () => void;
+}) {
+  const [name, setName] = useState(rowIncome.name);
+  const [amount, setAmount] = useState<string>(rowIncome.amount ?? "");
+  const [isCurrent, setIsCurrent] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+
+  // Imperative position loop. The popup is a fixed-position element that
+  // must stay glued to the drawn bar through every kind of motion:
+  //   - browser window scroll (vertical or horizontal)
+  //   - the timeline's *internal* horizontal-shift state (no scroll event
+  //     fires for those — the bar reflows via React state)
+  //   - window resize, card height change
+  // We bypass React state for the position math because state updates can
+  // be batched, dropped, or short-circuited by referential-equality bail-
+  // outs. Direct DOM writes on every animation frame are the simplest
+  // bulletproof approach. The loop runs only while the popup is mounted.
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const tailRef = useRef<HTMLSpanElement | null>(null);
+  useLayoutEffect(() => {
+    let rafId = 0;
+    const TAIL_H = 10;
+    const BAR_HALF_H = 16; // bar is h-8 = 32px tall
+    const SAFE_PAD = 12;
+    const tick = () => {
+      const card = cardRef.current;
+      const tail = tailRef.current;
+      const lane = document.querySelector(
+        `[data-row-income-id="${rowIncome.id}"]`
+      ) as HTMLElement | null;
+      if (card && tail && lane) {
+        const lr = lane.getBoundingClientRect();
+        if (lr.width > 0) {
+          const cr = card.getBoundingClientRect();
+          const monthWidthPx = lr.width / cellsLength;
+          const centerCell = (startIdx + endIdx + 1) / 2;
+          const barCenterX =
+            lr.left + (centerCell - subMonthFraction) * monthWidthPx;
+          const barCenterY = lr.top + lr.height / 2;
+          const cardW = cr.width;
+          const cardH = cr.height;
+          const winW = window.innerWidth;
+          const winH = window.innerHeight;
+          const barTopY = barCenterY - BAR_HALF_H;
+          const barBottomY = barCenterY + BAR_HALF_H;
+          // Above-the-bar preferred: card bottom = bar top − TAIL_H, so the
+          // tail tip lands exactly on the bar's top edge. Flip below if
+          // there's no room above.
+          const aboveTop = barTopY - TAIL_H - cardH;
+          const placeAbove = aboveTop >= SAFE_PAD;
+          const top = placeAbove
+            ? aboveTop
+            : Math.min(winH - cardH - SAFE_PAD, barBottomY + TAIL_H);
+          const idealLeft = barCenterX - cardW / 2;
+          const left = Math.max(
+            SAFE_PAD,
+            Math.min(winW - cardW - SAFE_PAD, idealLeft)
+          );
+          const tailX = Math.max(12, Math.min(cardW - 12, barCenterX - left));
+
+          // Card placement.
+          card.style.left = `${left}px`;
+          card.style.top = `${top}px`;
+          card.style.visibility = "visible";
+          card.style.opacity = "1";
+          card.style.pointerEvents = "auto";
+
+          // Tail placement + direction. Mirror the CSS-triangle config we
+          // had statically before, but keyed off live placeAbove.
+          tail.style.left = `${tailX}px`;
+          if (placeAbove) {
+            tail.style.top = "";
+            tail.style.bottom = `${-TAIL_H}px`;
+            tail.style.borderTop = `${TAIL_H}px solid hsl(var(--card))`;
+            tail.style.borderBottom = "";
+            tail.style.filter =
+              "drop-shadow(0 1px 0 hsl(var(--border) / 0.4))";
+          } else {
+            tail.style.top = `${-TAIL_H}px`;
+            tail.style.bottom = "";
+            tail.style.borderBottom = `${TAIL_H}px solid hsl(var(--card))`;
+            tail.style.borderTop = "";
+            tail.style.filter =
+              "drop-shadow(0 -1px 0 hsl(var(--border) / 0.4))";
+          }
+        }
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [rowIncome.id, startIdx, endIdx, cellsLength, subMonthFraction]);
+
+  // Click-away detection. The dashed draft bar itself represents unsaved
+  // work, so:
+  //   - Clicks on the bar (or its drag handles) count as *inside* — they're
+  //     the user repositioning, not abandoning. Without this exemption,
+  //     starting any drag would fire click-outside → discard → bar vanishes
+  //     mid-drag.
+  //   - Clicks anywhere else always surface the save-or-discard prompt,
+  //     regardless of whether the form fields are dirty. The bar is data;
+  //     never discard silently.
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      const card = cardRef.current;
+      if (!card) return;
+      if (card.contains(e.target as Node)) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('[data-draft-bar="true"]')) return;
+      setConfirmDiscard(true);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [onDiscard]);
+
+  const handleSave = () => {
+    const parsedAmount = parseFloat(amount);
+    if (!name.trim() || isNaN(parsedAmount) || parsedAmount <= 0) return;
+    onSave({
+      name: name.trim(),
+      amount: parsedAmount,
+      isCurrent: detectedCategory === "unknown" ? isCurrent : null,
+    });
+  };
+
+  const dateRangeLabel =
+    startKey === endKey
+      ? format(parseISO(`${startKey}-01`), "MMM yyyy")
+      : `${format(parseISO(`${startKey}-01`), "MMM yyyy")} → ${format(
+          parseISO(`${endKey}-01`),
+          "MMM yyyy"
+        )}`;
+
+  return (
+    <>
+      <div
+        ref={cardRef}
+        role="dialog"
+        aria-label="New income"
+        className="fixed z-50 w-[280px] rounded-2xl border border-border/40 bg-card p-4 shadow-2xl ring-1 ring-black/5"
+        // Initial styles — left/top/visibility/opacity/pointerEvents are
+        // assigned imperatively by the rAF loop above, which sees both card
+        // and bar dimensions live. We start hidden so the first frame
+        // (before measurement) doesn't flash an unpositioned card.
+        style={{
+          left: 0,
+          top: 0,
+          visibility: "hidden",
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        {/* Speech-bubble tail. The rAF loop sets left/top/bottom and the
+            triangle border-color/direction live based on placement so the
+            tip stays glued to the bar's top (above) or bottom (below). */}
+        <span
+          ref={tailRef}
+          aria-hidden
+          className="absolute"
+          style={{
+            width: 0,
+            height: 0,
+            transform: "translateX(-50%)",
+            borderLeft: "10px solid transparent",
+            borderRight: "10px solid transparent",
+          }}
+        />
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          New income · {dateRangeLabel}
+        </p>
+        <label className="mt-3 block text-xs font-semibold text-foreground">
+          Name
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="mt-1 w-full rounded-md border border-border/40 bg-background px-2 py-1.5 text-sm font-normal text-foreground focus:outline-none focus:ring-2 focus:ring-brand-terracotta/40"
+            placeholder="Income name"
+          />
+        </label>
+        <label className="mt-3 block text-xs font-semibold text-foreground">
+          Amount (monthly)
+          <input
+            type="number"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="mt-1 w-full rounded-md border border-border/40 bg-background px-2 py-1.5 text-sm font-normal text-foreground focus:outline-none focus:ring-2 focus:ring-brand-terracotta/40"
+            placeholder="0.00"
+          />
+        </label>
+        {detectedCategory === "unknown" && (
+          <label className="mt-3 flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isCurrent}
+              onChange={(e) => setIsCurrent(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-border/60 text-brand-terracotta focus:ring-brand-terracotta/40"
+            />
+            This is a current (ongoing) income
+          </label>
+        )}
+        {detectedCategory !== "unknown" && (
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Will save as <em className="not-italic font-semibold capitalize">{detectedCategory}</em>{" "}
+            income.
+          </p>
+        )}
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onDiscard}
+            className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            Discard
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!name.trim() || !amount.trim() || parseFloat(amount) <= 0}
+            className="rounded-md bg-brand-terracotta px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-terracotta/90 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+
+      <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save your changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You&apos;ve started filling in a new income but haven&apos;t saved
+              yet. Save now or discard?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDiscard(false)}>
+              Keep editing
+            </AlertDialogCancel>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmDiscard(false);
+                onDiscard();
+              }}
+              className="rounded-md border border-border/40 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              Discard
+            </button>
+            <AlertDialogAction onClick={handleSave}>Save</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
 interface IncomeStreamRowProps {
   income: Income;
   cells: MonthCell[];
+  // Sub-month scroll offset (0..1). Needed by the lane-level draw handlers
+  // so they can map a viewport clientX → cells index across translateX.
+  subMonthFraction?: number;
   isFirst?: boolean;
   alternate?: boolean;
   tlConfig: TimelineConfig;
@@ -1573,6 +2344,22 @@ interface IncomeStreamRowProps {
   onMoveBar: (income: Income, deltaMonths: number) => void;
   onResizeStart: (income: Income, deltaMonths: number) => void;
   onResizeEnd: (income: Income, deltaMonths: number) => void;
+  // Draw mode — when true, the lane area accepts pointerdown-to-draw a
+  // brand-new bar in this row. drawState non-null means the draw is
+  // currently in progress *for this row*.
+  drawingMode?: boolean;
+  drawState?: { rowIncomeId: string; anchorKey: string; endKey: string } | null;
+  onDrawStart?: (income: Income, cellIdx: number) => void;
+  onDrawMove?: (income: Income, cellIdx: number) => void;
+  onDrawEnd?: (
+    income: Income,
+    cellIdx: number,
+    viewportX: number,
+    viewportY: number
+  ) => void;
+  // Lateral drag of an existing draft bar. Called by the bar's resize-left,
+  // resize-right, and body-move handles with the new keys to apply.
+  onDraftReshape?: (newAnchorKey: string, newEndKey: string) => void;
 }
 
 type BarDragKind = "move" | "resize-left" | "resize-right";
@@ -1623,6 +2410,7 @@ interface DragTooltip {
 const IncomeStreamRow = memo(function IncomeStreamRow({
   income,
   cells,
+  subMonthFraction = 0,
   isFirst = false,
   alternate = false,
   tlConfig,
@@ -1633,6 +2421,12 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   onMoveBar,
   onResizeStart,
   onResizeEnd,
+  drawingMode = false,
+  drawState = null,
+  onDrawStart,
+  onDrawMove,
+  onDrawEnd,
+  onDraftReshape,
 }: IncomeStreamRowProps) {
   const archetype = getArchetype(income);
   const meta = ARCHETYPE_META[archetype];
@@ -1660,6 +2454,112 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
     cells.length > 0 &&
     endKey !== null &&
     endKey <= cells[cells.length - 1].key;
+
+  // Does the in-progress draft bar's date range intersect this income's
+  // range? If yes, we expand the lane and stack the bars vertically (top
+  // half = existing, bottom half = draft) so they don't visually collide.
+  // Behaves like a video editor splitting a clip onto a second track.
+  const incomeRangeStart = startKey;
+  const incomeRangeEnd = endKey ?? "9999-99"; // ongoing extends forever
+  const draftStacked = !!drawState && (() => {
+    const lo =
+      drawState.anchorKey < drawState.endKey
+        ? drawState.anchorKey
+        : drawState.endKey;
+    const hi =
+      drawState.anchorKey > drawState.endKey
+        ? drawState.anchorKey
+        : drawState.endKey;
+    return lo <= incomeRangeEnd && hi >= incomeRangeStart;
+  })();
+
+  // Lateral drag of the dashed draft bar. The user can grab the body
+  // (move) or either edge (resize-left / resize-right). All three call
+  // onDraftReshape with new (anchorKey, endKey) keys; the parent updates
+  // both drawState and drawCommit so the popup follows.
+  type DraftDragKind = "move" | "resize-left" | "resize-right";
+  const draftDragRef = useRef<{
+    kind: DraftDragKind;
+    pointerStartCellIdx: number;
+    origAnchorKey: string;
+    origEndKey: string;
+    hasMoved: boolean;
+    startPointerX: number;
+  } | null>(null);
+
+  const handleDraftPointerDown = (
+    e: React.PointerEvent,
+    kind: DraftDragKind
+  ) => {
+    if (!drawState || !onDraftReshape) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.stopPropagation();
+    const lane = lanesAreaRef.current;
+    if (!lane) return;
+    const rect = lane.getBoundingClientRect();
+    const monthWidthPx = rect.width / cells.length;
+    const cursorIdx = Math.floor(
+      (e.clientX - rect.left) / monthWidthPx + subMonthFraction
+    );
+    draftDragRef.current = {
+      kind,
+      pointerStartCellIdx: cursorIdx,
+      origAnchorKey: drawState.anchorKey,
+      origEndKey: drawState.endKey,
+      hasMoved: false,
+      startPointerX: e.clientX,
+    };
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+  };
+
+  const handleDraftPointerMove = (e: React.PointerEvent) => {
+    const drag = draftDragRef.current;
+    if (!drag || !onDraftReshape) return;
+    e.stopPropagation();
+    const lane = lanesAreaRef.current;
+    if (!lane) return;
+    const rect = lane.getBoundingClientRect();
+    const monthWidthPx = rect.width / cells.length;
+    const cursorIdx = Math.floor(
+      (e.clientX - rect.left) / monthWidthPx + subMonthFraction
+    );
+    const deltaMonths = cursorIdx - drag.pointerStartCellIdx;
+    if (Math.abs(e.clientX - drag.startPointerX) > 4) drag.hasMoved = true;
+    const shift = (k: string, m: number) =>
+      format(addMonths(parseISO(`${k}-01`), m), "yyyy-MM");
+    const lo =
+      drag.origAnchorKey < drag.origEndKey
+        ? drag.origAnchorKey
+        : drag.origEndKey;
+    const hi =
+      drag.origAnchorKey > drag.origEndKey
+        ? drag.origAnchorKey
+        : drag.origEndKey;
+    let newAnchor = drag.origAnchorKey;
+    let newEnd = drag.origEndKey;
+    if (drag.kind === "move") {
+      newAnchor = shift(drag.origAnchorKey, deltaMonths);
+      newEnd = shift(drag.origEndKey, deltaMonths);
+    } else if (drag.kind === "resize-left") {
+      let next = shift(lo, deltaMonths);
+      if (next > hi) next = hi;
+      newAnchor = next;
+      newEnd = hi;
+    } else {
+      // resize-right
+      let next = shift(hi, deltaMonths);
+      if (next < lo) next = lo;
+      newAnchor = lo;
+      newEnd = next;
+    }
+    onDraftReshape(newAnchor, newEnd);
+  };
+
+  const handleDraftPointerUp = (e: React.PointerEvent) => {
+    if (!draftDragRef.current) return;
+    e.stopPropagation();
+    draftDragRef.current = null;
+  };
 
   // Snap rule. Two rules in play because they're optimal for different
   // gestures:
@@ -1884,16 +2784,166 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
         </div>
       </div>
 
-      {/* Bars area — gridlines come from the parent overlay */}
+      {/* Bars area — gridlines come from the parent overlay. When the draft
+          bar overlaps with the existing bars in this row we double the lane
+          height (h-28) and split it in half: existing bars at the 25% line,
+          draft bar at the 75% line. Same approach video editors use to put
+          a colliding clip on a second track. */}
       <div
         ref={lanesAreaRef}
-        className="relative h-14 overflow-hidden"
+        data-row-income-id={income.id}
+        className={cn(
+          "relative overflow-hidden transition-[height]",
+          draftStacked ? "h-28" : "h-14",
+          drawingMode && "cursor-crosshair"
+        )}
         style={EDGE_FADE_STYLE}
+        onPointerDown={(e) => {
+          if (!drawingMode || !onDrawStart) return;
+          // Only the lane background should start a draw — clicks on existing
+          // bars/handles still go to their drag handlers via stopPropagation.
+          if ((e.target as Element)?.closest("button")) return;
+          const lane = lanesAreaRef.current;
+          if (!lane) return;
+          const rect = lane.getBoundingClientRect();
+          const monthWidthPx = rect.width / cells.length;
+          const cursorX = e.clientX - rect.left;
+          const idx = Math.max(
+            0,
+            Math.min(
+              cells.length - 1,
+              Math.floor(cursorX / monthWidthPx + subMonthFraction)
+            )
+          );
+          (e.currentTarget as Element).setPointerCapture(e.pointerId);
+          onDrawStart(income, idx);
+        }}
+        onPointerMove={(e) => {
+          if (!drawingMode || !drawState || !onDrawMove) return;
+          const lane = lanesAreaRef.current;
+          if (!lane) return;
+          const rect = lane.getBoundingClientRect();
+          const monthWidthPx = rect.width / cells.length;
+          const idx = Math.max(
+            0,
+            Math.min(
+              cells.length - 1,
+              Math.floor(
+                (e.clientX - rect.left) / monthWidthPx + subMonthFraction
+              )
+            )
+          );
+          onDrawMove(income, idx);
+        }}
+        onPointerUp={(e) => {
+          if (!drawingMode || !drawState || !onDrawEnd) return;
+          const lane = lanesAreaRef.current;
+          if (!lane) return;
+          const rect = lane.getBoundingClientRect();
+          const monthWidthPx = rect.width / cells.length;
+          const finalIdx = Math.max(
+            0,
+            Math.min(
+              cells.length - 1,
+              Math.floor(
+                (e.clientX - rect.left) / monthWidthPx + subMonthFraction
+              )
+            )
+          );
+          // Compute the bar's center in viewport coordinates so the popup's
+          // speech-bubble tail can point at the actual bar (not at where the
+          // cursor happened to be released).
+          const anchorIdx = cells.findIndex(
+            (c) => c.key === drawState.anchorKey
+          );
+          const startIdx = Math.min(anchorIdx, finalIdx);
+          const endIdxLocal = Math.max(anchorIdx, finalIdx);
+          const centerCell = (startIdx + endIdxLocal + 1) / 2;
+          const barCenterX =
+            rect.left + (centerCell - subMonthFraction) * monthWidthPx;
+          const barCenterY = rect.top + rect.height / 2;
+          onDrawEnd(income, finalIdx, barCenterX, barCenterY);
+        }}
       >
         <div
           className="absolute inset-0 will-change-transform"
           style={{ transform: "translateX(var(--ts-x, 0))" }}
         >
+          {/* In-progress drawing bar overlay — rendered when this row is the
+              draw target. Indices are derived from the date keys against the
+              current cells, so when the timeline scrolls horizontally the
+              bar stays glued to its calendar months instead of drifting.
+              Pointer-events-none so it doesn't swallow the pointermove/up
+              events fired against the lane wrapper. */}
+          {drawState && (() => {
+            const anchorIdx = cells.findIndex(
+              (c) => c.key === drawState.anchorKey
+            );
+            const endIdx = cells.findIndex(
+              (c) => c.key === drawState.endKey
+            );
+            // Either edge can scroll out of the visible window; clamp the
+            // visible portion so the bar still renders for the part that's
+            // on-screen rather than disappearing entirely.
+            const a = anchorIdx === -1
+              ? drawState.anchorKey < cells[0].key
+                ? 0
+                : cells.length - 1
+              : anchorIdx;
+            const b = endIdx === -1
+              ? drawState.endKey < cells[0].key
+                ? 0
+                : cells.length - 1
+              : endIdx;
+            const startIdx = Math.min(a, b);
+            const endIdxLocal = Math.max(a, b);
+            const leftPct = (startIdx / cells.length) * 100;
+            const widthPct = ((endIdxLocal - startIdx + 1) / cells.length) * 100;
+            return (
+              <div
+                data-draft-bar="true"
+                onPointerDown={(e) => handleDraftPointerDown(e, "move")}
+                onPointerMove={handleDraftPointerMove}
+                onPointerUp={handleDraftPointerUp}
+                onPointerCancel={handleDraftPointerUp}
+                className={cn(
+                  "absolute -translate-y-1/2 h-8 rounded-md border-2 border-dashed border-brand-terracotta bg-brand-terracotta/15 ring-2 ring-brand-terracotta/20 cursor-grab active:cursor-grabbing touch-none select-none",
+                  // When stacked, the draft bar moves to the 75% line so
+                  // it sits below the existing bars (which are at 25%).
+                  draftStacked ? "top-[75%]" : "top-1/2"
+                )}
+                style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                aria-label="New income (drag to reposition)"
+              >
+                {/* Resize-left handle */}
+                <span
+                  role="slider"
+                  aria-label="Drag to change new income's start month"
+                  onPointerDown={(e) => handleDraftPointerDown(e, "resize-left")}
+                  onPointerMove={handleDraftPointerMove}
+                  onPointerUp={handleDraftPointerUp}
+                  onPointerCancel={handleDraftPointerUp}
+                  className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize touch-none flex items-center justify-center"
+                >
+                  <span className="h-5 w-px rounded-full bg-brand-terracotta" />
+                </span>
+                {/* Resize-right handle */}
+                <span
+                  role="slider"
+                  aria-label="Drag to change new income's end month"
+                  onPointerDown={(e) =>
+                    handleDraftPointerDown(e, "resize-right")
+                  }
+                  onPointerMove={handleDraftPointerMove}
+                  onPointerUp={handleDraftPointerUp}
+                  onPointerCancel={handleDraftPointerUp}
+                  className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize touch-none flex items-center justify-center"
+                >
+                  <span className="h-5 w-px rounded-full bg-brand-terracotta" />
+                </span>
+              </div>
+            );
+          })()}
           {segments.map((seg, i) => {
           const leftPct = (seg.startIndex / cells.length) * 100;
           const widthPct = (seg.spanCount / cells.length) * 100;
@@ -1901,7 +2951,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
           const isFirstSegment = i === 0;
           const reachesEnd = seg.startIndex + seg.spanCount >= cells.length;
           const isOngoingTail =
-            archetype === "recurring" && !income.endDate && isLastSegment && reachesEnd;
+            (archetype === "recurring" || archetype === "future") &&
+            !income.endDate &&
+            isLastSegment &&
+            reachesEnd;
           // Resize handles only on the outermost edges of the income — the
           // first segment's left edge maps to startDate, the last segment's
           // right edge maps to endDate. Middle segment edges are milestones,
@@ -1922,7 +2975,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                   onPointerCancel={handlePointerCancel}
                   onClickCapture={handleClickCapture}
                   className={cn(
-                    "absolute top-1/2 -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 cursor-grab active:cursor-grabbing touch-none select-none",
+                    "absolute -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 cursor-grab active:cursor-grabbing touch-none select-none",
+                    // When stacked (draft bar overlaps), existing bars sit
+                    // on the 25% line; otherwise they're centered.
+                    draftStacked ? "top-[25%]" : "top-1/2",
                     isOngoingTail ? "rounded-l-md rounded-r-none" : "rounded-md",
                     meta.bar
                   )}
@@ -1943,6 +2999,11 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                 >
                   <span className={cn("truncate", isOngoingTail && "pr-3")}>
                     {formatCurrency(seg.amount)}
+                    {archetype === "recurring" && (
+                      <em className="ml-1 font-normal italic opacity-80">
+                        (Current)
+                      </em>
+                    )}
                   </span>
 
                   {showLeftHandle && (
@@ -2407,12 +3468,13 @@ function SentenceCard({
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border/40 bg-card p-12 text-center shadow-sm">
-      <p className="font-display text-lg font-semibold text-foreground">
+    <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card/95 p-10 text-center shadow-2xl ring-1 ring-black/5 backdrop-blur-sm">
+      <p className="font-display text-xl font-semibold text-foreground">
         No income streams yet
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        Add your first income to start projecting your monthly balance.
+        Add your first income to unlock the timeline studio and start
+        projecting your monthly balance.
       </p>
       <Button
         type="button"

@@ -23,7 +23,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { updateIncome, toggleIncomeStatus } from "@/lib/actions/income";
+import {
+  updateIncomeBeta as updateIncome,
+  toggleIncomeBetaStatus as toggleIncomeStatus,
+} from "@/lib/actions/incomes-beta";
 
 const CATEGORIES = [
   "salary",
