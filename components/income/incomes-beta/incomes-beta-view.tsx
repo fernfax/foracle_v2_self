@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Infinity as InfinityIcon,
   Target,
@@ -409,6 +410,38 @@ function buildPlaceholderIncomes(): Income[] {
     make("_p3", "Side gig", "freelance", 1500, -1, 6),
     make("_p4", "Year-end bonus", "salary", 8000, 5, 5),
   ];
+}
+
+// Greedy first-fit interval packing: group a family member's incomes into
+// "tracks" so non-overlapping incomes share a horizontal lane and
+// overlapping ones get their own track. Sort by start date, then for each
+// income place it on the first track whose last income ends strictly
+// before this one starts. If none fits, open a new track.
+//
+// The result is the minimum number of tracks needed for this family
+// member's row to render every income without visual collision.
+function packIntoTracks(incomes: Income[]): Income[][] {
+  const sorted = [...incomes].sort((a, b) =>
+    a.startDate.localeCompare(b.startDate)
+  );
+  const tracks: Income[][] = [];
+  for (const inc of sorted) {
+    const incStart = inc.startDate;
+    let placed = false;
+    for (const track of tracks) {
+      const last = track[track.length - 1];
+      // Open-ended (recurring) incomes have no end date — treat as +infinity
+      // so any later income overlaps and must take its own track.
+      const lastEnd = last.endDate ?? "9999-99-99";
+      if (incStart > lastEnd) {
+        track.push(inc);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) tracks.push([inc]);
+  }
+  return tracks;
 }
 
 // Group consecutive cells by calendar year so the timeline header can render
@@ -1063,6 +1096,7 @@ export function IncomesBetaView({
         <TimelineStudio
           cells={cells}
           incomes={effectiveIncomes}
+          familyMembers={familyMembers}
           monthlyTotals={monthlyTotals}
           peakTotal={peakTotal}
           hoverIndex={hoverIndex}
@@ -1384,6 +1418,7 @@ function TimelineHeader({
 function TimelineStudio({
   cells,
   incomes,
+  familyMembers = [],
   monthlyTotals,
   peakTotal,
   hoverIndex,
@@ -1417,6 +1452,7 @@ function TimelineStudio({
 }: {
   cells: MonthCell[];
   incomes: Income[];
+  familyMembers?: FamilyMember[];
   monthlyTotals: ReturnType<typeof Object>;
   peakTotal: number;
   hoverIndex: number | null;
@@ -1479,15 +1515,54 @@ function TimelineStudio({
   const nowIndex = cells.findIndex((c) => c.key === nowKey);
   const nowLeftPct = nowIndex >= 0 ? (nowIndex + 0.5) / cells.length : null;
 
-  // Sort tracks: RECURRING (current) first, then FUTURE, then TEMPORARY (past),
-  // then ONE-OFF — name-stable within each group.
-  const sortedIncomes = [...incomes].sort((a, b) => {
-    const order = { recurring: 0, future: 1, temporary: 2, "one-off": 3 } as const;
-    const oa = order[getArchetype(a)];
-    const ob = order[getArchetype(b)];
-    if (oa !== ob) return oa - ob;
-    return a.name.localeCompare(b.name);
-  });
+  // Group incomes by family member for the rack rendering. Each family
+  // member row gets one header + one or more bars (their incomes). Sort:
+  // Self first (relationship === "Self"), then alphabetical by name.
+  // Unassigned incomes (familyMemberId === null) collapse into a single
+  // "Unassigned" row at the bottom. Family members with zero incomes still
+  // get a row so the user can draw on them.
+  const groupedRows = useMemo(() => {
+    const byMember = new Map<string | null, Income[]>();
+    for (const inc of incomes) {
+      const key = inc.familyMemberId ?? null;
+      const list = byMember.get(key);
+      if (list) list.push(inc);
+      else byMember.set(key, [inc]);
+    }
+    const sortedMembers = [...familyMembers].sort((a, b) => {
+      const aSelf = a.relationship === "Self";
+      const bSelf = b.relationship === "Self";
+      if (aSelf && !bSelf) return -1;
+      if (!aSelf && bSelf) return 1;
+      return a.name.localeCompare(b.name);
+    });
+    const rows: Array<{
+      key: string;
+      familyMember: FamilyMember | null;
+      incomes: Income[];
+      tracks: Income[][];
+    }> = [];
+    for (const fm of sortedMembers) {
+      const memberIncomes = byMember.get(fm.id) ?? [];
+      rows.push({
+        key: fm.id,
+        familyMember: fm,
+        incomes: memberIncomes,
+        tracks: packIntoTracks(memberIncomes),
+      });
+    }
+    // Bottom: unassigned incomes, only if any exist.
+    const unassigned = byMember.get(null) ?? [];
+    if (unassigned.length > 0) {
+      rows.push({
+        key: "_unassigned",
+        familyMember: null,
+        incomes: unassigned,
+        tracks: packIntoTracks(unassigned),
+      });
+    }
+    return rows;
+  }, [incomes, familyMembers]);
 
   const dawRef = useRef<HTMLDivElement | null>(null);
   useHorizontalWheelScroll(dawRef, onShiftWindow, tlConfig.headerPx, tlConfig.monthCount);
@@ -1645,34 +1720,63 @@ function TimelineStudio({
             </div>
           )}
 
-          {sortedIncomes.map((income, i) => (
-            <IncomeStreamRow
-              key={income.id}
-              income={income}
-              cells={cells}
-              subMonthFraction={subMonthFraction}
-              isFirst={i === 0}
-              alternate={i % 2 === 1}
-              tlConfig={tlConfig}
-              onAmountChange={onAmountChange}
-              onRequestDelete={onRequestDelete}
-              onOpenDetail={onOpenDetail}
-              onDragPreview={onDragPreview}
-              onMoveBar={onMoveBar}
-              onResizeStart={onResizeStart}
-              onResizeEnd={onResizeEnd}
-              drawingMode={drawingMode}
-              drawState={
-                drawState && drawState.rowIncomeId === income.id
-                  ? drawState
-                  : null
-              }
-              onDrawStart={onDrawStart}
-              onDrawMove={onDrawMove}
-              onDrawEnd={onDrawEnd}
-              onDraftReshape={onDraftReshape}
-            />
-          ))}
+          {(() => {
+            // Render one family-member group at a time. Each group's first
+            // row shows the family member name in the header column; the
+            // remaining rows in the same group render with no header and
+            // no top border, so the group visually reads as a single
+            // expanded row containing stacked bars.
+            //
+            // Empty rows (members with zero incomes) are skipped in v1 —
+            // need more plumbing to make drawing on them work.
+            let globalRowIdx = 0;
+            return groupedRows.flatMap((group, groupIdx) => {
+              if (group.incomes.length === 0) return [];
+              const alternate = groupIdx % 2 === 1;
+              const familyHeader = group.familyMember
+                ? {
+                    name: group.familyMember.name,
+                    relationship: group.familyMember.relationship,
+                  }
+                : { name: "Unassigned", relationship: null };
+              return group.incomes.map((income, i) => {
+                const isFirst = globalRowIdx === 0;
+                const isFirstInGroup = i === 0;
+                globalRowIdx += 1;
+                return (
+                  <IncomeStreamRow
+                    key={income.id}
+                    income={income}
+                    familyMemberHeader={isFirstInGroup ? familyHeader : null}
+                    cells={cells}
+                    subMonthFraction={subMonthFraction}
+                    isFirst={isFirst}
+                    isFirstInGroup={isFirstInGroup}
+                    alternate={alternate}
+                    tlConfig={tlConfig}
+                    onAmountChange={onAmountChange}
+                    onRequestDelete={onRequestDelete}
+                    onOpenDetail={onOpenDetail}
+                    onDragPreview={onDragPreview}
+                    onMoveBar={onMoveBar}
+                    onResizeStart={onResizeStart}
+                    onResizeEnd={onResizeEnd}
+                    drawingMode={drawingMode}
+                    drawState={
+                      drawState && drawState.rowIncomeId === income.id
+                        ? drawState
+                        : null
+                    }
+                    onDrawStart={onDrawStart}
+                    onDrawMove={onDrawMove}
+                    onDrawEnd={onDrawEnd}
+                    onDraftReshape={onDraftReshape}
+                    rowFamilyMemberId={group.familyMember?.id ?? null}
+                  />
+                );
+              });
+            });
+          })()}
         </div>
 
         {/* Add track row — bottom of the rack */}
@@ -2091,29 +2195,29 @@ function DrawCommitCard({
   useLayoutEffect(() => {
     let rafId = 0;
     const TAIL_H = 10;
-    const BAR_HALF_H = 16; // bar is h-8 = 32px tall
     const SAFE_PAD = 12;
     const tick = () => {
       const card = cardRef.current;
       const tail = tailRef.current;
-      const lane = document.querySelector(
-        `[data-row-income-id="${rowIncome.id}"]`
+      // Query the dashed draft bar directly. Its rect IS the source of
+      // truth for "where the bar is right now" — much more reliable than
+      // computing from the lane's center, which is wrong when the lane is
+      // expanded for vertical stacking (the bar lives at 75% of the lane,
+      // not 50%).
+      const bar = document.querySelector(
+        '[data-draft-bar="true"]'
       ) as HTMLElement | null;
-      if (card && tail && lane) {
-        const lr = lane.getBoundingClientRect();
-        if (lr.width > 0) {
+      if (card && tail && bar) {
+        const br = bar.getBoundingClientRect();
+        if (br.width > 0) {
           const cr = card.getBoundingClientRect();
-          const monthWidthPx = lr.width / cellsLength;
-          const centerCell = (startIdx + endIdx + 1) / 2;
-          const barCenterX =
-            lr.left + (centerCell - subMonthFraction) * monthWidthPx;
-          const barCenterY = lr.top + lr.height / 2;
+          const barCenterX = br.left + br.width / 2;
+          const barTopY = br.top;
+          const barBottomY = br.bottom;
           const cardW = cr.width;
           const cardH = cr.height;
           const winW = window.innerWidth;
           const winH = window.innerHeight;
-          const barTopY = barCenterY - BAR_HALF_H;
-          const barBottomY = barCenterY + BAR_HALF_H;
           // Above-the-bar preferred: card bottom = bar top − TAIL_H, so the
           // tail tip lands exactly on the bar's top edge. Flip below if
           // there's no room above.
@@ -2202,7 +2306,13 @@ function DrawCommitCard({
           "MMM yyyy"
         )}`;
 
-  return (
+  // Portal to document.body so the fixed-positioned card escapes any
+  // ancestor with `contain: layout paint` / `transform` / `will-change`,
+  // which would otherwise become its containing block and offset the
+  // viewport-relative coordinates we compute. Body is the only safe
+  // mounting point that's guaranteed to be the viewport.
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <>
       <div
         ref={cardRef}
@@ -2324,7 +2434,8 @@ function DrawCommitCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </>,
+    document.body
   );
 }
 
@@ -2335,6 +2446,16 @@ interface IncomeStreamRowProps {
   // so they can map a viewport clientX → cells index across translateX.
   subMonthFraction?: number;
   isFirst?: boolean;
+  // True if this row is the first within its family-member group. Drives
+  // header rendering (only the first row in a group shows the family name)
+  // and top-border suppression on subsequent rows in the same group.
+  isFirstInGroup?: boolean;
+  // Header content for the left column. Null on subsequent rows in a
+  // family-member group (the first row already drew the header above).
+  familyMemberHeader?: { name: string; relationship: string | null } | null;
+  // Family member this row belongs to (null = "Unassigned"). Used as the
+  // draw context for the pencil tool and for popup name pre-fill.
+  rowFamilyMemberId?: string | null;
   alternate?: boolean;
   tlConfig: TimelineConfig;
   onAmountChange: (income: Income, amount: number) => void;
@@ -2412,6 +2533,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   cells,
   subMonthFraction = 0,
   isFirst = false,
+  isFirstInGroup = true,
+  familyMemberHeader = null,
+  rowFamilyMemberId = null,
   alternate = false,
   tlConfig,
   onAmountChange,
@@ -2740,13 +2864,28 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
       style={{ gridTemplateColumns: `${tlConfig.headerPx}px 1fr` }}
       className={cn(
         "group relative grid items-stretch transition-colors",
-        !isFirst && "border-t border-border/20",
+        // Top border separates *family-member groups* — within a group the
+        // rows visually merge into one expanded row with stacked bars.
+        !isFirst && isFirstInGroup && "border-t border-border/20",
         alternate ? "bg-muted/25" : "bg-transparent",
         "hover:bg-brand-jungle/[0.04]"
       )}
     >
-      {/* Track header column */}
+      {/* Track header column. The family member name appears once per group
+          (on the first row); subsequent rows in the same group show only
+          the per-income archetype + edit/delete controls so the group reads
+          as one unified row but each income can still be edited or removed. */}
       <div className="flex flex-col justify-center gap-0.5 border-r border-border/30 px-2 py-2 min-w-0 sm:px-4 sm:py-3">
+        {familyMemberHeader && (
+          <p className="font-display text-sm font-semibold text-foreground truncate">
+            {familyMemberHeader.name}
+            {familyMemberHeader.relationship && (
+              <span className="ml-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                · {familyMemberHeader.relationship}
+              </span>
+            )}
+          </p>
+        )}
         <div
           className={cn(
             "flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em]",
@@ -2756,14 +2895,6 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
           <Icon className="h-3 w-3" />
           {meta.label}
         </div>
-        <p className="font-display text-sm font-semibold text-foreground truncate">
-          {income.name}
-        </p>
-        {income.familyMember && (
-          <p className="text-[11px] text-muted-foreground truncate">
-            {income.familyMember.name}
-          </p>
-        )}
         <div className="mt-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             type="button"
@@ -2998,6 +3129,16 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                   aria-label={`Adjust ${income.name} amount, currently ${formatCurrency(seg.amount)}${isOngoingTail ? " (ongoing)" : ""}`}
                 >
                   <span className={cn("truncate", isOngoingTail && "pr-3")}>
+                    {/* Income name + amount so stacked bars on a single
+                        family-member row are individually identifiable
+                        without hovering. The name is shown only on the
+                        first segment of a multi-segment income (rest stay
+                        amount-only) to avoid label clutter. */}
+                    {isFirstSegment && (
+                      <span className="font-medium opacity-90">
+                        {income.name} ·{" "}
+                      </span>
+                    )}
                     {formatCurrency(seg.amount)}
                     {archetype === "recurring" && (
                       <em className="ml-1 font-normal italic opacity-80">
