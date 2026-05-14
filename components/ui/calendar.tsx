@@ -6,7 +6,6 @@ import { DayPicker } from "react-day-picker"
 import { format, setMonth, setYear, addYears, subYears, addMonths, subMonths } from "date-fns"
 
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 import { Button } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
@@ -112,9 +111,10 @@ function Calendar({
               key={month}
               onClick={() => handleMonthClick(index)}
               className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "h-9 w-full p-0 font-normal",
-                displayDate.getMonth() === index && "bg-accent text-accent-foreground"
+                "h-9 w-full rounded-md font-display text-[13px] font-normal text-foreground transition-colors",
+                "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                displayDate.getMonth() === index &&
+                  "bg-primary text-primary-foreground hover:bg-primary"
               )}
             >
               {month}
@@ -152,9 +152,10 @@ function Calendar({
               key={year}
               onClick={() => handleYearClick(year)}
               className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "h-9 w-full p-0 font-normal",
-                displayDate.getFullYear() === year && "bg-accent text-accent-foreground"
+                "h-9 w-full rounded-md font-display text-[13px] font-normal text-foreground transition-colors tabular-nums",
+                "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                displayDate.getFullYear() === year &&
+                  "bg-primary text-primary-foreground hover:bg-primary"
               )}
             >
               {year}
@@ -207,20 +208,20 @@ function Calendar({
           head_cell:
             "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
           row: "flex w-full mt-2",
-          cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+          cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
           day: cn(
-            buttonVariants({ variant: "ghost" }),
-            "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+            "inline-flex h-9 w-9 items-center justify-center rounded-full font-display text-[13px] font-normal text-foreground transition-colors tabular-nums",
+            "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            "aria-selected:opacity-100"
           ),
           day_range_end: "day-range-end",
           day_selected:
             "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-          day_today: "bg-accent text-accent-foreground",
+          day_today: "font-semibold ring-1 ring-primary/40",
           day_outside:
-            "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
-          day_disabled: "text-muted-foreground opacity-50",
-          day_range_middle:
-            "aria-selected:bg-accent aria-selected:text-accent-foreground",
+            "day-outside text-muted-foreground/50 aria-selected:bg-primary/30 aria-selected:text-muted-foreground",
+          day_disabled: "text-muted-foreground/50",
+          day_range_middle: "aria-selected:bg-muted aria-selected:text-foreground rounded-none",
           day_hidden: "invisible",
           ...classNames,
         }}
