@@ -19,6 +19,7 @@ import {
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { CHART_PALETTE } from "@/lib/chart-palette";
 import {
   Popover,
@@ -41,7 +42,7 @@ import {
   createIncomeBeta,
 } from "@/lib/actions/incomes-beta";
 import { useOptimisticIncomes } from "./use-optimistic-incomes";
-import { QuickAdjustPad } from "./quick-adjust-pad";
+import { IncomeBarPopup, QuickAdjustPad } from "./quick-adjust-pad";
 import {
   EditablePill,
   TextPillEditor,
@@ -412,28 +413,91 @@ function buildPlaceholderIncomes(): Income[] {
   ];
 }
 
-// Greedy first-fit interval packing: group a family member's incomes into
-// "tracks" so non-overlapping incomes share a horizontal lane and
-// overlapping ones get their own track. Sort by start date, then for each
-// income place it on the first track whose last income ends strictly
-// before this one starts. If none fits, open a new track.
+// Synthetic income placeholder used to render an empty family-member row in
+// edit mode so the user can draw their first income on the lane. The ghost
+// has amount=0 (so buildBarSegments returns an empty array — nothing renders
+// visually) but carries the familyMemberId so handleDrawSave wires the
+// freshly-drawn income to the correct member.
+function buildGhostIncome(
+  familyMember: FamilyMember | null,
+  todayIso: string
+): Income {
+  return {
+    id: `__ghost_${familyMember?.id ?? "unassigned"}`,
+    userId: "_ghost",
+    name: "",
+    category: "salary",
+    incomeCategory: "past",
+    amount: "0",
+    frequency: "monthly",
+    customMonths: null,
+    subjectToCpf: false,
+    accountForBonus: false,
+    bonusGroups: null,
+    employeeCpfContribution: null,
+    employerCpfContribution: null,
+    netTakeHome: null,
+    cpfOrdinaryAccount: null,
+    cpfSpecialAccount: null,
+    cpfMedisaveAccount: null,
+    description: null,
+    startDate: todayIso,
+    endDate: todayIso,
+    pastIncomeHistory: null,
+    futureMilestones: null,
+    accountForFutureChange: false,
+    isActive: true,
+    familyMemberId: familyMember?.id ?? null,
+    familyMember: familyMember
+      ? {
+          id: familyMember.id,
+          name: familyMember.name,
+          relationship: familyMember.relationship,
+          dateOfBirth: familyMember.dateOfBirth ?? null,
+          isContributing: familyMember.isContributing ?? null,
+        }
+      : null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
+
+// Pack a family member's incomes into rows ("tracks"). Two ideas in play:
 //
-// The result is the minimum number of tracks needed for this family
-// member's row to render every income without visual collision.
+//   1. Main track. The current/recurring income anchors track 0. Any other
+//      income that doesn't overlap it joins the same row (so e.g. a Past
+//      Salary that ended before the Current Salary started lands on the
+//      main track instead of starting a parallel row). This matches the
+//      product spec: "the main track is where the current income bar
+//      exists; any other bar that doesn't overlap shares that row."
+//
+//   2. First-fit packing for the rest. Anything that overlaps an existing
+//      track tries the next track; if none fits, a new track opens. The
+//      check is full-interval overlap (not just the last item's end) so
+//      that incomes preceding the recurring anchor on the main track are
+//      handled correctly.
+//
+// If there's no recurring income, we fall back to chronological first-fit
+// across the whole set — equivalent to the prior implementation.
 function packIntoTracks(incomes: Income[]): Income[][] {
-  const sorted = [...incomes].sort((a, b) =>
-    a.startDate.localeCompare(b.startDate)
-  );
+  if (incomes.length === 0) return [];
+  const recurring = incomes.find((i) => getArchetype(i) === "recurring");
   const tracks: Income[][] = [];
-  for (const inc of sorted) {
-    const incStart = inc.startDate;
+  if (recurring) tracks.push([recurring]);
+  const remaining = incomes
+    .filter((i) => i !== recurring)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+  const overlaps = (a: Income, b: Income) => {
+    const aStart = a.startDate;
+    const aEnd = a.endDate ?? "9999-99-99";
+    const bStart = b.startDate;
+    const bEnd = b.endDate ?? "9999-99-99";
+    return aStart <= bEnd && bStart <= aEnd;
+  };
+  for (const inc of remaining) {
     let placed = false;
     for (const track of tracks) {
-      const last = track[track.length - 1];
-      // Open-ended (recurring) incomes have no end date — treat as +infinity
-      // so any later income overlaps and must take its own track.
-      const lastEnd = last.endDate ?? "9999-99-99";
-      if (incStart > lastEnd) {
+      if (track.every((t) => !overlaps(t, inc))) {
         track.push(inc);
         placed = true;
         break;
@@ -441,7 +505,11 @@ function packIntoTracks(incomes: Income[]): Income[][] {
     }
     if (!placed) tracks.push([inc]);
   }
-  return tracks;
+  // Stable visual ordering: sort each track left-to-right by start date so
+  // bars render predictably regardless of which one anchored the track.
+  return tracks.map((track) =>
+    [...track].sort((a, b) => a.startDate.localeCompare(b.startDate))
+  );
 }
 
 // Group consecutive cells by calendar year so the timeline header can render
@@ -499,7 +567,21 @@ export function IncomesBetaView({
   }, [incomes, dragPreview]);
 
   // Responsive timeline window — narrower on mobile so each month is readable.
-  const tlConfig = useTimelineConfig();
+  const baseTlConfig = useTimelineConfig();
+
+  // User-controlled time-range slider (desktop only). 2 years (24 months)
+  // through 10 years (120 months) in 1-year steps. Mobile keeps the
+  // compact 8-month default — there's no room for a usable slider on a
+  // small screen, and the dense bars would become illegible at 10 years.
+  // Start offset stays at ~25% of the window in the past so "today" sits
+  // about a quarter in from the left, matching the existing 2-year default.
+  const [windowYears, setWindowYears] = useState(2);
+  const tlConfig = useMemo(() => {
+    if (baseTlConfig.isMobile) return baseTlConfig;
+    const monthCount = windowYears * 12;
+    const startOffset = -Math.floor(monthCount / 4);
+    return { ...baseTlConfig, monthCount, startOffset };
+  }, [baseTlConfig, windowYears]);
 
   // Timeline scroll state — fractional months shifted from the default window.
   // Integer part drives cell construction; fractional part drives a CSS
@@ -517,15 +599,18 @@ export function IncomesBetaView({
   } | null>(null);
   const [deleteContext, setDeleteContext] = useState<Income | null>(null);
 
-  // Draw mode state — pencil tool. drawingMode means the lane areas accept
-  // pointerdown to start a new bar. drawState tracks the in-progress drag.
-  // drawCommit is the post-pointerup popup card the user fills in to save.
+  // Edit mode — the umbrella state for any modification of bars. When true,
+  // bars accept drag/resize/click-popover, lane areas accept pointerdown to
+  // draw a new bar, and the bottom-rack and empty-state "Add Income" CTAs
+  // route here. When false the timeline is read-only (hover tooltips still
+  // work; everything else is inert). drawState tracks an in-progress draw,
+  // drawCommit is the post-pointerup popup the user fills in to save.
   //
   // Anchoring by *date key* (yyyy-MM) instead of cells-index means the
   // dashed bar stays at the same calendar month when the user scrolls the
   // timeline horizontally — the indices are recomputed from the keys against
   // whatever `cells` currently holds.
-  const [drawingMode, setDrawingMode] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [drawState, setDrawState] = useState<
     | {
         rowIncomeId: string;
@@ -552,8 +637,8 @@ export function IncomesBetaView({
     | null
   >(null);
 
-  const handleToggleDrawing = useCallback(() => {
-    setDrawingMode((p) => {
+  const handleToggleEditMode = useCallback(() => {
+    setEditMode((p) => {
       const next = !p;
       if (!next) {
         setDrawState(null);
@@ -854,7 +939,7 @@ export function IncomesBetaView({
   // be coordinated globally.
   const handleDrawStart = useCallback(
     (income: Income, cellIdx: number) => {
-      if (!drawingMode) return;
+      if (!editMode) return;
       // The previous bar's commit popup is still open — don't let a click on
       // another lane wipe out the user's in-flight draft.
       if (drawCommit) return;
@@ -866,7 +951,7 @@ export function IncomesBetaView({
         endKey: k,
       });
     },
-    [drawingMode, cells, drawCommit]
+    [editMode, cells, drawCommit]
   );
 
   const handleDrawMove = useCallback(
@@ -973,7 +1058,7 @@ export function IncomesBetaView({
       });
       setDrawCommit(null);
       setDrawState(null);
-      // Stay in drawing mode so the user can keep adding bars without
+      // Stay in edit mode so the user can keep adding bars without
       // re-clicking the pencil — matches Figma/Photoshop tool behaviour.
     },
     [drawCommit, cells]
@@ -1024,7 +1109,7 @@ export function IncomesBetaView({
         </div>
       )}
 
-      {incomes.length === 0 ? (
+      {incomes.length === 0 && !editMode ? (
         <div className="relative">
           {/* Backdrop: a faded, non-interactive preview of whichever view the
               user has selected, populated with placeholder incomes.
@@ -1089,7 +1174,7 @@ export function IncomesBetaView({
           </div>
           {/* Foreground: the real empty-state CTA, centered over the backdrop. */}
           <div className="absolute inset-0 flex items-center justify-center px-4">
-            <EmptyState onCreate={() => setCreatorOpen(true)} />
+            <EmptyState onCreate={() => setEditMode(true)} />
           </div>
         </div>
       ) : view === "timeline" ? (
@@ -1110,15 +1195,15 @@ export function IncomesBetaView({
           onShiftWindow={shiftWindowMonths}
           onAmountChange={handleAmountChange}
           onRequestDelete={setDeleteContext}
-          onOpenCreator={() => setCreatorOpen(true)}
+          onOpenCreator={() => setEditMode(true)}
           onOpenDetail={setDetailIncomeId}
           onDragPreview={setDragPreview}
           dragHighlight={dragHighlight}
           onMoveBar={handleMoveBar}
           onResizeStart={handleResizeStart}
           onResizeEnd={handleResizeEnd}
-          drawingMode={drawingMode}
-          onToggleDrawing={handleToggleDrawing}
+          editMode={editMode}
+          onToggleEditMode={handleToggleEditMode}
           drawState={drawState}
           drawCommit={drawCommit}
           onDrawStart={handleDrawStart}
@@ -1127,6 +1212,8 @@ export function IncomesBetaView({
           onDrawSave={handleDrawSave}
           onDrawDiscard={handleDrawDiscard}
           onDraftReshape={handleDraftReshape}
+          windowYears={windowYears}
+          onWindowYearsChange={setWindowYears}
         />
       ) : (
         <ActionCardsView
@@ -1332,16 +1419,16 @@ function TimelineHeader({
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
-  drawingMode,
-  onToggleDrawing,
+  editMode,
+  onToggleEditMode,
 }: {
   cells: MonthCell[];
   windowOffsetMonths: number;
   onScrollPrev: () => void;
   onScrollNext: () => void;
   onScrollToToday: () => void;
-  drawingMode?: boolean;
-  onToggleDrawing?: () => void;
+  editMode?: boolean;
+  onToggleEditMode?: () => void;
 }) {
   const first = cells[0];
   const last = cells[cells.length - 1];
@@ -1360,21 +1447,21 @@ function TimelineHeader({
         <span className="hidden sm:inline-block min-w-[140px] text-right font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {rangeLabel}
         </span>
-        {onToggleDrawing && (
+        {onToggleEditMode && (
           <button
             type="button"
-            onClick={onToggleDrawing}
-            aria-pressed={drawingMode}
-            aria-label={drawingMode ? "Exit draw mode" : "Draw a new income"}
+            onClick={onToggleEditMode}
+            aria-pressed={editMode}
+            aria-label={editMode ? "Exit edit mode" : "Enter edit mode"}
             className={cn(
               "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-semibold uppercase tracking-wider transition-colors shadow-sm",
-              drawingMode
+              editMode
                 ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90"
                 : "border-border/40 bg-card text-foreground hover:bg-muted"
             )}
           >
             <Pencil className="h-3.5 w-3.5" />
-            {drawingMode ? "Drawing…" : "Draw"}
+            {editMode ? "Editing…" : "Edit"}
           </button>
         )}
         <div className="inline-flex items-center rounded-full border border-border/40 bg-card p-0.5 shadow-sm">
@@ -1439,8 +1526,8 @@ function TimelineStudio({
   onMoveBar,
   onResizeStart,
   onResizeEnd,
-  drawingMode = false,
-  onToggleDrawing,
+  editMode = false,
+  onToggleEditMode,
   drawState,
   drawCommit,
   onDrawStart,
@@ -1449,6 +1536,8 @@ function TimelineStudio({
   onDrawSave,
   onDrawDiscard,
   onDraftReshape,
+  windowYears,
+  onWindowYearsChange,
 }: {
   cells: MonthCell[];
   incomes: Income[];
@@ -1473,8 +1562,8 @@ function TimelineStudio({
   onMoveBar: (income: Income, deltaMonths: number) => void;
   onResizeStart: (income: Income, deltaMonths: number) => void;
   onResizeEnd: (income: Income, deltaMonths: number) => void;
-  drawingMode?: boolean;
-  onToggleDrawing?: () => void;
+  editMode?: boolean;
+  onToggleEditMode?: () => void;
   drawState?: {
     rowIncomeId: string;
     anchorKey: string;
@@ -1503,6 +1592,8 @@ function TimelineStudio({
   }) => void;
   onDrawDiscard?: () => void;
   onDraftReshape?: (newAnchorKey: string, newEndKey: string) => void;
+  windowYears?: number;
+  onWindowYearsChange?: (years: number) => void;
 }) {
   const totals = monthlyTotals as Array<{
     cell: MonthCell;
@@ -1590,16 +1681,40 @@ function TimelineStudio({
         onScrollPrev={onScrollPrev}
         onScrollNext={onScrollNext}
         onScrollToToday={onScrollToToday}
-        drawingMode={drawingMode}
-        onToggleDrawing={onToggleDrawing}
+        editMode={editMode}
+        onToggleEditMode={onToggleEditMode}
       />
 
       <div className="relative">
       <div
         ref={dawRef}
         style={tsStyle}
-        className="rounded-2xl border border-border/30 bg-card shadow-sm overflow-hidden overscroll-x-contain"
+        className="relative rounded-2xl border border-border/30 bg-card shadow-sm overflow-hidden overscroll-x-contain"
       >
+        {/* Time-range scale slider — overlaid at the top-right of the
+            river graph card. Desktop only; mobile keeps the compact
+            8-month default and hides the slider because bars at 10y on a
+            small screen would be illegible. Sits above the chart via z-10
+            so it stays clear of the gradient fill. */}
+        {onWindowYearsChange && !tlConfig.isMobile && windowYears !== undefined && (
+          <div className="absolute right-4 top-3 z-10 hidden sm:flex items-center gap-2 rounded-full border border-border/40 bg-card/90 px-3 py-1 shadow-sm backdrop-blur-sm">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Scale
+            </span>
+            <Slider
+              value={[windowYears]}
+              onValueChange={(v) => onWindowYearsChange(v[0])}
+              min={2}
+              max={10}
+              step={1}
+              className="w-24"
+              aria-label="Timeline range in years"
+            />
+            <span className="font-display text-[11px] font-semibold tabular-nums text-foreground min-w-[2.5rem] text-right">
+              {windowYears}y
+            </span>
+          </div>
+        )}
         {/* Master river chart */}
         <div
           className="px-3 pt-4 pb-2 grid gap-0 sm:px-6 sm:pt-6"
@@ -1727,26 +1842,79 @@ function TimelineStudio({
             // no top border, so the group visually reads as a single
             // expanded row containing stacked bars.
             //
-            // Empty rows (members with zero incomes) are skipped in v1 —
-            // need more plumbing to make drawing on them work.
+            // Empty family-member rows render a single "ghost" row when edit
+            // mode is on so the user can draw their first income on the lane.
+            // The ghost has amount=0 (renders nothing) but carries the
+            // familyMemberId so handleDrawSave wires the new income to the
+            // right member. In view mode, empty rows are skipped — they'd
+            // just show a blank lane with no purpose.
+            const todayIso = format(startOfMonth(new Date()), "yyyy-MM-dd");
             let globalRowIdx = 0;
             return groupedRows.flatMap((group, groupIdx) => {
-              if (group.incomes.length === 0) return [];
               const alternate = groupIdx % 2 === 1;
+              if (group.incomes.length === 0) {
+                if (!editMode) return [];
+                const ghost = buildGhostIncome(group.familyMember, todayIso);
+                const isFirst = globalRowIdx === 0;
+                globalRowIdx += 1;
+                const familyHeader = group.familyMember
+                  ? {
+                      name: group.familyMember.name,
+                      relationship: group.familyMember.relationship,
+                    }
+                  : { name: "Unassigned", relationship: null };
+                return [
+                  <IncomeStreamRow
+                    key={ghost.id}
+                    incomes={[ghost]}
+                    familyMemberHeader={familyHeader}
+                    cells={cells}
+                    subMonthFraction={subMonthFraction}
+                    isFirst={isFirst}
+                    isFirstInGroup={true}
+                    alternate={alternate}
+                    tlConfig={tlConfig}
+                    onAmountChange={onAmountChange}
+                    onRequestDelete={onRequestDelete}
+                    onOpenDetail={onOpenDetail}
+                    onDragPreview={onDragPreview}
+                    onMoveBar={onMoveBar}
+                    onResizeStart={onResizeStart}
+                    onResizeEnd={onResizeEnd}
+                    editMode={editMode}
+                    drawState={
+                      drawState && drawState.rowIncomeId === ghost.id
+                        ? drawState
+                        : null
+                    }
+                    onDrawStart={onDrawStart}
+                    onDrawMove={onDrawMove}
+                    onDrawEnd={onDrawEnd}
+                    onDraftReshape={onDraftReshape}
+                    rowFamilyMemberId={group.familyMember?.id ?? null}
+                  />,
+                ];
+              }
               const familyHeader = group.familyMember
                 ? {
                     name: group.familyMember.name,
                     relationship: group.familyMember.relationship,
                   }
                 : { name: "Unassigned", relationship: null };
-              return group.incomes.map((income, i) => {
+              // One row per packed track (non-overlapping incomes share a
+              // lane). The track's first income drives the React key + the
+              // draw context (via the row's `primary` lookup).
+              return group.tracks.map((track, i) => {
                 const isFirst = globalRowIdx === 0;
                 const isFirstInGroup = i === 0;
                 globalRowIdx += 1;
+                const trackKey = `${group.key}__${track.map((t) => t.id).join("_")}`;
+                const drawTargetIncome =
+                  track.find((t) => getArchetype(t) === "recurring") ?? track[0];
                 return (
                   <IncomeStreamRow
-                    key={income.id}
-                    income={income}
+                    key={trackKey}
+                    incomes={track}
                     familyMemberHeader={isFirstInGroup ? familyHeader : null}
                     cells={cells}
                     subMonthFraction={subMonthFraction}
@@ -1761,9 +1929,9 @@ function TimelineStudio({
                     onMoveBar={onMoveBar}
                     onResizeStart={onResizeStart}
                     onResizeEnd={onResizeEnd}
-                    drawingMode={drawingMode}
+                    editMode={editMode}
                     drawState={
-                      drawState && drawState.rowIncomeId === income.id
+                      drawState && drawState.rowIncomeId === drawTargetIncome.id
                         ? drawState
                         : null
                     }
@@ -2031,6 +2199,17 @@ const MonthAxis = memo(function MonthAxis({
   const gridCols = {
     gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))`,
   } as React.CSSProperties;
+  // Density throttle: at higher zoom-out the per-cell width shrinks below the
+  // label width, so we drop labels on a stride. Cells still render to keep
+  // the grid + tick alignment intact; only the text is hidden.
+  // Stride is anchored to month-of-year (cell.month % stride === 0) instead
+  // of array index so the visible months don't shift as the user pans.
+  const labelStride = (() => {
+    if (cells.length <= 30) return 1;   // ≤ ~2.5y: every month
+    if (cells.length <= 60) return 3;   // ≤ 5y: quarterly (Jan/Apr/Jul/Oct)
+    if (cells.length <= 90) return 6;   // ≤ 7.5y: half-yearly (Jan/Jul)
+    return 12;                           // 10y: year markers only (Jan)
+  })();
   return (
     <div className="relative mt-2">
       {/* Year strip — one label per contiguous calendar-year span, sized to
@@ -2056,20 +2235,23 @@ const MonthAxis = memo(function MonthAxis({
         className="grid gap-px text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
         style={gridCols}
       >
-        {cells.map((cell, i) => (
-          <div
-            key={cell.key}
-            onMouseEnter={() => onHover(i)}
-            onMouseLeave={() => onHover(null)}
-            className={cn(
-              "relative flex flex-col items-center gap-1 py-1.5 cursor-default rounded transition-colors",
-              hoverIndex === i && "bg-muted text-foreground"
-            )}
-          >
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-brand-jungle/50 to-transparent" />
-            <span>{cell.label}</span>
-          </div>
-        ))}
+        {cells.map((cell, i) => {
+          const showLabel = labelStride === 1 || cell.date.getMonth() % labelStride === 0;
+          return (
+            <div
+              key={cell.key}
+              onMouseEnter={() => onHover(i)}
+              onMouseLeave={() => onHover(null)}
+              className={cn(
+                "relative flex flex-col items-center gap-1 py-1.5 cursor-default rounded transition-colors",
+                hoverIndex === i && "bg-muted text-foreground"
+              )}
+            >
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-brand-jungle/50 to-transparent" />
+              <span className={cn(!showLabel && "invisible")}>{cell.label}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -2440,7 +2622,12 @@ function DrawCommitCard({
 }
 
 interface IncomeStreamRowProps {
-  income: Income;
+  // A "track" of one or more incomes belonging to the same family member that
+  // do not overlap in time — packed by `packIntoTracks`. They share a single
+  // visual lane: bars sit side-by-side at the same vertical level. When a
+  // member's incomes don't overlap (e.g., past Salary Aug-Apr + Retainer
+  // May-Dec), they all collapse into one row regardless of archetype.
+  incomes: Income[];
   cells: MonthCell[];
   // Sub-month scroll offset (0..1). Needed by the lane-level draw handlers
   // so they can map a viewport clientX → cells index across translateX.
@@ -2465,10 +2652,11 @@ interface IncomeStreamRowProps {
   onMoveBar: (income: Income, deltaMonths: number) => void;
   onResizeStart: (income: Income, deltaMonths: number) => void;
   onResizeEnd: (income: Income, deltaMonths: number) => void;
-  // Draw mode — when true, the lane area accepts pointerdown-to-draw a
-  // brand-new bar in this row. drawState non-null means the draw is
-  // currently in progress *for this row*.
-  drawingMode?: boolean;
+  // Edit mode — when true, the lane area accepts pointerdown-to-draw a new
+  // bar AND existing bars become drag/resizable; otherwise the row is
+  // read-only. drawState non-null means a draw is currently in progress for
+  // this row.
+  editMode?: boolean;
   drawState?: { rowIncomeId: string; anchorKey: string; endKey: string } | null;
   onDrawStart?: (income: Income, cellIdx: number) => void;
   onDrawMove?: (income: Income, cellIdx: number) => void;
@@ -2529,7 +2717,7 @@ interface DragTooltip {
 }
 
 const IncomeStreamRow = memo(function IncomeStreamRow({
-  income,
+  incomes,
   cells,
   subMonthFraction = 0,
   isFirst = false,
@@ -2545,17 +2733,20 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   onMoveBar,
   onResizeStart,
   onResizeEnd,
-  drawingMode = false,
+  editMode = false,
   drawState = null,
   onDrawStart,
   onDrawMove,
   onDrawEnd,
   onDraftReshape,
 }: IncomeStreamRowProps) {
-  const archetype = getArchetype(income);
-  const meta = ARCHETYPE_META[archetype];
-  const Icon = meta.icon;
-  const segments = useMemo(() => buildBarSegments(income, cells), [income, cells]);
+  // Representative income for the draw context (drawing in this row carries
+  // the row's familyMemberId). Prefer the current/recurring income if any —
+  // its archetype drives the past/current/future detection in handleDrawEnd.
+  // Otherwise the first income works; with zero incomes (a ghost row) the
+  // single placeholder is the representative.
+  const primary =
+    incomes.find((i) => getArchetype(i) === "recurring") ?? incomes[0];
   const lanesAreaRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<BarDragState | null>(null);
   const [dragTooltip, setDragTooltip] = useState<DragTooltip | null>(null);
@@ -2563,28 +2754,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   // event so the QuickAdjustPad popover doesn't open after a drag.
   const justDraggedRef = useRef(false);
 
-  // The bar's actual edge (start / end) is off-screen if its date is outside
-  // the visible window. In that case the visible segment edge isn't the real
-  // edge — it's just where the bar gets clipped by the viewport — so we hide
-  // the resize handle to avoid confusing semantics. The user can scroll to
-  // bring the real edge into view, then resize.
-  const startKey = format(startOfMonth(parseISO(income.startDate)), "yyyy-MM");
-  const endKey = income.endDate
-    ? format(startOfMonth(parseISO(income.endDate)), "yyyy-MM")
-    : null;
-  const startInWindow =
-    cells.length > 0 && startKey >= cells[0].key;
-  const endInWindow =
-    cells.length > 0 &&
-    endKey !== null &&
-    endKey <= cells[cells.length - 1].key;
-
-  // Does the in-progress draft bar's date range intersect this income's
-  // range? If yes, we expand the lane and stack the bars vertically (top
+  // Does the in-progress draft bar's date range intersect ANY income on this
+  // track? If yes, we expand the lane and stack the bars vertically (top
   // half = existing, bottom half = draft) so they don't visually collide.
   // Behaves like a video editor splitting a clip onto a second track.
-  const incomeRangeStart = startKey;
-  const incomeRangeEnd = endKey ?? "9999-99"; // ongoing extends forever
   const draftStacked = !!drawState && (() => {
     const lo =
       drawState.anchorKey < drawState.endKey
@@ -2594,7 +2767,13 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
       drawState.anchorKey > drawState.endKey
         ? drawState.anchorKey
         : drawState.endKey;
-    return lo <= incomeRangeEnd && hi >= incomeRangeStart;
+    return incomes.some((income) => {
+      const sKey = format(startOfMonth(parseISO(income.startDate)), "yyyy-MM");
+      const eKey = income.endDate
+        ? format(startOfMonth(parseISO(income.endDate)), "yyyy-MM")
+        : "9999-99";
+      return lo <= eKey && hi >= sKey;
+    });
   })();
 
   // Lateral drag of the dashed draft bar. The user can grab the body
@@ -2770,9 +2949,15 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
     return `${format(newStart, "MMM yyyy")} → ${format(newEnd, "MMM yyyy")}`;
   };
 
-  const handlePointerDown = (e: React.PointerEvent, kind: BarDragKind) => {
+  const handlePointerDown = (
+    e: React.PointerEvent,
+    kind: BarDragKind,
+    forIncome: Income
+  ) => {
     // Only primary button / single touch
     if (e.pointerType === "mouse" && e.button !== 0) return;
+    // Edit mode gate — view mode is read-only, no drag/resize.
+    if (!editMode) return;
     e.stopPropagation();
     const lane = lanesAreaRef.current;
     if (!lane) return;
@@ -2795,9 +2980,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
       monthWidthPx,
       edgeAnchorViewportX,
       grabOffsetPx,
-      originalIncome: income,
-      startStart: parseISO(income.startDate),
-      startEnd: income.endDate ? parseISO(income.endDate) : null,
+      originalIncome: forIncome,
+      startStart: parseISO(forIncome.startDate),
+      startEnd: forIncome.endDate ? parseISO(forIncome.endDate) : null,
       startPointerX: e.clientX,
       hasMoved: false,
     };
@@ -2816,7 +3001,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
     if (Math.abs(dx) > 8) drag.hasMoved = true;
     if (!drag.hasMoved) return;
     const deltaMonths = computeDeltaMonths(e.clientX);
-    onDragPreview({ id: income.id, patch: computePatch(drag.kind, deltaMonths) });
+    onDragPreview({
+      id: drag.originalIncome.id,
+      patch: computePatch(drag.kind, deltaMonths),
+    });
     setDragTooltip({
       x: e.clientX,
       y: e.clientY,
@@ -2872,9 +3060,12 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
       )}
     >
       {/* Track header column. The family member name appears once per group
-          (on the first row); subsequent rows in the same group show only
-          the per-income archetype + edit/delete controls so the group reads
-          as one unified row but each income can still be edited or removed. */}
+          (on the first row in the group). When the row carries a single
+          income we also surface its archetype label + edit/delete shortcuts.
+          When the row carries multiple non-overlapping incomes (a packed
+          track), the per-income chip is dropped — bar colors carry the
+          archetype info and per-bar popovers + the detail dialog cover edit
+          actions, so duplicating them in the header would be noise. */}
       <div className="flex flex-col justify-center gap-0.5 border-r border-border/30 px-2 py-2 min-w-0 sm:px-4 sm:py-3">
         {familyMemberHeader && (
           <p className="font-display text-sm font-semibold text-foreground truncate">
@@ -2886,33 +3077,43 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
             )}
           </p>
         )}
-        <div
-          className={cn(
-            "flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em]",
-            meta.tone
-          )}
-        >
-          <Icon className="h-3 w-3" />
-          {meta.label}
-        </div>
-        <div className="mt-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-          <button
-            type="button"
-            onClick={() => onOpenDetail(income.id)}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={`Open details for ${income.name}`}
-          >
-            <Settings2 className="h-3 w-3" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onRequestDelete(income)}
-            className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            aria-label={`Delete ${income.name}`}
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
-        </div>
+        {incomes.length === 1 && (() => {
+          const income = incomes[0];
+          const archetype = getArchetype(income);
+          const meta = ARCHETYPE_META[archetype];
+          const Icon = meta.icon;
+          return (
+            <>
+              <div
+                className={cn(
+                  "flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em]",
+                  meta.tone
+                )}
+              >
+                <Icon className="h-3 w-3" />
+                {meta.label}
+              </div>
+              <div className="mt-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={() => onOpenDetail(income.id)}
+                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={`Open details for ${income.name}`}
+                >
+                  <Settings2 className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRequestDelete(income)}
+                  className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={`Delete ${income.name}`}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Bars area — gridlines come from the parent overlay. When the draft
@@ -2922,15 +3123,15 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
           a colliding clip on a second track. */}
       <div
         ref={lanesAreaRef}
-        data-row-income-id={income.id}
+        data-row-income-id={primary.id}
         className={cn(
           "relative overflow-hidden transition-[height]",
           draftStacked ? "h-28" : "h-14",
-          drawingMode && "cursor-crosshair"
+          editMode && "cursor-crosshair"
         )}
         style={EDGE_FADE_STYLE}
         onPointerDown={(e) => {
-          if (!drawingMode || !onDrawStart) return;
+          if (!editMode || !onDrawStart) return;
           // Only the lane background should start a draw — clicks on existing
           // bars/handles still go to their drag handlers via stopPropagation.
           if ((e.target as Element)?.closest("button")) return;
@@ -2947,10 +3148,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
             )
           );
           (e.currentTarget as Element).setPointerCapture(e.pointerId);
-          onDrawStart(income, idx);
+          onDrawStart(primary, idx);
         }}
         onPointerMove={(e) => {
-          if (!drawingMode || !drawState || !onDrawMove) return;
+          if (!editMode || !drawState || !onDrawMove) return;
           const lane = lanesAreaRef.current;
           if (!lane) return;
           const rect = lane.getBoundingClientRect();
@@ -2964,10 +3165,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
               )
             )
           );
-          onDrawMove(income, idx);
+          onDrawMove(primary, idx);
         }}
         onPointerUp={(e) => {
-          if (!drawingMode || !drawState || !onDrawEnd) return;
+          if (!editMode || !drawState || !onDrawEnd) return;
           const lane = lanesAreaRef.current;
           if (!lane) return;
           const rect = lane.getBoundingClientRect();
@@ -2993,7 +3194,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
           const barCenterX =
             rect.left + (centerCell - subMonthFraction) * monthWidthPx;
           const barCenterY = rect.top + rect.height / 2;
-          onDrawEnd(income, finalIdx, barCenterX, barCenterY);
+          onDrawEnd(primary, finalIdx, barCenterX, barCenterY);
         }}
       >
         <div
@@ -3075,151 +3276,168 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
               </div>
             );
           })()}
-          {segments.map((seg, i) => {
-          const leftPct = (seg.startIndex / cells.length) * 100;
-          const widthPct = (seg.spanCount / cells.length) * 100;
-          const isLastSegment = i === segments.length - 1;
-          const isFirstSegment = i === 0;
-          const reachesEnd = seg.startIndex + seg.spanCount >= cells.length;
-          const isOngoingTail =
-            (archetype === "recurring" || archetype === "future") &&
-            !income.endDate &&
-            isLastSegment &&
-            reachesEnd;
-          // Resize handles only on the outermost edges of the income — the
-          // first segment's left edge maps to startDate, the last segment's
-          // right edge maps to endDate. Middle segment edges are milestones,
-          // not yet draggable. We also hide handles when the corresponding
-          // actual edge is off-window: the visible segment edge there is just
-          // a viewport clip, not the real edge, so resizing it would set a
-          // date the user can't see and didn't intend.
-          const showLeftHandle = isFirstSegment && startInWindow;
-          const showRightHandle = isLastSegment && !isOngoingTail && endInWindow;
-          return (
-            <Popover key={i}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  onPointerDown={(e) => handlePointerDown(e, "move")}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={handlePointerUp}
-                  onPointerCancel={handlePointerCancel}
-                  onClickCapture={handleClickCapture}
-                  className={cn(
-                    "absolute -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 cursor-grab active:cursor-grabbing touch-none select-none",
-                    // When stacked (draft bar overlaps), existing bars sit
-                    // on the 25% line; otherwise they're centered.
-                    draftStacked ? "top-[25%]" : "top-1/2",
-                    isOngoingTail ? "rounded-l-md rounded-r-none" : "rounded-md",
-                    meta.bar
-                  )}
-                  style={{
-                    left: `${leftPct}%`,
-                    height: "32px",
-                    ...(isOngoingTail
-                      ? {
-                          right: "var(--ts-x, 0)",
-                          clipPath:
-                            "polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%)",
-                        }
-                      : {
-                          width: `${widthPct}%`,
-                        }),
-                  }}
-                  aria-label={`Adjust ${income.name} amount, currently ${formatCurrency(seg.amount)}${isOngoingTail ? " (ongoing)" : ""}`}
+          {/* Bars from every income on this track. Tracks are pre-packed by
+              `packIntoTracks` so two incomes never overlap horizontally —
+              they share the lane at the same vertical level regardless of
+              archetype. Per-income archetype/color/segments are computed
+              inside the loop so a temporary + current pair on one row each
+              keep their own theming. */}
+          {incomes.flatMap((income) => {
+            const archetype = getArchetype(income);
+            const meta = ARCHETYPE_META[archetype];
+            const segments = buildBarSegments(income, cells);
+            const startKey = format(
+              startOfMonth(parseISO(income.startDate)),
+              "yyyy-MM"
+            );
+            const endKey = income.endDate
+              ? format(startOfMonth(parseISO(income.endDate)), "yyyy-MM")
+              : null;
+            const startInWindow = cells.length > 0 && startKey >= cells[0].key;
+            const endInWindow =
+              cells.length > 0 &&
+              endKey !== null &&
+              endKey <= cells[cells.length - 1].key;
+            return segments.map((seg, i) => {
+              const leftPct = (seg.startIndex / cells.length) * 100;
+              const widthPct = (seg.spanCount / cells.length) * 100;
+              const isLastSegment = i === segments.length - 1;
+              const isFirstSegment = i === 0;
+              const reachesEnd = seg.startIndex + seg.spanCount >= cells.length;
+              const isOngoingTail =
+                (archetype === "recurring" || archetype === "future") &&
+                !income.endDate &&
+                isLastSegment &&
+                reachesEnd;
+              const showLeftHandle = editMode && isFirstSegment && startInWindow;
+              const showRightHandle =
+                editMode && isLastSegment && !isOngoingTail && endInWindow;
+              return (
+                <Popover
+                  key={`${income.id}-${i}`}
+                  {...(editMode ? {} : { open: false })}
                 >
-                  <span className={cn("truncate", isOngoingTail && "pr-3")}>
-                    {/* Income name + amount so stacked bars on a single
-                        family-member row are individually identifiable
-                        without hovering. The name is shown only on the
-                        first segment of a multi-segment income (rest stay
-                        amount-only) to avoid label clutter. */}
-                    {isFirstSegment && (
-                      <span className="font-medium opacity-90">
-                        {income.name} ·{" "}
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      onPointerDown={(e) => handlePointerDown(e, "move", income)}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      onPointerCancel={handlePointerCancel}
+                      onClickCapture={handleClickCapture}
+                      className={cn(
+                        "absolute -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 touch-none select-none",
+                        editMode
+                          ? "cursor-grab active:cursor-grabbing"
+                          : "cursor-default",
+                        draftStacked ? "top-[25%]" : "top-1/2",
+                        isOngoingTail ? "rounded-l-md rounded-r-none" : "rounded-md",
+                        meta.bar
+                      )}
+                      style={{
+                        left: `${leftPct}%`,
+                        height: "32px",
+                        ...(isOngoingTail
+                          ? {
+                              right: "var(--ts-x, 0)",
+                              clipPath:
+                                "polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%)",
+                            }
+                          : {
+                              width: `${widthPct}%`,
+                            }),
+                      }}
+                      aria-label={`Adjust ${income.name} amount, currently ${formatCurrency(seg.amount)}${isOngoingTail ? " (ongoing)" : ""}`}
+                    >
+                      <span className={cn("truncate", isOngoingTail && "pr-3")}>
+                        {isFirstSegment && (
+                          <span className="font-medium opacity-90">
+                            {income.name} ·{" "}
+                          </span>
+                        )}
+                        {formatCurrency(seg.amount)}
+                        {archetype === "recurring" && (
+                          <em className="ml-1 font-normal italic opacity-80">
+                            (Current)
+                          </em>
+                        )}
                       </span>
-                    )}
-                    {formatCurrency(seg.amount)}
-                    {archetype === "recurring" && (
-                      <em className="ml-1 font-normal italic opacity-80">
-                        (Current)
-                      </em>
-                    )}
-                  </span>
 
-                  {showLeftHandle && (
-                    <span
-                      role="slider"
-                      aria-label={`Drag to change ${income.name} start date`}
-                      onPointerDown={(e) => {
-                        e.stopPropagation();
-                        handlePointerDown(e, "resize-left");
-                      }}
-                      onPointerMove={(e) => {
-                        e.stopPropagation();
-                        handlePointerMove(e);
-                      }}
-                      onPointerUp={(e) => {
-                        e.stopPropagation();
-                        handlePointerUp(e);
-                      }}
-                      onPointerCancel={(e) => {
-                        e.stopPropagation();
-                        handlePointerCancel();
-                      }}
-                      onClickCapture={(e) => {
-                        e.stopPropagation();
-                        handleClickCapture(e);
-                      }}
-                      className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize touch-none flex items-center justify-center"
-                    >
-                      <span className="h-5 w-px rounded-full bg-white/35 group-hover:bg-white/85 transition-colors" />
-                    </span>
-                  )}
-                  {showRightHandle && (
-                    <span
-                      role="slider"
-                      aria-label={`Drag to change ${income.name} end date`}
-                      onPointerDown={(e) => {
-                        e.stopPropagation();
-                        handlePointerDown(e, "resize-right");
-                      }}
-                      onPointerMove={(e) => {
-                        e.stopPropagation();
-                        handlePointerMove(e);
-                      }}
-                      onPointerUp={(e) => {
-                        e.stopPropagation();
-                        handlePointerUp(e);
-                      }}
-                      onPointerCancel={(e) => {
-                        e.stopPropagation();
-                        handlePointerCancel();
-                      }}
-                      onClickCapture={(e) => {
-                        e.stopPropagation();
-                        handleClickCapture(e);
-                      }}
-                      className="absolute right-0 top-0 bottom-0 w-1.5 cursor-ew-resize touch-none flex items-center justify-center"
-                    >
-                      <span className="h-5 w-px rounded-full bg-white/35 group-hover:bg-white/85 transition-colors" />
-                    </span>
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="center"
-                className="p-0 border-0 bg-transparent shadow-none w-auto"
-              >
-                <QuickAdjustPad
-                  initialAmount={seg.amount}
-                  label={`Adjust ${income.name}`}
-                  onConfirm={(next) => onAmountChange(income, next)}
-                />
-              </PopoverContent>
-            </Popover>
-          );
-        })}
+                      {showLeftHandle && (
+                        <span
+                          role="slider"
+                          aria-label={`Drag to change ${income.name} start date`}
+                          onPointerDown={(e) => {
+                            e.stopPropagation();
+                            handlePointerDown(e, "resize-left", income);
+                          }}
+                          onPointerMove={(e) => {
+                            e.stopPropagation();
+                            handlePointerMove(e);
+                          }}
+                          onPointerUp={(e) => {
+                            e.stopPropagation();
+                            handlePointerUp(e);
+                          }}
+                          onPointerCancel={(e) => {
+                            e.stopPropagation();
+                            handlePointerCancel();
+                          }}
+                          onClickCapture={(e) => {
+                            e.stopPropagation();
+                            handleClickCapture(e);
+                          }}
+                          className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize touch-none flex items-center justify-center"
+                        >
+                          <span className="h-5 w-px rounded-full bg-white/35 group-hover:bg-white/85 transition-colors" />
+                        </span>
+                      )}
+                      {showRightHandle && (
+                        <span
+                          role="slider"
+                          aria-label={`Drag to change ${income.name} end date`}
+                          onPointerDown={(e) => {
+                            e.stopPropagation();
+                            handlePointerDown(e, "resize-right", income);
+                          }}
+                          onPointerMove={(e) => {
+                            e.stopPropagation();
+                            handlePointerMove(e);
+                          }}
+                          onPointerUp={(e) => {
+                            e.stopPropagation();
+                            handlePointerUp(e);
+                          }}
+                          onPointerCancel={(e) => {
+                            e.stopPropagation();
+                            handlePointerCancel();
+                          }}
+                          onClickCapture={(e) => {
+                            e.stopPropagation();
+                            handleClickCapture(e);
+                          }}
+                          className="absolute right-0 top-0 bottom-0 w-1.5 cursor-ew-resize touch-none flex items-center justify-center"
+                        >
+                          <span className="h-5 w-px rounded-full bg-white/35 group-hover:bg-white/85 transition-colors" />
+                        </span>
+                      )}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="center"
+                    className="p-0 border-0 bg-transparent shadow-none w-auto"
+                  >
+                    <IncomeBarPopup
+                      income={income}
+                      initialAmount={seg.amount}
+                      onConfirm={(next) => onAmountChange(income, next)}
+                      onOpenDetail={() => onOpenDetail(income.id)}
+                    />
+                  </PopoverContent>
+                </Popover>
+              );
+            });
+          })}
         </div>
       </div>
 
