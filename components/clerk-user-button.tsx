@@ -1,14 +1,18 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { Users } from "lucide-react";
+import { Code2, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { InviteFamilyMemberForm } from "@/components/family-members/invite-family-member-form";
 
 type ClerkUserButtonProps = React.ComponentProps<typeof UserButton>;
 
+const IS_DEV = process.env.NODE_ENV === "development";
+
 export function ClerkUserButton(props: ClerkUserButtonProps) {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -33,6 +37,15 @@ export function ClerkUserButton(props: ClerkUserButtonProps) {
           <InviteFamilyMemberForm />
         </div>
       </UserButton.UserProfilePage>
+      {IS_DEV && (
+        <UserButton.MenuItems>
+          <UserButton.Action
+            label="Developer Mode"
+            labelIcon={<Code2 className="h-4 w-4" />}
+            onClick={() => router.push("/developer")}
+          />
+        </UserButton.MenuItems>
+      )}
     </UserButton>
   );
 }
