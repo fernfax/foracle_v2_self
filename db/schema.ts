@@ -35,6 +35,9 @@ export const users = pgTable("users", {
   onboardingCompleted: boolean("onboarding_completed").default(false),
   tourCompletedAt: text("tour_completed_at"), // JSON: {"dashboard":"2024-01-15T...","incomes":null,"expenses":null}
   singlishMode: boolean("singlish_mode").default(false),
+  // App-shell background style. 'radial' (default) | 'peranakan' | 'none'.
+  // Light-mode visual only; dark mode ignores this and shows no decor.
+  backgroundDecor: text("background_decor").default("radial"),
   // familyId: which Family this user belongs to. Nullable during the initial backfill;
   // a follow-up migration will set NOT NULL once every user has been assigned to a family.
   familyId: varchar("family_id", { length: 255 }),
@@ -407,6 +410,22 @@ export const budgetShifts = pgTable("budget_shifts", {
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   note: text("note"), // Optional note explaining the shift
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Push notification tokens — one row per (userId, token) pair. Mobile clients
+// register their APNs/FCM token after sign-in; revoking sets revokedAt rather
+// than deleting so we keep an audit trail of devices that have been
+// associated with the account.
+export const pushTokens = pgTable("push_tokens", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  familyId: varchar("family_id", { length: 255 }),
+  token: varchar("token", { length: 512 }).notNull(),
+  platform: varchar("platform", { length: 20 }).notNull(), // "ios" | "android"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  revokedAt: timestamp("revoked_at"),
 });
 
 // =============================================================================

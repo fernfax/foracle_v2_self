@@ -3,9 +3,13 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { expenseCategories, expenses } from "@/db/schema";
-import { eq, and, asc } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import {
+  createExpenseCategory as createExpenseCategoryService,
+  listExpenseCategories,
+} from "@/lib/services/expense-categories";
 
 export type ExpenseCategory = {
   id: string;
@@ -18,80 +22,14 @@ export type ExpenseCategory = {
   updatedAt: Date;
 };
 
-// Default categories that will be created for new users
-// These must match the categories used in onboarding (ExpensesStep.tsx)
-const DEFAULT_CATEGORIES = [
-  "Housing",
-  "Food",
-  "Transportation",
-  "Utilities",
-  "Healthcare",
-  "Insurance",
-  "Children",
-  "Entertainment",
-  "Allowances",
-  "Vehicle",
-  "Shopping",
-];
-
 /**
  * Get all expense categories for the authenticated user.
  * Also auto-creates any categories that exist in the expenses table but not in expense_categories.
  */
 export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    let categories = await db
-      .select()
-      .from(expenseCategories)
-      .where(eq(expenseCategories.userId, userId))
-      .orderBy(asc(expenseCategories.name));
-
-    // If no categories exist, create default ones (only for new users)
-    if (categories.length === 0) {
-      await initializeDefaultCategories(userId);
-      return getExpenseCategories();
-    }
-
-    // Auto-create any categories that exist in expenses but not in expense_categories
-    const existingCategoryNames = new Set(categories.map((c) => c.name));
-
-    // Get unique category names from expenses table
-    const expenseCategoryNames = await db
-      .selectDistinct({ category: expenses.category })
-      .from(expenses)
-      .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
-
-    // Find categories that exist in expenses but not in expense_categories
-    const missingCategories = expenseCategoryNames
-      .map((e) => e.category)
-      .filter((name) => !existingCategoryNames.has(name));
-
-    // Auto-create missing categories
-    if (missingCategories.length > 0) {
-      const newCategories = missingCategories.map((name) => ({
-        id: randomUUID(),
-        userId,
-        name,
-        isDefault: false,
-        trackedInBudget: true, // Auto-created categories should be tracked by default
-      }));
-
-      await db.insert(expenseCategories).values(newCategories);
-
-      // Re-fetch to get the newly created categories
-      categories = await db
-        .select()
-        .from(expenseCategories)
-        .where(eq(expenseCategories.userId, userId))
-        .orderBy(asc(expenseCategories.name));
-    }
-
-    return categories;
+    const ctx = await getCurrentUserAndFamily();
+    return await listExpenseCategories(ctx);
   } catch (error) {
     console.error("Error fetching expense categories:", error);
     return [];
@@ -99,42 +37,11 @@ export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
 }
 
 /**
- * Initialize default categories for a user
- */
-async function initializeDefaultCategories(userId: string): Promise<void> {
-  const defaultCategories = DEFAULT_CATEGORIES.map((name) => ({
-    id: randomUUID(),
-    userId,
-    name,
-    isDefault: true,
-  }));
-
-  await db.insert(expenseCategories).values(defaultCategories);
-}
-
-
-/**
  * Add a new expense category
  */
 export async function addExpenseCategory(name: string): Promise<ExpenseCategory> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  const id = randomUUID();
-
-  const [newCategory] = await db
-    .insert(expenseCategories)
-    .values({
-      id,
-      userId,
-      name,
-      isDefault: false,
-    })
-    .returning();
-
-  return newCategory;
+  const ctx = await getCurrentUserAndFamily();
+  return createExpenseCategoryService(ctx, name);
 }
 
 /**

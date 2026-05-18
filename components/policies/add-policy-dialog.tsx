@@ -261,7 +261,6 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
         : undefined;
 
       const newPolicy = await createPolicy({
-        userId,
         familyMemberId: selectedFamilyMember || undefined,
         provider,
         policyNumber: policyNumber || undefined,

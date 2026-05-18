@@ -342,7 +342,7 @@ export function CurrentHoldingList({ initialHoldings }: CurrentHoldingListProps)
           </p>
         </div>
       ) : (
-        <div className="rounded-md border">
+        <div className="rounded-md border bg-card">
           <Table>
             <TableHeader>
               <TableRow>

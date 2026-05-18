@@ -6,6 +6,13 @@ import { dailyExpenses, expenseCategories } from "@/db/schema";
 import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import {
+  createDailyExpense as createDailyExpenseService,
+  deleteDailyExpense as deleteDailyExpenseService,
+  listDailyExpenses,
+  updateDailyExpense as updateDailyExpenseService,
+} from "@/lib/services/daily-expenses";
 
 export type DailyExpense = {
   id: string;
@@ -32,29 +39,11 @@ export async function getDailyExpensesForMonth(
   month: number
 ): Promise<DailyExpense[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    // Calculate start and end dates for the month
+    const ctx = await getCurrentUserAndFamily();
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-
-    const expenses = await db
-      .select()
-      .from(dailyExpenses)
-      .where(
-        and(
-          eq(dailyExpenses.userId, userId),
-          gte(dailyExpenses.date, startDate),
-          lte(dailyExpenses.date, endDate)
-        )
-      )
-      .orderBy(desc(dailyExpenses.date), desc(dailyExpenses.createdAt));
-
-    return expenses;
+    return await listDailyExpenses(ctx, { startDate, endDate });
   } catch (error) {
     console.error("Error fetching daily expenses:", error);
     return [];
@@ -69,24 +58,8 @@ export async function getDailyExpenses(
   endDate: string
 ): Promise<DailyExpense[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    const expenses = await db
-      .select()
-      .from(dailyExpenses)
-      .where(
-        and(
-          eq(dailyExpenses.userId, userId),
-          gte(dailyExpenses.date, startDate),
-          lte(dailyExpenses.date, endDate)
-        )
-      )
-      .orderBy(desc(dailyExpenses.date), desc(dailyExpenses.createdAt));
-
-    return expenses;
+    const ctx = await getCurrentUserAndFamily();
+    return await listDailyExpenses(ctx, { startDate, endDate });
   } catch (error) {
     console.error("Error fetching daily expenses:", error);
     return [];
@@ -108,34 +81,22 @@ export async function addDailyExpense(data: {
   originalAmount?: number; // Amount in original currency
   exchangeRate?: number; // Rate used for conversion
 }): Promise<DailyExpense> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  const id = randomUUID();
-
-  const [newExpense] = await db
-    .insert(dailyExpenses)
-    .values({
-      id,
-      userId,
-      categoryId: data.categoryId || null,
-      categoryName: data.categoryName,
-      subcategoryId: data.subcategoryId || null,
-      subcategoryName: data.subcategoryName || null,
-      amount: data.amount.toString(),
-      note: data.note || null,
-      date: data.date,
-      originalCurrency: data.originalCurrency || null,
-      originalAmount: data.originalAmount?.toString() || null,
-      exchangeRate: data.exchangeRate?.toString() || null,
-    })
-    .returning();
+  const ctx = await getCurrentUserAndFamily();
+  const result = await createDailyExpenseService(ctx, {
+    categoryId: data.categoryId,
+    categoryName: data.categoryName,
+    subcategoryId: data.subcategoryId,
+    subcategoryName: data.subcategoryName,
+    amount: data.amount.toString(),
+    note: data.note,
+    date: data.date,
+    originalCurrency: data.originalCurrency,
+    originalAmount: data.originalAmount?.toString(),
+    exchangeRate: data.exchangeRate?.toString(),
+  });
 
   revalidatePath("/budget");
-
-  return newExpense;
+  return result.row;
 }
 
 /**
@@ -156,68 +117,32 @@ export async function updateDailyExpense(
     exchangeRate?: number | null;
   }
 ): Promise<DailyExpense> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const ctx = await getCurrentUserAndFamily();
+  const patch: Parameters<typeof updateDailyExpenseService>[2] = {};
+  if (data.categoryId !== undefined) patch.categoryId = data.categoryId;
+  if (data.categoryName !== undefined) patch.categoryName = data.categoryName;
+  if (data.subcategoryId !== undefined) patch.subcategoryId = data.subcategoryId;
+  if (data.subcategoryName !== undefined) patch.subcategoryName = data.subcategoryName;
+  if (data.amount !== undefined) patch.amount = data.amount.toString();
+  if (data.note !== undefined) patch.note = data.note;
+  if (data.date !== undefined) patch.date = data.date;
+  if (data.originalCurrency !== undefined) patch.originalCurrency = data.originalCurrency;
+  if (data.originalAmount !== undefined)
+    patch.originalAmount = data.originalAmount === null ? null : data.originalAmount.toString();
+  if (data.exchangeRate !== undefined)
+    patch.exchangeRate = data.exchangeRate === null ? null : data.exchangeRate.toString();
 
-  // Verify ownership
-  const existing = await db.query.dailyExpenses.findFirst({
-    where: and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, userId)),
-  });
-
-  if (!existing) {
-    throw new Error("Daily expense not found");
-  }
-
-  const updateData: Record<string, unknown> = {
-    updatedAt: new Date(),
-  };
-
-  if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
-  if (data.categoryName !== undefined) updateData.categoryName = data.categoryName;
-  if (data.subcategoryId !== undefined) updateData.subcategoryId = data.subcategoryId;
-  if (data.subcategoryName !== undefined) updateData.subcategoryName = data.subcategoryName;
-  if (data.amount !== undefined) updateData.amount = data.amount.toString();
-  if (data.note !== undefined) updateData.note = data.note;
-  if (data.date !== undefined) updateData.date = data.date;
-  if (data.originalCurrency !== undefined) updateData.originalCurrency = data.originalCurrency;
-  if (data.originalAmount !== undefined) updateData.originalAmount = data.originalAmount?.toString() || null;
-  if (data.exchangeRate !== undefined) updateData.exchangeRate = data.exchangeRate?.toString() || null;
-
-  const [updatedExpense] = await db
-    .update(dailyExpenses)
-    .set(updateData)
-    .where(and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, userId)))
-    .returning();
-
+  const row = await updateDailyExpenseService(ctx, id, patch);
   revalidatePath("/budget");
-
-  return updatedExpense;
+  return row;
 }
 
 /**
  * Delete a daily expense
  */
 export async function deleteDailyExpense(id: string): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  // Verify ownership
-  const existing = await db.query.dailyExpenses.findFirst({
-    where: and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, userId)),
-  });
-
-  if (!existing) {
-    throw new Error("Daily expense not found");
-  }
-
-  await db
-    .delete(dailyExpenses)
-    .where(and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, userId)));
-
+  const ctx = await getCurrentUserAndFamily();
+  await deleteDailyExpenseService(ctx, id);
   revalidatePath("/budget");
 }
 

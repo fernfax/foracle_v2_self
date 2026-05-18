@@ -1,21 +1,30 @@
 "use server";
 
-import { db } from "@/db";
-import { policies, expenses } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import {
+  createPolicy as createPolicyService,
+  deletePolicy as deletePolicyService,
+  listPolicies,
+  updatePolicy as updatePolicyService,
+} from "@/lib/services/policies";
 
-export async function getUserPolicies(userId: string) {
-  const userPolicies = await db
-    .select()
-    .from(policies)
-    .where(eq(policies.userId, userId))
-    .orderBy(policies.createdAt);
-
-  return userPolicies;
+/**
+ * Get all policies for the current user.
+ *
+ * NOTE: signature changed from getUserPolicies(userId) to getUserPolicies()
+ * — the userId is now resolved via Clerk auth inside the service. Callers
+ * should drop the explicit argument.
+ */
+export async function getUserPolicies() {
+  const ctx = await getCurrentUserAndFamily();
+  return listPolicies(ctx);
 }
 
+/**
+ * Create a new policy. Auth is resolved internally; do not pass userId.
+ */
 export async function createPolicy(data: {
-  userId: string;
   familyMemberId?: string;
   linkedExpenseId?: string;
   provider: string;
@@ -32,15 +41,37 @@ export async function createPolicy(data: {
   coverageOptions?: string;
   description?: string;
 }) {
-  const newPolicy = await db.insert(policies).values({
-    id: crypto.randomUUID(),
-    ...data,
-    isActive: true,
-  }).returning();
-
-  return newPolicy[0];
+  const ctx = await getCurrentUserAndFamily();
+  const result = await createPolicyService(ctx, {
+    familyMemberId: data.familyMemberId,
+    linkedExpenseId: data.linkedExpenseId,
+    provider: data.provider,
+    policyNumber: data.policyNumber,
+    policyType: data.policyType,
+    status: data.status as
+      | "active"
+      | "lapsed"
+      | "cancelled"
+      | "matured"
+      | undefined,
+    startDate: data.startDate,
+    maturityDate: data.maturityDate,
+    coverageUntilAge: data.coverageUntilAge,
+    premiumAmount: data.premiumAmount,
+    premiumFrequency: data.premiumFrequency,
+    customMonths: data.customMonths,
+    totalPremiumDuration: data.totalPremiumDuration,
+    coverageOptions: data.coverageOptions,
+    description: data.description,
+  });
+  revalidatePath("/policies");
+  return result.row;
 }
 
+/**
+ * Update an existing policy. Now scoped to the caller — previously this
+ * function had no auth at all, allowing cross-user policy modification.
+ */
 export async function updatePolicy(
   policyId: string,
   data: Partial<{
@@ -62,26 +93,43 @@ export async function updatePolicy(
     isActive: boolean;
   }>
 ) {
-  const updatedPolicy = await db
-    .update(policies)
-    .set(data)
-    .where(eq(policies.id, policyId))
-    .returning();
+  const ctx = await getCurrentUserAndFamily();
+  const patch: Parameters<typeof updatePolicyService>[2] = {};
+  if (data.familyMemberId !== undefined) patch.familyMemberId = data.familyMemberId;
+  if (data.linkedExpenseId !== undefined) patch.linkedExpenseId = data.linkedExpenseId;
+  if (data.provider !== undefined) patch.provider = data.provider;
+  if (data.policyNumber !== undefined) patch.policyNumber = data.policyNumber;
+  if (data.policyType !== undefined) patch.policyType = data.policyType;
+  if (data.status !== undefined)
+    patch.status = data.status as "active" | "lapsed" | "cancelled" | "matured";
+  if (data.startDate !== undefined) patch.startDate = data.startDate;
+  if (data.maturityDate !== undefined) patch.maturityDate = data.maturityDate;
+  if (data.coverageUntilAge !== undefined) patch.coverageUntilAge = data.coverageUntilAge;
+  if (data.premiumAmount !== undefined) patch.premiumAmount = data.premiumAmount;
+  if (data.premiumFrequency !== undefined) patch.premiumFrequency = data.premiumFrequency;
+  if (data.customMonths !== undefined) patch.customMonths = data.customMonths;
+  if (data.totalPremiumDuration !== undefined)
+    patch.totalPremiumDuration = data.totalPremiumDuration;
+  if (data.coverageOptions !== undefined) patch.coverageOptions = data.coverageOptions;
+  if (data.description !== undefined) patch.description = data.description;
+  if (data.isActive !== undefined) patch.isActive = data.isActive;
 
-  return updatedPolicy[0];
-}
-
-export async function deletePolicy(policyId: string) {
-  // First, get the policy to find the linked expense
-  const policy = await db.query.policies.findFirst({
-    where: eq(policies.id, policyId),
-  });
-
-  // Delete the linked expense if it exists
-  if (policy?.linkedExpenseId) {
-    await db.delete(expenses).where(eq(expenses.id, policy.linkedExpenseId));
+  // If the patch is empty (e.g. caller only passed undefined values), the
+  // service refuses with an empty-update guard. Match that contract here.
+  if (Object.keys(patch).length === 0) {
+    throw new Error("At least one field must be provided");
   }
 
-  // Then delete the policy
-  await db.delete(policies).where(eq(policies.id, policyId));
+  const row = await updatePolicyService(ctx, policyId, patch);
+  revalidatePath("/policies");
+  return row;
+}
+
+/**
+ * Delete a policy. Now scoped to the caller; cascades the linked expense.
+ */
+export async function deletePolicy(policyId: string) {
+  const ctx = await getCurrentUserAndFamily();
+  await deletePolicyService(ctx, policyId);
+  revalidatePath("/policies");
 }

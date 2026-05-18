@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { checkOnboardingStatus } from "@/lib/actions/onboarding";
+import { getBackgroundDecor } from "@/lib/actions/singlish-mode";
 import { TourProvider } from "@/components/tour/tour-provider";
 import { AddExpenseProvider } from "@/components/budget";
 import { DashboardShell } from "@/components/sidebar/dashboard-shell";
@@ -23,10 +24,14 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
+  const backgroundDecor = await getBackgroundDecor();
+
   return (
     <TourProvider userId={userId}>
       <AddExpenseProvider>
-        <DashboardShell>{children}</DashboardShell>
+        {/* RadialDecor / PeranakanTilesDecor mounted inside DashboardShell's
+            bg-background div — paints above canvas, below content. */}
+        <DashboardShell backgroundDecor={backgroundDecor}>{children}</DashboardShell>
       </AddExpenseProvider>
     </TourProvider>
   );

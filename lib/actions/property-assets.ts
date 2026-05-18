@@ -1,22 +1,13 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { propertyAssets, expenses } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { nanoid } from "nanoid";
-
-/**
- * Get the current authenticated user's ID
- */
-async function getCurrentUserId() {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-  return userId;
-}
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import {
+  createPropertyAsset as createPropertyAssetService,
+  deletePropertyAsset as deletePropertyAssetService,
+  listPropertyAssets,
+  updatePropertyAsset as updatePropertyAssetService,
+} from "@/lib/services/property-assets";
 
 /**
  * Create a new property asset
@@ -34,71 +25,38 @@ export async function createPropertyAsset(data: {
   accruedInterestToDate?: number;
   paidByCpf?: boolean;
   addToExpenditures?: boolean;
-  expenseName?: string; // Customizable expense name
-  expenditureAmount?: number; // Customizable expenditure amount
+  expenseName?: string;
+  expenditureAmount?: number;
 }) {
-  const userId = await getCurrentUserId();
-
-  const propertyId = nanoid();
-  let linkedExpenseId: string | null = null;
-
-  // If addToExpenditures is true, create an expense record
-  const expenseAmount = data.expenditureAmount ?? data.monthlyLoanPayment;
-  if (data.addToExpenditures && expenseAmount > 0) {
-    const expenseId = nanoid();
-    await db.insert(expenses).values({
-      id: expenseId,
-      userId,
-      linkedPropertyId: propertyId, // Link back to property
-      name: data.expenseName || `${data.propertyName} - Loan Payment`,
-      category: "Housing",
-      expenseCategory: "current-recurring",
-      amount: expenseAmount.toString(),
-      frequency: "Monthly",
-      startDate: data.purchaseDate,
-      description: `Auto-generated from property asset: ${data.propertyName}`,
-      isActive: true,
-    });
-    linkedExpenseId = expenseId;
-  }
-
-  const newPropertyAsset = await db.insert(propertyAssets).values({
-    id: propertyId,
-    userId,
-    linkedExpenseId,
+  const ctx = await getCurrentUserAndFamily();
+  const result = await createPropertyAssetService(ctx, {
     propertyName: data.propertyName,
     purchaseDate: data.purchaseDate,
     originalPurchasePrice: data.originalPurchasePrice.toString(),
-    loanAmountTaken: data.loanAmountTaken?.toString() || null,
+    loanAmountTaken: data.loanAmountTaken?.toString(),
     outstandingLoan: data.outstandingLoan.toString(),
     monthlyLoanPayment: data.monthlyLoanPayment.toString(),
     interestRate: data.interestRate.toString(),
-    principalCpfWithdrawn: data.principalCpfWithdrawn?.toString() || null,
-    housingGrantTaken: data.housingGrantTaken?.toString() || null,
-    accruedInterestToDate: data.accruedInterestToDate?.toString() || null,
-    paidByCpf: data.paidByCpf ?? false,
-    isActive: true,
-  }).returning();
-
+    principalCpfWithdrawn: data.principalCpfWithdrawn?.toString(),
+    housingGrantTaken: data.housingGrantTaken?.toString(),
+    accruedInterestToDate: data.accruedInterestToDate?.toString(),
+    paidByCpf: data.paidByCpf,
+    addToExpenditures: data.addToExpenditures,
+    expenseName: data.expenseName,
+    expenditureAmount: data.expenditureAmount?.toString(),
+  });
   revalidatePath("/assets");
   revalidatePath("/expenses");
   revalidatePath("/user");
-  return newPropertyAsset[0];
+  return result.row;
 }
 
 /**
  * Get all property assets for the current user
  */
 export async function getPropertyAssets() {
-  const userId = await getCurrentUserId();
-
-  const properties = await db
-    .select()
-    .from(propertyAssets)
-    .where(eq(propertyAssets.userId, userId))
-    .orderBy(propertyAssets.createdAt);
-
-  return properties;
+  const ctx = await getCurrentUserAndFamily();
+  return listPropertyAssets(ctx);
 }
 
 /**
@@ -119,113 +77,39 @@ export async function updatePropertyAsset(
     accruedInterestToDate?: number;
     paidByCpf?: boolean;
     addToExpenditures?: boolean;
-    expenseName?: string; // Customizable expense name
-    expenditureAmount?: number; // Customizable expenditure amount
+    expenseName?: string;
+    expenditureAmount?: number;
   }
 ) {
-  const userId = await getCurrentUserId();
-
-  // Get the existing property to check for linked expense
-  const existing = await db
-    .select()
-    .from(propertyAssets)
-    .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, userId)))
-    .limit(1);
-
-  if (!existing.length) {
-    throw new Error("Property asset not found");
-  }
-
-  const existingProperty = existing[0];
-  let linkedExpenseId = existingProperty.linkedExpenseId;
-
-  // Handle expense integration
-  const expenseAmount = data.expenditureAmount ?? data.monthlyLoanPayment;
-  if (data.addToExpenditures && expenseAmount > 0) {
-    if (linkedExpenseId) {
-      // Update existing expense
-      await db.update(expenses)
-        .set({
-          name: data.expenseName || `${data.propertyName} - Loan Payment`,
-          amount: expenseAmount.toString(),
-          startDate: data.purchaseDate,
-          updatedAt: new Date(),
-        })
-        .where(eq(expenses.id, linkedExpenseId));
-    } else {
-      // Create new expense
-      const expenseId = nanoid();
-      await db.insert(expenses).values({
-        id: expenseId,
-        userId,
-        linkedPropertyId: id, // Link back to property
-        name: data.expenseName || `${data.propertyName} - Loan Payment`,
-        category: "Housing",
-        expenseCategory: "current-recurring",
-        amount: expenseAmount.toString(),
-        frequency: "Monthly",
-        startDate: data.purchaseDate,
-        description: `Auto-generated from property asset: ${data.propertyName}`,
-        isActive: true,
-      });
-      linkedExpenseId = expenseId;
-    }
-  } else if (!data.addToExpenditures && linkedExpenseId) {
-    // Remove linked expense if toggle is turned off
-    await db.delete(expenses).where(eq(expenses.id, linkedExpenseId));
-    linkedExpenseId = null;
-  }
-
-  const updated = await db.update(propertyAssets)
-    .set({
-      linkedExpenseId,
-      propertyName: data.propertyName,
-      purchaseDate: data.purchaseDate,
-      originalPurchasePrice: data.originalPurchasePrice.toString(),
-      loanAmountTaken: data.loanAmountTaken?.toString() || null,
-      outstandingLoan: data.outstandingLoan.toString(),
-      monthlyLoanPayment: data.monthlyLoanPayment.toString(),
-      interestRate: data.interestRate.toString(),
-      principalCpfWithdrawn: data.principalCpfWithdrawn?.toString() || null,
-      housingGrantTaken: data.housingGrantTaken?.toString() || null,
-      accruedInterestToDate: data.accruedInterestToDate?.toString() || null,
-      paidByCpf: data.paidByCpf ?? false,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, userId)))
-    .returning();
-
+  const ctx = await getCurrentUserAndFamily();
+  const row = await updatePropertyAssetService(ctx, id, {
+    propertyName: data.propertyName,
+    purchaseDate: data.purchaseDate,
+    originalPurchasePrice: data.originalPurchasePrice.toString(),
+    loanAmountTaken: data.loanAmountTaken?.toString() ?? null,
+    outstandingLoan: data.outstandingLoan.toString(),
+    monthlyLoanPayment: data.monthlyLoanPayment.toString(),
+    interestRate: data.interestRate.toString(),
+    principalCpfWithdrawn: data.principalCpfWithdrawn?.toString() ?? null,
+    housingGrantTaken: data.housingGrantTaken?.toString() ?? null,
+    accruedInterestToDate: data.accruedInterestToDate?.toString() ?? null,
+    paidByCpf: data.paidByCpf ?? false,
+    addToExpenditures: data.addToExpenditures,
+    expenseName: data.expenseName,
+    expenditureAmount: data.expenditureAmount?.toString() ?? null,
+  });
   revalidatePath("/assets");
   revalidatePath("/expenses");
   revalidatePath("/user");
-  return updated[0];
+  return row;
 }
 
 /**
  * Delete a property asset
  */
 export async function deletePropertyAsset(id: string) {
-  const userId = await getCurrentUserId();
-
-  // Get the property to check for linked expense
-  const existing = await db
-    .select()
-    .from(propertyAssets)
-    .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, userId)))
-    .limit(1);
-
-  if (!existing.length) {
-    throw new Error("Property asset not found");
-  }
-
-  // Delete linked expense if exists
-  if (existing[0].linkedExpenseId) {
-    await db.delete(expenses).where(eq(expenses.id, existing[0].linkedExpenseId));
-  }
-
-  await db.delete(propertyAssets)
-    .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, userId)));
-
+  const ctx = await getCurrentUserAndFamily();
+  await deletePropertyAssetService(ctx, id);
   revalidatePath("/assets");
   revalidatePath("/expenses");
 }

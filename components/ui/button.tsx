@@ -6,31 +6,32 @@ import { cn } from "@/lib/utils"
 
 /**
  * Button — see /design_guide/design_guide.md §10.1.
- * Default: Space Grotesk 13px / 500, padding 10px 22px, radius 6px.
- * Variants: default (terracotta primary), secondary (outlined terracotta),
- * ghost (transparent + hairline), teal (success-only completion flows),
- * destructive (alert red), outline (legacy alias for ghost), link.
+ *
+ * Polished tactile feel: 10px radius (up from 6px sharp), brand-tinted
+ * lift shadow on the primary variant (so the CTA reads as a slightly
+ * raised tag), subtle press translate. Ghost / outline / link stay flat
+ * so secondary affordances don't compete with the primary action.
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm font-display text-[13px] font-medium tracking-tight transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-[3px] focus-visible:ring-primary/15 focus-visible:ring-offset-1 focus-visible:ring-offset-background aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[10px] font-display text-[13px] font-medium tracking-tight transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-[3px] focus-visible:ring-primary/15 focus-visible:ring-offset-1 focus-visible:ring-offset-background aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-[#D4845A] dark:hover:bg-[#B8622A] active:translate-y-px",
+          "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(184,98,42,0.18),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#D4845A] hover:shadow-[0_4px_12px_rgba(184,98,42,0.22),0_1px_2px_rgba(28,43,42,0.04)] active:translate-y-px active:shadow-[0_1px_2px_rgba(184,98,42,0.18)] dark:hover:bg-[#B8622A]",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20",
+          "bg-destructive text-destructive-foreground shadow-[0_2px_8px_rgba(224,85,85,0.18),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-destructive/90 hover:shadow-[0_4px_12px_rgba(224,85,85,0.22)] active:translate-y-px focus-visible:ring-destructive/20",
         outline:
           "border border-border/40 bg-transparent text-foreground hover:bg-muted/60 hover:border-border/70",
         secondary:
-          "border-[1.5px] border-primary bg-transparent text-primary hover:bg-primary/8",
+          "border-[1.5px] border-primary bg-transparent text-primary hover:bg-primary/8 hover:shadow-[0_2px_8px_rgba(184,98,42,0.10)] active:translate-y-px",
         ghost:
           "border border-border/30 bg-transparent text-foreground/70 hover:bg-muted/60 hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline px-0 h-auto",
         teal:
-          "bg-[#00C4AA] text-[#1C2B2A] hover:bg-[#33D4BC] active:translate-y-px",
+          "bg-[#00C4AA] text-[#1C2B2A] shadow-[0_2px_8px_rgba(0,196,170,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#33D4BC] hover:shadow-[0_4px_12px_rgba(0,196,170,0.24)] active:translate-y-px",
         warning:
-          "bg-[#D4A843] text-[#1C2B2A] hover:bg-[#D4A843]/90",
+          "bg-[#D4A843] text-[#1C2B2A] shadow-[0_2px_8px_rgba(212,168,67,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#D4A843]/90 active:translate-y-px",
       },
       size: {
         default: "h-9 px-[22px] py-[10px] has-[>svg]:px-4",

@@ -1,21 +1,7 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { expenses, expenseCategories, dailyExpenses } from "@/db/schema";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
-import { calculateMonthlyAmount } from "@/lib/expense-calculator";
-import { getBudgetAdjustmentsForMonth } from "@/lib/actions/budget-shifts";
-
-// Frequency multipliers for converting to monthly
-const FREQUENCY_MULTIPLIERS: Record<string, number> = {
-  monthly: 1,
-  yearly: 1 / 12,
-  weekly: 4.33,
-  "bi-weekly": 2.17,
-  quarterly: 1 / 3,
-  "semi-yearly": 1 / 6,
-};
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import { getBudgetForMonth } from "@/lib/services/budget";
 
 export interface CategoryBudget {
   categoryId: string | null;
@@ -35,100 +21,27 @@ export interface BudgetVsActual {
 }
 
 /**
- * Check if a one-time expense falls within a specific month
- */
-function isOneTimeExpenseInMonth(
-  expenseStartDate: string | null,
-  year: number,
-  month: number
-): boolean {
-  if (!expenseStartDate) return false;
-  const date = new Date(expenseStartDate);
-  return date.getFullYear() === year && date.getMonth() + 1 === month;
-}
-
-/**
- * Calculate monthly budget per category from recurring expenses
- * Only includes expenses that are tracked in budget
- * For a specific month, also includes one-time expenses that occur in that month
+ * Calculate monthly budget per category from recurring expenses.
+ * Only includes tracked-in-budget expenses; for a specific month, also
+ * includes one-time expenses that occur in that month.
  */
 export async function calculateCategoryBudgets(
   year?: number,
   month?: number
 ): Promise<CategoryBudget[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    // Get all active recurring expenses that are tracked in budget
-    const userExpenses = await db
-      .select()
-      .from(expenses)
-      .where(and(
-        eq(expenses.userId, userId),
-        eq(expenses.isActive, true),
-        eq(expenses.trackedInBudget, true)
-      ));
-
-    // Get all expense categories with icons
-    const categories = await db
-      .select()
-      .from(expenseCategories)
-      .where(eq(expenseCategories.userId, userId));
-
-    // Create a map of category names to icons
-    const categoryIconMap: Record<string, { id: string; icon: string | null }> = {};
-    categories.forEach((cat) => {
-      categoryIconMap[cat.name] = { id: cat.id, icon: cat.icon };
-    });
-
-    // Calculate monthly budget per category (only from tracked expenses)
-    const categoryBudgets: Record<
-      string,
-      { categoryId: string | null; monthlyBudget: number; icon: string | null }
-    > = {};
-
-    userExpenses.forEach((expense) => {
-      const amount = parseFloat(expense.amount);
-      const isOneTime = expense.frequency.toLowerCase() === "one-time";
-
-      let monthlyAmount: number;
-      if (isOneTime) {
-        // One-time expenses: include full amount only if they fall in the specified month
-        if (year && month && isOneTimeExpenseInMonth(expense.startDate, year, month)) {
-          monthlyAmount = amount;
-        } else {
-          monthlyAmount = 0;
-        }
-      } else {
-        // Recurring expenses: calculate normal monthly amount
-        monthlyAmount = calculateMonthlyAmount(
-          amount,
-          expense.frequency,
-          expense.customMonths
-        );
-      }
-
-      if (monthlyAmount > 0) {
-        if (!categoryBudgets[expense.category]) {
-          const catInfo = categoryIconMap[expense.category];
-          categoryBudgets[expense.category] = {
-            categoryId: catInfo?.id || null,
-            monthlyBudget: 0,
-            icon: catInfo?.icon || null,
-          };
-        }
-        categoryBudgets[expense.category].monthlyBudget += monthlyAmount;
-      }
-    });
-
-    return Object.entries(categoryBudgets).map(([categoryName, data]) => ({
-      categoryName,
-      categoryId: data.categoryId,
-      monthlyBudget: data.monthlyBudget,
-      icon: data.icon,
+    const ctx = await getCurrentUserAndFamily();
+    // No year/month → use current month for the rollup. Mirrors how the
+    // existing UI calls this when it just wants "this month".
+    const now = new Date();
+    const y = year ?? now.getFullYear();
+    const m = month ?? now.getMonth() + 1;
+    const { categories } = await getBudgetForMonth(ctx, y, m);
+    return categories.map((c) => ({
+      categoryId: c.categoryId,
+      categoryName: c.categoryName,
+      monthlyBudget: c.monthlyBudget,
+      icon: c.icon,
     }));
   } catch (error) {
     console.error("Error calculating category budgets:", error);
@@ -137,52 +50,19 @@ export async function calculateCategoryBudgets(
 }
 
 /**
- * Calculate total monthly budget from all tracked recurring expenses
- * For a specific month, also includes one-time expenses that occur in that month
+ * Calculate total monthly budget from all tracked recurring expenses.
  */
 export async function getTotalMonthlyBudget(
   year?: number,
   month?: number
 ): Promise<number> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    // Get only tracked expenses
-    const userExpenses = await db
-      .select()
-      .from(expenses)
-      .where(and(
-        eq(expenses.userId, userId),
-        eq(expenses.isActive, true),
-        eq(expenses.trackedInBudget, true)
-      ));
-
-    return userExpenses.reduce((total, expense) => {
-      const amount = parseFloat(expense.amount);
-      const isOneTime = expense.frequency.toLowerCase() === "one-time";
-
-      let monthlyAmount: number;
-      if (isOneTime) {
-        // One-time expenses: include full amount only if they fall in the specified month
-        if (year && month && isOneTimeExpenseInMonth(expense.startDate, year, month)) {
-          monthlyAmount = amount;
-        } else {
-          monthlyAmount = 0;
-        }
-      } else {
-        // Recurring expenses: calculate normal monthly amount
-        monthlyAmount = calculateMonthlyAmount(
-          amount,
-          expense.frequency,
-          expense.customMonths
-        );
-      }
-
-      return total + monthlyAmount;
-    }, 0);
+    const ctx = await getCurrentUserAndFamily();
+    const now = new Date();
+    const y = year ?? now.getFullYear();
+    const m = month ?? now.getMonth() + 1;
+    const { summary } = await getBudgetForMonth(ctx, y, m);
+    return summary.totalBudget;
   } catch (error) {
     console.error("Error calculating total monthly budget:", error);
     return 0;
@@ -190,127 +70,16 @@ export async function getTotalMonthlyBudget(
 }
 
 /**
- * Get the category names that have at least one tracked expense
- */
-async function getTrackedCategoryNames(userId: string): Promise<Set<string>> {
-  const trackedExpenses = await db
-    .select({ category: expenses.category })
-    .from(expenses)
-    .where(and(
-      eq(expenses.userId, userId),
-      eq(expenses.isActive, true),
-      eq(expenses.trackedInBudget, true)
-    ));
-
-  return new Set(trackedExpenses.map((e) => e.category));
-}
-
-/**
- * Get budget vs actual for a specific month
- * Only includes categories with tracked expenses
+ * Get budget vs actual per category for a specific month.
  */
 export async function getBudgetVsActual(
   year: number,
   month: number
 ): Promise<BudgetVsActual[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    // Get categories that have tracked expenses
-    const trackedCategoryNames = await getTrackedCategoryNames(userId);
-
-    // Get all expense categories with icons
-    const categories = await db
-      .select()
-      .from(expenseCategories)
-      .where(eq(expenseCategories.userId, userId));
-
-    // Get category budgets (already filtered by tracked expenses)
-    // Pass year/month to include one-time expenses for this specific month
-    const categoryBudgets = await calculateCategoryBudgets(year, month);
-
-    // Get budget shift adjustments for this month
-    const budgetAdjustments = await getBudgetAdjustmentsForMonth(year, month);
-
-    // Get actual spending for the month
-    const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-    const lastDay = new Date(year, month, 0).getDate();
-    const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-
-    const spending = await db
-      .select({
-        categoryName: dailyExpenses.categoryName,
-        totalSpent: sql<number>`sum(${dailyExpenses.amount})::numeric`,
-      })
-      .from(dailyExpenses)
-      .where(
-        and(
-          eq(dailyExpenses.userId, userId),
-          gte(dailyExpenses.date, startDate),
-          lte(dailyExpenses.date, endDate)
-        )
-      )
-      .groupBy(dailyExpenses.categoryName);
-
-    // Create a map of spending by category (only tracked categories)
-    const spendingMap: Record<string, number> = {};
-    spending.forEach((s) => {
-      if (trackedCategoryNames.has(s.categoryName)) {
-        spendingMap[s.categoryName] = Number(s.totalSpent) || 0;
-      }
-    });
-
-    // Combine budgets with actual spending, applying budget shift adjustments
-    const result: BudgetVsActual[] = categoryBudgets.map((budget) => {
-      const spent = spendingMap[budget.categoryName] || 0;
-      // Apply budget shift adjustment (positive = increased budget, negative = decreased)
-      const adjustment = budgetAdjustments[budget.categoryName] || 0;
-      const adjustedBudget = budget.monthlyBudget + adjustment;
-      const remaining = adjustedBudget - spent;
-      const percentUsed =
-        adjustedBudget > 0 ? (spent / adjustedBudget) * 100 : 0;
-
-      return {
-        categoryName: budget.categoryName,
-        categoryId: budget.categoryId,
-        icon: budget.icon,
-        monthlyBudget: adjustedBudget,
-        spent,
-        remaining,
-        percentUsed,
-      };
-    });
-
-    // Add any tracked categories that have spending but no budget
-    Object.entries(spendingMap).forEach(([categoryName, spent]) => {
-      if (!result.find((r) => r.categoryName === categoryName)) {
-        // Find the category info
-        const cat = categories.find((c) => c.name === categoryName);
-        // Check if this category received budget through shifts
-        const adjustment = budgetAdjustments[categoryName] || 0;
-        const adjustedBudget = Math.max(0, adjustment); // Only positive adjustments create budget
-        result.push({
-          categoryName,
-          categoryId: cat?.id || null,
-          icon: cat?.icon || null,
-          monthlyBudget: adjustedBudget,
-          spent,
-          remaining: adjustedBudget - spent,
-          percentUsed: adjustedBudget > 0 ? (spent / adjustedBudget) * 100 : 100,
-        });
-      }
-    });
-
-    // Sort by monthly budget (highest first), then by spent (highest first)
-    return result.sort((a, b) => {
-      if (b.monthlyBudget !== a.monthlyBudget) {
-        return b.monthlyBudget - a.monthlyBudget;
-      }
-      return b.spent - a.spent;
-    });
+    const ctx = await getCurrentUserAndFamily();
+    const { categories } = await getBudgetForMonth(ctx, year, month);
+    return categories;
   } catch (error) {
     console.error("Error calculating budget vs actual:", error);
     return [];
@@ -318,78 +87,13 @@ export async function getBudgetVsActual(
 }
 
 /**
- * Get overall budget summary for a month
- * Only includes tracked expenses
+ * Overall budget summary for a month.
  */
 export async function getBudgetSummary(year: number, month: number) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    // Get category names that have tracked expenses
-    const trackedCategoryNames = await getTrackedCategoryNames(userId);
-
-    // Pass year/month to include one-time expenses for this specific month
-    const totalBudget = await getTotalMonthlyBudget(year, month);
-
-    // Get total spending for the month - only for tracked categories
-    const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-    const lastDay = new Date(year, month, 0).getDate();
-    const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-
-    // Get all daily expenses for the month
-    const allExpenses = await db
-      .select()
-      .from(dailyExpenses)
-      .where(
-        and(
-          eq(dailyExpenses.userId, userId),
-          gte(dailyExpenses.date, startDate),
-          lte(dailyExpenses.date, endDate)
-        )
-      );
-
-    // Sum only tracked category expenses
-    const totalSpent = allExpenses
-      .filter((exp) => trackedCategoryNames.has(exp.categoryName))
-      .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-
-    const remaining = totalBudget - totalSpent;
-    const percentUsed = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-
-    // Calculate daily budget and pacing (using Singapore Time for day calculation)
-    const daysInMonth = lastDay;
-    const sgtDate = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
-    const currentDay = parseInt(sgtDate.split("-")[2], 10);
-
-    // Daily target = remaining budget / days left (including today)
-    const daysLeftIncludingToday = daysInMonth - currentDay + 1;
-    const dailyBudget = remaining > 0 ? remaining / daysLeftIncludingToday : 0;
-
-    // Expected spent by today uses the original pro-rata calculation for pacing
-    const expectedSpentByToday = (totalBudget / daysInMonth) * currentDay;
-
-    // Determine pacing status
-    let pacingStatus: "under" | "on-track" | "over" = "on-track";
-    if (totalSpent < expectedSpentByToday * 0.9) {
-      pacingStatus = "under";
-    } else if (totalSpent > expectedSpentByToday * 1.1) {
-      pacingStatus = "over";
-    }
-
-    return {
-      totalBudget,
-      totalSpent,
-      remaining,
-      percentUsed,
-      dailyBudget,
-      expectedSpentByToday,
-      pacingStatus,
-      daysInMonth,
-      currentDay,
-    };
+    const ctx = await getCurrentUserAndFamily();
+    const { summary } = await getBudgetForMonth(ctx, year, month);
+    return summary;
   } catch (error) {
     console.error("Error calculating budget summary:", error);
     return {

@@ -3,8 +3,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { expenses, expenseCategories } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import {
+  createExpense as createExpenseService,
+  hardDeleteExpense as hardDeleteExpenseService,
+  listExpenses,
+  updateExpense as updateExpenseService,
+} from "@/lib/services/expenses";
 
 export type Expense = {
   id: string;
@@ -29,18 +36,8 @@ export type Expense = {
  */
 export async function getExpenses(): Promise<Expense[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    const userExpenses = await db
-      .select()
-      .from(expenses)
-      .where(eq(expenses.userId, userId))
-      .orderBy(desc(expenses.createdAt));
-
-    return userExpenses;
+    const ctx = await getCurrentUserAndFamily();
+    return await listExpenses(ctx);
   } catch (error) {
     console.error("Error fetching expenses:", error);
     return [];
@@ -61,32 +58,30 @@ export async function addExpense(data: {
   endDate?: string | null;
   description?: string;
 }): Promise<Expense> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  const id = randomUUID();
-
-  const [newExpense] = await db
-    .insert(expenses)
-    .values({
-      id,
-      userId,
-      name: data.name,
-      category: data.category,
-      expenseCategory: data.expenseCategory || "current-recurring",
-      amount: data.amount.toString(),
-      frequency: data.frequency,
-      customMonths: data.customMonths || null,
-      startDate: data.startDate || null,
-      endDate: data.endDate || null,
-      description: data.description || null,
-      isActive: true,
-    })
-    .returning();
-
-  return newExpense;
+  const ctx = await getCurrentUserAndFamily();
+  const result = await createExpenseService(ctx, {
+    name: data.name,
+    category: data.category,
+    expenseCategory: data.expenseCategory as
+      | "current-recurring"
+      | "future-recurring"
+      | "temporary"
+      | "one-off"
+      | undefined,
+    amount: data.amount.toString(),
+    frequency: data.frequency as
+      | "monthly"
+      | "yearly"
+      | "one-time"
+      | "weekly"
+      | "bi-weekly"
+      | "custom",
+    customMonths: data.customMonths,
+    startDate: data.startDate,
+    endDate: data.endDate,
+    description: data.description,
+  });
+  return result.row;
 }
 
 /**
@@ -106,55 +101,38 @@ export async function updateExpense(
     description?: string;
   }
 ): Promise<Expense> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  // Verify ownership
-  const existing = await db.query.expenses.findFirst({
-    where: and(eq(expenses.id, id), eq(expenses.userId, userId)),
-  });
-
-  if (!existing) {
-    throw new Error("Expense not found");
-  }
-
-  const updateData: any = {
-    updatedAt: new Date(),
-  };
-
-  if (data.name !== undefined) updateData.name = data.name;
-  if (data.category !== undefined) updateData.category = data.category;
-  if (data.expenseCategory !== undefined) updateData.expenseCategory = data.expenseCategory;
-  if (data.amount !== undefined) updateData.amount = data.amount.toString();
-  if (data.frequency !== undefined) updateData.frequency = data.frequency;
-  if (data.customMonths !== undefined) updateData.customMonths = data.customMonths;
-  if (data.startDate !== undefined) updateData.startDate = data.startDate;
-  if (data.endDate !== undefined) updateData.endDate = data.endDate;
-  if (data.description !== undefined) updateData.description = data.description;
-
-  const [updatedExpense] = await db
-    .update(expenses)
-    .set(updateData)
-    .where(and(eq(expenses.id, id), eq(expenses.userId, userId)))
-    .returning();
-
-  return updatedExpense;
+  const ctx = await getCurrentUserAndFamily();
+  const patch: Parameters<typeof updateExpenseService>[2] = {};
+  if (data.name !== undefined) patch.name = data.name;
+  if (data.category !== undefined) patch.category = data.category;
+  if (data.expenseCategory !== undefined)
+    patch.expenseCategory = data.expenseCategory as
+      | "current-recurring"
+      | "future-recurring"
+      | "temporary"
+      | "one-off";
+  if (data.amount !== undefined) patch.amount = data.amount.toString();
+  if (data.frequency !== undefined)
+    patch.frequency = data.frequency as
+      | "monthly"
+      | "yearly"
+      | "one-time"
+      | "weekly"
+      | "bi-weekly"
+      | "custom";
+  if (data.customMonths !== undefined) patch.customMonths = data.customMonths;
+  if (data.startDate !== undefined) patch.startDate = data.startDate;
+  if (data.endDate !== undefined) patch.endDate = data.endDate;
+  if (data.description !== undefined) patch.description = data.description;
+  return updateExpenseService(ctx, id, patch);
 }
 
 /**
  * Delete an expense
  */
 export async function deleteExpense(id: string): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  await db
-    .delete(expenses)
-    .where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
+  const ctx = await getCurrentUserAndFamily();
+  await hardDeleteExpenseService(ctx, id);
 }
 
 /**

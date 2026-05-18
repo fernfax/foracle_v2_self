@@ -24,7 +24,7 @@ export default async function UserHomepage() {
     getFamilyMembers(),
     getCpfByFamilyMember(),
     getCurrentHoldings(),
-    getUserPolicies(userId),
+    getUserPolicies(),
     getPropertyAssets(),
   ]);
 
