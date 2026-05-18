@@ -10,6 +10,7 @@ import { MobileNav } from "@/components/mobile-nav";
 import { HeaderQuickLinks } from "@/components/header/header-quick-links";
 import { HelpButton } from "@/components/tour/help-button";
 import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget";
+import { ClerkUserButton } from "@/components/clerk-user-button";
 import { RadialDecor } from "@/components/ui/radial-decor";
 import { PeranakanTilesDecor } from "@/components/ui/peranakan-tiles-decor";
 import type { BackgroundDecor } from "@/lib/services/user-prefs";
@@ -88,6 +89,14 @@ function DashboardContent({ children }: { children: ReactNode }) {
               >
                 <Smartphone className="h-5 w-5 text-foreground/55" />
               </Link>
+              {/* Avatar / Manage Account — mobile only. Desktop has its own
+                  ClerkUserButton inside the sidebar footer. */}
+              <div className="md:hidden">
+                <ClerkUserButton
+                  afterSignOutUrl="/"
+                  appearance={{ elements: { avatarBox: "w-8 h-8" } }}
+                />
+              </div>
             </div>
           </div>
         </header>
