@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import { PageHeader } from "@/components/ui/page-header";
 import { Receipt, TrendingUp, PieChart } from "lucide-react";
 import { ExpenseList } from "@/components/expenses/expense-list";
 import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
@@ -99,45 +100,40 @@ export function ExpensesClient({ initialExpenses, initialIncomes, initialHolding
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-          Profile
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Expenses</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your personal financial information
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Expenses"
+        tabs={
+          mounted ? (
+            <SlidingTabs
+              tabs={[
+                { value: "expenses", label: "Expenses", icon: Receipt },
+                { value: "graph", label: "Graph", icon: TrendingUp },
+                { value: "reports", label: "Reports", icon: PieChart },
+              ]}
+              value={activeTab}
+              onValueChange={handleTabChange}
+            />
+          ) : null
+        }
+      />
 
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <>
-          <SlidingTabs
-            tabs={[
-              { value: "expenses", label: "Expenses", icon: Receipt },
-              { value: "graph", label: "Graph", icon: TrendingUp },
-              { value: "reports", label: "Reports", icon: PieChart },
-            ]}
-            value={activeTab}
-            onValueChange={handleTabChange}
-          />
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsContent value="expenses" className="mt-4">
+            <ExpenseList initialExpenses={initialExpenses} />
+          </TabsContent>
 
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsContent value="expenses" className="mt-4">
-              <ExpenseList initialExpenses={initialExpenses} />
-            </TabsContent>
+          <TabsContent value="graph" className="mt-4">
+            <MonthlyBalanceGraph incomes={initialIncomes} expenses={initialExpenses} holdings={initialHoldings} investments={initialInvestments} />
+          </TabsContent>
 
-            <TabsContent value="graph" className="mt-4">
-              <MonthlyBalanceGraph incomes={initialIncomes} expenses={initialExpenses} holdings={initialHoldings} investments={initialInvestments} />
-            </TabsContent>
-
-            <TabsContent value="reports" className="mt-4">
-              <ExpenseReports expenses={initialExpenses} />
-            </TabsContent>
-          </Tabs>
-        </>
+          <TabsContent value="reports" className="mt-4">
+            <ExpenseReports expenses={initialExpenses} />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

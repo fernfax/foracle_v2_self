@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { Home, Car, Package, Plus } from "lucide-react";
 import { PropertyList } from "@/components/assets/property-list";
 import { VehicleList } from "@/components/assets/vehicle-list";
@@ -72,32 +73,28 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-          Profile
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Assets</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your property, vehicle, and other assets
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Assets"
+        tabs={
+          mounted ? (
+            <SlidingTabs
+              tabs={[
+                { value: "property", label: "Property", icon: Home },
+                { value: "vehicle", label: "Vehicle", icon: Car },
+                { value: "others", label: "Others", icon: Package },
+              ]}
+              value={activeTab}
+              onValueChange={handleTabChange}
+            />
+          ) : null
+        }
+      />
 
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <>
-          <SlidingTabs
-            tabs={[
-              { value: "property", label: "Property", icon: Home },
-              { value: "vehicle", label: "Vehicle", icon: Car },
-              { value: "others", label: "Others", icon: Package },
-            ]}
-            value={activeTab}
-            onValueChange={handleTabChange}
-          />
-
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsContent value="property" className="mt-4">
             <PropertyList initialProperties={initialPropertyAssets} />
           </TabsContent>
@@ -122,7 +119,6 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
             </div>
           </TabsContent>
         </Tabs>
-        </>
       )}
     </div>
   );
