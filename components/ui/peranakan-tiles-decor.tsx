@@ -10,7 +10,9 @@
  * Light mode only — dark mode renders nothing (depth comes from the
  * dark surface stack, per design guide §11).
  *
- * Sized at 200×200 per tile in a 400×400 repeating block (4 motifs).
+ * Sized at 200×200 per tile in a 400×400 repeating block (4 motifs),
+ * then scaled to 0.5 via patternTransform so tiles render tighter
+ * (≈100×100 each) without rewriting every coordinate.
  * Opacity tuned low (~0.18) so it never competes with content.
  */
 export function PeranakanTilesDecor() {
@@ -33,6 +35,7 @@ export function PeranakanTilesDecor() {
             width="400"
             height="400"
             patternUnits="userSpaceOnUse"
+            patternTransform="scale(0.5)"
           >
             {/* ──── Cell 1 (0,0): 8-petal floral, terracotta ──── */}
             <g transform="translate(0 0)">

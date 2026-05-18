@@ -65,6 +65,15 @@ export function HelpButton() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [welcomeModalTour, setWelcomeModalTour] = useState<TourName>("overall");
 
+  // Defer mounting so Radix DropdownMenu's useId-generated trigger ID is
+  // only produced client-side. Otherwise any upstream SSR/CSR tree difference
+  // shifts the React 19 useId counter and the server-rendered id won't match
+  // the client-expected id, throwing a hydration warning.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Don't render on assistant page (has its own input interface)
   const isAssistantPage = pathname === "/assistant";
 
@@ -187,8 +196,8 @@ export function HelpButton() {
     setPendingTour(null);
   };
 
-  // Don't render on assistant page
-  if (isAssistantPage) {
+  // Don't render on assistant page, or before client mount (see comment above)
+  if (isAssistantPage || !mounted) {
     return null;
   }
 

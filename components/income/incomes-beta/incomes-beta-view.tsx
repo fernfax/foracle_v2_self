@@ -538,11 +538,21 @@ interface IncomesBetaViewProps {
 
 type ViewMode = "timeline" | "cards";
 
+// In-page draft state for Action Cards. Lives in IncomesBetaView; flows down
+// to ActionCardsView, which renders a DraftSentenceCard in place of the
+// dashed "+ New Income Rule" tile while a draft is active. Replaces the
+// IncomeCreatorDrawer modal for the cards-view "Add Income" entry points.
+type DraftIncome = {
+  name: string;
+  amount: string;
+  archetype: "recurring" | "one-off" | "temporary";
+};
+
 export function IncomesBetaView({
   incomes: rawIncomes,
   familyMembers,
 }: IncomesBetaViewProps) {
-  const [view, setView] = useState<ViewMode>("timeline");
+  const [view, setView] = useState<ViewMode>("cards");
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   const activeRaw = useMemo(
@@ -592,6 +602,12 @@ export function IncomesBetaView({
 
   // Modal/drawer state
   const [creatorOpen, setCreatorOpen] = useState(false);
+
+  // Inline draft for the cards-view "Add Income" flow. Non-null while the
+  // user is filling out a DraftSentenceCard on the page. Timeline view uses
+  // editMode instead, so this stays null there.
+  const [draftIncome, setDraftIncome] = useState<DraftIncome | null>(null);
+  const [draftSaving, setDraftSaving] = useState(false);
   const [detailIncomeId, setDetailIncomeId] = useState<string | null>(null);
   const [futureChangeContext, setFutureChangeContext] = useState<{
     incomeId: string;
@@ -1069,6 +1085,47 @@ export function IncomesBetaView({
     setDrawState(null);
   }, []);
 
+  // Every "Add Income" CTA on the page routes through here. Cards view opens
+  // an inline DraftSentenceCard; Timeline view flips into draw/edit mode so
+  // the user can sketch a bar. Either way, no modal.
+  const handleOpenAddIncome = useCallback(() => {
+    if (view === "timeline") {
+      setEditMode(true);
+    } else {
+      setDraftIncome({ name: "", amount: "", archetype: "recurring" });
+    }
+  }, [view]);
+
+  const handleCancelDraft = useCallback(() => {
+    setDraftIncome(null);
+  }, []);
+
+  const handleSaveDraft = useCallback(async () => {
+    if (!draftIncome) return;
+    const name = draftIncome.name.trim();
+    const amount = Number(draftIncome.amount);
+    if (!name || !(amount > 0)) return;
+    setDraftSaving(true);
+    try {
+      const startKey = format(startOfMonth(new Date()), "yyyy-MM-dd");
+      await createIncomeBeta({
+        name,
+        category: "salary",
+        incomeCategory:
+          draftIncome.archetype === "one-off" ? "one-off" : "current-recurring",
+        amount,
+        subjectToCpf: false,
+        startDate: startKey,
+        // One-off collapses to a single-month bar. Temporary needs an end
+        // date but we don't collect it inline — user sets it on the card.
+        endDate: draftIncome.archetype === "one-off" ? startKey : undefined,
+      });
+      setDraftIncome(null);
+    } finally {
+      setDraftSaving(false);
+    }
+  }, [draftIncome]);
+
   // Called by the dashed bar's drag handles (lateral move + resize-left +
   // resize-right). The row computes the new keys from the cursor; we just
   // mirror them into both drawState (so the bar re-renders at the new
@@ -1109,7 +1166,7 @@ export function IncomesBetaView({
         </div>
       )}
 
-      {incomes.length === 0 && !editMode ? (
+      {incomes.length === 0 && !editMode && !draftIncome ? (
         <div className="relative">
           {/* Backdrop: a faded, non-interactive preview of whichever view the
               user has selected, populated with placeholder incomes.
@@ -1174,7 +1231,7 @@ export function IncomesBetaView({
           </div>
           {/* Foreground: the real empty-state CTA, centered over the backdrop. */}
           <div className="absolute inset-0 flex items-center justify-center px-4">
-            <EmptyState onCreate={() => setEditMode(true)} />
+            <EmptyState onCreate={handleOpenAddIncome} />
           </div>
         </div>
       ) : view === "timeline" ? (
@@ -1242,8 +1299,13 @@ export function IncomesBetaView({
           }
           onDeleteMilestone={handleDeleteMilestone}
           onRequestDelete={setDeleteContext}
-          onOpenCreator={() => setCreatorOpen(true)}
+          onOpenCreator={handleOpenAddIncome}
           onOpenDetail={setDetailIncomeId}
+          draftIncome={draftIncome}
+          draftSaving={draftSaving}
+          onDraftChange={setDraftIncome}
+          onDraftSave={handleSaveDraft}
+          onDraftCancel={handleCancelDraft}
         />
       )}
 
@@ -1327,17 +1389,6 @@ function ViewToggle({
     <div className="flex justify-end">
       <div className="inline-flex items-center rounded-full border border-border/40 bg-muted p-1 text-sm shadow-sm">
         <button
-          onClick={() => onChangeView("timeline")}
-          className={cn(
-            "rounded-full px-4 py-1.5 font-medium transition-colors",
-            view === "timeline"
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Timeline Studio
-        </button>
-        <button
           onClick={() => onChangeView("cards")}
           className={cn(
             "rounded-full px-4 py-1.5 font-medium transition-colors",
@@ -1347,6 +1398,17 @@ function ViewToggle({
           )}
         >
           Action Cards
+        </button>
+        <button
+          onClick={() => onChangeView("timeline")}
+          className={cn(
+            "rounded-full px-4 py-1.5 font-medium transition-colors",
+            view === "timeline"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Timeline Studio
         </button>
       </div>
     </div>
@@ -3478,6 +3540,15 @@ interface ActionCardsViewProps {
   onRequestDelete: (income: Income) => void;
   onOpenCreator: () => void;
   onOpenDetail: (id: string) => void;
+  // Optional inline-draft props — when set, the dashed "+ New Income Rule"
+  // tile renders as an editable DraftSentenceCard. Optional so the empty-
+  // state placeholder render path (which doesn't track draft state) can
+  // skip them.
+  draftIncome?: DraftIncome | null;
+  draftSaving?: boolean;
+  onDraftChange?: (next: DraftIncome | null) => void;
+  onDraftSave?: () => void;
+  onDraftCancel?: () => void;
 }
 
 function ActionCardsView({
@@ -3504,6 +3575,11 @@ function ActionCardsView({
   onRequestDelete,
   onOpenCreator,
   onOpenDetail,
+  draftIncome,
+  draftSaving,
+  onDraftChange,
+  onDraftSave,
+  onDraftCancel,
 }: ActionCardsViewProps) {
   const totals = monthlyTotals as Array<{
     cell: MonthCell;
@@ -3562,16 +3638,151 @@ function ActionCardsView({
             onOpenDetail={onOpenDetail}
           />
         ))}
+        {draftIncome && onDraftChange && onDraftSave && onDraftCancel ? (
+          <DraftSentenceCard
+            draft={draftIncome}
+            saving={draftSaving ?? false}
+            onChange={onDraftChange}
+            onSave={onDraftSave}
+            onCancel={onDraftCancel}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenCreator}
+            className="flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/40 bg-transparent text-sm font-medium text-muted-foreground hover:border-brand-terracotta/60 hover:bg-brand-terracotta/5 hover:text-brand-terracotta transition-colors"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+              <Plus className="h-5 w-5" />
+            </span>
+            New Income Rule
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Inline draft card — the cards-view replacement for the IncomeCreatorDrawer
+ * modal. Owns no state of its own; the parent IncomesBetaView holds the
+ * DraftIncome and decides when to persist via createIncomeBeta. Submitting
+ * needs only name + amount + archetype; other fields (dates, family member,
+ * CPF, category) are filled in afterwards via the resulting SentenceCard's
+ * inline editors.
+ */
+const DRAFT_ARCHETYPES: Array<{
+  value: DraftIncome["archetype"];
+  label: string;
+  hint: string;
+}> = [
+  { value: "recurring", label: "Recurring", hint: "Monthly, no end date" },
+  { value: "one-off", label: "One-off", hint: "Single payment this month" },
+  { value: "temporary", label: "Temporary", hint: "Monthly, with an end date" },
+];
+
+function DraftSentenceCard({
+  draft,
+  saving,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  draft: DraftIncome;
+  saving: boolean;
+  onChange: (next: DraftIncome) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  const canSave =
+    draft.name.trim().length > 0 && Number(draft.amount) > 0 && !saving;
+
+  return (
+    <div
+      className="rounded-2xl border-2 border-brand-terracotta/60 bg-card p-5 shadow-sm"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onCancel();
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSave) onSave();
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-terracotta">
+          New income
+        </p>
         <button
           type="button"
-          onClick={onOpenCreator}
-          className="flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/40 bg-transparent text-sm font-medium text-muted-foreground hover:border-brand-terracotta/60 hover:bg-brand-terracotta/5 hover:text-brand-terracotta transition-colors"
+          onClick={onCancel}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Cancel new income"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-            <Plus className="h-5 w-5" />
-          </span>
-          New Income Rule
+          <X className="h-4 w-4" />
         </button>
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {DRAFT_ARCHETYPES.map((opt) => {
+          const active = draft.archetype === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange({ ...draft, archetype: opt.value })}
+              className={cn(
+                "rounded-lg border px-2.5 py-2 text-left transition-colors",
+                active
+                  ? "border-brand-terracotta bg-brand-terracotta/10"
+                  : "border-border/40 bg-background hover:border-border/70 hover:bg-muted/60"
+              )}
+            >
+              <p
+                className={cn(
+                  "font-display text-xs font-semibold",
+                  active ? "text-brand-terracotta" : "text-foreground"
+                )}
+              >
+                {opt.label}
+              </p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground leading-tight">
+                {opt.hint}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        <input
+          type="text"
+          autoFocus
+          value={draft.name}
+          onChange={(e) => onChange({ ...draft, name: e.target.value })}
+          placeholder="Name — e.g. Salary, Annual Bonus"
+          className="w-full rounded-lg border border-border/40 bg-background px-3 py-2 font-display text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/10"
+        />
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            $
+          </span>
+          <input
+            type="number"
+            min={0}
+            step="50"
+            inputMode="decimal"
+            value={draft.amount}
+            onChange={(e) => onChange({ ...draft, amount: e.target.value })}
+            placeholder="0"
+            className="w-full rounded-lg border border-border/40 bg-background pl-7 pr-3 py-2 font-display text-lg font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/10"
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={onCancel} disabled={saving}>
+          Cancel
+        </Button>
+        <Button size="sm" onClick={onSave} disabled={!canSave}>
+          {saving ? "Saving…" : "Add income"}
+        </Button>
       </div>
     </div>
   );
