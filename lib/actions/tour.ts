@@ -1,36 +1,32 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import {
+  getTourStatus as getTourStatusService,
+  isTourCompleted as isTourCompletedService,
+  markTourCompleted as markTourCompletedService,
+  resetTourStatus as resetTourStatusService,
+} from "@/lib/services/user-prefs";
+import type { TourName, TourStatus } from "@/lib/api-schemas/user-prefs";
 
-export type TourName = "overall" | "dashboard" | "incomes" | "expenses";
+export type { TourName, TourStatus };
 
-export type TourStatus = Record<TourName, string | null>;
+const EMPTY: TourStatus = {
+  overall: null,
+  dashboard: null,
+  incomes: null,
+  expenses: null,
+};
 
 /**
  * Get the tour completion status for the current user
  */
 export async function getTourStatus(): Promise<TourStatus> {
-  const { userId } = await auth();
-  if (!userId) {
-    return { overall: null, dashboard: null, incomes: null, expenses: null };
-  }
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: { tourCompletedAt: true },
-  });
-
-  if (!user?.tourCompletedAt) {
-    return { overall: null, dashboard: null, incomes: null, expenses: null };
-  }
-
   try {
-    return JSON.parse(user.tourCompletedAt);
+    const ctx = await getCurrentUserAndFamily();
+    return await getTourStatusService(ctx);
   } catch {
-    return { overall: null, dashboard: null, incomes: null, expenses: null };
+    return { ...EMPTY };
   }
 }
 
@@ -38,44 +34,34 @@ export async function getTourStatus(): Promise<TourStatus> {
  * Mark a specific tour as completed
  */
 export async function markTourCompleted(tourName: TourName): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) return;
-
-  const existing = await getTourStatus();
-  existing[tourName] = new Date().toISOString();
-
-  await db
-    .update(users)
-    .set({
-      tourCompletedAt: JSON.stringify(existing),
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, userId));
+  try {
+    const ctx = await getCurrentUserAndFamily();
+    await markTourCompletedService(ctx, tourName);
+  } catch {
+    // Swallow unauth — preserves original action behavior.
+  }
 }
 
 /**
- * Reset a tour so it can be replayed (for manual replay via Help button)
+ * Reset a tour so it can be replayed
  */
 export async function resetTourStatus(tourName: TourName): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) return;
-
-  const existing = await getTourStatus();
-  existing[tourName] = null;
-
-  await db
-    .update(users)
-    .set({
-      tourCompletedAt: JSON.stringify(existing),
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, userId));
+  try {
+    const ctx = await getCurrentUserAndFamily();
+    await resetTourStatusService(ctx, tourName);
+  } catch {
+    // Swallow unauth.
+  }
 }
 
 /**
  * Check if a specific tour has been completed
  */
 export async function isTourCompleted(tourName: TourName): Promise<boolean> {
-  const status = await getTourStatus();
-  return status[tourName] !== null;
+  try {
+    const ctx = await getCurrentUserAndFamily();
+    return await isTourCompletedService(ctx, tourName);
+  } catch {
+    return false;
+  }
 }

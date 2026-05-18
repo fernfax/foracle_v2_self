@@ -32,6 +32,7 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 - `npx tsc --noEmit` — typecheck only
 - `npm run db:studio` / `db:generate` / `db:migrate` / `db:push` — Drizzle workflows
 - `npm test` — Vitest
+- `npm run test:db-setup` — **one-time only**. Creates a `foracle_test` database next to your dev one, enables pgvector, and applies the schema. Required before any service-level real-DB tests run. Re-run after schema changes.
 
 ## Out of scope by default
 

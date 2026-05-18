@@ -707,7 +707,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border" data-tour="income-table">
+      <div className="rounded-md border bg-card" data-tour="income-table">
         <Table>
           <TableHeader>
             <TableRow>

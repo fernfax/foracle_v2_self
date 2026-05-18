@@ -1,20 +1,14 @@
 "use server";
 
-import { db } from "@/db";
-import { incomesBeta, familyMembers } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { nanoid } from "nanoid";
-import { calculateCPF } from "@/lib/cpf-calculator";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
-
-function calculateAge(dob: Date): number {
-  const today = new Date();
-  let age = today.getFullYear() - dob.getFullYear();
-  const m = today.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-  return age;
-}
+import {
+  createIncome,
+  deleteIncome,
+  listIncomes,
+  toggleIncomeActive,
+  updateIncome,
+} from "@/lib/services/incomes";
 
 // The IncomesBetaView still passes legacy enum values like "current-recurring"
 // when patching incomeCategory. Coerce to the new 3-value taxonomy at the
@@ -36,24 +30,8 @@ function normalizeIncomeCategory(
  * modelled as start_date == end_date.
  */
 export async function getIncomesBeta() {
-  const { familyId } = await getCurrentUserAndFamily();
-
-  const rows = await db.query.incomesBeta.findMany({
-    where: eq(incomesBeta.familyId, familyId),
-    orderBy: [desc(incomesBeta.createdAt)],
-    with: {
-      familyMember: {
-        columns: {
-          id: true,
-          name: true,
-          relationship: true,
-          dateOfBirth: true,
-          isContributing: true,
-        },
-      },
-    },
-  });
-
+  const ctx = await getCurrentUserAndFamily();
+  const rows = await listIncomes(ctx);
   return rows.map((r) => ({
     ...r,
     frequency: "monthly" as const,
@@ -86,58 +64,29 @@ export async function createIncomeBeta(data: {
   cpfSpecialAccount?: number;
   cpfMedisaveAccount?: number;
 }) {
-  const { userId, familyId } = await getCurrentUserAndFamily();
-
-  let employeeCpfContribution: string | null = null;
-  let employerCpfContribution: string | null = null;
-  let netTakeHome: string | null = null;
-
-  if (data.subjectToCpf) {
-    const userAge = data.familyMemberAge ?? 30;
-    const cpfResult = calculateCPF(data.amount, userAge);
-    employeeCpfContribution = cpfResult.employeeCpfContribution.toString();
-    employerCpfContribution = cpfResult.employerCpfContribution.toString();
-    netTakeHome = cpfResult.netTakeHome.toString();
-  }
-
-  const inserted = await db
-    .insert(incomesBeta)
-    .values({
-      id: nanoid(),
-      userId,
-      familyId,
-      familyMemberId: data.familyMemberId || null,
-      name: data.name,
-      category: data.category,
-      incomeCategory: normalizeIncomeCategory(data.incomeCategory) ?? "current",
-      amount: data.amount.toString(),
-      subjectToCpf: data.subjectToCpf,
-      accountForBonus: data.accountForBonus ?? false,
-      bonusGroups: data.bonusGroups || null,
-      employeeCpfContribution,
-      employerCpfContribution,
-      netTakeHome,
-      cpfOrdinaryAccount: data.cpfOrdinaryAccount
-        ? data.cpfOrdinaryAccount.toString()
-        : null,
-      cpfSpecialAccount: data.cpfSpecialAccount
-        ? data.cpfSpecialAccount.toString()
-        : null,
-      cpfMedisaveAccount: data.cpfMedisaveAccount
-        ? data.cpfMedisaveAccount.toString()
-        : null,
-      startDate: data.startDate,
-      endDate: data.endDate || null,
-      pastIncomeHistory: data.pastIncomeHistory || null,
-      futureMilestones: data.futureMilestones || null,
-      accountForFutureChange: data.accountForFutureChange ?? false,
-      description: data.description || null,
-      isActive: true,
-    })
-    .returning();
-
+  const ctx = await getCurrentUserAndFamily();
+  const row = await createIncome(ctx, {
+    name: data.name,
+    category: data.category,
+    incomeCategory: normalizeIncomeCategory(data.incomeCategory),
+    amount: data.amount.toString(),
+    startDate: data.startDate,
+    endDate: data.endDate,
+    subjectToCpf: data.subjectToCpf,
+    accountForBonus: data.accountForBonus,
+    bonusGroups: data.bonusGroups,
+    description: data.description,
+    familyMemberId: data.familyMemberId,
+    familyMemberAge: data.familyMemberAge,
+    pastIncomeHistory: data.pastIncomeHistory,
+    futureMilestones: data.futureMilestones,
+    accountForFutureChange: data.accountForFutureChange,
+    cpfOrdinaryAccount: data.cpfOrdinaryAccount?.toString(),
+    cpfSpecialAccount: data.cpfSpecialAccount?.toString(),
+    cpfMedisaveAccount: data.cpfMedisaveAccount?.toString(),
+  });
   revalidatePath("/user");
-  return inserted[0];
+  return row;
 }
 
 export async function updateIncomeBeta(
@@ -167,116 +116,46 @@ export async function updateIncomeBeta(
     cpfMedisaveAccount?: number;
   }
 ) {
-  const { familyId } = await getCurrentUserAndFamily();
-
-  const existing = await db.query.incomesBeta.findFirst({
-    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)),
-  });
-  if (!existing) throw new Error("Income not found or access denied");
-
-  const update: Record<string, unknown> = { updatedAt: new Date() };
-
-  if (data.name !== undefined) update.name = data.name;
-  if (data.category !== undefined) update.category = data.category;
+  const ctx = await getCurrentUserAndFamily();
+  const patch: Parameters<typeof updateIncome>[2] = {};
+  if (data.name !== undefined) patch.name = data.name;
+  if (data.category !== undefined) patch.category = data.category;
   if (data.incomeCategory !== undefined) {
     const norm = normalizeIncomeCategory(data.incomeCategory);
-    if (norm) update.incomeCategory = norm;
+    if (norm) patch.incomeCategory = norm;
   }
-  if (data.amount !== undefined) update.amount = data.amount.toString();
-  if (data.subjectToCpf !== undefined) update.subjectToCpf = data.subjectToCpf;
-  if (data.accountForBonus !== undefined)
-    update.accountForBonus = data.accountForBonus;
-  if (data.bonusGroups !== undefined) update.bonusGroups = data.bonusGroups;
-  if (data.startDate !== undefined) update.startDate = data.startDate;
-  if (data.endDate !== undefined) update.endDate = data.endDate;
-  if (data.pastIncomeHistory !== undefined)
-    update.pastIncomeHistory = data.pastIncomeHistory;
-  if (data.futureMilestones !== undefined)
-    update.futureMilestones = data.futureMilestones;
-  if (data.accountForFutureChange !== undefined)
-    update.accountForFutureChange = data.accountForFutureChange;
-  if (data.description !== undefined) update.description = data.description;
-  if (data.isActive !== undefined) update.isActive = data.isActive;
-  if (data.familyMemberId !== undefined)
-    update.familyMemberId = data.familyMemberId || null;
-  if (data.cpfOrdinaryAccount !== undefined)
-    update.cpfOrdinaryAccount = data.cpfOrdinaryAccount.toString();
-  if (data.cpfSpecialAccount !== undefined)
-    update.cpfSpecialAccount = data.cpfSpecialAccount.toString();
-  if (data.cpfMedisaveAccount !== undefined)
-    update.cpfMedisaveAccount = data.cpfMedisaveAccount.toString();
+  if (data.amount !== undefined) patch.amount = data.amount.toString();
+  if (data.subjectToCpf !== undefined) patch.subjectToCpf = data.subjectToCpf;
+  if (data.accountForBonus !== undefined) patch.accountForBonus = data.accountForBonus;
+  if (data.bonusGroups !== undefined) patch.bonusGroups = data.bonusGroups;
+  if (data.startDate !== undefined) patch.startDate = data.startDate;
+  if (data.endDate !== undefined) patch.endDate = data.endDate;
+  if (data.pastIncomeHistory !== undefined) patch.pastIncomeHistory = data.pastIncomeHistory;
+  if (data.futureMilestones !== undefined) patch.futureMilestones = data.futureMilestones;
+  if (data.accountForFutureChange !== undefined) patch.accountForFutureChange = data.accountForFutureChange;
+  if (data.description !== undefined) patch.description = data.description;
+  if (data.isActive !== undefined) patch.isActive = data.isActive;
+  if (data.familyMemberId !== undefined) patch.familyMemberId = data.familyMemberId;
+  if (data.familyMemberAge !== undefined) patch.familyMemberAge = data.familyMemberAge;
+  if (data.cpfOrdinaryAccount !== undefined) patch.cpfOrdinaryAccount = data.cpfOrdinaryAccount.toString();
+  if (data.cpfSpecialAccount !== undefined) patch.cpfSpecialAccount = data.cpfSpecialAccount.toString();
+  if (data.cpfMedisaveAccount !== undefined) patch.cpfMedisaveAccount = data.cpfMedisaveAccount.toString();
 
-  // Recompute CPF whenever subjectToCpf or amount could be affected. Mirrors
-  // lib/actions/income.ts's logic so behavior stays consistent.
-  const finalAmount =
-    data.amount !== undefined ? data.amount : Number(existing.amount);
-  const finalSubject =
-    data.subjectToCpf !== undefined
-      ? data.subjectToCpf
-      : (existing.subjectToCpf ?? false);
-
-  if (finalSubject) {
-    let userAge = data.familyMemberAge ?? 30;
-    const effectiveFamilyMemberId =
-      data.familyMemberId !== undefined
-        ? data.familyMemberId
-        : existing.familyMemberId;
-    if (!data.familyMemberAge && effectiveFamilyMemberId) {
-      const fm = await db.query.familyMembers.findFirst({
-        where: eq(familyMembers.id, effectiveFamilyMemberId),
-      });
-      if (fm?.dateOfBirth) userAge = calculateAge(new Date(fm.dateOfBirth));
-    }
-    const cpf = calculateCPF(finalAmount, userAge);
-    update.employeeCpfContribution = cpf.employeeCpfContribution.toString();
-    update.employerCpfContribution = cpf.employerCpfContribution.toString();
-    update.netTakeHome = cpf.netTakeHome.toString();
-  } else {
-    update.employeeCpfContribution = null;
-    update.employerCpfContribution = null;
-    update.netTakeHome = null;
-  }
-
-  const updated = await db
-    .update(incomesBeta)
-    .set(update)
-    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)))
-    .returning();
-
+  const row = await updateIncome(ctx, id, patch);
   revalidatePath("/user");
-  return updated[0];
+  return row;
 }
 
 export async function deleteIncomeBeta(id: string) {
-  const { familyId } = await getCurrentUserAndFamily();
-
-  const existing = await db.query.incomesBeta.findFirst({
-    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)),
-  });
-  if (!existing) throw new Error("Income not found or access denied");
-
-  await db
-    .delete(incomesBeta)
-    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)));
-
+  const ctx = await getCurrentUserAndFamily();
+  await deleteIncome(ctx, id);
   revalidatePath("/user");
   return { success: true };
 }
 
 export async function toggleIncomeBetaStatus(id: string) {
-  const { familyId } = await getCurrentUserAndFamily();
-
-  const existing = await db.query.incomesBeta.findFirst({
-    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)),
-  });
-  if (!existing) throw new Error("Income not found or access denied");
-
-  const updated = await db
-    .update(incomesBeta)
-    .set({ isActive: !existing.isActive, updatedAt: new Date() })
-    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)))
-    .returning();
-
+  const ctx = await getCurrentUserAndFamily();
+  const row = await toggleIncomeActive(ctx, id);
   revalidatePath("/user");
-  return updated[0];
+  return row;
 }

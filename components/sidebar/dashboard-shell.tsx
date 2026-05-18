@@ -10,9 +10,13 @@ import { MobileNav } from "@/components/mobile-nav";
 import { HeaderQuickLinks } from "@/components/header/header-quick-links";
 import { HelpButton } from "@/components/tour/help-button";
 import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget";
+import { RadialDecor } from "@/components/ui/radial-decor";
+import { PeranakanTilesDecor } from "@/components/ui/peranakan-tiles-decor";
+import type { BackgroundDecor } from "@/lib/services/user-prefs";
 
 interface DashboardShellProps {
   children: ReactNode;
+  backgroundDecor?: BackgroundDecor;
 }
 
 const SIDEBAR_W_EXPANDED = 260;
@@ -108,10 +112,19 @@ function DashboardContent({ children }: { children: ReactNode }) {
   );
 }
 
-export function DashboardShell({ children }: DashboardShellProps) {
+export function DashboardShell({
+  children,
+  backgroundDecor = "radial",
+}: DashboardShellProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background">
+      <div className="relative isolate min-h-screen bg-background">
+        {/* Atmospheric decor — `fixed inset-0 -z-10` pins it to the viewport
+            so it stays put as the page scrolls. `isolate` on this wrapper
+            creates a stacking context so `-z-10` lands below normal-flow
+            content but above the parent's bg-background fill. */}
+        {backgroundDecor === "radial" && <RadialDecor />}
+        {backgroundDecor === "peranakan" && <PeranakanTilesDecor />}
         <DashboardContent>{children}</DashboardContent>
       </div>
     </SidebarProvider>

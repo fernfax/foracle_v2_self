@@ -1,11 +1,13 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { expenseSubcategories } from "@/db/schema";
-import { eq, and, asc } from "drizzle-orm";
-import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import {
+  createExpenseSubcategory,
+  deleteExpenseSubcategory as deleteSubcategoryService,
+  listExpenseSubcategories,
+  updateExpenseSubcategory as updateSubcategoryService,
+} from "@/lib/services/expense-subcategories";
 
 export type ExpenseSubcategory = {
   id: string;
@@ -19,25 +21,12 @@ export type ExpenseSubcategory = {
 /**
  * Get all subcategories for a specific category
  */
-export async function getSubcategoriesByCategory(categoryId: string): Promise<ExpenseSubcategory[]> {
+export async function getSubcategoriesByCategory(
+  categoryId: string
+): Promise<ExpenseSubcategory[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    const subcategories = await db
-      .select()
-      .from(expenseSubcategories)
-      .where(
-        and(
-          eq(expenseSubcategories.userId, userId),
-          eq(expenseSubcategories.categoryId, categoryId)
-        )
-      )
-      .orderBy(asc(expenseSubcategories.name));
-
-    return subcategories;
+    const ctx = await getCurrentUserAndFamily();
+    return await listExpenseSubcategories(ctx, { categoryId });
   } catch (error) {
     console.error("Error fetching subcategories:", error);
     return [];
@@ -49,18 +38,8 @@ export async function getSubcategoriesByCategory(categoryId: string): Promise<Ex
  */
 export async function getAllSubcategories(): Promise<ExpenseSubcategory[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    const subcategories = await db
-      .select()
-      .from(expenseSubcategories)
-      .where(eq(expenseSubcategories.userId, userId))
-      .orderBy(asc(expenseSubcategories.name));
-
-    return subcategories;
+    const ctx = await getCurrentUserAndFamily();
+    return await listExpenseSubcategories(ctx);
   } catch (error) {
     console.error("Error fetching all subcategories:", error);
     return [];
@@ -74,25 +53,10 @@ export async function addSubcategory(
   categoryId: string,
   name: string
 ): Promise<ExpenseSubcategory> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  const id = randomUUID();
-
-  const [newSubcategory] = await db
-    .insert(expenseSubcategories)
-    .values({
-      id,
-      userId,
-      categoryId,
-      name,
-    })
-    .returning();
-
+  const ctx = await getCurrentUserAndFamily();
+  const row = await createExpenseSubcategory(ctx, { categoryId, name });
   revalidatePath("/budget");
-  return newSubcategory;
+  return row;
 }
 
 /**
@@ -102,58 +66,17 @@ export async function updateSubcategory(
   id: string,
   name: string
 ): Promise<ExpenseSubcategory> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  // Verify ownership
-  const existing = await db.query.expenseSubcategories.findFirst({
-    where: and(
-      eq(expenseSubcategories.id, id),
-      eq(expenseSubcategories.userId, userId)
-    ),
-  });
-
-  if (!existing) {
-    throw new Error("Subcategory not found");
-  }
-
-  const [updatedSubcategory] = await db
-    .update(expenseSubcategories)
-    .set({
-      name,
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(expenseSubcategories.id, id),
-        eq(expenseSubcategories.userId, userId)
-      )
-    )
-    .returning();
-
+  const ctx = await getCurrentUserAndFamily();
+  const row = await updateSubcategoryService(ctx, id, { name });
   revalidatePath("/budget");
-  return updatedSubcategory;
+  return row;
 }
 
 /**
  * Delete a subcategory
  */
 export async function deleteSubcategory(id: string): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  await db
-    .delete(expenseSubcategories)
-    .where(
-      and(
-        eq(expenseSubcategories.id, id),
-        eq(expenseSubcategories.userId, userId)
-      )
-    );
-
+  const ctx = await getCurrentUserAndFamily();
+  await deleteSubcategoryService(ctx, id);
   revalidatePath("/budget");
 }
