@@ -16,15 +16,20 @@ interface PageHeaderProps {
  * - App shell header    → sticky top-0  z-40 (70px tall, in dashboard-shell.tsx)
  * - PageHeader (this)   → sticky top-[70px] z-30
  *
- * Mobile: the inner overflow-x-auto wrapper lets the tab strip scroll
- * horizontally on narrow viewports without changing component composition (D6).
+ * Negative top margin (-mt-6 sm:-mt-8) offsets <main>'s py-6 sm:py-8 top
+ * padding so the header's natural position aligns with its sticky anchor
+ * (y=70). Without this, the header would scroll with content for 24–32px
+ * before locking — a visible "moving" effect on initial scroll.
  *
- * Negative margins (-mx-*) make the sticky bar bleed to the edges of the
- * main column container, matching the rest of the dashboard chrome.
+ * Negative horizontal margins (-mx-*) bleed the bar to the edges of the
+ * main column container.
+ *
+ * Mobile: the inner overflow-x-auto wrapper lets the tab strip scroll
+ * horizontally on narrow viewports (D6).
  */
 export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
   return (
-    <div className="sticky top-[70px] z-30 bg-background/95 backdrop-blur-sm border-b border-border/40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+    <div className="sticky top-[70px] z-30 bg-background/95 backdrop-blur-sm border-b border-border/40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8">
       <div className="flex items-center justify-between gap-4 py-3">
         <h1 className="text-[18px] font-display font-semibold tracking-tight text-foreground">
           {title}
