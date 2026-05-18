@@ -698,7 +698,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           variant="outline"
           size="sm"
           onClick={() => setIsAddDialogOpen(true)}
-          className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+          className="h-8 px-4 text-sm font-medium border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           data-tour="add-income-btn"
         >
           <Plus className="h-4 w-4 mr-1.5" />

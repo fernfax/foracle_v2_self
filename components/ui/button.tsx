@@ -22,11 +22,11 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground shadow-[0_2px_8px_rgba(224,85,85,0.18),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-destructive/90 hover:shadow-[0_4px_12px_rgba(224,85,85,0.22)] active:translate-y-px focus-visible:ring-destructive/20",
         outline:
-          "border border-border/40 bg-transparent text-foreground hover:bg-muted/60 hover:border-border/70",
+          "border border-border/40 bg-background text-foreground hover:bg-muted/60 hover:border-border/70",
         secondary:
-          "border-[1.5px] border-primary bg-transparent text-primary hover:bg-primary/8 hover:shadow-[0_2px_8px_rgba(184,98,42,0.10)] active:translate-y-px",
+          "border-[1.5px] border-primary bg-background text-primary hover:bg-primary/8 hover:shadow-[0_2px_8px_rgba(184,98,42,0.10)] active:translate-y-px",
         ghost:
-          "border border-border/30 bg-transparent text-foreground/70 hover:bg-muted/60 hover:text-foreground",
+          "border border-border/30 bg-background text-foreground/70 hover:bg-muted/60 hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline px-0 h-auto",
         teal:
           "bg-[#00C4AA] text-[#1C2B2A] shadow-[0_2px_8px_rgba(0,196,170,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#33D4BC] hover:shadow-[0_4px_12px_rgba(0,196,170,0.24)] active:translate-y-px",
