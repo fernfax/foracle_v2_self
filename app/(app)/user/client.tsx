@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Card,
   CardContent,
@@ -154,51 +155,47 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-            Profile
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight">User Homepage</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your personal financial information
-          </p>
-        </div>
-        {activeTab === "incomes" && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleToggleIncomeView}
-            className={cn(
-              "h-9 px-4 rounded-full text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm",
-              incomeView === "beta"
-                ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90 hover:border-brand-terracotta"
-                : "border-brand-terracotta/40 bg-brand-terracotta/10 text-brand-terracotta hover:bg-brand-terracotta/15 hover:border-brand-terracotta/60"
-            )}
-          >
-            <Sparkles className="h-4 w-4 mr-1.5" />
-            {incomeView === "beta" ? "Standard View" : "Beta View"}
-          </Button>
-        )}
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="User Homepage"
+        actions={
+          activeTab === "incomes" ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleToggleIncomeView}
+              className={cn(
+                "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm",
+                incomeView === "beta"
+                  ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90 hover:border-brand-terracotta"
+                  : "border-brand-terracotta/40 bg-brand-terracotta/10 text-brand-terracotta hover:bg-brand-terracotta/15 hover:border-brand-terracotta/60"
+              )}
+            >
+              <Sparkles className="h-4 w-4 mr-1" />
+              {incomeView === "beta" ? "Standard View" : "Beta View"}
+            </Button>
+          ) : null
+        }
+        tabs={
+          mounted ? (
+            <SlidingTabs
+              tabs={[
+                { value: "family", label: "Family", icon: Users },
+                { value: "incomes", label: "Incomes", icon: DollarSign },
+                { value: "cpf", label: "CPF", icon: Building2 },
+                { value: "current", label: "Holdings", icon: Briefcase },
+              ]}
+              value={activeTab}
+              onValueChange={handleTabChange}
+            />
+          ) : null
+        }
+      />
 
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <>
-        <SlidingTabs
-          tabs={[
-            { value: "family", label: "Family", icon: Users },
-            { value: "incomes", label: "Incomes", icon: DollarSign },
-            { value: "cpf", label: "CPF", icon: Building2 },
-            { value: "current", label: "Holdings", icon: Briefcase },
-          ]}
-          value={activeTab}
-          onValueChange={handleTabChange}
-        />
-
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsContent value="family" className="mt-4">
           <FamilyMemberList
@@ -231,8 +228,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         <TabsContent value="current" className="mt-4">
           <CurrentHoldingList initialHoldings={initialCurrentHoldings} />
         </TabsContent>
-      </Tabs>
-        </>
+        </Tabs>
       )}
     </div>
   );

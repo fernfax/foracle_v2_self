@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Shield, Plus, User, Users, Baby, Heart, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
 import { AddPolicyDialog } from "@/components/policies/add-policy-dialog";
 import { EditPolicyDialog } from "@/components/policies/edit-policy-dialog";
 import { PolicyCard } from "@/components/policies/policy-card";
@@ -227,23 +228,16 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-            Profile
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight">Insurance Policies</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your insurance policies and coverage
-          </p>
-        </div>
-        <Button onClick={() => setAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Policy
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Insurance Policies"
+        actions={
+          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" />
+            Add Policy
+          </Button>
+        }
+      />
 
       {/* Policy Type Filters */}
       {policies.length > 0 && (

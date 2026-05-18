@@ -53,9 +53,16 @@ function DashboardContent({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="grid min-h-screen transition-[grid-template-columns] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+      className="grid min-h-screen motion-safe:transition-[grid-template-columns] motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.4,0,0.2,1)]"
       style={{ gridTemplateColumns }}
     >
+      {/* Skip-link target — appears on first Tab, lands focus past the sidebar. */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-md focus:ring-2 focus:ring-primary/40"
+      >
+        Skip to main content
+      </a>
       {isDesktop && <Sidebar />}
 
       {/* Main column — the min-w-0 prevents grid items from refusing to shrink below their content size */}
@@ -104,7 +111,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
         {/* Main Content — contain layout so internal reflows don't bubble to the grid wrapper */}
         <div className="flex-1 [contain:layout_paint]">
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <main className="py-6 sm:py-8">{children}</main>
+            <main id="main" className="py-6 sm:py-8">{children}</main>
           </div>
         </div>
       </div>

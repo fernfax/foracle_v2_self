@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, LineChart, TrendingUp, DollarSign, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -98,23 +99,16 @@ export function InvestmentsClient({
   const activeInvestments = investments.filter((i) => i.isActive);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-            Portfolio
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight">Investments</h1>
-          <p className="text-muted-foreground mt-1">
-            Track your investment policies and projected growth
-          </p>
-        </div>
-        <Button onClick={() => setAddModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Investment
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Investments"
+        actions={
+          <Button size="sm" onClick={() => setAddModalOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" />
+            Add Investment
+          </Button>
+        }
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

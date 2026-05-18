@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import { PageHeader } from "@/components/ui/page-header";
 import { Target, Trophy } from "lucide-react";
 import { GoalList } from "@/components/goals/goal-list";
 
@@ -58,40 +59,35 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
   const achievedGoals = initialGoals.filter((goal) => goal.isAchieved === true);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">
-          Financial Planning
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Goals</h1>
-        <p className="text-muted-foreground mt-1">
-          Set and track your financial goals
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Goals"
+        tabs={
+          mounted ? (
+            <SlidingTabs
+              tabs={[
+                { value: "active", label: "Active Goals", icon: Target, badge: activeGoals.length },
+                { value: "achieved", label: "Achieved", icon: Trophy, badge: achievedGoals.length, badgeVariant: "success" },
+              ]}
+              value={activeTab}
+              onValueChange={handleTabChange}
+            />
+          ) : null
+        }
+      />
 
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <>
-          <SlidingTabs
-            tabs={[
-              { value: "active", label: "Active Goals", icon: Target, badge: activeGoals.length },
-              { value: "achieved", label: "Achieved", icon: Trophy, badge: achievedGoals.length, badgeVariant: "success" },
-            ]}
-            value={activeTab}
-            onValueChange={handleTabChange}
-          />
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsContent value="active" className="mt-4">
+            <GoalList initialGoals={activeGoals} showAddButton />
+          </TabsContent>
 
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsContent value="active" className="mt-4">
-              <GoalList initialGoals={activeGoals} showAddButton />
-            </TabsContent>
-
-            <TabsContent value="achieved" className="mt-4">
-              <GoalList initialGoals={achievedGoals} isAchievedView />
-            </TabsContent>
-          </Tabs>
-        </>
+          <TabsContent value="achieved" className="mt-4">
+            <GoalList initialGoals={achievedGoals} isAchievedView />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
