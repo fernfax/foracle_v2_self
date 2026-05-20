@@ -74,15 +74,16 @@ export function SlidingTabs({
     <div
       ref={containerRef}
       className={cn(
-        "relative inline-flex items-center gap-1 p-1.5 rounded-full bg-muted/70 border border-border/40",
-        // Mobile: allow horizontal scroll within container, hide scrollbar
+        // Flat: no outer pill chrome (bg/border/padding dropped) so tabs sit
+        // naked on the page header.
+        "relative inline-flex items-center gap-0.5",
         "max-w-full overflow-x-auto scrollbar-hide",
         className
       )}
     >
-      {/* Sliding indicator */}
+      {/* Sliding indicator — flat, no shadow */}
       <div
-        className="absolute top-1.5 bottom-1.5 rounded-full bg-primary shadow-sm shadow-primary/20 transition-all duration-300 ease-out"
+        className="absolute top-0 bottom-0 rounded-md bg-primary transition-all duration-300 ease-out"
         style={{
           left: indicatorStyle.left,
           width: indicatorStyle.width,
@@ -101,9 +102,9 @@ export function SlidingTabs({
             onClick={() => onValueChange(tab.value)}
             data-tour={tab.dataTour}
             className={cn(
-              "relative z-10 flex items-center gap-1.5 px-3 py-2 rounded-full font-display text-[13px] font-medium transition-colors duration-200",
-              // Larger padding on desktop
-              "md:gap-2 md:px-5 md:py-2.5",
+              "relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md font-display text-[13px] font-medium transition-colors duration-200",
+              // Slightly larger padding on desktop, no rounded pill
+              "md:gap-2 md:px-4 md:py-1.5",
               isActive
                 ? "text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
