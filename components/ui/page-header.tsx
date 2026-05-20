@@ -29,9 +29,9 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
   return (
-    <div className="sticky top-[70px] z-30 bg-background/95 backdrop-blur-sm border-b border-border/40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8">
-      <div className="flex items-center justify-between gap-4 py-3">
-        <h1 className="text-[18px] font-display font-semibold tracking-tight text-foreground">
+    <div className="sticky top-[70px] z-30 bg-background border-b border-border/20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8">
+      <div className="flex items-center justify-between gap-4 py-2">
+        <h1 className="text-[17px] font-display font-medium tracking-tight text-foreground">
           {title}
         </h1>
         {actions ? (
@@ -39,7 +39,7 @@ export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
         ) : null}
       </div>
       {tabs ? (
-        <div className="overflow-x-auto scrollbar-hide -mt-1 pb-1">{tabs}</div>
+        <div className="overflow-x-auto scrollbar-hide -mt-0.5 pb-1">{tabs}</div>
       ) : null}
     </div>
   );
