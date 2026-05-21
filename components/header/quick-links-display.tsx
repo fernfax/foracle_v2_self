@@ -20,7 +20,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Settings2, GripVertical } from "lucide-react";
+import { Settings2, GripVertical, Plus } from "lucide-react";
 import {
   Home,
   User,
@@ -155,37 +155,48 @@ export function QuickLinksDisplay({
   return (
     <div className="flex items-center gap-1">
       {links.length > 0 ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={linkIds}
-            strategy={horizontalListSortingStrategy}
+        <>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            <div className="flex items-center gap-0.5">
-              {links.map((link) => (
-                <SortableQuickLink key={link.id} link={link} onNavigate={handleNavigate} />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
-      ) : (
-        <span className="text-sm text-muted-foreground px-2">
-          No quick links yet
-        </span>
-      )}
+            <SortableContext
+              items={linkIds}
+              strategy={horizontalListSortingStrategy}
+            >
+              <div className="flex items-center gap-0.5">
+                {links.map((link) => (
+                  <SortableQuickLink key={link.id} link={link} onNavigate={handleNavigate} />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onEditClick}
-        className="h-8 px-2 ml-1"
-        title="Edit Quick Links"
-      >
-        <Settings2 className="h-4 w-4" />
-      </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onEditClick}
+            className="h-8 px-2 ml-1"
+            title="Edit Quick Links"
+          >
+            <Settings2 className="h-4 w-4" />
+          </Button>
+        </>
+      ) : (
+        // Empty state is an actionable affordance, not persistent happy-talk:
+        // one subtle ghost button that opens the same edit flow.
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onEditClick}
+          className="h-8 px-2 text-muted-foreground hover:text-foreground"
+          title="Add quick links"
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Add quick link
+        </Button>
+      )}
     </div>
   );
 }
