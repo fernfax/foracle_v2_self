@@ -494,11 +494,6 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
   return (
     <div className="space-y-4">
-      {/* Income Details Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Income Details</h2>
-      </div>
-
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         {/* Card 1: Annual Income Summary */}
