@@ -459,11 +459,6 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
   return (
     <div className="space-y-6">
-      {/* Expense Details Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Expense Details</h2>
-      </div>
-
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         {/* Card 1: Expected Expenses */}
