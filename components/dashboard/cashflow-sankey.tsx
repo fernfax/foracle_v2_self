@@ -129,6 +129,16 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
   // items render as an overlay on top of the parent category's bar, so the
   // layout stays stable, items are guaranteed contiguous (inside the same
   // rectangle), and we get a clean place to attach CSS animations.
+  //
+  // Value compression: Sankey lays out node heights proportional to flow
+  // value, so a $19k salary next to a $40 expense category leaves the small
+  // categories as hair-thin ribbons and the chart half-empty. We compress
+  // the dynamic range with sqrt — large flows still read as larger, but
+  // small categories get enough vertical real estate to be visible and the
+  // overall diagram fills its container. Real dollar amounts remain in
+  // `realValueById` for every tooltip, so the user never sees compressed
+  // numbers — only the visual layout changes.
+  const visualize = (v: number) => Math.sqrt(Math.max(v, 0));
   const data = useMemo(() => {
     const nodes: SankeyInputNode[] = [];
     const idToIndex = new Map<string, number>();
@@ -144,18 +154,23 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
         id: inc.id,
         name: inc.label,
         kind: inc.kind,
-        value: inc.value,
+        value: visualize(inc.value),
         color: colorForKind(inc.kind),
         meta: inc.meta,
       });
     }
 
-    // Layer 1: hub
+    // Layer 1: hub — value is the sum of incoming compressed link values so
+    // the hub bar's height matches the column total at its layer.
+    const hubVisualValue = model.incomeNodes.reduce(
+      (acc, inc) => acc + visualize(inc.value),
+      0
+    );
     addNode({
       id: model.hub.id,
       name: model.hub.label,
       kind: model.hub.kind,
-      value: model.hub.value,
+      value: hubVisualValue,
       color: colorForKind(model.hub.kind),
     });
 
@@ -170,20 +185,22 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
         id: out.id,
         name: out.label,
         kind: out.kind,
-        value: out.value,
+        value: visualize(out.value),
         color,
       });
     }
 
     // Links. Color = the "outer" end (source for left half, target for right
-    // half) so each ribbon reads as a continuation of its node.
+    // half) so each ribbon reads as a continuation of its node. Link values
+    // are also compressed so ribbon widths match the (compressed) node
+    // heights — otherwise Recharts would mismatch them and stretch ribbons.
     const links: SankeyInputLink[] = [];
     for (const link of model.links) {
       const s = idToIndex.get(link.sourceId);
       const t = idToIndex.get(link.targetId);
       if (s === undefined || t === undefined) continue;
       const color = nodes[t].kind === "hub" ? nodes[s].color : nodes[t].color;
-      links.push({ source: s, target: t, value: link.value, color });
+      links.push({ source: s, target: t, value: visualize(link.value), color });
     }
 
     return { nodes, links };
@@ -536,7 +553,7 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       </CardHeader>
       <CardContent>
         <div
-          className="w-full h-[520px] relative"
+          className="w-full h-[440px] relative"
           // Clear the item tooltip if the cursor leaves the chart entirely.
           onMouseLeave={() => setItemHover(null)}
           // Click-away to collapse: any click that wasn't on an interactive
@@ -553,13 +570,13 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
               node={renderNode}
               link={renderLink}
               nodeWidth={12}
-              nodePadding={24}
+              nodePadding={14}
               iterations={48}
               // Disable Recharts' final ascendingY sort so the input order in
               // our outflow array (Savings + CPF first, then categories) is
               // preserved as the visual top-to-bottom order in each column.
               sort={false}
-              margin={{ top: 24, right: 160, bottom: 12, left: 140 }}
+              margin={{ top: 12, right: 160, bottom: 8, left: 140 }}
             >
               <Tooltip content={renderTooltip} />
             </Sankey>
