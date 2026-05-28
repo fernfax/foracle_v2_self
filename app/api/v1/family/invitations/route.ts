@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         throw new ApiError("UNAUTHORIZED", "Sign in required");
       }
       if (err instanceof InvitationError) {
-        if (err.code === "OTHER_FAMILY") {
+        if (err.code === "OTHER_FAMILY" || err.code === "EXISTING_USER") {
           throw new ApiError("CONFLICT", err.message);
         }
         throw new ApiError("VALIDATION_ERROR", err.message);
