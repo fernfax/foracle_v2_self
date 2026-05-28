@@ -11,8 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TileMotif } from "@/components/ui/tile-motif";
-import { FloatingIcons } from "@/components/landing/floating-icons";
-import { HeroBlurMask } from "@/components/landing/hero-blur-mask";
+import { LandingShader } from "@/components/landing/landing-shader";
 import {
   TrendingUp,
   Shield,
@@ -74,7 +73,8 @@ export default async function Home() {
     redirect("/overview");
   }
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-transparent">
+      <LandingShader />
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b border-border/30 bg-background/85 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex justify-between items-center">
@@ -102,41 +102,29 @@ export default async function Home() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-muted/40" />
-        <FloatingIcons />
-        <HeroBlurMask />
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:py-40 text-center">
           <p className="font-display text-[11px] font-semibold tracking-[0.2em] uppercase text-[#B8622A] mb-6">
             A guided companion for your money
           </p>
-          <h1
-            data-blur-target="heading"
-            className="font-display text-5xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.025em] mb-6 inline-block text-foreground"
-          >
+          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.025em] mb-6 inline-block text-foreground">
             Take control of your
             <br />
             <span className="text-foreground/55">finances.</span>
           </h1>
 
-          <p
-            data-blur-target="description"
-            className="font-editorial text-lg md:text-xl text-foreground/65 max-w-2xl mx-auto mb-8 leading-relaxed"
-          >
+          <p className="font-editorial text-lg md:text-xl text-foreground/65 max-w-2xl mx-auto mb-8 leading-relaxed">
             Foracle helps you track income, expenses, assets, and goals — calmly,
             in one place rooted in Singaporean rhythms.
           </p>
 
-          <div
-            data-blur-target="badge"
-            className="inline-flex items-center rounded-full bg-[rgba(184,98,42,0.10)] px-4 py-1.5 mb-8 border border-[rgba(184,98,42,0.18)]"
-          >
+          <div className="inline-flex items-center rounded-full bg-[rgba(184,98,42,0.10)] px-4 py-1.5 mb-8 border border-[rgba(184,98,42,0.18)]">
             <span className="font-display text-[11px] font-semibold tracking-wide uppercase text-[#7A3A0A]">
               Made for Singapore, by Singaporeans
             </span>
           </div>
 
           <div className="flex justify-center">
-            <Link href="/sign-up" data-blur-target="cta">
+            <Link href="/sign-up">
               <Button size="lg" className="px-10 transition-all duration-200">
                 Start Your Journey
                 <ArrowRight className="ml-2 h-4 w-4" />
