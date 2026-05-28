@@ -7,7 +7,10 @@ import { Smartphone } from "lucide-react";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "@/components/mobile-nav";
-import { HeaderQuickLinks } from "@/components/header/header-quick-links";
+// Header quick-links are temporarily hidden across the app. The feature is
+// intact in `components/header/*` and `lib/actions/quick-links.ts`. To restore,
+// re-enable the import and the `<HeaderQuickLinks />` block below.
+// import { HeaderQuickLinks } from "@/components/header/header-quick-links";
 import { HelpButton } from "@/components/tour/help-button";
 import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget";
 import { ClerkUserButton } from "@/components/clerk-user-button";
@@ -81,11 +84,13 @@ function DashboardContent({ children }: { children: ReactNode }) {
               />
             </Link>
 
-            {isDesktop && (
+            {/* Header quick-links hidden — see the comment near the import
+                at the top of this file for how to put them back. */}
+            {/* {isDesktop && (
               <div className="flex-1 flex justify-center">
                 <HeaderQuickLinks />
               </div>
-            )}
+            )} */}
 
             <div className="flex items-center gap-4 ml-auto">
               <Link
