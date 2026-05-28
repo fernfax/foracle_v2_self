@@ -12,7 +12,7 @@
  * items (an extra column appears on the right); click again to collapse.
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import {
   ResponsiveContainer,
   Sankey,
@@ -115,13 +115,23 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
   const expandedCategory =
     expandedId ? model.categories.find((c) => c.id === expandedId) ?? null : null;
 
-  // Build the Recharts data graph. Categories get unique palette colors
-  // assigned in the order they appear (size desc). Items inherit their
-  // parent category's color so the drill-down reads as one continuous flow.
+  // Hover state for the in-bar item overlay — items are NOT part of the
+  // Recharts graph, so they need their own cursor-following tooltip.
+  const [itemHover, setItemHover] = useState<{
+    x: number;
+    y: number;
+    itemName: string;
+    itemValue: number;
+    parentName: string;
+  } | null>(null);
+
+  // Build the Recharts data graph. The graph never changes on drill-down —
+  // items render as an overlay on top of the parent category's bar, so the
+  // layout stays stable, items are guaranteed contiguous (inside the same
+  // rectangle), and we get a clean place to attach CSS animations.
   const data = useMemo(() => {
     const nodes: SankeyInputNode[] = [];
     const idToIndex = new Map<string, number>();
-    const categoryColor = new Map<string, string>();
 
     const addNode = (n: SankeyInputNode) => {
       idToIndex.set(n.id, nodes.length);
@@ -149,39 +159,12 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       color: colorForKind(model.hub.kind),
     });
 
-    // Layer 2: outflows. The expanded category (if any) is swapped *in place*
-    // for its item nodes — same slot, same column. Pre-assigning palette colors
-    // in outflow order before we know which one is expanded keeps the colour
-    // for each non-expanded category stable across drill-down toggles.
+    // Layer 2: outflows — assign categorical colors in stable order.
     let catIdx = 0;
     for (const out of model.outflowNodes) {
-      if (out.kind === "category") {
-        categoryColor.set(out.id, CHART_PALETTE[catIdx % CHART_PALETTE.length]);
-        catIdx++;
-      }
-    }
-
-    for (const out of model.outflowNodes) {
-      if (out.kind === "category" && expandedCategory?.id === out.id) {
-        // Substitute: emit item nodes in this slot, ordered just like the
-        // category was (largest first). Same colour as the parent so the
-        // drill-down reads as one continuous flow.
-        const parentColor = categoryColor.get(out.id) ?? CHART_PALETTE[0];
-        for (const item of expandedCategory.items) {
-          addNode({
-            id: item.id,
-            name: item.name,
-            kind: "item",
-            value: item.value,
-            color: parentColor,
-            meta: { parentCategoryId: out.id },
-          });
-        }
-        continue;
-      }
       const color =
         out.kind === "category"
-          ? categoryColor.get(out.id) ?? CHART_PALETTE[0]
+          ? CHART_PALETTE[catIdx++ % CHART_PALETTE.length]
           : colorForKind(out.kind);
       addNode({
         id: out.id,
@@ -199,28 +182,12 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       const s = idToIndex.get(link.sourceId);
       const t = idToIndex.get(link.targetId);
       if (s === undefined || t === undefined) continue;
-      // When a category is expanded, its hub→category link's target is gone
-      // from the graph (we substituted items for the category). idToIndex.get
-      // returns undefined for it, so the link is naturally dropped above. We
-      // re-emit hub→item links below in the same slot so d3-sankey keeps the
-      // items contiguous on the right column.
       const color = nodes[t].kind === "hub" ? nodes[s].color : nodes[t].color;
       links.push({ source: s, target: t, value: link.value, color });
     }
-    if (expandedCategory) {
-      const hubIdx = idToIndex.get(model.hub.id);
-      const parentColor = categoryColor.get(expandedCategory.id) ?? CHART_PALETTE[0];
-      if (hubIdx !== undefined) {
-        for (const item of expandedCategory.items) {
-          const i = idToIndex.get(item.id);
-          if (i === undefined) continue;
-          links.push({ source: hubIdx, target: i, value: item.value, color: parentColor });
-        }
-      }
-    }
 
     return { nodes, links };
-  }, [model, expandedCategory]);
+  }, [model]);
 
   // ---- Empty state -----------------------------------------------------
   if (model.incomeNodes.length === 0) {
@@ -242,6 +209,12 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
 
   // ---- Custom renderers ------------------------------------------------
 
+  // Tunable timings — kept in one place so all three transitions stay in
+  // sync (dim other categories, fade the category label out, slice the bar
+  // into items).
+  const TRANSITION_MS = 240;
+  const ITEM_STAGGER_MS = 50;
+
   // Place node labels OUTSIDE the diagram so they don't fight the ribbons:
   // left of node when it's a source (depth 0), right of node otherwise.
   // The hub is the only middle column, and we label it above its rectangle.
@@ -251,8 +224,6 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
     const isLeft = n.depth === 0;
     const isHub = n.kind === "hub";
     const isCategory = n.kind === "category";
-    const isItem = n.kind === "item";
-    const isInteractive = isCategory || isItem;
     const labelX = isLeft ? x - 6 : x + width + 6;
     const labelAnchor = isLeft ? "end" : "start";
 
@@ -260,31 +231,45 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
     // cumulative throughput). Always render the *real* monthly amount.
     const realValue = realValueById.get(n.id) ?? n.value;
 
-    const ariaHint = isCategory
-      ? ". Click to drill down."
-      : isItem
-        ? ". Click to return to categories."
-        : "";
+    const isExpandedSelf = isCategory && expandedId === n.id;
+    // Dim non-focus outflow nodes (other categories, CPF, savings, shortfall)
+    // when something is expanded — sources (incomes) and the hub stay bright
+    // so the user can still see where the money came from.
+    const isDimTarget =
+      expandedId !== null &&
+      !isExpandedSelf &&
+      (n.kind === "category" || n.kind === "cpf" || n.kind === "savings" || n.kind === "shortfall");
+    const nodeOpacity = isDimTarget ? 0.18 : 1;
+    const transition: CSSProperties = {
+      transition: `opacity ${TRANSITION_MS}ms ease`,
+    };
 
     return (
       <g
-        role={isInteractive ? "button" : "img"}
-        tabIndex={isInteractive ? 0 : -1}
-        aria-label={`${n.name}, ${fmt(realValue)} monthly${ariaHint}`}
-        style={{ cursor: isInteractive ? "pointer" : "default", outline: "none" }}
-        onClick={() => {
-          if (isCategory) setExpandedId(n.id);
-          else if (isItem) setExpandedId(null);
+        role={isCategory ? "button" : "img"}
+        tabIndex={isCategory ? 0 : -1}
+        aria-label={`${n.name}, ${fmt(realValue)} monthly${isCategory ? (isExpandedSelf ? ". Expanded. Click to collapse." : ". Click to drill down.") : ""}`}
+        aria-pressed={isCategory ? isExpandedSelf : undefined}
+        style={{ cursor: isCategory ? "pointer" : "default", outline: "none" }}
+        onClick={(e) => {
+          if (!isCategory) return;
+          // Stop the bubble — the chart's click-away handler would
+          // otherwise immediately collapse us right after we expand.
+          e.stopPropagation();
+          setExpandedId(isExpandedSelf ? null : n.id);
         }}
         onKeyDown={(e) => {
-          if (!isInteractive) return;
+          if (!isCategory) return;
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            if (isCategory) setExpandedId(n.id);
-            else if (isItem) setExpandedId(null);
+            e.stopPropagation();
+            setExpandedId(isExpandedSelf ? null : n.id);
           }
         }}
       >
+        {/* The category/outflow rectangle stays a single solid bar even
+            when expanded — the **ribbon** is what splits into sub-tendrils
+            (see renderLink). */}
         <Rectangle
           x={x}
           y={y}
@@ -292,10 +277,12 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
           height={height}
           fill={n.color}
           fillOpacity={1}
+          style={{ ...transition, opacity: nodeOpacity }}
         />
+
+        {/* Hub label sits above the rectangle so it doesn't compete with the
+            ribbons crossing through. */}
         {isHub ? (
-          // Hub label sits above the rectangle so it doesn't compete with the
-          // ribbons crossing through.
           <text
             x={x + width / 2}
             y={y - 6}
@@ -304,6 +291,8 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
             fontWeight={600}
             fontFamily='"Space Grotesk", system-ui, sans-serif'
             fill="#1C2B2A"
+            style={transition}
+            opacity={expandedId ? 0.6 : 1}
           >
             {n.name} · {fmt(realValue)}
           </text>
@@ -317,6 +306,8 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
               fontSize={12}
               fontFamily='"Space Grotesk", system-ui, sans-serif'
               fill="#1C2B2A"
+              style={transition}
+              opacity={isDimTarget ? 0.25 : 1}
             >
               <tspan fontWeight={600}>{n.name}</tspan>
               <tspan dx={6} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
@@ -330,17 +321,104 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
   function renderLink(props: SankeyLinkRenderProps) {
     const { sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, payload } = props;
     // Recharts hands us the link with `source`/`target` resolved to full node
-    // objects. Our colour was precomputed on the input link — recover it via
-    // the link index... actually easier: we tucked it onto the link directly
-    // and Recharts preserves extra fields on the link object.
-    const color = (payload as unknown as SankeyInputLink).color ?? "#3A6B52";
+    // objects. Read the colour we precomputed on the input link, and use the
+    // target id to decide if this ribbon should dim when something else is
+    // expanded.
+    const pl = payload as unknown as SankeyInputLink & {
+      source: { id?: string };
+      target: { id?: string };
+    };
+    const color = pl.color ?? "#3A6B52";
+    const sourceId = pl.source?.id;
+    const targetId = pl.target?.id;
+    const isHubToOutflow = sourceId === model.hub.id;
+    const isFocusRibbon = expandedId !== null && targetId === expandedId;
+    const dimmed = expandedId !== null && isHubToOutflow && !isFocusRibbon;
+    const baseOpacity = expandedId === null ? 0.42 : dimmed ? 0.08 : 0.42;
+
+    const transitionStyle: CSSProperties = {
+      transition: `stroke-opacity ${TRANSITION_MS}ms ease`,
+    };
+
+    // ---- Focus ribbon: split into one sub-tendril per item -----------
+    // The single hub→category ribbon fans out into N parallel sub-ribbons,
+    // each sized to its item's share of the category. The bar at the
+    // target end stays a single solid block — only the *tendril* splits.
+    if (isFocusRibbon) {
+      const cat = model.categories.find((c) => c.id === targetId);
+      if (cat && cat.value > 0 && cat.items.length > 0) {
+        const GAP = 3; // px between adjacent sub-tendrils
+        const itemCount = cat.items.length;
+        const contentW = Math.max(1, linkWidth - GAP * Math.max(0, itemCount - 1));
+        let cumulative = -linkWidth / 2; // top edge of the original ribbon
+        return (
+          <g>
+            {/* The original ribbon, kept rendered but fully faded out, so
+                React keeps the link element mounted across drill toggles —
+                lets the dim/un-dim animation on neighbours stay smooth. */}
+            <path
+              d={`M${sourceX},${sourceY}C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`}
+              fill="none"
+              stroke={color}
+              strokeOpacity={0}
+              strokeWidth={linkWidth}
+              style={transitionStyle}
+            />
+            {cat.items.map((item, i) => {
+              const itemW = (item.value / cat.value) * contentW;
+              const cy = cumulative + itemW / 2;
+              const subSourceY = sourceY + cy;
+              const subTargetY = targetY + cy;
+              cumulative += itemW + GAP;
+              return (
+                <path
+                  key={item.id}
+                  className="animate-in fade-in"
+                  style={{
+                    animationDuration: `${TRANSITION_MS + 100}ms`,
+                    animationDelay: `${i * ITEM_STAGGER_MS}ms`,
+                    animationFillMode: "backwards",
+                    cursor: "pointer",
+                  }}
+                  d={`M${sourceX},${subSourceY}C${sourceControlX},${subSourceY} ${targetControlX},${subTargetY} ${targetX},${subTargetY}`}
+                  fill="none"
+                  stroke={color}
+                  // Alternate opacity slightly so adjacent strands read as
+                  // distinct without changing hue.
+                  strokeOpacity={i % 2 === 0 ? 0.7 : 0.42}
+                  strokeWidth={Math.max(1, itemW)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedId(null);
+                  }}
+                  onMouseMove={(e) => {
+                    e.stopPropagation();
+                    setItemHover({
+                      x: e.clientX,
+                      y: e.clientY,
+                      itemName: item.name,
+                      itemValue: item.value,
+                      parentName: cat.name,
+                    });
+                  }}
+                  onMouseLeave={() => setItemHover(null)}
+                  aria-label={`${item.name}, ${fmt(item.value)} monthly`}
+                />
+              );
+            })}
+          </g>
+        );
+      }
+    }
+
     return (
       <path
         d={`M${sourceX},${sourceY}C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`}
         fill="none"
         stroke={color}
-        strokeOpacity={0.42}
+        strokeOpacity={baseOpacity}
         strokeWidth={linkWidth}
+        style={transitionStyle}
       />
     );
   }
@@ -415,12 +493,7 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
           )}
           {n.kind === "category" && (
             <div className="pt-1 mt-1 border-t border-border/50 text-[11px]">
-              Click to see line items
-            </div>
-          )}
-          {n.kind === "item" && (
-            <div className="pt-1 mt-1 border-t border-border/50 text-[11px]">
-              Click to return to categories
+              {expandedId === n.id ? "Click to collapse" : "Click to see line items"}
             </div>
           )}
         </div>
@@ -435,36 +508,45 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
         <CardTitle className="text-base font-display flex items-center gap-2">
           <Layers className="h-4 w-4 text-primary" /> Monthly Cashflow
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Gross income flows into the pool, then out to CPF, your expense categories, and savings.
-          Click a category to break it down. Hover any node or ribbon for detail.
-        </p>
-      </CardHeader>
-      <CardContent>
-        {expandedCategory && (
-          // When a category is expanded, the category bar itself is gone from
-          // the diagram (the items occupy its slot). Give the user an obvious
-          // way back to the categories view.
-          <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-sm">
-            <span className="text-muted-foreground">
-              Showing{" "}
-              <span className="font-display font-semibold text-foreground">
-                {expandedCategory.name}
-              </span>{" "}
-              breakdown · {fmt(expandedCategory.value)} across{" "}
-              {expandedCategory.items.length}{" "}
-              {expandedCategory.items.length === 1 ? "item" : "items"}
-            </span>
+        {/* Inline status text — same line height as the default description,
+            so swapping between the two never reflows the chart below. */}
+        {expandedCategory ? (
+          <p className="text-xs text-muted-foreground">
+            Showing{" "}
+            <span className="font-display font-semibold text-foreground">
+              {expandedCategory.name}
+            </span>{" "}
+            breakdown · {fmt(expandedCategory.value)} across{" "}
+            {expandedCategory.items.length}{" "}
+            {expandedCategory.items.length === 1 ? "item" : "items"} ·{" "}
             <button
               type="button"
               onClick={() => setExpandedId(null)}
-              className="rounded-md px-2 py-1 font-display text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              className="font-display font-medium text-foreground underline-offset-2 hover:underline"
             >
-              ← Show categories
+              Show categories
             </button>
-          </div>
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Gross income flows into the pool, then out to CPF, your expense categories, and savings.
+            Click a category to break it down. Hover any node or ribbon for detail.
+          </p>
         )}
-        <div className="w-full h-[520px]">
+      </CardHeader>
+      <CardContent>
+        <div
+          className="w-full h-[520px] relative"
+          // Clear the item tooltip if the cursor leaves the chart entirely.
+          onMouseLeave={() => setItemHover(null)}
+          // Click-away to collapse: any click that wasn't on an interactive
+          // node (category bar) or item sub-tendril bubbles up to here and
+          // restores the full-colour categories view. Category and item
+          // handlers call stopPropagation so they don't reach this.
+          onClick={() => {
+            if (expandedId !== null) setExpandedId(null);
+          }}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <Sankey
               data={data}
@@ -488,8 +570,54 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
           {model.shortfall > 0 && <LegendDot color={STATUS_COLORS.danger} label="Shortfall" />}
         </div>
       </CardContent>
+
+      {/* Cursor-following tooltip for the in-bar item segments. Items live
+          outside the Recharts graph (they're an overlay on the parent bar),
+          so the Recharts <Tooltip> never sees them — this fixed-positioned
+          floater fills the gap. Rendered last + pointer-events: none so it
+          never steals hover from anything below. */}
+      {itemHover && (
+        <div
+          role="tooltip"
+          className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm pointer-events-none animate-in fade-in"
+          style={tooltipStyle(itemHover.x, itemHover.y)}
+        >
+          <div className="font-display text-[13px] font-semibold mb-1">{itemHover.itemName}</div>
+          <div className="text-xs text-muted-foreground space-y-0.5">
+            <div>
+              Monthly:{" "}
+              <span className="text-foreground font-medium tabular-nums">
+                {fmt(itemHover.itemValue)}
+              </span>
+            </div>
+            <div>
+              Share of {itemHover.parentName}:{" "}
+              <span className="text-foreground font-medium tabular-nums">
+                {(() => {
+                  const cat = model.categories.find((c) => c.name === itemHover.parentName);
+                  const denom = cat?.value ?? 0;
+                  return denom > 0 ? `${((itemHover.itemValue / denom) * 100).toFixed(1)}%` : "—";
+                })()}
+              </span>
+            </div>
+            <div className="pt-1 mt-1 border-t border-border/50 text-[11px]">
+              Click to collapse
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
+}
+
+function tooltipStyle(x: number, y: number): CSSProperties {
+  const vw = typeof window !== "undefined" ? window.innerWidth : 9999;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 9999;
+  const TIP_W = 240;
+  const TIP_H = 120;
+  const left = Math.min(Math.max(8, x + 14), vw - TIP_W - 8);
+  const top = y + 14 + TIP_H > vh ? Math.max(8, y - TIP_H - 14) : y + 14;
+  return { position: "fixed", left, top, zIndex: 60, maxWidth: TIP_W };
 }
 
 function LegendDot({ color, label }: { color: string; label: string }) {
