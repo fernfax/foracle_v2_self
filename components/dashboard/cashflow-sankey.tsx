@@ -12,7 +12,7 @@
  * items (an extra column appears on the right); click again to collapse.
  */
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   ResponsiveContainer,
   Sankey,
@@ -94,9 +94,31 @@ function colorForKind(kind: ModelNode["kind"]): string {
   }
 }
 
+// Narrow-viewport breakpoint for the chart's mobile layout. Matches Tailwind's
+// `sm` (640px) so anything from phone portrait through phone landscape gets
+// the compact margins, smaller labels, and stacked name/amount pairs.
+function useIsNarrow(): boolean {
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const check = () => setIsNarrow(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isNarrow;
+}
+
+// On narrow viewports our side-margin budget is ~80px instead of ~150px, so
+// long names overflow even the compact label slot. Trim to a reasonable
+// width and append an ellipsis; the full name is still in the tooltip.
+function truncateLabel(name: string, max: number): string {
+  return name.length > max ? `${name.slice(0, max - 1).trimEnd()}…` : name;
+}
+
 export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
   const model = useMemo(() => buildCashflowModel(incomes, expenses), [incomes, expenses]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const isNarrow = useIsNarrow();
 
   // Recharts' Sankey mutates the nodes you pass in (it overwrites `value`
   // with cumulative throughput, ~2x the real number for the hub). Snapshot
@@ -133,11 +155,18 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
   // Value compression: Sankey lays out node heights proportional to flow
   // value, so a $19k salary next to a $40 expense category leaves the small
   // categories as hair-thin ribbons and the chart half-empty. We compress
-  // the dynamic range with sqrt — large flows still read as larger, but
-  // small categories get enough vertical real estate to be visible and the
-  // overall diagram fills its container. Real dollar amounts remain in
-  // `realValueById` for every tooltip, so the user never sees compressed
-  // numbers — only the visual layout changes.
+  // each side's dynamic range with sqrt — large flows still read as larger,
+  // but small categories get enough vertical real estate to be visible.
+  //
+  // Sqrt is concave, so Σ√xᵢ ≠ √(Σxᵢ) — naively applying sqrt to every link
+  // breaks Sankey's conservation invariant at the hub (sum of inflow
+  // ribbons no longer equals sum of outflow ribbons), and Recharts uses
+  // max(inflow, outflow) for the hub height which leaves a gap on the
+  // smaller side. We restore conservation by rescaling all outflow ribbons
+  // by inflowSum / outflowSum so the hub bar matches what flows into and
+  // out of it visually. Real dollar amounts remain in `realValueById` for
+  // every tooltip, so the user never sees compressed numbers — only the
+  // visual layout changes.
   const visualize = (v: number) => Math.sqrt(Math.max(v, 0));
   const data = useMemo(() => {
     const nodes: SankeyInputNode[] = [];
@@ -147,6 +176,19 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       idToIndex.set(n.id, nodes.length);
       nodes.push(n);
     };
+
+    const inflowSum = model.incomeNodes.reduce(
+      (acc, inc) => acc + visualize(inc.value),
+      0
+    );
+    const outflowSum = model.outflowNodes.reduce(
+      (acc, out) => acc + visualize(out.value),
+      0
+    );
+    // Rescale outflow side so its sum matches the inflow side at the hub —
+    // preserves conservation. Guard against divide-by-zero in the degenerate
+    // case where the user has incomes but every outflow is exactly $0.
+    const outflowScale = outflowSum > 0 ? inflowSum / outflowSum : 1;
 
     // Layer 0: incomes (+ shortfall, when present)
     for (const inc of model.incomeNodes) {
@@ -160,17 +202,13 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       });
     }
 
-    // Layer 1: hub — value is the sum of incoming compressed link values so
-    // the hub bar's height matches the column total at its layer.
-    const hubVisualValue = model.incomeNodes.reduce(
-      (acc, inc) => acc + visualize(inc.value),
-      0
-    );
+    // Layer 1: hub — exactly the sum of inflows so the bar matches the
+    // ribbons feeding into it.
     addNode({
       id: model.hub.id,
       name: model.hub.label,
       kind: model.hub.kind,
-      value: hubVisualValue,
+      value: inflowSum,
       color: colorForKind(model.hub.kind),
     });
 
@@ -185,22 +223,25 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
         id: out.id,
         name: out.label,
         kind: out.kind,
-        value: visualize(out.value),
+        value: visualize(out.value) * outflowScale,
         color,
       });
     }
 
     // Links. Color = the "outer" end (source for left half, target for right
-    // half) so each ribbon reads as a continuation of its node. Link values
-    // are also compressed so ribbon widths match the (compressed) node
-    // heights — otherwise Recharts would mismatch them and stretch ribbons.
+    // half) so each ribbon reads as a continuation of its node. Outgoing
+    // links from the hub get the outflow rescale so ribbon widths match
+    // the rescaled outflow node heights.
     const links: SankeyInputLink[] = [];
     for (const link of model.links) {
       const s = idToIndex.get(link.sourceId);
       const t = idToIndex.get(link.targetId);
       if (s === undefined || t === undefined) continue;
       const color = nodes[t].kind === "hub" ? nodes[s].color : nodes[t].color;
-      links.push({ source: s, target: t, value: visualize(link.value), color });
+      const isFromHub = nodes[s].kind === "hub";
+      const linkValue =
+        visualize(link.value) * (isFromHub ? outflowScale : 1);
+      links.push({ source: s, target: t, value: linkValue, color });
     }
 
     return { nodes, links };
@@ -298,37 +339,72 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
         />
 
         {/* Hub label sits above the rectangle so it doesn't compete with the
-            ribbons crossing through. */}
+            ribbons crossing through. On narrow viewports we stack name above
+            amount so it fits in the constrained column. */}
         {isHub ? (
-          <text
-            x={x + width / 2}
-            y={y - 6}
-            textAnchor="middle"
-            fontSize={12}
-            fontWeight={600}
-            fontFamily='"Space Grotesk", system-ui, sans-serif'
-            fill="#1C2B2A"
-            style={transition}
-            opacity={expandedId ? 0.6 : 1}
-          >
-            {n.name} · {fmt(realValue)}
-          </text>
-        ) : (
-          height > 10 && (
+          isNarrow ? (
             <text
-              x={labelX}
-              y={y + height / 2}
-              textAnchor={labelAnchor}
-              dominantBaseline="middle"
-              fontSize={12}
+              x={x + width / 2}
+              y={y - 18}
+              textAnchor="middle"
+              fontSize={10}
               fontFamily='"Space Grotesk", system-ui, sans-serif'
               fill="#1C2B2A"
               style={transition}
-              opacity={isDimTarget ? 0.25 : 1}
+              opacity={expandedId ? 0.6 : 1}
             >
-              <tspan fontWeight={600}>{n.name}</tspan>
-              <tspan dx={6} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
+              <tspan x={x + width / 2} fontWeight={600}>{n.name}</tspan>
+              <tspan x={x + width / 2} dy={12} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
             </text>
+          ) : (
+            <text
+              x={x + width / 2}
+              y={y - 6}
+              textAnchor="middle"
+              fontSize={12}
+              fontWeight={600}
+              fontFamily='"Space Grotesk", system-ui, sans-serif'
+              fill="#1C2B2A"
+              style={transition}
+              opacity={expandedId ? 0.6 : 1}
+            >
+              {n.name} · {fmt(realValue)}
+            </text>
+          )
+        ) : (
+          height > 10 && (
+            isNarrow ? (
+              // Stacked label: name on top, amount below. Easier to fit in
+              // the ~80px left/right margin on phones than a single wide row.
+              <text
+                x={labelX}
+                y={y + height / 2}
+                textAnchor={labelAnchor}
+                fontSize={10}
+                fontFamily='"Space Grotesk", system-ui, sans-serif'
+                fill="#1C2B2A"
+                style={transition}
+                opacity={isDimTarget ? 0.25 : 1}
+              >
+                <tspan x={labelX} dy={-2} fontWeight={600}>{truncateLabel(n.name, 12)}</tspan>
+                <tspan x={labelX} dy={11} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
+              </text>
+            ) : (
+              <text
+                x={labelX}
+                y={y + height / 2}
+                textAnchor={labelAnchor}
+                dominantBaseline="middle"
+                fontSize={12}
+                fontFamily='"Space Grotesk", system-ui, sans-serif'
+                fill="#1C2B2A"
+                style={transition}
+                opacity={isDimTarget ? 0.25 : 1}
+              >
+                <tspan fontWeight={600}>{n.name}</tspan>
+                <tspan dx={6} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
+              </text>
+            )
           )
         )}
       </g>
@@ -553,7 +629,12 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       </CardHeader>
       <CardContent>
         <div
-          className="w-full h-[440px] relative"
+          // Mobile keeps a compact fixed height so it sits comfortably with
+          // the bottom nav. Desktop fills most of the viewport below the
+          // page header + card chrome — calc(90vh - 198px) is "fill" * 0.9
+          // so the card stretches down but leaves a sliver of breathing room
+          // at the bottom rather than abutting the viewport edge.
+          className="w-full h-[340px] sm:h-[calc(90vh-198px)] sm:min-h-[400px] relative"
           // Clear the item tooltip if the cursor leaves the chart entirely.
           onMouseLeave={() => setItemHover(null)}
           // Click-away to collapse: any click that wasn't on an interactive
@@ -569,14 +650,21 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
               data={data}
               node={renderNode}
               link={renderLink}
-              nodeWidth={12}
-              nodePadding={14}
+              nodeWidth={isNarrow ? 8 : 12}
+              nodePadding={isNarrow ? 10 : 14}
               iterations={48}
               // Disable Recharts' final ascendingY sort so the input order in
               // our outflow array (Savings + CPF first, then categories) is
               // preserved as the visual top-to-bottom order in each column.
               sort={false}
-              margin={{ top: 12, right: 160, bottom: 8, left: 140 }}
+              // Narrow viewports get drastically smaller side margins so the
+              // ribbons themselves get the screen width they need. Stacked
+              // labels (renderNode) compensate for the lost horizontal room.
+              margin={
+                isNarrow
+                  ? { top: 20, right: 80, bottom: 8, left: 80 }
+                  : { top: 12, right: 160, bottom: 8, left: 140 }
+              }
             >
               <Tooltip content={renderTooltip} />
             </Sankey>
