@@ -13,9 +13,8 @@
 -- needs reconciling. The two queries below find the two ways this can break.
 
 \echo
-\echo === Q1: users.family_id ≠ their clerk-linked family_members.family_id ===
-\echo (these users' "home" family per users.family_id doesnt match the family
-\echo  they appear in as a member; arbitrary which side is canonical)
+\echo === Q1: users.family_id differs from their clerk-linked family_members.family_id ===
+\echo (the home family per users.family_id does not match the family they appear in as a member; arbitrary which side is canonical)
 \echo
 
 SELECT
@@ -55,10 +54,8 @@ HAVING count(*) > 1
 ORDER BY count(*) DESC, u.email;
 
 \echo
-\echo === Q3: orphan pending invitations targeting emails of existing users ===
-\echo (pending family_members rows where the invitedEmail already belongs to a
-\echo  signed-up users row — these never resolve cleanly when the invitee
-\echo  clicks the link, because Clerk reuses their existing account)
+\echo === Q3: pending invitations whose email already belongs to a signed-up user ===
+\echo (pending family_members rows whose invited_email matches a row in users; these never resolve cleanly because Clerk reuses the existing account on click)
 \echo
 
 SELECT
@@ -78,9 +75,7 @@ ORDER BY fm.created_at;
 
 \echo
 \echo === Q4: per-user data footprint by family ===
-\echo (helps decide which family to keep when reconciling — the one with the
-\echo  most user-created rows is usually the right "home". Re-run scoped to a
-\echo  specific email after Q1/Q2 surface candidates.)
+\echo (helps decide which family to keep when reconciling. Re-run scoped to a specific email after Q1/Q2 surface candidates.)
 \echo
 
 -- Replace 'USER_EMAIL_HERE' with an affected email and uncomment to inspect.
