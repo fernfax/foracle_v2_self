@@ -69,6 +69,10 @@ interface SankeyInputNode {
   value: number;
   color: string;
   meta?: ModelNode["meta"];
+  /** True for the first category in the outflow stack — the renderer draws
+   *  a dashed divider above it to separate non-discretionary outflows
+   *  (Savings, CPF) from discretionary spending categories. */
+  isFirstCategory?: boolean;
 }
 
 interface SankeyInputLink {
@@ -253,18 +257,25 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
     });
 
     // Layer 2: outflows — assign categorical colors in stable order.
+    // Mark the first category so the renderer can draw a divider above it,
+    // visually separating Savings + CPF (anchored at top) from the spending
+    // categories below.
     let catIdx = 0;
+    let firstCategoryMarked = false;
     for (const out of model.outflowNodes) {
-      const color =
-        out.kind === "category"
-          ? CHART_PALETTE[catIdx++ % CHART_PALETTE.length]
-          : colorForKind(out.kind);
+      const isCategory = out.kind === "category";
+      const color = isCategory
+        ? CHART_PALETTE[catIdx++ % CHART_PALETTE.length]
+        : colorForKind(out.kind);
+      const isFirstCategory = isCategory && !firstCategoryMarked;
+      if (isFirstCategory) firstCategoryMarked = true;
       addNode({
         id: out.id,
         name: out.label,
         kind: out.kind,
         value: visualize(out.value) * outflowScale,
         color,
+        isFirstCategory,
       });
     }
 
@@ -316,7 +327,8 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
               <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[210px] sm:w-[230px]">
                 <button
                   onClick={goToPreviousMonth}
-                  className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                  disabled={isCurrentMonth}
+                  className="p-1.5 hover:bg-muted rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Previous month"
                 >
                   <ChevronLeft className="h-4 w-4 text-muted-foreground" />
@@ -408,6 +420,25 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
           }
         }}
       >
+        {/* Divider above the first category bar — visually separates the
+            non-discretionary outflows (Savings, CPF) at the top of the
+            stack from the discretionary spending categories below. The
+            line sits in the middle of the existing nodePadding gap, so it
+            doesn't push the layout. Pointer-events:none so it doesn't
+            interfere with hover/click on the bars or ribbons. */}
+        {n.isFirstCategory && (
+          <line
+            x1={x - 30}
+            y1={y - (isNarrow ? 5 : 7)}
+            x2={x + width + 90}
+            y2={y - (isNarrow ? 5 : 7)}
+            stroke="rgba(28, 43, 42, 0.18)"
+            strokeWidth={1}
+            strokeDasharray="3 4"
+            pointerEvents="none"
+          />
+        )}
+
         {/* The category/outflow rectangle stays a single solid bar even
             when expanded — the **ribbon** is what splits into sub-tendrils
             (see renderLink). Note: Recharts bakes the node's x/y into the
@@ -735,7 +766,8 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
             <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[210px] sm:w-[230px]">
               <button
                 onClick={goToPreviousMonth}
-                className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                disabled={isCurrentMonth}
+                className="p-1.5 hover:bg-muted rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Previous month"
               >
                 <ChevronLeft className="h-4 w-4 text-muted-foreground" />
