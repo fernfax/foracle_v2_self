@@ -21,37 +21,37 @@ const DEFAULT_CATEGORIES = [
   "Shopping",
 ];
 
-async function seedDefaults(userId: string): Promise<void> {
+async function seedDefaults(ctx: AuthContext): Promise<void> {
   await db.insert(expenseCategories).values(
     DEFAULT_CATEGORIES.map((name) => ({
       id: randomUUID(),
-      userId,
+      userId: ctx.userId,
+      familyId: ctx.familyId,
       name,
       isDefault: true,
     }))
   );
 }
 
-// Returns the user's categories, seeding defaults for new users and
+// Returns the family's categories, seeding defaults for fresh families and
 // backfilling any category names that appear in the recurring `expenses`
-// table but are missing from `expense_categories`. This auto-heal behavior
-// is preserved from the original lib/actions/expense-categories.ts so the
-// web continues to work identically after the service swap.
+// table but are missing from `expense_categories`. Family-scoped so every
+// member of a household sees the same category set.
 export async function listExpenseCategories(
   ctx: AuthContext
 ): Promise<ExpenseCategoryRow[]> {
   let categories = await db
     .select()
     .from(expenseCategories)
-    .where(eq(expenseCategories.userId, ctx.userId))
+    .where(eq(expenseCategories.familyId, ctx.familyId))
     .orderBy(asc(expenseCategories.name));
 
   if (categories.length === 0) {
-    await seedDefaults(ctx.userId);
+    await seedDefaults(ctx);
     categories = await db
       .select()
       .from(expenseCategories)
-      .where(eq(expenseCategories.userId, ctx.userId))
+      .where(eq(expenseCategories.familyId, ctx.familyId))
       .orderBy(asc(expenseCategories.name));
   }
 
@@ -59,7 +59,7 @@ export async function listExpenseCategories(
   const namesInExpenses = await db
     .selectDistinct({ category: expenses.category })
     .from(expenses)
-    .where(and(eq(expenses.userId, ctx.userId), eq(expenses.isActive, true)));
+    .where(and(eq(expenses.familyId, ctx.familyId), eq(expenses.isActive, true)));
 
   const missing = namesInExpenses
     .map((e) => e.category)
@@ -70,6 +70,7 @@ export async function listExpenseCategories(
       missing.map((name) => ({
         id: randomUUID(),
         userId: ctx.userId,
+        familyId: ctx.familyId,
         name,
         isDefault: false,
         trackedInBudget: true,
@@ -78,7 +79,7 @@ export async function listExpenseCategories(
     categories = await db
       .select()
       .from(expenseCategories)
-      .where(eq(expenseCategories.userId, ctx.userId))
+      .where(eq(expenseCategories.familyId, ctx.familyId))
       .orderBy(asc(expenseCategories.name));
   }
 
@@ -94,6 +95,7 @@ export async function createExpenseCategory(
     .values({
       id: randomUUID(),
       userId: ctx.userId,
+      familyId: ctx.familyId,
       name,
       isDefault: false,
     })

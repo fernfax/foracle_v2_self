@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -28,6 +27,7 @@ import {
   incomesBeta,
 } from "@/db/schema";
 import type { DeveloperTableScope, TableRowsResult } from "@/lib/developer-tables";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
 const ROW_LIMIT = 100;
 
@@ -39,23 +39,23 @@ type TableEntry = {
 const REGISTRY: Record<string, TableEntry> = {
   users: { scope: "self", table: users },
   families: { scope: "primaryFamily", table: families },
-  family_members: { scope: "userId", table: familyMembers },
-  incomes: { scope: "userId", table: incomes },
-  incomes_beta: { scope: "userId", table: incomesBeta },
-  expenses: { scope: "userId", table: expenses },
-  daily_expenses: { scope: "userId", table: dailyExpenses },
-  expense_categories: { scope: "userId", table: expenseCategories },
-  expense_subcategories: { scope: "userId", table: expenseSubcategories },
-  budget_shifts: { scope: "userId", table: budgetShifts },
-  assets: { scope: "userId", table: assets },
-  property_assets: { scope: "userId", table: propertyAssets },
-  vehicle_assets: { scope: "userId", table: vehicleAssets },
-  current_holdings: { scope: "userId", table: currentHoldings },
-  holding_amount_history: { scope: "userId", table: holdingAmountHistory },
-  investment_policies: { scope: "userId", table: investmentPolicies },
-  policies: { scope: "userId", table: policies },
-  insurance_providers: { scope: "userId", table: insuranceProviders },
-  goals: { scope: "userId", table: goals },
+  family_members: { scope: "familyId", table: familyMembers },
+  incomes: { scope: "familyId", table: incomes },
+  incomes_beta: { scope: "familyId", table: incomesBeta },
+  expenses: { scope: "familyId", table: expenses },
+  daily_expenses: { scope: "familyId", table: dailyExpenses },
+  expense_categories: { scope: "familyId", table: expenseCategories },
+  expense_subcategories: { scope: "familyId", table: expenseSubcategories },
+  budget_shifts: { scope: "familyId", table: budgetShifts },
+  assets: { scope: "familyId", table: assets },
+  property_assets: { scope: "familyId", table: propertyAssets },
+  vehicle_assets: { scope: "familyId", table: vehicleAssets },
+  current_holdings: { scope: "familyId", table: currentHoldings },
+  holding_amount_history: { scope: "familyId", table: holdingAmountHistory },
+  investment_policies: { scope: "familyId", table: investmentPolicies },
+  policies: { scope: "familyId", table: policies },
+  insurance_providers: { scope: "familyId", table: insuranceProviders },
+  goals: { scope: "familyId", table: goals },
   quick_links: { scope: "userId", table: quickLinks },
   user_chunks: { scope: "userId", table: userChunks },
   kb_chunks: { scope: "global", table: kbChunks },
@@ -70,8 +70,7 @@ function assertDevMode() {
 export async function getTableRows(tableName: string): Promise<TableRowsResult> {
   assertDevMode();
 
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const { userId, familyId } = await getCurrentUserAndFamily();
 
   const entry = REGISTRY[tableName];
   if (!entry) throw new Error(`Unknown table: ${tableName}`);
@@ -84,16 +83,19 @@ export async function getTableRows(tableName: string): Promise<TableRowsResult> 
     rows = (await db.select().from(table).where(eq(table.id, userId))) as any;
     totalForScope = rows.length;
   } else if (scope === "primaryFamily") {
-    const me = await db
-      .select({ familyId: users.familyId })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-    const familyId = me[0]?.familyId ?? null;
-    if (familyId) {
-      rows = (await db.select().from(table).where(eq(table.id, familyId))) as any;
-    }
+    rows = (await db.select().from(table).where(eq(table.id, familyId))) as any;
     totalForScope = rows.length;
+  } else if (scope === "familyId") {
+    const countResult = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(table)
+      .where(eq(table.familyId, familyId));
+    totalForScope = countResult[0]?.n ?? 0;
+    rows = (await db
+      .select()
+      .from(table)
+      .where(eq(table.familyId, familyId))
+      .limit(ROW_LIMIT)) as any;
   } else if (scope === "userId") {
     const countResult = await db
       .select({ n: sql<number>`count(*)::int` })

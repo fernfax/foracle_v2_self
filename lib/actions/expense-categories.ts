@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { expenseCategories, expenses } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -23,7 +22,7 @@ export type ExpenseCategory = {
 };
 
 /**
- * Get all expense categories for the authenticated user.
+ * Get all expense categories for the caller's family.
  * Also auto-creates any categories that exist in the expenses table but not in expense_categories.
  */
 export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
@@ -51,14 +50,10 @@ export async function updateExpenseCategory(
   id: string,
   name: string
 ): Promise<ExpenseCategory> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Verify ownership
   const existing = await db.query.expenseCategories.findFirst({
-    where: and(eq(expenseCategories.id, id), eq(expenseCategories.userId, userId)),
+    where: and(eq(expenseCategories.id, id), eq(expenseCategories.familyId, familyId)),
   });
 
   if (!existing) {
@@ -71,7 +66,7 @@ export async function updateExpenseCategory(
       name,
       updatedAt: new Date(),
     })
-    .where(and(eq(expenseCategories.id, id), eq(expenseCategories.userId, userId)))
+    .where(and(eq(expenseCategories.id, id), eq(expenseCategories.familyId, familyId)))
     .returning();
 
   return updatedCategory;
@@ -81,14 +76,11 @@ export async function updateExpenseCategory(
  * Delete an expense category
  */
 export async function deleteExpenseCategory(id: string): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
   await db
     .delete(expenseCategories)
-    .where(and(eq(expenseCategories.id, id), eq(expenseCategories.userId, userId)));
+    .where(and(eq(expenseCategories.id, id), eq(expenseCategories.familyId, familyId)));
 }
 
 /**
@@ -99,10 +91,7 @@ export async function getExpensesByCategory(categoryName: string): Promise<{
   name: string;
   amount: string;
 }[]> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
   const categoryExpenses = await db
     .select({
@@ -111,7 +100,7 @@ export async function getExpensesByCategory(categoryName: string): Promise<{
       amount: expenses.amount,
     })
     .from(expenses)
-    .where(and(eq(expenses.userId, userId), eq(expenses.category, categoryName)));
+    .where(and(eq(expenses.familyId, familyId), eq(expenses.category, categoryName)));
 
   return categoryExpenses;
 }
@@ -126,7 +115,7 @@ export type ExpenseItem = {
 };
 
 /**
- * Get all expenses grouped by category for the authenticated user
+ * Get all expenses grouped by category for the caller's family.
  * When year/month are provided, one-time expenses are filtered to only show
  * those occurring in that specific month
  */
@@ -134,10 +123,7 @@ export async function getAllExpensesGroupedByCategory(
   year?: number,
   month?: number
 ): Promise<Record<string, ExpenseItem[]>> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
   const allExpenses = await db
     .select({
@@ -150,7 +136,7 @@ export async function getAllExpensesGroupedByCategory(
       startDate: expenses.startDate,
     })
     .from(expenses)
-    .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+    .where(and(eq(expenses.familyId, familyId), eq(expenses.isActive, true)));
 
   // Group expenses by category, filtering one-time expenses by month
   const grouped: Record<string, ExpenseItem[]> = {};
@@ -190,14 +176,10 @@ export async function updateExpenseCategoryIcon(
   id: string,
   icon: string | null
 ): Promise<ExpenseCategory> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Verify ownership
   const existing = await db.query.expenseCategories.findFirst({
-    where: and(eq(expenseCategories.id, id), eq(expenseCategories.userId, userId)),
+    where: and(eq(expenseCategories.id, id), eq(expenseCategories.familyId, familyId)),
   });
 
   if (!existing) {
@@ -210,7 +192,7 @@ export async function updateExpenseCategoryIcon(
       icon,
       updatedAt: new Date(),
     })
-    .where(and(eq(expenseCategories.id, id), eq(expenseCategories.userId, userId)))
+    .where(and(eq(expenseCategories.id, id), eq(expenseCategories.familyId, familyId)))
     .returning();
 
   return updatedCategory;
@@ -222,18 +204,13 @@ export async function updateExpenseCategoryIcon(
 export async function updateTrackedCategories(
   trackedCategoryIds: string[]
 ): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Get all user categories
   const allCategories = await db
     .select({ id: expenseCategories.id })
     .from(expenseCategories)
-    .where(eq(expenseCategories.userId, userId));
+    .where(eq(expenseCategories.familyId, familyId));
 
-  // Update all categories - set tracked to true if in list, false otherwise
   for (const category of allCategories) {
     const isTracked = trackedCategoryIds.includes(category.id);
     await db
@@ -242,7 +219,7 @@ export async function updateTrackedCategories(
         trackedInBudget: isTracked,
         updatedAt: new Date(),
       })
-      .where(and(eq(expenseCategories.id, category.id), eq(expenseCategories.userId, userId)));
+      .where(and(eq(expenseCategories.id, category.id), eq(expenseCategories.familyId, familyId)));
   }
 
   revalidatePath("/budget");
@@ -254,19 +231,14 @@ export async function updateTrackedCategories(
 export async function updateTrackedExpenses(
   trackedExpenseIds: string[]
 ): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Get all user expenses with their category
-  const allUserExpenses = await db
+  const allFamilyExpenses = await db
     .select({ id: expenses.id, category: expenses.category })
     .from(expenses)
-    .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+    .where(and(eq(expenses.familyId, familyId), eq(expenses.isActive, true)));
 
-  // Update all expenses - set tracked to true if in list, false otherwise
-  for (const expense of allUserExpenses) {
+  for (const expense of allFamilyExpenses) {
     const isTracked = trackedExpenseIds.includes(expense.id);
     await db
       .update(expenses)
@@ -274,27 +246,25 @@ export async function updateTrackedExpenses(
         trackedInBudget: isTracked,
         updatedAt: new Date(),
       })
-      .where(and(eq(expenses.id, expense.id), eq(expenses.userId, userId)));
+      .where(and(eq(expenses.id, expense.id), eq(expenses.familyId, familyId)));
   }
 
   // Also update category.trackedInBudget based on whether any expenses in that category are tracked
-  const userCategories = await db
+  const familyCategories = await db
     .select()
     .from(expenseCategories)
-    .where(eq(expenseCategories.userId, userId));
+    .where(eq(expenseCategories.familyId, familyId));
 
-  // Build a map of category name -> has any tracked expenses
   const trackedExpenseSet = new Set(trackedExpenseIds);
   const categoryHasTracked: Record<string, boolean> = {};
 
-  for (const expense of allUserExpenses) {
+  for (const expense of allFamilyExpenses) {
     if (trackedExpenseSet.has(expense.id)) {
       categoryHasTracked[expense.category] = true;
     }
   }
 
-  // Update each category's trackedInBudget
-  for (const category of userCategories) {
+  for (const category of familyCategories) {
     const shouldTrack = categoryHasTracked[category.name] === true;
     await db
       .update(expenseCategories)
@@ -302,7 +272,7 @@ export async function updateTrackedExpenses(
         trackedInBudget: shouldTrack,
         updatedAt: new Date(),
       })
-      .where(and(eq(expenseCategories.id, category.id), eq(expenseCategories.userId, userId)));
+      .where(and(eq(expenseCategories.id, category.id), eq(expenseCategories.familyId, familyId)));
   }
 
   revalidatePath("/budget");

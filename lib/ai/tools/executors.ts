@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
 import { expenses, incomes, familyMembers, expenseCategories, currentHoldings, propertyAssets, vehicleAssets, assets, policies, dailyExpenses, expenseSubcategories } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf-calculator";
@@ -560,10 +560,12 @@ function parseMonth(monthStr: string): { year: number; month: number } {
   };
 }
 
-async function getCurrentUserId(): Promise<string | null> {
+// Resolves the caller's userId (for audit attribution) and familyId (for data
+// scoping). Tool functions read family-shared tables, so they filter by
+// familyId; userId is retained only for the audit log.
+async function resolveCallerContext(): Promise<{ userId: string; familyId: string } | null> {
   try {
-    const { userId } = await auth();
-    return userId;
+    return await getCurrentUserAndFamily();
   } catch {
     return null;
   }
@@ -604,7 +606,7 @@ function addMonthsToString(monthStr: string, offset: number): string {
 
 async function executeGetIncomeSummary(
   params: MonthParams,
-  userId: string
+  familyId: string
 ): Promise<IncomeSummaryResult> {
   const { year, month } = parseMonth(params.month);
 
@@ -614,7 +616,7 @@ async function executeGetIncomeSummary(
     .from(incomes)
     .where(
       and(
-        eq(incomes.userId, userId),
+        eq(incomes.familyId, familyId),
         eq(incomes.isActive, true)
       )
     );
@@ -623,7 +625,7 @@ async function executeGetIncomeSummary(
   const userFamilyMembers = await db
     .select()
     .from(familyMembers)
-    .where(eq(familyMembers.userId, userId));
+    .where(eq(familyMembers.familyId, familyId));
 
   const familyMemberMap: Record<string, string> = {};
   userFamilyMembers.forEach((fm) => {
@@ -875,7 +877,7 @@ async function executeGetIncomeSummary(
 
 async function executeGetExpensesSummary(
   params: MonthParams,
-  userId: string
+  familyId: string
 ): Promise<ExpensesSummaryResult> {
   const { year, month } = parseMonth(params.month);
   const monthStart = new Date(year, month - 1, 1);
@@ -887,7 +889,7 @@ async function executeGetExpensesSummary(
     .from(expenses)
     .where(
       and(
-        eq(expenses.userId, userId),
+        eq(expenses.familyId, familyId),
         eq(expenses.isActive, true)
       )
     );
@@ -896,7 +898,7 @@ async function executeGetExpensesSummary(
   const userExpenseCategories = await db
     .select()
     .from(expenseCategories)
-    .where(eq(expenseCategories.userId, userId));
+    .where(eq(expenseCategories.familyId, familyId));
 
   // Process expenses and calculate monthly amounts
   const expenseItems: RecurringExpenseItem[] = [];
@@ -1020,7 +1022,7 @@ async function executeGetExpensesSummary(
 
 async function executeGetFamilySummary(
   params: FamilySummaryParams,
-  userId: string
+  familyId: string
 ): Promise<FamilySummaryResult> {
   // Determine effective scope
   const effectiveScope: "household" | "member" =
@@ -1032,14 +1034,14 @@ async function executeGetFamilySummary(
   const userFamilyMembers = await db
     .select()
     .from(familyMembers)
-    .where(eq(familyMembers.userId, userId));
+    .where(eq(familyMembers.familyId, familyId));
 
   // Get all incomes for this user (to link to family members)
   const userIncomes = await db
     .select()
     .from(incomes)
     .where(and(
-      eq(incomes.userId, userId),
+      eq(incomes.familyId, familyId),
       eq(incomes.isActive, true)
     ));
 
@@ -1318,7 +1320,7 @@ function calculateMonthlyExpensesForMonth(
 
 async function executeGetBalanceSummary(
   params: BalanceSummaryParams,
-  userId: string
+  familyId: string
 ): Promise<BalanceSummaryResult> {
   const notes: string[] = [];
   const assumptions: string[] = [];
@@ -1333,7 +1335,7 @@ async function executeGetBalanceSummary(
   const holdings = await db
     .select()
     .from(currentHoldings)
-    .where(eq(currentHoldings.userId, userId));
+    .where(eq(currentHoldings.familyId, familyId));
 
   const startingBalance = holdings.reduce((total, holding) => {
     return total + parseFloat(holding.holdingAmount);
@@ -1350,12 +1352,12 @@ async function executeGetBalanceSummary(
   const userIncomes = await db
     .select()
     .from(incomes)
-    .where(and(eq(incomes.userId, userId), eq(incomes.isActive, true)));
+    .where(and(eq(incomes.familyId, familyId), eq(incomes.isActive, true)));
 
   const userExpenses = await db
     .select()
     .from(expenses)
-    .where(and(eq(expenses.userId, userId), eq(expenses.isActive, true)));
+    .where(and(eq(expenses.familyId, familyId), eq(expenses.isActive, true)));
 
   assumptions.push("Future income estimated using current active income sources");
   assumptions.push("Recurring expenses assumed constant unless end date specified");
@@ -1859,19 +1861,19 @@ async function executeGetBalanceSummary(
 // =============================================================================
 
 async function executeGetHoldingsSummary(
-  userId: string
+  familyId: string
 ): Promise<HoldingsSummaryResult> {
   // Fetch all holdings for the user
   const holdings = await db
     .select()
     .from(currentHoldings)
-    .where(eq(currentHoldings.userId, userId));
+    .where(eq(currentHoldings.familyId, familyId));
 
   // Get family members to map IDs to names
   const userFamilyMembers = await db
     .select()
     .from(familyMembers)
-    .where(eq(familyMembers.userId, userId));
+    .where(eq(familyMembers.familyId, familyId));
 
   const familyMemberMap: Record<string, string> = {};
   userFamilyMembers.forEach((fm) => {
@@ -1945,13 +1947,13 @@ async function executeGetHoldingsSummary(
 // =============================================================================
 
 async function executeGetPropertyAssetsSummary(
-  userId: string
+  familyId: string
 ): Promise<PropertyAssetsSummaryResult> {
   // Fetch all active property assets for the user
   const properties = await db
     .select()
     .from(propertyAssets)
-    .where(and(eq(propertyAssets.userId, userId), eq(propertyAssets.isActive, true)));
+    .where(and(eq(propertyAssets.familyId, familyId), eq(propertyAssets.isActive, true)));
 
   const propertyItems: PropertyAssetItem[] = [];
   let totalPropertyValue = 0;
@@ -2024,13 +2026,13 @@ async function executeGetPropertyAssetsSummary(
 // =============================================================================
 
 async function executeGetVehicleAssetsSummary(
-  userId: string
+  familyId: string
 ): Promise<VehicleAssetsSummaryResult> {
   // Fetch all active vehicle assets for the user
   const vehicles = await db
     .select()
     .from(vehicleAssets)
-    .where(and(eq(vehicleAssets.userId, userId), eq(vehicleAssets.isActive, true)));
+    .where(and(eq(vehicleAssets.familyId, familyId), eq(vehicleAssets.isActive, true)));
 
   const vehicleItems: VehicleAssetItem[] = [];
   let totalVehicleValue = 0;
@@ -2116,13 +2118,13 @@ async function executeGetVehicleAssetsSummary(
 
 async function executeGetOtherAssetsSummary(
   params: OtherAssetsSummaryParams,
-  userId: string
+  familyId: string
 ): Promise<OtherAssetsSummaryResult> {
   // Fetch all assets for the user
   let userAssets = await db
     .select()
     .from(assets)
-    .where(eq(assets.userId, userId));
+    .where(eq(assets.familyId, familyId));
 
   // Apply type filter if provided
   const appliedFilter = params.assetType || null;
@@ -2224,19 +2226,19 @@ async function executeGetOtherAssetsSummary(
 
 async function executeGetInsuranceSummary(
   params: InsuranceSummaryParams,
-  userId: string
+  familyId: string
 ): Promise<InsuranceSummaryResult> {
   // Fetch all policies for the user
   let userPolicies = await db
     .select()
     .from(policies)
-    .where(eq(policies.userId, userId));
+    .where(eq(policies.familyId, familyId));
 
   // Get family members to map IDs to names
   const userFamilyMembers = await db
     .select()
     .from(familyMembers)
-    .where(eq(familyMembers.userId, userId));
+    .where(eq(familyMembers.familyId, familyId));
 
   const familyMemberMap: Record<string, string> = {};
   userFamilyMembers.forEach((fm) => {
@@ -2452,7 +2454,7 @@ export interface SearchKnowledgeResult {
 
 async function executeGetDailyExpenseSummary(
   params: DailyExpenseSummaryParams,
-  userId: string
+  familyId: string
 ): Promise<DailyExpenseSummaryResult> {
   const now = new Date();
 
@@ -2488,7 +2490,7 @@ async function executeGetDailyExpenseSummary(
   const userDailyExpenses = await db
     .select()
     .from(dailyExpenses)
-    .where(eq(dailyExpenses.userId, userId));
+    .where(eq(dailyExpenses.familyId, familyId));
 
   // Filter by date range
   let filteredExpenses = userDailyExpenses.filter((e) => {
@@ -2514,13 +2516,13 @@ async function executeGetDailyExpenseSummary(
   const userSubcategories = await db
     .select()
     .from(expenseSubcategories)
-    .where(eq(expenseSubcategories.userId, userId));
+    .where(eq(expenseSubcategories.familyId, familyId));
 
   // Get user expense categories for context
   const userExpenseCategories = await db
     .select()
     .from(expenseCategories)
-    .where(eq(expenseCategories.userId, userId));
+    .where(eq(expenseCategories.familyId, familyId));
 
   // Build category ID to name map
   const categoryIdToName: Record<string, string> = {};
@@ -2674,7 +2676,8 @@ export async function executeTool(
   // Check if tool is allowed
   if (!registry.isAllowed(toolName)) {
     const duration = Date.now() - startTime;
-    const userId = (await getCurrentUserId()) || "unknown";
+    const ctx = await resolveCallerContext();
+    const userId = ctx?.userId ?? "unknown";
 
     logAudit({
       toolName: toolName as ToolName,
@@ -2693,9 +2696,9 @@ export async function executeTool(
     };
   }
 
-  // Authenticate user
-  const userId = await getCurrentUserId();
-  if (!userId) {
+  // Authenticate caller — userId is for audit, familyId is for data scoping.
+  const ctx = await resolveCallerContext();
+  if (!ctx) {
     const duration = Date.now() - startTime;
 
     logAudit({
@@ -2714,6 +2717,7 @@ export async function executeTool(
       durationMs: duration,
     };
   }
+  const { userId, familyId } = ctx;
 
   // Validate arguments
   const validationResult = registry.safeValidateArgs(toolName as ToolName, args);
@@ -2743,43 +2747,43 @@ export async function executeTool(
 
     switch (toolName as ToolName) {
       case "get_income_summary":
-        data = await executeGetIncomeSummary(validationResult.data as MonthParams, userId);
+        data = await executeGetIncomeSummary(validationResult.data as MonthParams, familyId);
         break;
 
       case "get_expenses_summary":
-        data = await executeGetExpensesSummary(validationResult.data as MonthParams, userId);
+        data = await executeGetExpensesSummary(validationResult.data as MonthParams, familyId);
         break;
 
       case "get_family_summary":
-        data = await executeGetFamilySummary(validationResult.data as FamilySummaryParams, userId);
+        data = await executeGetFamilySummary(validationResult.data as FamilySummaryParams, familyId);
         break;
 
       case "get_balance_summary":
-        data = await executeGetBalanceSummary(validationResult.data as BalanceSummaryParams, userId);
+        data = await executeGetBalanceSummary(validationResult.data as BalanceSummaryParams, familyId);
         break;
 
       case "get_holdings_summary":
-        data = await executeGetHoldingsSummary(userId);
+        data = await executeGetHoldingsSummary(familyId);
         break;
 
       case "get_property_assets_summary":
-        data = await executeGetPropertyAssetsSummary(userId);
+        data = await executeGetPropertyAssetsSummary(familyId);
         break;
 
       case "get_vehicle_assets_summary":
-        data = await executeGetVehicleAssetsSummary(userId);
+        data = await executeGetVehicleAssetsSummary(familyId);
         break;
 
       case "get_other_assets_summary":
-        data = await executeGetOtherAssetsSummary(validationResult.data as OtherAssetsSummaryParams, userId);
+        data = await executeGetOtherAssetsSummary(validationResult.data as OtherAssetsSummaryParams, familyId);
         break;
 
       case "get_insurance_summary":
-        data = await executeGetInsuranceSummary(validationResult.data as InsuranceSummaryParams, userId);
+        data = await executeGetInsuranceSummary(validationResult.data as InsuranceSummaryParams, familyId);
         break;
 
       case "get_daily_expense_summary":
-        data = await executeGetDailyExpenseSummary(validationResult.data as DailyExpenseSummaryParams, userId);
+        data = await executeGetDailyExpenseSummary(validationResult.data as DailyExpenseSummaryParams, familyId);
         break;
 
       case "search_knowledge":

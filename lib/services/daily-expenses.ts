@@ -50,8 +50,8 @@ export async function createDailyExpense(
       where: eq(dailyExpenses.id, body.id),
     });
     if (existing) {
-      if (existing.userId !== ctx.userId) {
-        const err = new Error("id collision with another user's row");
+      if (existing.familyId !== ctx.familyId) {
+        const err = new Error("id collision with another family's row");
         (err as Error & { code?: string }).code = "CONFLICT";
         throw err;
       }
@@ -90,7 +90,7 @@ export async function listDailyExpenses(
     .from(dailyExpenses)
     .where(
       and(
-        eq(dailyExpenses.userId, ctx.userId),
+        eq(dailyExpenses.familyId, ctx.familyId),
         gte(dailyExpenses.date, opts.startDate),
         lte(dailyExpenses.date, opts.endDate)
       )
@@ -103,7 +103,7 @@ export async function getDailyExpenseById(
   id: string
 ): Promise<DailyExpenseRow | null> {
   const row = await db.query.dailyExpenses.findFirst({
-    where: and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, ctx.userId)),
+    where: and(eq(dailyExpenses.id, id), eq(dailyExpenses.familyId, ctx.familyId)),
   });
   return row ?? null;
 }
@@ -133,7 +133,7 @@ export async function updateDailyExpense(
   const [row] = await db
     .update(dailyExpenses)
     .set(update)
-    .where(and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, ctx.userId)))
+    .where(and(eq(dailyExpenses.id, id), eq(dailyExpenses.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -143,5 +143,5 @@ export async function deleteDailyExpense(ctx: AuthContext, id: string): Promise<
   if (!existing) throw new DailyExpenseNotFoundError();
   await db
     .delete(dailyExpenses)
-    .where(and(eq(dailyExpenses.id, id), eq(dailyExpenses.userId, ctx.userId)));
+    .where(and(eq(dailyExpenses.id, id), eq(dailyExpenses.familyId, ctx.familyId)));
 }

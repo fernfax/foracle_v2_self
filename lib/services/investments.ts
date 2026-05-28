@@ -32,7 +32,7 @@ export async function listInvestments(
   ctx: AuthContext,
   filters: ListInvestmentsQuery = {}
 ): Promise<InvestmentRow[]> {
-  const conditions = [eq(investmentPolicies.userId, ctx.userId)];
+  const conditions = [eq(investmentPolicies.familyId, ctx.familyId)];
   if (filters.isActive !== undefined)
     conditions.push(eq(investmentPolicies.isActive, filters.isActive));
   if (filters.type !== undefined)
@@ -51,7 +51,7 @@ export async function getInvestmentById(
   const row = await db.query.investmentPolicies.findFirst({
     where: and(
       eq(investmentPolicies.id, id),
-      eq(investmentPolicies.userId, ctx.userId)
+      eq(investmentPolicies.familyId, ctx.familyId)
     ),
   });
   return row ?? null;
@@ -68,8 +68,8 @@ export async function createInvestment(
       where: eq(investmentPolicies.id, body.id),
     });
     if (existing) {
-      if (existing.userId !== ctx.userId) {
-        const err = new Error("id collision with another user's row") as Error & {
+      if (existing.familyId !== ctx.familyId) {
+        const err = new Error("id collision with another family's row") as Error & {
           code?: string;
         };
         err.code = "CONFLICT";
@@ -124,7 +124,7 @@ export async function updateInvestment(
     .update(investmentPolicies)
     .set(update)
     .where(
-      and(eq(investmentPolicies.id, id), eq(investmentPolicies.userId, ctx.userId))
+      and(eq(investmentPolicies.id, id), eq(investmentPolicies.familyId, ctx.familyId))
     )
     .returning();
   return row;
@@ -139,7 +139,7 @@ export async function deleteInvestment(
   await db
     .delete(investmentPolicies)
     .where(
-      and(eq(investmentPolicies.id, id), eq(investmentPolicies.userId, ctx.userId))
+      and(eq(investmentPolicies.id, id), eq(investmentPolicies.familyId, ctx.familyId))
     );
 }
 
@@ -152,7 +152,7 @@ export async function getInvestmentsSummary(
   const rows = await db
     .select()
     .from(investmentPolicies)
-    .where(eq(investmentPolicies.userId, ctx.userId));
+    .where(eq(investmentPolicies.familyId, ctx.familyId));
   const active = rows.filter((r) => r.isActive);
   if (active.length === 0) {
     return {

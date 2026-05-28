@@ -1,163 +1,124 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users, incomes, expenses, assets, propertyAssets, vehicleAssets, policies, goals, familyMembers } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
 /**
- * Get the current authenticated user's ID
- * Throws error if user is not authenticated
+ * Get the current authenticated user's Clerk ID.
+ * Throws error if user is not authenticated.
  */
 export async function getCurrentUserId() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
+  const { userId } = await getCurrentUserAndFamily();
   return userId;
 }
 
 /**
- * Get the current user's profile from the database
+ * Get the current user's profile from the database.
+ * Profile lookup is per-user (preferences, name, avatar) — not family-shared.
  */
 export async function getCurrentUser() {
-  const userId = await getCurrentUserId();
-
-  const user = await db.query.users.findFirst({
+  const { userId } = await getCurrentUserAndFamily();
+  return db.query.users.findFirst({
     where: eq(users.id, userId),
   });
-
-  return user;
 }
 
 /**
- * Get all incomes for the current user
- * Ensures data isolation - users can only see their own data
+ * Get all incomes for the caller's family.
  */
 export async function getUserIncomes() {
-  const userId = await getCurrentUserId();
-
-  const userIncomes = await db.query.incomes.findMany({
-    where: eq(incomes.userId, userId),
+  const { familyId } = await getCurrentUserAndFamily();
+  return db.query.incomes.findMany({
+    where: eq(incomes.familyId, familyId),
     orderBy: (incomes, { desc }) => [desc(incomes.createdAt)],
   });
-
-  return userIncomes;
 }
 
 /**
- * Get all expenses for the current user
- * Ensures data isolation - users can only see their own data
+ * Get all expenses for the caller's family.
  */
 export async function getUserExpenses() {
-  const userId = await getCurrentUserId();
-
-  const userExpenses = await db.query.expenses.findMany({
-    where: eq(expenses.userId, userId),
+  const { familyId } = await getCurrentUserAndFamily();
+  return db.query.expenses.findMany({
+    where: eq(expenses.familyId, familyId),
     orderBy: (expenses, { desc }) => [desc(expenses.createdAt)],
   });
-
-  return userExpenses;
 }
 
 /**
- * Get all assets for the current user (generic assets table)
- * Ensures data isolation - users can only see their own data
+ * Get all generic assets for the caller's family.
  */
 export async function getUserAssets() {
-  const userId = await getCurrentUserId();
-
-  const userAssets = await db.query.assets.findMany({
-    where: eq(assets.userId, userId),
+  const { familyId } = await getCurrentUserAndFamily();
+  return db.query.assets.findMany({
+    where: eq(assets.familyId, familyId),
     orderBy: (assets, { desc }) => [desc(assets.createdAt)],
   });
-
-  return userAssets;
 }
 
 /**
- * Get all property assets for the current user
+ * Get all property assets for the caller's family.
  */
 export async function getUserPropertyAssets() {
-  const userId = await getCurrentUserId();
-
-  const userPropertyAssets = await db.query.propertyAssets.findMany({
-    where: eq(propertyAssets.userId, userId),
+  const { familyId } = await getCurrentUserAndFamily();
+  return db.query.propertyAssets.findMany({
+    where: eq(propertyAssets.familyId, familyId),
     orderBy: (propertyAssets, { desc }) => [desc(propertyAssets.createdAt)],
   });
-
-  return userPropertyAssets;
 }
 
 /**
- * Get all vehicle assets for the current user
+ * Get all vehicle assets for the caller's family.
  */
 export async function getUserVehicleAssets() {
-  const userId = await getCurrentUserId();
-
-  const userVehicleAssets = await db.query.vehicleAssets.findMany({
-    where: eq(vehicleAssets.userId, userId),
+  const { familyId } = await getCurrentUserAndFamily();
+  return db.query.vehicleAssets.findMany({
+    where: eq(vehicleAssets.familyId, familyId),
     orderBy: (vehicleAssets, { desc }) => [desc(vehicleAssets.createdAt)],
   });
-
-  return userVehicleAssets;
 }
 
 /**
- * Get all policies for the current user
- * Ensures data isolation - users can only see their own data
+ * Get all policies for the caller's family.
  */
 export async function getUserPolicies() {
-  const userId = await getCurrentUserId();
-
-  const userPolicies = await db.query.policies.findMany({
-    where: eq(policies.userId, userId),
+  const { familyId } = await getCurrentUserAndFamily();
+  return db.query.policies.findMany({
+    where: eq(policies.familyId, familyId),
     orderBy: (policies, { desc }) => [desc(policies.createdAt)],
   });
-
-  return userPolicies;
 }
 
 /**
- * Get all goals for the current user
- * Ensures data isolation - users can only see their own data
+ * Get all goals for the caller's family.
  */
 export async function getUserGoals() {
-  const userId = await getCurrentUserId();
-
-  const userGoals = await db.query.goals.findMany({
-    where: eq(goals.userId, userId),
+  const { familyId } = await getCurrentUserAndFamily();
+  return db.query.goals.findMany({
+    where: eq(goals.familyId, familyId),
     orderBy: (goals, { desc }) => [desc(goals.createdAt)],
   });
-
-  return userGoals;
 }
 
 /**
- * Get all family members for the current user
- * Ensures data isolation - users can only see their own data
+ * Get all family members for the caller's family.
  */
 export async function getUserFamilyMembers() {
-  const userId = await getCurrentUserId();
-
-  const userFamily = await db.query.familyMembers.findMany({
-    where: eq(familyMembers.userId, userId),
+  const { familyId } = await getCurrentUserAndFamily();
+  return db.query.familyMembers.findMany({
+    where: eq(familyMembers.familyId, familyId),
     orderBy: (familyMembers, { desc }) => [desc(familyMembers.createdAt)],
   });
-
-  return userFamily;
 }
 
 /**
- * Get dashboard metrics for the current user
- * Calculates aggregated financial data
+ * Get dashboard metrics for the caller's family.
+ * Calculates aggregated financial data across all family members.
  */
 export async function getDashboardMetrics() {
-  const userId = await getCurrentUserId();
-
-  // Get all user data
+  // Get all family data
   const [userIncomes, userExpenses, userPropertyAssets, userVehicleAssets, userGoals, userFamily] = await Promise.all([
     getUserIncomes(),
     getUserExpenses(),

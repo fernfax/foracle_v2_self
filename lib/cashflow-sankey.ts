@@ -225,8 +225,20 @@ export function buildCashflowModel(
     links.push({ sourceId: SHORTFALL_ID, targetId: HUB_ID, value: shortfall });
   }
 
-  // hub → Layer 2 (CPF first, then categories by size, then savings)
+  // hub → Layer 2. Order matters: the consumer renders with Sankey
+  // `sort={false}`, so this array order becomes the visual top-to-bottom
+  // order in the outflow column. Pin Savings + CPF to the top of the stack
+  // (they're not discretionary spend, so the user wants them anchored
+  // away from the category bars). Categories follow in size-desc order.
   const outflowNodes: CashflowNode[] = [];
+  if (savings > 0) {
+    outflowNodes.push({
+      id: SAVINGS_ID,
+      label: "Savings",
+      value: savings,
+      kind: "savings",
+    });
+  }
   if (totalCpf > 0) {
     outflowNodes.push({
       id: CPF_ID,
@@ -241,14 +253,6 @@ export function buildCashflowModel(
       label: cat.name,
       value: cat.value,
       kind: "category",
-    });
-  }
-  if (savings > 0) {
-    outflowNodes.push({
-      id: SAVINGS_ID,
-      label: "Savings",
-      value: savings,
-      kind: "savings",
     });
   }
   for (const node of outflowNodes) {

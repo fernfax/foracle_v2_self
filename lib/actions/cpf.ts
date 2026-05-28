@@ -1,10 +1,10 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { incomes, familyMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getCPFRatesByAge, getCPFAllocationByAge, calculateBonusCPF } from "@/lib/cpf-calculator";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
 export interface CpfByFamilyMember {
   familyMemberId: string;
@@ -81,27 +81,24 @@ function normalizeToMonthly(amount: number, frequency: string): number {
  * Get aggregated CPF data grouped by family member
  */
 export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Fetch all family members for this user
+  // Fetch all contributing family members in this family
   const members = await db
     .select()
     .from(familyMembers)
     .where(
       and(
-        eq(familyMembers.userId, userId),
+        eq(familyMembers.familyId, familyId),
         eq(familyMembers.isContributing, true)
       )
     );
 
-  // Fetch all incomes for this user
+  // Fetch all incomes in this family
   const allIncomes = await db
     .select()
     .from(incomes)
-    .where(eq(incomes.userId, userId));
+    .where(eq(incomes.familyId, familyId));
 
   const cpfData: CpfByFamilyMember[] = [];
 

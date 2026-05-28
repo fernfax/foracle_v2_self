@@ -68,7 +68,7 @@ export async function listPropertyAssets(
   ctx: AuthContext,
   filters: ListPropertyAssetsQuery = {}
 ): Promise<PropertyAssetRow[]> {
-  const conditions = [eq(propertyAssets.userId, ctx.userId)];
+  const conditions = [eq(propertyAssets.familyId, ctx.familyId)];
   if (filters.isActive !== undefined)
     conditions.push(eq(propertyAssets.isActive, filters.isActive));
   return db
@@ -83,7 +83,7 @@ export async function getPropertyAssetById(
   id: string
 ): Promise<PropertyAssetRow | null> {
   const row = await db.query.propertyAssets.findFirst({
-    where: and(eq(propertyAssets.id, id), eq(propertyAssets.userId, ctx.userId)),
+    where: and(eq(propertyAssets.id, id), eq(propertyAssets.familyId, ctx.familyId)),
   });
   return row ?? null;
 }
@@ -99,8 +99,8 @@ export async function createPropertyAsset(
       where: eq(propertyAssets.id, body.id),
     });
     if (existing) {
-      if (existing.userId !== ctx.userId) {
-        const err = new Error("id collision with another user's row") as Error & {
+      if (existing.familyId !== ctx.familyId) {
+        const err = new Error("id collision with another family's row") as Error & {
           code?: string;
         };
         err.code = "CONFLICT";
@@ -215,7 +215,7 @@ export async function updatePropertyAsset(
   const [row] = await db
     .update(propertyAssets)
     .set(update)
-    .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, ctx.userId)))
+    .where(and(eq(propertyAssets.id, id), eq(propertyAssets.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -231,5 +231,5 @@ export async function deletePropertyAsset(
   }
   await db
     .delete(propertyAssets)
-    .where(and(eq(propertyAssets.id, id), eq(propertyAssets.userId, ctx.userId)));
+    .where(and(eq(propertyAssets.id, id), eq(propertyAssets.familyId, ctx.familyId)));
 }

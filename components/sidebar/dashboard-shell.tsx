@@ -3,7 +3,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Smartphone } from "lucide-react";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "@/components/mobile-nav";
@@ -70,10 +69,12 @@ function DashboardContent({ children }: { children: ReactNode }) {
 
       {/* Main column — the min-w-0 prevents grid items from refusing to shrink below their content size */}
       <div className="min-w-0 flex flex-col">
-        <header className="sticky top-0 z-40 border-b border-border/30 bg-background/95">
+        {/* Header — mobile only. Desktop has the sidebar (logo + avatar); the
+            "Install on iPhone" action moved into the floating HelpButton, so
+            the desktop header had nothing left to render. */}
+        <header className="sticky top-0 z-40 border-b border-border/30 bg-background/95 md:hidden">
           <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-[70px] flex items-center">
-            {/* Logo - mobile only */}
-            <Link href="/overview" className="flex items-center md:hidden">
+            <Link href="/overview" className="flex items-center">
               <Image
                 src="/wordmark-400.png"
                 alt="Foracle"
@@ -84,31 +85,11 @@ function DashboardContent({ children }: { children: ReactNode }) {
               />
             </Link>
 
-            {/* Header quick-links hidden — see the comment near the import
-                at the top of this file for how to put them back. */}
-            {/* {isDesktop && (
-              <div className="flex-1 flex justify-center">
-                <HeaderQuickLinks />
-              </div>
-            )} */}
-
             <div className="flex items-center gap-4 ml-auto">
-              <Link
-                href="/mobile-guide"
-                className="p-2 rounded-md hover:bg-muted transition-colors"
-                title="Add to Home Screen Guide"
-                data-tour="mobile-guide-btn"
-              >
-                <Smartphone className="h-5 w-5 text-foreground/55" />
-              </Link>
-              {/* Avatar / Manage Account — mobile only. Desktop has its own
-                  ClerkUserButton inside the sidebar footer. */}
-              <div className="md:hidden">
-                <ClerkUserButton
-                  afterSignOutUrl="/"
-                  appearance={{ elements: { avatarBox: "w-8 h-8" } }}
-                />
-              </div>
+              <ClerkUserButton
+                afterSignOutUrl="/"
+                appearance={{ elements: { avatarBox: "w-8 h-8" } }}
+              />
             </div>
           </div>
         </header>
@@ -116,7 +97,10 @@ function DashboardContent({ children }: { children: ReactNode }) {
         {/* Main Content — contain layout so internal reflows don't bubble to the grid wrapper */}
         <div className="flex-1 [contain:layout_paint]">
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <main id="main" className="py-6 sm:py-8">{children}</main>
+            {/* Desktop has no top header anymore — let page headers sit flush
+                against the top edge. Mobile keeps the standard top padding
+                because its header is rendered above. */}
+            <main id="main" className="pt-6 sm:pt-8 md:pt-0 pb-6 sm:pb-8">{children}</main>
           </div>
         </div>
       </div>

@@ -31,6 +31,22 @@ Three-step migration. Run in order, gated on application code:
 Run only after verifying the previous step on a staging clone. Each migration
 ends with assertions that fail loudly if the state is inconsistent.
 
+### One-shot runbook
+
+`runbook_family_id_full.sql` bundles all three phases into a single
+transaction with pre-flight row-count NOTICE output, a duplicate-clerk-id
+guard, a mid-phase NULL assertion, and post-flight cascade-swap. Use this on
+prod once the app-side read migration has landed:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f db/manual-migrations/runbook_family_id_full.sql
+```
+
+`ON_ERROR_STOP=1` aborts on the first error rather than leaving the DB
+half-applied. The script is safe to re-run — every step is idempotent via
+`IF NOT EXISTS` / `WHERE … IS NULL` guards.
+
 ## Pre-flight check
 
 Before each step, verify nothing is mid-migration by counting NULLs on
