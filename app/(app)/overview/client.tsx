@@ -1,17 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Target, Users } from "lucide-react";
+import { LayoutDashboard, Target, Users, Waves } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { TotalAssetsCard } from "@/components/dashboard/total-assets-card";
 import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
 import { BudgetTrackerCard, BudgetCategory } from "@/components/dashboard/budget-tracker-card";
+import { CashflowSankey } from "@/components/dashboard/cashflow-sankey";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
 
 interface DashboardMetrics {
   totalIncome: number;
@@ -92,6 +95,11 @@ interface DashboardClientProps {
 
 export function DashboardClient({ metrics, incomes, expenses, holdings, investments, budgetData }: DashboardClientProps) {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // `?view=` selects the layout. Default = "classic" — the existing dashboard
+  // stays the entry point so this is purely additive for users who don't opt in.
+  const view = searchParams.get("view") === "cashflow" ? "cashflow" : "classic";
 
   useEffect(() => {
     setMounted(true);
@@ -101,8 +109,32 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
     return <div className="h-[500px] animate-pulse bg-muted rounded-lg" />;
   }
 
+  const handleViewChange = (next: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "classic") params.delete("view");
+    else params.set("view", next);
+    const qs = params.toString();
+    router.replace(qs ? `/overview?${qs}` : "/overview", { scroll: false });
+  };
+
   return (
     <div className="space-y-6">
+      {/* View toggle — Classic (default) vs. Cashflow Sankey. */}
+      <div className="flex items-center">
+        <SlidingTabs
+          tabs={[
+            { value: "classic", label: "Classic", icon: LayoutDashboard },
+            { value: "cashflow", label: "Cashflow", icon: Waves },
+          ]}
+          value={view}
+          onValueChange={handleViewChange}
+        />
+      </div>
+
+      {view === "cashflow" ? (
+        <CashflowSankey incomes={incomes} expenses={expenses} />
+      ) : (
+      <>
       {/* Main layout: Left (3/4) for Overview + Graph, Right (1/4) for Budget Tracker */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left column - Monthly Overview and Balance Projection */}
@@ -171,6 +203,8 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
           </CardContent>
         </Card>
       </div>
+      </>
+      )}
     </div>
   );
 }
