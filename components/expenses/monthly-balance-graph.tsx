@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -77,6 +77,10 @@ interface MonthlyBalanceGraphProps {
   expenses: Expense[];
   holdings: CurrentHolding[];
   investments?: Investment[];
+  /** When true, render header + content directly without the outer <Card>
+   *  wrapper. Lets a parent card host MBG's full layout (used by the
+   *  CashflowSankey card's Sankey/Projection toggle). */
+  embedded?: boolean;
 }
 
 const TIME_RANGES = [
@@ -380,7 +384,7 @@ function CustomTooltip({ active, payload, viewMode }: any) {
 
 const INCLUDE_INVESTMENTS_KEY = "foracle_include_investments";
 
-export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments = [] }: MonthlyBalanceGraphProps) {
+export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments = [], embedded = false }: MonthlyBalanceGraphProps) {
   const [timeRange, setTimeRange] = useState("12");
   const [viewMode, setViewMode] = useState<"cumulative" | "non-cumulative">("cumulative");
   const [includeInvestments, setIncludeInvestments] = useState(false);
@@ -541,78 +545,91 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
   // For long durations, show ~10 ticks spread equally
   const xAxisInterval = isLongDuration ? Math.floor(totalDataPoints / 10) : 0;
 
+  // Embedded mode (e.g. when CashflowSankey hosts MBG as a sub-view) returns
+  // the header + content as siblings without the outer Card chrome. The
+  // CardHeader/CardContent components are just styled divs and render fine
+  // inside another card's CardContent area.
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => <>{children}</>
+    : ({ children }: { children: ReactNode }) => (
+        <Card className="w-full">{children}</Card>
+      );
+
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2 pt-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-2xl sm:text-3xl font-black">Monthly Balance Projection</CardTitle>
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
-                      <Info className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[300px] text-xs bg-white border shadow-lg">
-                    <p>
-                      This projection includes <strong>All Active Income</strong> (including one-time income) and{" "}
-                      <strong>All Active Expenses</strong> (including one-time expenses). Future income milestones are only included for incomes with &quot;Account for Future Change&quot; enabled.
-                      Starting balance is based on the sum of all current holdings.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+    <Wrapper>
+      <CardHeader className={embedded ? "pb-2 pt-0" : "pb-2 pt-4"}>
+        {/* Top header row — only in standalone mode. Embedded layout drops
+            title/description/View Mode (the parent card provides title +
+            description, and embedded locks to cumulative view). */}
+        {!embedded && (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-2xl sm:text-3xl font-black">Monthly Balance Projection</CardTitle>
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-[300px] text-xs bg-white border shadow-lg">
+                      <p>
+                        This projection includes <strong>All Active Income</strong> (including one-time income) and{" "}
+                        <strong>All Active Expenses</strong> (including one-time expenses). Future income milestones are only included for incomes with &quot;Account for Future Change&quot; enabled.
+                        Starting balance is based on the sum of all current holdings.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <CardDescription className="mt-0.5 text-xs sm:text-sm">
+                {viewMode === "cumulative"
+                  ? "Cumulative balance projection based on current recurring income and expenses"
+                  : "Monthly breakdown of income, expenses, and net balance"
+                }
+              </CardDescription>
             </div>
-            <CardDescription className="mt-0.5 text-xs sm:text-sm">
-              {viewMode === "cumulative"
-                ? "Cumulative balance projection based on current recurring income and expenses"
-                : "Monthly breakdown of income, expenses, and net balance"
-              }
-            </CardDescription>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-4" data-tour="graph-controls">
+              <div className="space-y-1 sm:space-y-2 sm:min-w-[180px]">
+                <Label htmlFor="viewMode" className="text-xs sm:text-sm font-medium">
+                  View Mode
+                </Label>
+                <Select value={viewMode} onValueChange={(value: "cumulative" | "non-cumulative") => setViewMode(value)}>
+                  <SelectTrigger id="viewMode" className="bg-white text-xs sm:text-sm h-9 sm:h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cumulative">Cumulative</SelectItem>
+                    <SelectItem value="non-cumulative">Non-Cumulative</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1 sm:space-y-2 sm:min-w-[180px]">
+                <Label htmlFor="timeRange" className="text-xs sm:text-sm font-medium">
+                  Time Range
+                </Label>
+                <Select value={timeRange} onValueChange={setTimeRange}>
+                  <SelectTrigger id="timeRange" className="bg-white text-xs sm:text-sm h-9 sm:h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_RANGES.map((range) => (
+                      <SelectItem key={range.value} value={range.value}>
+                        {range.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-4" data-tour="graph-controls">
-            {/* View Mode Toggle */}
-            <div className="space-y-1 sm:space-y-2 sm:min-w-[180px]">
-              <Label htmlFor="viewMode" className="text-xs sm:text-sm font-medium">
-                View Mode
-              </Label>
-              <Select value={viewMode} onValueChange={(value: "cumulative" | "non-cumulative") => setViewMode(value)}>
-                <SelectTrigger id="viewMode" className="bg-white text-xs sm:text-sm h-9 sm:h-10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cumulative">Cumulative</SelectItem>
-                  <SelectItem value="non-cumulative">Non-Cumulative</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        )}
 
-            {/* Time Range Selector */}
-            <div className="space-y-1 sm:space-y-2 sm:min-w-[180px]">
-              <Label htmlFor="timeRange" className="text-xs sm:text-sm font-medium">
-                Time Range
-              </Label>
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger id="timeRange" className="bg-white text-xs sm:text-sm h-9 sm:h-10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_RANGES.map((range) => (
-                    <SelectItem key={range.value} value={range.value}>
-                      {range.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        {/* Investment Toggle */}
+        {/* Investment Toggle (both modes). Reclaims a row in embedded mode
+            because the rest collapses into a single line below. */}
         {hasInvestments && (
-          <div className="flex items-center gap-2 mt-3 sm:mt-4 px-3 py-2 bg-[rgba(0,196,170,0.12)] rounded-lg border border-[rgba(0,196,170,0.25)] w-fit">
+          <div className={`flex items-center gap-2 ${embedded ? "mb-2" : "mt-3 sm:mt-4"} px-3 py-2 bg-[rgba(0,196,170,0.12)] rounded-lg border border-[rgba(0,196,170,0.25)] w-fit`}>
             <TrendingUp className="h-4 w-4 text-[#007A68] flex-shrink-0" />
             <Label
               htmlFor="includeInvestments"
@@ -628,8 +645,29 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
           </div>
         )}
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-4">
+        {/* Summary stats — in embedded mode, Time Range pill rides along as the
+            first cell so the chart gets full vertical budget. Standalone mode
+            keeps the original 3-up grid. */}
+        <div className={`grid gap-2 sm:gap-3 ${embedded ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3 mt-3 sm:mt-4"}`}>
+          {embedded && (
+            <div className="bg-muted rounded-lg p-2 sm:p-3 flex flex-col justify-between min-h-[64px]">
+              <Label htmlFor="timeRange" className="text-xs text-foreground mb-0.5 font-normal">
+                Time Range
+              </Label>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger id="timeRange" className="bg-white text-xs sm:text-sm h-7 sm:h-8 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_RANGES.map((range) => (
+                    <SelectItem key={range.value} value={range.value}>
+                      {range.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="bg-muted rounded-lg p-2 sm:p-3">
             <p className="text-xs text-foreground mb-0.5">Starting Balance</p>
             <p className="text-sm sm:text-lg font-semibold text-foreground">
@@ -668,7 +706,11 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
       </CardHeader>
 
       <CardContent className="pt-2">
-        <div className="w-full h-[350px]">
+        {/* In embedded mode (inside the CashflowSankey card) we match the
+            Sankey's responsive height so flipping the Sankey/Projection toggle
+            doesn't shift the card height. Standalone (Classic view) keeps the
+            original fixed 350px which the dashboard grid expects. */}
+        <div className={embedded ? "w-full h-[340px] sm:h-[calc(90vh-198px)] sm:min-h-[400px]" : "w-full h-[350px]"}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={balanceData}
@@ -848,6 +890,6 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
         </div>
 
       </CardContent>
-    </Card>
+    </Wrapper>
   );
 }

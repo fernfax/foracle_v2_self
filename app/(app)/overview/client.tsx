@@ -137,7 +137,12 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
       />
 
       {view === "cashflow" ? (
-        <CashflowSankey incomes={incomes} expenses={expenses} />
+        <CashflowSankey
+          incomes={incomes}
+          expenses={expenses}
+          holdings={holdings}
+          investments={investments}
+        />
       ) : (
       <>
       {/* Main layout: Left (3/4) for Overview + Graph, Right (1/4) for Budget Tracker */}

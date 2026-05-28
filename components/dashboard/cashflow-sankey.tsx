@@ -45,18 +45,81 @@ interface SankeyLinkRenderProps {
 }
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Layers, LineChart, Waves } from "lucide-react";
 import { CHART_PALETTE, STATUS_COLORS } from "@/lib/chart-palette";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
 import {
   buildCashflowModel,
-  type CashflowExpenseInput,
-  type CashflowIncomeInput,
   type CashflowNode as ModelNode,
 } from "@/lib/cashflow-sankey";
 
+// Permissive row shapes that satisfy both the Sankey model
+// (CashflowIncomeInput/CashflowExpenseInput) and MonthlyBalanceGraph's own
+// expected fields. Overview/client.tsx already passes data of this richer
+// shape, so extra fields just get ignored by whichever consumer doesn't need
+// them.
+interface IncomeRow {
+  id: string;
+  name: string;
+  amount: string;
+  frequency: string;
+  customMonths: string | null;
+  startDate: string;
+  endDate: string | null;
+  incomeCategory: string | null;
+  isActive: boolean | null;
+  netTakeHome: string | null;
+  subjectToCpf: boolean | null;
+  futureMilestones: string | null;
+  accountForFutureChange: boolean | null;
+  accountForBonus: boolean | null;
+  bonusGroups: string | null;
+}
+
+interface ExpenseRow {
+  id: string;
+  name: string;
+  category: string;
+  amount: string;
+  frequency: string;
+  customMonths: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  expenseCategory: string | null;
+  isActive: boolean | null;
+}
+
+interface HoldingRow {
+  id: string;
+  userId: string;
+  familyMemberId: string | null;
+  bankName: string;
+  holdingAmount: string;
+  createdAt: Date;
+  updatedAt: Date;
+  familyMemberName?: string | null;
+}
+
+interface InvestmentRow {
+  id: string;
+  name: string;
+  type: string;
+  currentCapital: string;
+  projectedYield: string;
+  contributionAmount: string;
+  contributionFrequency: string;
+  customMonths: string | null;
+  isActive: boolean | null;
+}
+
 interface CashflowSankeyProps {
-  incomes: CashflowIncomeInput[];
-  expenses: CashflowExpenseInput[];
+  incomes: IncomeRow[];
+  expenses: ExpenseRow[];
+  /** Required for the embedded Projection view. Pass through from overview. */
+  holdings?: HoldingRow[];
+  /** Optional — projection's "include investments" toggle is hidden when empty. */
+  investments?: InvestmentRow[];
 }
 
 // Input nodes we feed into Recharts — Recharts spreads any extra fields onto
@@ -123,7 +186,9 @@ function truncateLabel(name: string, max: number): string {
   return name.length > max ? `${name.slice(0, max - 1).trimEnd()}…` : name;
 }
 
-export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
+export function CashflowSankey({ incomes, expenses, holdings = [], investments = [] }: CashflowSankeyProps) {
+  // Inner toggle between the two views of the same card.
+  const [chartView, setChartView] = useState<"sankey" | "projection">("sankey");
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -304,58 +369,10 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
     return { nodes, links };
   }, [model]);
 
-  // ---- Empty state -----------------------------------------------------
-  if (model.incomeNodes.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-base font-display flex items-center gap-2">
-              <Layers className="h-4 w-4 text-primary" /> Monthly Cashflow
-            </CardTitle>
-            <div className="flex items-center gap-2 shrink-0">
-              {!isCurrentMonth && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={goToCurrentMonth}
-                >
-                  Current Month
-                </Button>
-              )}
-              <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[210px] sm:w-[230px]">
-                <button
-                  onClick={goToPreviousMonth}
-                  disabled={isCurrentMonth}
-                  className="p-1.5 hover:bg-muted rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-                </button>
-                <div className="flex items-center gap-1.5 px-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
-                </div>
-                <button
-                  onClick={goToNextMonth}
-                  className="p-1.5 hover:bg-muted rounded-full transition-colors"
-                  aria-label="Next month"
-                >
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground text-center px-6">
-            No income recorded for {formatMonthDisplay(selectedMonth)} — try a different month or add an income.
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Empty-state is handled inline in the Sankey branch of the main render
+  // below (so the Projection toggle still works when there's no current-month
+  // income — the projection may still have data from one-off / future items).
+  const isEmptyForCurrentMonth = model.incomeNodes.length === 0;
 
   // ---- Custom renderers ------------------------------------------------
 
@@ -715,17 +732,23 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
   }
 
   // ---- Render ----------------------------------------------------------
+  const isProjection = chartView === "projection";
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
             <CardTitle className="text-base font-display flex items-center gap-2">
-              <Layers className="h-4 w-4 text-primary" /> Monthly Cashflow
+              <Layers className="h-4 w-4 text-primary" />
+              {isProjection ? "Balance Projection" : "Monthly Cashflow"}
             </CardTitle>
             {/* Inline status text — same line height as the default description,
                 so swapping between the two never reflows the chart below. */}
-            {expandedCategory ? (
+            {isProjection ? (
+              <p className="text-xs text-muted-foreground mt-1">
+                Projected balance based on current recurring income, expenses, and one-off items.
+              </p>
+            ) : expandedCategory ? (
               <p className="text-xs text-muted-foreground mt-1">
                 Showing{" "}
                 <span className="font-display font-semibold text-foreground">
@@ -750,94 +773,129 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
             )}
           </div>
 
-          {/* Month nav — mirrors the pill in DashboardHeader so users get a
-              consistent control across Classic and Cashflow views. */}
-          <div className="flex items-center gap-2 shrink-0">
-            {!isCurrentMonth && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs px-2"
-                onClick={goToCurrentMonth}
-              >
-                Current Month
-              </Button>
-            )}
-            <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[210px] sm:w-[230px]">
-              <button
-                onClick={goToPreviousMonth}
-                disabled={isCurrentMonth}
-                className="p-1.5 hover:bg-muted rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Previous month"
-              >
-                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-              </button>
-              <div className="flex items-center gap-1.5 px-2">
-                <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
+          <div className="flex flex-col gap-2 sm:items-end shrink-0">
+            {/* Sankey / Projection view toggle. */}
+            <SlidingTabs
+              tabs={[
+                { value: "sankey", label: "Sankey", icon: Waves },
+                { value: "projection", label: "Projection", icon: LineChart },
+              ]}
+              value={chartView}
+              onValueChange={(v) => setChartView(v as "sankey" | "projection")}
+            />
+
+            {/* Month nav — only meaningful for the Sankey view (the projection
+                has its own time-range controls inside MBG's header). */}
+            {!isProjection && (
+              <div className="flex items-center gap-2">
+                {!isCurrentMonth && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2"
+                    onClick={goToCurrentMonth}
+                  >
+                    Current Month
+                  </Button>
+                )}
+                <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[210px] sm:w-[230px]">
+                  <button
+                    onClick={goToPreviousMonth}
+                    disabled={isCurrentMonth}
+                    className="p-1.5 hover:bg-muted rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Previous month"
+                  >
+                    <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <div className="flex items-center gap-1.5 px-2">
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
+                  </div>
+                  <button
+                    onClick={goToNextMonth}
+                    className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                    aria-label="Next month"
+                  >
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={goToNextMonth}
-                className="p-1.5 hover:bg-muted rounded-full transition-colors"
-                aria-label="Next month"
-              >
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </div>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div
-          // Mobile keeps a compact fixed height so it sits comfortably with
-          // the bottom nav. Desktop fills most of the viewport below the
-          // page header + card chrome — calc(90vh - 198px) is "fill" * 0.9
-          // so the card stretches down but leaves a sliver of breathing room
-          // at the bottom rather than abutting the viewport edge.
-          className="w-full h-[340px] sm:h-[calc(90vh-198px)] sm:min-h-[400px] relative"
-          // Clear the item tooltip if the cursor leaves the chart entirely.
-          onMouseLeave={() => setItemHover(null)}
-          // Click-away to collapse: any click that wasn't on an interactive
-          // node (category bar) or item sub-tendril bubbles up to here and
-          // restores the full-colour categories view. Category and item
-          // handlers call stopPropagation so they don't reach this.
-          onClick={() => {
-            if (expandedId !== null) setExpandedId(null);
-          }}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <Sankey
-              data={data}
-              node={renderNode}
-              link={renderLink}
-              nodeWidth={isNarrow ? 8 : 12}
-              nodePadding={isNarrow ? 10 : 14}
-              iterations={48}
-              // Disable Recharts' final ascendingY sort so the input order in
-              // our outflow array (Savings + CPF first, then categories) is
-              // preserved as the visual top-to-bottom order in each column.
-              sort={false}
-              // Narrow viewports get drastically smaller side margins so the
-              // ribbons themselves get the screen width they need. Stacked
-              // labels (renderNode) compensate for the lost horizontal room.
-              margin={
-                isNarrow
-                  ? { top: 20, right: 80, bottom: 8, left: 80 }
-                  : { top: 12, right: 160, bottom: 8, left: 140 }
-              }
+        {isProjection ? (
+          // MBG provides its own controls (View Mode, Time Range, Investment
+          // toggle), summary stats, and the chart. Rendering in embedded mode
+          // skips the Card wrapper so it sits cleanly inside ours.
+          <MonthlyBalanceGraph
+            incomes={incomes}
+            expenses={expenses}
+            holdings={holdings}
+            investments={investments}
+            embedded
+          />
+        ) : isEmptyForCurrentMonth ? (
+          <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground text-center px-6">
+            No income recorded for {formatMonthDisplay(selectedMonth)} — try a different month, switch to Projection, or add an income.
+          </div>
+        ) : (
+          <>
+            <div
+              // Mobile keeps a compact fixed height so it sits comfortably with
+              // the bottom nav. Desktop fills most of the viewport below the
+              // page header + card chrome — calc(90vh - 198px) is "fill" * 0.9
+              // so the card stretches down but leaves a sliver of breathing room
+              // at the bottom rather than abutting the viewport edge.
+              className="w-full h-[340px] sm:h-[calc(90vh-198px)] sm:min-h-[400px] relative"
+              // Clear the item tooltip if the cursor leaves the chart entirely.
+              onMouseLeave={() => setItemHover(null)}
+              // Click-away to collapse: any click that wasn't on an interactive
+              // node (category bar) or item sub-tendril bubbles up to here and
+              // restores the full-colour categories view. Category and item
+              // handlers call stopPropagation so they don't reach this.
+              onClick={() => {
+                if (expandedId !== null) setExpandedId(null);
+              }}
             >
-              <Tooltip content={renderTooltip} />
-            </Sankey>
-          </ResponsiveContainer>
-        </div>
+              <ResponsiveContainer width="100%" height="100%">
+                <Sankey
+                  data={data}
+                  node={renderNode}
+                  link={renderLink}
+                  nodeWidth={isNarrow ? 8 : 12}
+                  nodePadding={isNarrow ? 10 : 14}
+                  iterations={48}
+                  // Disable Recharts' final ascendingY sort so the input order
+                  // in our outflow array (Savings + CPF first, then
+                  // categories) is preserved as the visual top-to-bottom
+                  // order in each column.
+                  sort={false}
+                  // Narrow viewports get drastically smaller side margins so
+                  // the ribbons themselves get the screen width they need.
+                  // Stacked labels (renderNode) compensate for the lost
+                  // horizontal room.
+                  margin={
+                    isNarrow
+                      ? { top: 20, right: 80, bottom: 8, left: 80 }
+                      : { top: 12, right: 160, bottom: 8, left: 140 }
+                  }
+                >
+                  <Tooltip content={renderTooltip} />
+                </Sankey>
+              </ResponsiveContainer>
+            </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <LegendDot color="#3A6B52" label="Income" />
-          <LegendDot color="#B8622A" label="CPF" />
-          <LegendDot color={CHART_PALETTE[0]} label="Expense categories" />
-          <LegendDot color={STATUS_COLORS.positive} label="Savings" />
-          {model.shortfall > 0 && <LegendDot color={STATUS_COLORS.danger} label="Shortfall" />}
-        </div>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <LegendDot color="#3A6B52" label="Income" />
+              <LegendDot color="#B8622A" label="CPF" />
+              <LegendDot color={CHART_PALETTE[0]} label="Expense categories" />
+              <LegendDot color={STATUS_COLORS.positive} label="Savings" />
+              {model.shortfall > 0 && <LegendDot color={STATUS_COLORS.danger} label="Shortfall" />}
+            </div>
+          </>
+        )}
       </CardContent>
 
       {/* Cursor-following tooltip for the in-bar item segments. Items live
