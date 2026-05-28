@@ -17,14 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { InviteFamilyMemberForm } from "./invite-family-member-form";
 import {
   convertFamilyMember,
@@ -218,54 +210,108 @@ export function FamilyAdminPanel({
 
         {members.length > 0 && (
           <ul className="space-y-2">
-            {members.map((member) => (
-              <li
-                key={member.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-border/40 bg-background px-3 py-2"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-medium">{member.name}</span>
-                    {member.isMaster && (
-                      <Badge
-                        variant="outline"
-                        className="gap-1 border-amber-300 bg-amber-50 text-amber-900 text-[10px] dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+            {members.map((member) => {
+              const isConverting = convertTarget?.id === member.id;
+              return (
+                <li
+                  key={member.id}
+                  className="rounded-md border border-border/40 bg-background px-3 py-2"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-medium">{member.name}</span>
+                        {member.isMaster && (
+                          <Badge
+                            variant="outline"
+                            className="gap-1 border-amber-300 bg-amber-50 text-amber-900 text-[10px] dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+                          >
+                            <Crown className="h-3 w-3" />
+                            Master
+                          </Badge>
+                        )}
+                        {member.isYou && (
+                          <Badge variant="outline" className="text-[10px]">
+                            You
+                          </Badge>
+                        )}
+                        {member.relationship && !member.isMaster && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {member.relationship}
+                          </Badge>
+                        )}
+                      </div>
+                      {member.email && (
+                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{member.email}</span>
+                        </div>
+                      )}
+                    </div>
+                    {isMaster && member.canConvert && !member.isYou && !isConverting && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 shrink-0 gap-1 text-xs"
+                        onClick={() => handleOpenConvert(member)}
                       >
-                        <Crown className="h-3 w-3" />
-                        Master
-                      </Badge>
-                    )}
-                    {member.isYou && (
-                      <Badge variant="outline" className="text-[10px]">
-                        You
-                      </Badge>
-                    )}
-                    {member.relationship && !member.isMaster && (
-                      <Badge variant="outline" className="text-[10px]">
-                        {member.relationship}
-                      </Badge>
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Convert
+                      </Button>
                     )}
                   </div>
-                  {member.email && (
-                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Mail className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{member.email}</span>
-                    </div>
+                  {isConverting && (
+                    <form
+                      onSubmit={handleConvertSubmit}
+                      className="mt-3 space-y-2 border-t border-border/40 pt-3"
+                    >
+                      <p className="text-xs text-muted-foreground">
+                        Send <span className="font-medium text-foreground">{member.name}</span> a
+                        sign-in invite. They&apos;ll get their own login and unique user ID,
+                        but skip onboarding — they inherit this family&apos;s data.
+                      </p>
+                      <div className="space-y-1">
+                        <Label htmlFor={`convert-email-${member.id}`} className="text-xs">
+                          Email
+                        </Label>
+                        <Input
+                          id={`convert-email-${member.id}`}
+                          type="email"
+                          value={convertEmail}
+                          onChange={(e) => setConvertEmail(e.target.value)}
+                          placeholder="them@example.com"
+                          autoComplete="email"
+                          disabled={convertSubmitting}
+                          autoFocus
+                          className="h-9"
+                        />
+                      </div>
+                      {convertError && (
+                        <p className="text-xs text-destructive">{convertError}</p>
+                      )}
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCloseConvert}
+                          disabled={convertSubmitting}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          size="sm"
+                          disabled={!convertEmail.trim() || convertSubmitting}
+                        >
+                          {convertSubmitting ? "Sending…" : "Send invitation"}
+                        </Button>
+                      </div>
+                    </form>
                   )}
-                </div>
-                {isMaster && member.canConvert && !member.isYou && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 shrink-0 gap-1 text-xs"
-                    onClick={() => handleOpenConvert(member)}
-                  >
-                    <UserPlus className="h-3.5 w-3.5" />
-                    Convert
-                  </Button>
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -383,60 +429,6 @@ export function FamilyAdminPanel({
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog
-        open={convertTarget !== null}
-        onOpenChange={(open) => !open && handleCloseConvert()}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Convert to user account</DialogTitle>
-            <DialogDescription>
-              {convertTarget && (
-                <>
-                  Send a sign-in invitation to{" "}
-                  <span className="font-medium">{convertTarget.name}</span>. They&apos;ll
-                  get their own login and a unique user ID, but skip the
-                  onboarding wizard — they inherit this family&apos;s data.
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleConvertSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="convert-email">Email</Label>
-              <Input
-                id="convert-email"
-                type="email"
-                value={convertEmail}
-                onChange={(e) => setConvertEmail(e.target.value)}
-                placeholder="them@example.com"
-                autoComplete="email"
-                disabled={convertSubmitting}
-                autoFocus
-              />
-            </div>
-            {convertError && (
-              <p className="text-sm text-destructive">{convertError}</p>
-            )}
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCloseConvert}
-                disabled={convertSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={!convertEmail.trim() || convertSubmitting}
-              >
-                {convertSubmitting ? "Sending…" : "Send invitation"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
