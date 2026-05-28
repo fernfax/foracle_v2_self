@@ -75,6 +75,11 @@ export async function getCurrentUserAndFamily(): Promise<AuthContext> {
         ? (clerkUser.publicMetadata.foracleFamilyMemberId as string)
         : null;
 
+    // Tracks whether this user came in via an invite. Invitees inherit the
+    // family's setup, so they should not be sent through the onboarding wizard
+    // even when the Clerk webhook hasn't fired yet (local dev).
+    let joinedViaInvite = false;
+
     if (invitedRowId) {
       const invitedRow = await db.query.familyMembers.findFirst({
         where: eq(familyMembers.id, invitedRowId),
@@ -88,9 +93,15 @@ export async function getCurrentUserAndFamily(): Promise<AuthContext> {
         invitedRow.invitedEmail.toLowerCase() === primaryEmail
       ) {
         familyId = invitedRow.familyId;
+        joinedViaInvite = true;
         await db
           .update(familyMembers)
-          .set({ clerkUserId: userId, status: "active", updatedAt: new Date() })
+          .set({
+            clerkUserId: userId,
+            status: "active",
+            emailInvitationAccepted: true,
+            updatedAt: new Date(),
+          })
           .where(eq(familyMembers.id, invitedRow.id));
       }
     }
@@ -110,7 +121,13 @@ export async function getCurrentUserAndFamily(): Promise<AuthContext> {
 
     await db
       .update(users)
-      .set({ familyId, updatedAt: new Date() })
+      .set({
+        familyId,
+        // Mark invitees as onboarded so the /onboarding wizard is skipped —
+        // only the first user of a family (the master) needs to run it.
+        ...(joinedViaInvite ? { onboardingCompleted: true } : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(users.id, userId));
   }
 

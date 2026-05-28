@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { families, familyMembers, users } from "@/db/schema";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
 import {
+  convertFamilyMember as convertFamilyMemberService,
   inviteFamilyMember as inviteFamilyMemberService,
   resendInvitation as resendInvitationService,
   revokeInvitation as revokeInvitationService,
@@ -28,6 +29,25 @@ export async function inviteFamilyMember(input: InviteInput) {
     lastName: input.lastName,
     email: input.email,
     relationship: input.relationship,
+  });
+  revalidatePath("/user");
+  return result;
+}
+
+type ConvertInput = {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+};
+
+export async function convertFamilyMember(rowId: string, input: ConvertInput) {
+  if (!input.email.trim()) {
+    throw new Error("Email is required");
+  }
+  const result = await convertFamilyMemberService(rowId, {
+    email: input.email,
+    firstName: input.firstName,
+    lastName: input.lastName,
   });
   revalidatePath("/user");
   return result;
@@ -60,6 +80,9 @@ export type FamilyMemberSummary = {
   relationship: string | null;
   isMaster: boolean;
   isYou: boolean;
+  // True iff this row is informational (no Clerk user yet) and can be
+  // promoted to a real authenticated user by the master.
+  canConvert: boolean;
   joinedAt: string; // ISO date
 };
 
@@ -140,6 +163,11 @@ export async function getFamilyAdminData(): Promise<FamilyAdminData> {
       relationship: r.relationship,
       isMaster: r.clerkUserId !== null && r.clerkUserId === family?.masterUserId,
       isYou: r.clerkUserId === ctx.userId,
+      // Convertible iff this row is purely informational (no Clerk user
+      // behind it yet) and isn't a "Self" placeholder for an existing user.
+      // Only the master sees the button (gated client-side); the action
+      // re-checks server-side.
+      canConvert: r.clerkUserId === null && r.relationship !== "Self",
       joinedAt: r.createdAt.toISOString(),
     }));
 

@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Mail, Clock, RotateCw, X, Crown, Copy, Check } from "lucide-react";
+import { Mail, Clock, RotateCw, X, Crown, Copy, Check, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,11 +17,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { InviteFamilyMemberForm } from "./invite-family-member-form";
 import {
+  convertFamilyMember,
   resendInvitation,
   revokeInvitation,
   type FamilyAdminData,
+  type FamilyMemberSummary,
   type PendingInvitation,
 } from "@/lib/actions/family-invitations";
 import { cn } from "@/lib/utils";
@@ -57,6 +69,10 @@ export function FamilyAdminPanel({
   const [actingOnId, setActingOnId] = useState<string | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<PendingInvitation | null>(null);
   const [familyIdCopied, setFamilyIdCopied] = useState(false);
+  const [convertTarget, setConvertTarget] = useState<FamilyMemberSummary | null>(null);
+  const [convertEmail, setConvertEmail] = useState("");
+  const [convertSubmitting, setConvertSubmitting] = useState(false);
+  const [convertError, setConvertError] = useState<string | null>(null);
 
   const handleCopyFamilyId = async () => {
     try {
@@ -112,6 +128,64 @@ export function FamilyAdminPanel({
   // Optimistic refresh after a successful invite from the embedded form.
   const handleInviteSuccess = () => {
     onPendingChanged?.();
+  };
+
+  const handleOpenConvert = (member: FamilyMemberSummary) => {
+    setConvertTarget(member);
+    setConvertEmail("");
+    setConvertError(null);
+  };
+
+  const handleCloseConvert = () => {
+    if (convertSubmitting) return;
+    setConvertTarget(null);
+    setConvertEmail("");
+    setConvertError(null);
+  };
+
+  const handleConvertSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!convertTarget || convertSubmitting) return;
+    const trimmedEmail = convertEmail.trim();
+    if (!trimmedEmail) {
+      setConvertError("Email is required");
+      return;
+    }
+    setConvertSubmitting(true);
+    setConvertError(null);
+    const target = convertTarget;
+    try {
+      await convertFamilyMember(target.id, { email: trimmedEmail });
+      // The row flips from member → pending. Reflect that in local state so
+      // the panel updates immediately, without a page nav.
+      setData((prev) => ({
+        ...prev,
+        members: prev.members.filter((m) => m.id !== target.id),
+        pendingInvitations: [
+          {
+            id: target.id,
+            name: target.name,
+            email: trimmedEmail,
+            relationship: target.relationship,
+            sentAt: new Date().toISOString(),
+          },
+          ...prev.pendingInvitations,
+        ],
+      }));
+      toast.success(`Invitation sent to ${target.name}`, {
+        description: `${trimmedEmail} will appear as Pending until they accept.`,
+        duration: 6000,
+      });
+      setConvertTarget(null);
+      setConvertEmail("");
+      onPendingChanged?.();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not convert member";
+      setConvertError(message);
+      toast.error("Conversion failed", { description: message });
+    } finally {
+      setConvertSubmitting(false);
+    }
   };
 
   const { familyId, isMaster, masterName, masterEmail, members, pendingInvitations } = data;
@@ -179,6 +253,17 @@ export function FamilyAdminPanel({
                     </div>
                   )}
                 </div>
+                {isMaster && member.canConvert && !member.isYou && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 gap-1 text-xs"
+                    onClick={() => handleOpenConvert(member)}
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    Convert
+                  </Button>
+                )}
               </li>
             ))}
           </ul>
@@ -297,6 +382,61 @@ export function FamilyAdminPanel({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={convertTarget !== null}
+        onOpenChange={(open) => !open && handleCloseConvert()}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Convert to user account</DialogTitle>
+            <DialogDescription>
+              {convertTarget && (
+                <>
+                  Send a sign-in invitation to{" "}
+                  <span className="font-medium">{convertTarget.name}</span>. They&apos;ll
+                  get their own login and a unique user ID, but skip the
+                  onboarding wizard — they inherit this family&apos;s data.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleConvertSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="convert-email">Email</Label>
+              <Input
+                id="convert-email"
+                type="email"
+                value={convertEmail}
+                onChange={(e) => setConvertEmail(e.target.value)}
+                placeholder="them@example.com"
+                autoComplete="email"
+                disabled={convertSubmitting}
+                autoFocus
+              />
+            </div>
+            {convertError && (
+              <p className="text-sm text-destructive">{convertError}</p>
+            )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseConvert}
+                disabled={convertSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={!convertEmail.trim() || convertSubmitting}
+              >
+                {convertSubmitting ? "Sending…" : "Send invitation"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

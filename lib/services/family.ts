@@ -21,7 +21,12 @@ export class FamilyMemberNotFoundError extends Error {
 }
 
 export class InvitationError extends Error {
-  readonly code: "OTHER_FAMILY" | "INVALID_RELATIONSHIP" | "INVALID_EMAIL" | "INVALID_STATUS";
+  readonly code:
+    | "OTHER_FAMILY"
+    | "INVALID_RELATIONSHIP"
+    | "INVALID_EMAIL"
+    | "INVALID_STATUS"
+    | "ALREADY_LINKED";
   constructor(code: InvitationError["code"], message: string) {
     super(message);
     this.code = code;
@@ -336,6 +341,111 @@ export async function inviteFamilyMember(
       .where(eq(familyMembers.id, rowId));
   }
   return { id: rowId, status: "pending" };
+}
+
+// Convert an existing informational family member (no Clerk user yet) into a
+// real authenticated user. Reuses the same family_members row so all linked
+// records (incomes, policies, holdings) follow the converted member without
+// any data migration. Sends a Clerk invitation with publicMetadata pointing
+// at this row; on acceptance the webhook/auth-context fallback flips the
+// row to active and sets onboardingCompleted on the new user.
+export async function convertFamilyMember(
+  rowId: string,
+  input: { email: string; firstName?: string; lastName?: string }
+): Promise<{ id: string; status: "pending" }> {
+  const normalizedEmail = input.email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    throw new InvitationError("INVALID_EMAIL", "Invalid email address");
+  }
+
+  const ctx = await callerAsMaster();
+
+  const row = await db.query.familyMembers.findFirst({
+    where: and(eq(familyMembers.id, rowId), eq(familyMembers.familyId, ctx.familyId)),
+  });
+  if (!row) throw new FamilyMemberNotFoundError();
+  if (row.clerkUserId) {
+    throw new InvitationError(
+      "ALREADY_LINKED",
+      "This family member is already a Foracle user"
+    );
+  }
+  if (row.status !== "active" && row.status !== "informational") {
+    throw new InvitationError(
+      "INVALID_STATUS",
+      "Only informational members can be converted"
+    );
+  }
+
+  // Reject if this email already belongs to a different family. An existing
+  // pending row in the *current* family is fine — it would be a no-op overlap.
+  const existingByEmail = await db.query.familyMembers.findFirst({
+    where: eq(familyMembers.invitedEmail, normalizedEmail),
+  });
+  if (
+    existingByEmail &&
+    existingByEmail.id !== row.id &&
+    existingByEmail.status !== "revoked" &&
+    existingByEmail.familyId !== ctx.familyId
+  ) {
+    throw new InvitationError(
+      "OTHER_FAMILY",
+      "This email is already part of another family"
+    );
+  }
+
+  // Derive firstName/lastName: prefer caller input, fall back to existing
+  // columns, then to splitting the display name.
+  const fallbackSplit = row.name?.split(/\s+/) ?? [];
+  const firstName = (input.firstName ?? row.firstName ?? fallbackSplit[0] ?? "").trim();
+  const lastName = (
+    input.lastName ?? row.lastName ?? fallbackSplit.slice(1).join(" ") ?? ""
+  ).trim();
+
+  await db
+    .update(familyMembers)
+    .set({
+      invitedEmail: normalizedEmail,
+      firstName: firstName || null,
+      lastName: lastName || null,
+      status: "pending",
+      emailInvitationAccepted: false,
+      updatedAt: new Date(),
+    })
+    .where(eq(familyMembers.id, row.id));
+
+  let clerkInvitationId: string | null = null;
+  try {
+    const client = await clerkClient();
+    const invitation = await client.invitations.createInvitation({
+      emailAddress: normalizedEmail,
+      redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/overview`,
+      publicMetadata: { foracleFamilyMemberId: row.id },
+      ignoreExisting: true,
+    });
+    clerkInvitationId = invitation.id;
+  } catch (err) {
+    // Roll the row back so the UI doesn't show a pending invite that was
+    // never actually sent.
+    await db
+      .update(familyMembers)
+      .set({
+        status: row.status,
+        invitedEmail: row.invitedEmail,
+        updatedAt: new Date(),
+      })
+      .where(eq(familyMembers.id, row.id));
+    throw err;
+  }
+
+  if (clerkInvitationId) {
+    await db
+      .update(familyMembers)
+      .set({ clerkInvitationId, updatedAt: new Date() })
+      .where(eq(familyMembers.id, row.id));
+  }
+
+  return { id: row.id, status: "pending" };
 }
 
 export async function revokeInvitation(
