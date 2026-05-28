@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { expenses, expenseCategories } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -153,17 +152,14 @@ export async function createExpenseFromPolicy(data: {
   console.log("=== SERVER: createExpenseFromPolicy called ===");
   console.log("Data received:", JSON.stringify(data, null, 2));
 
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { userId, familyId } = await getCurrentUserAndFamily();
 
-  console.log("User ID:", userId);
+  console.log("User ID:", userId, "Family ID:", familyId);
 
-  // Ensure the Insurance category exists for this user
+  // Ensure the Insurance category exists for this family
   const existingCategory = await db.query.expenseCategories.findFirst({
     where: and(
-      eq(expenseCategories.userId, userId),
+      eq(expenseCategories.familyId, familyId),
       eq(expenseCategories.name, "Insurance")
     ),
   });
@@ -172,6 +168,7 @@ export async function createExpenseFromPolicy(data: {
     await db.insert(expenseCategories).values({
       id: randomUUID(),
       userId,
+      familyId,
       name: "Insurance",
       isDefault: true,
     });
@@ -182,6 +179,7 @@ export async function createExpenseFromPolicy(data: {
   const expenseData = {
     id,
     userId,
+    familyId,
     linkedPolicyId: data.policyId,
     name: data.name || `${data.policyType} - ${data.provider}`,
     category: "Insurance", // Hardcoded as per requirements
@@ -224,14 +222,11 @@ export async function updateExpenseFromPolicy(
     maturityDate?: string | null;
   }
 ): Promise<Expense> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Verify ownership
+  // Verify the expense belongs to caller's family
   const existing = await db.query.expenses.findFirst({
-    where: and(eq(expenses.id, expenseId), eq(expenses.userId, userId)),
+    where: and(eq(expenses.id, expenseId), eq(expenses.familyId, familyId)),
   });
 
   if (!existing) {
@@ -249,7 +244,7 @@ export async function updateExpenseFromPolicy(
       endDate: data.maturityDate || null,
       updatedAt: new Date(),
     })
-    .where(and(eq(expenses.id, expenseId), eq(expenses.userId, userId)))
+    .where(and(eq(expenses.id, expenseId), eq(expenses.familyId, familyId)))
     .returning();
 
   return updatedExpense;
@@ -260,13 +255,10 @@ export async function updateExpenseFromPolicy(
  * This is used when a policy's "Add to Expenditures" toggle is turned OFF
  */
 export async function deleteLinkedExpense(policyId: string): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
   // Find and delete the expense linked to this policy
   await db
     .delete(expenses)
-    .where(and(eq(expenses.linkedPolicyId, policyId), eq(expenses.userId, userId)));
+    .where(and(eq(expenses.linkedPolicyId, policyId), eq(expenses.familyId, familyId)));
 }

@@ -16,7 +16,7 @@ export async function listExpenseSubcategories(
   ctx: AuthContext,
   opts: { categoryId?: string } = {}
 ): Promise<ExpenseSubcategoryRow[]> {
-  const conditions = [eq(expenseSubcategories.userId, ctx.userId)];
+  const conditions = [eq(expenseSubcategories.familyId, ctx.familyId)];
   if (opts.categoryId) {
     conditions.push(eq(expenseSubcategories.categoryId, opts.categoryId));
   }
@@ -34,7 +34,7 @@ export async function getExpenseSubcategoryById(
   const row = await db.query.expenseSubcategories.findFirst({
     where: and(
       eq(expenseSubcategories.id, id),
-      eq(expenseSubcategories.userId, ctx.userId)
+      eq(expenseSubcategories.familyId, ctx.familyId)
     ),
   });
   return row ?? null;
@@ -49,6 +49,7 @@ export async function createExpenseSubcategory(
     .values({
       id: randomUUID(),
       userId: ctx.userId,
+      familyId: ctx.familyId,
       categoryId: input.categoryId,
       name: input.name,
     })
@@ -75,7 +76,7 @@ export async function updateExpenseSubcategory(
     .where(
       and(
         eq(expenseSubcategories.id, id),
-        eq(expenseSubcategories.userId, ctx.userId)
+        eq(expenseSubcategories.familyId, ctx.familyId)
       )
     )
     .returning();
@@ -93,7 +94,7 @@ export async function deleteExpenseSubcategory(
     .where(
       and(
         eq(expenseSubcategories.id, id),
-        eq(expenseSubcategories.userId, ctx.userId)
+        eq(expenseSubcategories.familyId, ctx.familyId)
       )
     );
 }

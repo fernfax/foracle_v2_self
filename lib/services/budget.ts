@@ -61,7 +61,7 @@ async function getAdjustments(
     .from(budgetShifts)
     .where(
       and(
-        eq(budgetShifts.userId, ctx.userId),
+        eq(budgetShifts.familyId, ctx.familyId),
         eq(budgetShifts.year, year),
         eq(budgetShifts.month, month)
       )
@@ -89,12 +89,12 @@ async function getCategoryBudgets(
       .from(expenses)
       .where(
         and(
-          eq(expenses.userId, ctx.userId),
+          eq(expenses.familyId, ctx.familyId),
           eq(expenses.isActive, true),
           eq(expenses.trackedInBudget, true)
         )
       ),
-    db.select().from(expenseCategories).where(eq(expenseCategories.userId, ctx.userId)),
+    db.select().from(expenseCategories).where(eq(expenseCategories.familyId, ctx.familyId)),
   ]);
 
   const catLookup: Record<string, { id: string; icon: string | null }> = {};
@@ -153,7 +153,7 @@ export async function getBudgetForMonth(
       .from(dailyExpenses)
       .where(
         and(
-          eq(dailyExpenses.userId, ctx.userId),
+          eq(dailyExpenses.familyId, ctx.familyId),
           gte(dailyExpenses.date, startDate),
           lte(dailyExpenses.date, endDate)
         )
@@ -167,7 +167,7 @@ export async function getBudgetForMonth(
   const allCats = await db
     .select()
     .from(expenseCategories)
-    .where(eq(expenseCategories.userId, ctx.userId));
+    .where(eq(expenseCategories.familyId, ctx.familyId));
   const catLookup: Record<string, { id: string; icon: string | null }> = {};
   for (const c of allCats) catLookup[c.name] = { id: c.id, icon: c.icon };
 

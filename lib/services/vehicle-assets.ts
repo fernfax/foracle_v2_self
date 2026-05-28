@@ -68,7 +68,7 @@ export async function listVehicleAssets(
   ctx: AuthContext,
   filters: ListVehicleAssetsQuery = {}
 ): Promise<VehicleAssetRow[]> {
-  const conditions = [eq(vehicleAssets.userId, ctx.userId)];
+  const conditions = [eq(vehicleAssets.familyId, ctx.familyId)];
   if (filters.isActive !== undefined)
     conditions.push(eq(vehicleAssets.isActive, filters.isActive));
   return db
@@ -83,7 +83,7 @@ export async function getVehicleAssetById(
   id: string
 ): Promise<VehicleAssetRow | null> {
   const row = await db.query.vehicleAssets.findFirst({
-    where: and(eq(vehicleAssets.id, id), eq(vehicleAssets.userId, ctx.userId)),
+    where: and(eq(vehicleAssets.id, id), eq(vehicleAssets.familyId, ctx.familyId)),
   });
   return row ?? null;
 }
@@ -99,8 +99,8 @@ export async function createVehicleAsset(
       where: eq(vehicleAssets.id, body.id),
     });
     if (existing) {
-      if (existing.userId !== ctx.userId) {
-        const err = new Error("id collision with another user's row") as Error & {
+      if (existing.familyId !== ctx.familyId) {
+        const err = new Error("id collision with another family's row") as Error & {
           code?: string;
         };
         err.code = "CONFLICT";
@@ -204,7 +204,7 @@ export async function updateVehicleAsset(
   const [row] = await db
     .update(vehicleAssets)
     .set(update)
-    .where(and(eq(vehicleAssets.id, id), eq(vehicleAssets.userId, ctx.userId)))
+    .where(and(eq(vehicleAssets.id, id), eq(vehicleAssets.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -220,5 +220,5 @@ export async function deleteVehicleAsset(
   }
   await db
     .delete(vehicleAssets)
-    .where(and(eq(vehicleAssets.id, id), eq(vehicleAssets.userId, ctx.userId)));
+    .where(and(eq(vehicleAssets.id, id), eq(vehicleAssets.familyId, ctx.familyId)));
 }

@@ -555,6 +555,10 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
               nodeWidth={12}
               nodePadding={24}
               iterations={48}
+              // Disable Recharts' final ascendingY sort so the input order in
+              // our outflow array (Savings + CPF first, then categories) is
+              // preserved as the visual top-to-bottom order in each column.
+              sort={false}
               margin={{ top: 24, right: 160, bottom: 12, left: 140 }}
             >
               <Tooltip content={renderTooltip} />

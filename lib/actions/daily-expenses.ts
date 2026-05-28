@@ -1,10 +1,8 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { dailyExpenses, expenseCategories } from "@/db/schema";
-import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { dailyExpenses } from "@/db/schema";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
 import {
@@ -161,10 +159,7 @@ export async function getCategorySpendingForMonth(
   }[]
 > {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+    const { familyId } = await getCurrentUserAndFamily();
 
     // Calculate start and end dates for the month
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
@@ -181,7 +176,7 @@ export async function getCategorySpendingForMonth(
       .from(dailyExpenses)
       .where(
         and(
-          eq(dailyExpenses.userId, userId),
+          eq(dailyExpenses.familyId, familyId),
           gte(dailyExpenses.date, startDate),
           lte(dailyExpenses.date, endDate)
         )
@@ -205,10 +200,7 @@ export async function getCategorySpendingForMonth(
  */
 export async function getTodaySpending(): Promise<number> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+    const { familyId } = await getCurrentUserAndFamily();
 
     // Get today's date in Singapore Time (UTC+8)
     const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
@@ -219,7 +211,7 @@ export async function getTodaySpending(): Promise<number> {
       })
       .from(dailyExpenses)
       .where(
-        and(eq(dailyExpenses.userId, userId), eq(dailyExpenses.date, today))
+        and(eq(dailyExpenses.familyId, familyId), eq(dailyExpenses.date, today))
       );
 
     return Number(result[0]?.total) || 0;
@@ -237,10 +229,7 @@ export async function getDailySpendingByDay(
   month: number
 ): Promise<{ day: number; date: string; amount: number }[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+    const { familyId } = await getCurrentUserAndFamily();
 
     // Calculate start and end dates for the month
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
@@ -255,7 +244,7 @@ export async function getDailySpendingByDay(
       .from(dailyExpenses)
       .where(
         and(
-          eq(dailyExpenses.userId, userId),
+          eq(dailyExpenses.familyId, familyId),
           gte(dailyExpenses.date, startDate),
           lte(dailyExpenses.date, endDate)
         )

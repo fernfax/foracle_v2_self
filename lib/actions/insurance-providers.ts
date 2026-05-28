@@ -1,10 +1,10 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { insuranceProviders } from "@/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { getCurrentUserAndFamily, type AuthContext } from "@/lib/auth-context";
 
 export type InsuranceProvider = {
   id: string;
@@ -30,24 +30,21 @@ const DEFAULT_PROVIDERS = [
 ];
 
 /**
- * Get all insurance providers for the authenticated user
+ * Get all insurance providers for the caller's family
  */
 export async function getInsuranceProviders(): Promise<InsuranceProvider[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+    const ctx = await getCurrentUserAndFamily();
 
     const providers = await db
       .select()
       .from(insuranceProviders)
-      .where(eq(insuranceProviders.userId, userId))
+      .where(eq(insuranceProviders.familyId, ctx.familyId))
       .orderBy(asc(insuranceProviders.name));
 
-    // If no providers exist, create default ones
+    // If no providers exist for this family, create defaults
     if (providers.length === 0) {
-      await initializeDefaultProviders(userId);
+      await initializeDefaultProviders(ctx);
       return getInsuranceProviders();
     }
 
@@ -59,12 +56,13 @@ export async function getInsuranceProviders(): Promise<InsuranceProvider[]> {
 }
 
 /**
- * Initialize default providers for a user
+ * Initialize default providers for a family
  */
-async function initializeDefaultProviders(userId: string): Promise<void> {
+async function initializeDefaultProviders(ctx: AuthContext): Promise<void> {
   const defaultProviders = DEFAULT_PROVIDERS.map((name) => ({
     id: randomUUID(),
-    userId,
+    userId: ctx.userId,
+    familyId: ctx.familyId,
     name,
     isDefault: true,
   }));
@@ -76,10 +74,7 @@ async function initializeDefaultProviders(userId: string): Promise<void> {
  * Add a new insurance provider
  */
 export async function addInsuranceProvider(name: string): Promise<InsuranceProvider> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { userId, familyId } = await getCurrentUserAndFamily();
 
   const id = randomUUID();
 
@@ -88,6 +83,7 @@ export async function addInsuranceProvider(name: string): Promise<InsuranceProvi
     .values({
       id,
       userId,
+      familyId,
       name,
       isDefault: false,
     })
@@ -103,14 +99,10 @@ export async function updateInsuranceProvider(
   id: string,
   name: string
 ): Promise<InsuranceProvider> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Verify ownership
   const existing = await db.query.insuranceProviders.findFirst({
-    where: and(eq(insuranceProviders.id, id), eq(insuranceProviders.userId, userId)),
+    where: and(eq(insuranceProviders.id, id), eq(insuranceProviders.familyId, familyId)),
   });
 
   if (!existing) {
@@ -123,7 +115,7 @@ export async function updateInsuranceProvider(
       name,
       updatedAt: new Date(),
     })
-    .where(and(eq(insuranceProviders.id, id), eq(insuranceProviders.userId, userId)))
+    .where(and(eq(insuranceProviders.id, id), eq(insuranceProviders.familyId, familyId)))
     .returning();
 
   return updatedProvider;
@@ -133,12 +125,9 @@ export async function updateInsuranceProvider(
  * Delete an insurance provider
  */
 export async function deleteInsuranceProvider(id: string): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
   await db
     .delete(insuranceProviders)
-    .where(and(eq(insuranceProviders.id, id), eq(insuranceProviders.userId, userId)));
+    .where(and(eq(insuranceProviders.id, id), eq(insuranceProviders.familyId, familyId)));
 }

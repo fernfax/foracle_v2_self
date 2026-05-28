@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { HelpCircle, Compass, LayoutDashboard, DollarSign, Receipt, GraduationCap } from "lucide-react";
+import { HelpCircle, Compass, LayoutDashboard, DollarSign, Receipt, GraduationCap, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -253,6 +253,14 @@ export function HelpButton() {
           >
             <GraduationCap className="mr-2 h-4 w-4" />
             Onboarding View
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => router.push("/mobile-guide")}
+            data-tour="mobile-guide-btn"
+            className="cursor-pointer transition-colors hover:bg-accent focus:bg-accent"
+          >
+            <Smartphone className="mr-2 h-4 w-4" />
+            Install on iPhone
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

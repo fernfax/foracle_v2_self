@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
@@ -36,7 +36,7 @@ export async function listFamilyMembers(
   ctx: AuthContext
 ): Promise<FamilyMemberRow[]> {
   return db.query.familyMembers.findMany({
-    where: eq(familyMembers.userId, ctx.userId),
+    where: eq(familyMembers.familyId, ctx.familyId),
     orderBy: [desc(familyMembers.createdAt)],
   });
 }
@@ -46,7 +46,7 @@ export async function getFamilyMemberById(
   id: string
 ): Promise<FamilyMemberRow | null> {
   const row = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, id), eq(familyMembers.userId, ctx.userId)),
+    where: and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)),
   });
   return row ?? null;
 }
@@ -91,7 +91,7 @@ export async function updateFamilyMember(
   const [row] = await db
     .update(familyMembers)
     .set(update)
-    .where(and(eq(familyMembers.id, id), eq(familyMembers.userId, ctx.userId)))
+    .where(and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -105,7 +105,7 @@ export async function deleteFamilyMember(
   deletedIncomes: { id: string; name: string; amount: string; category: string }[];
 }> {
   const existing = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, id), eq(familyMembers.userId, ctx.userId)),
+    where: and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)),
     with: {
       incomes: {
         columns: { id: true, name: true, amount: true, category: true },
@@ -117,7 +117,7 @@ export async function deleteFamilyMember(
   await db.delete(incomes).where(eq(incomes.familyMemberId, id));
   await db
     .delete(familyMembers)
-    .where(and(eq(familyMembers.id, id), eq(familyMembers.userId, ctx.userId)));
+    .where(and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)));
 
   return { deletedIncomes: existing.incomes ?? [] };
 }
@@ -127,7 +127,7 @@ export async function getFamilyMemberIncomes(
   id: string
 ): Promise<{ id: string; name: string; amount: string; category: string }[]> {
   const member = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, id), eq(familyMembers.userId, ctx.userId)),
+    where: and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)),
     with: {
       incomes: {
         columns: { id: true, name: true, amount: true, category: true },
@@ -138,23 +138,41 @@ export async function getFamilyMemberIncomes(
   return member.incomes ?? [];
 }
 
-// Onboarding helper. If the caller already has any family members, returns
-// the existing "Self" row (creating/updating it). Otherwise inserts a new one.
+// Finds the caller's own Self row in the current family. Adopts legacy rows
+// that pre-date the clerkUserId linking — matched by user_id + relationship
+// when clerk_user_id is still NULL. This is the single place that decides
+// whether to insert vs reuse, so the rest of the code can call it freely
+// without re-implementing the same dedupe logic.
+async function findCallerSelfRow(
+  ctx: AuthContext
+): Promise<FamilyMemberRow | null> {
+  const row = await db.query.familyMembers.findFirst({
+    where: and(
+      eq(familyMembers.familyId, ctx.familyId),
+      eq(familyMembers.relationship, "Self"),
+      or(
+        eq(familyMembers.clerkUserId, ctx.userId),
+        and(eq(familyMembers.userId, ctx.userId), isNull(familyMembers.clerkUserId))
+      )
+    ),
+  });
+  return row ?? null;
+}
+
+// Onboarding helper. If the caller already has a Self row (clerk-linked OR
+// legacy NULL-clerk), returns/updates it. Otherwise inserts a new one.
 export async function getOrCreateSelfMember(
   ctx: AuthContext,
   data: { name: string; dateOfBirth: string }
 ): Promise<FamilyMemberRow> {
-  const existing = await db.query.familyMembers.findFirst({
-    where: and(
-      eq(familyMembers.userId, ctx.userId),
-      eq(familyMembers.relationship, "Self")
-    ),
-  });
+  const existing = await findCallerSelfRow(ctx);
 
   if (existing) {
     const [row] = await db
       .update(familyMembers)
       .set({
+        // Adopt the row by setting clerk_user_id if it was NULL (legacy).
+        clerkUserId: ctx.userId,
         name: data.name,
         dateOfBirth: data.dateOfBirth,
         isContributing: true,
@@ -171,6 +189,7 @@ export async function getOrCreateSelfMember(
       id: nanoid(),
       userId: ctx.userId,
       familyId: ctx.familyId,
+      clerkUserId: ctx.userId,
       name: data.name,
       relationship: "Self",
       dateOfBirth: data.dateOfBirth,
@@ -180,34 +199,58 @@ export async function getOrCreateSelfMember(
   return row;
 }
 
-// Auto-seeds a Self member when the list is empty — preserves existing
-// behavior of getFamilyMembers() action so the action layer can delegate.
+// Returns the family member list, ensuring exactly one Self row exists for
+// the caller. If the caller's Self row exists with NULL clerk_user_id
+// (legacy), adopt it by writing clerk_user_id. If no Self row exists, insert
+// a fresh one. The partial unique index on family_members(clerk_user_id)
+// backs this up at the DB layer.
 export async function listFamilyMembersOrSelf(
   ctx: AuthContext
 ): Promise<FamilyMemberRow[]> {
-  let members = await listFamilyMembers(ctx);
-  if (members.length === 0) {
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, ctx.userId),
-    });
-    const userName = user
-      ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "User"
-      : "User";
-    const [row] = await db
-      .insert(familyMembers)
-      .values({
-        id: nanoid(),
-        userId: ctx.userId,
-        familyId: ctx.familyId,
-        name: userName,
-        relationship: "Self",
-        isContributing: false,
-        notes: "Primary account holder",
-      })
-      .returning();
-    members = [row];
+  const members = await listFamilyMembers(ctx);
+  const existing = members.find(
+    (m) =>
+      m.relationship === "Self" &&
+      (m.clerkUserId === ctx.userId ||
+        (m.userId === ctx.userId && m.clerkUserId === null))
+  );
+
+  // Already linked — nothing to do.
+  if (existing && existing.clerkUserId === ctx.userId) {
+    return members;
   }
-  return members;
+
+  // Legacy Self row with NULL clerk_user_id — adopt it in place.
+  if (existing && existing.clerkUserId === null) {
+    const [adopted] = await db
+      .update(familyMembers)
+      .set({ clerkUserId: ctx.userId, status: "active", updatedAt: new Date() })
+      .where(eq(familyMembers.id, existing.id))
+      .returning();
+    return members.map((m) => (m.id === adopted.id ? adopted : m));
+  }
+
+  // No Self row at all — create one.
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, ctx.userId),
+  });
+  const userName = user
+    ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "User"
+    : "User";
+  const [row] = await db
+    .insert(familyMembers)
+    .values({
+      id: nanoid(),
+      userId: ctx.userId,
+      familyId: ctx.familyId,
+      clerkUserId: ctx.userId,
+      name: userName,
+      relationship: "Self",
+      isContributing: false,
+      notes: "Primary account holder",
+    })
+    .returning();
+  return [row, ...members];
 }
 
 // =============================================================================

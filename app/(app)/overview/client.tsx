@@ -15,6 +15,7 @@ import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph
 import { BudgetTrackerCard, BudgetCategory } from "@/components/dashboard/budget-tracker-card";
 import { CashflowSankey } from "@/components/dashboard/cashflow-sankey";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import { PageHeader } from "@/components/ui/page-header";
 
 interface DashboardMetrics {
   totalIncome: number;
@@ -118,18 +119,20 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
   };
 
   return (
-    <div className="space-y-6">
-      {/* View toggle — Classic (default) vs. Cashflow Sankey. */}
-      <div className="flex items-center">
-        <SlidingTabs
-          tabs={[
-            { value: "classic", label: "Classic", icon: LayoutDashboard },
-            { value: "cashflow", label: "Cashflow", icon: Waves },
-          ]}
-          value={view}
-          onValueChange={handleViewChange}
-        />
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Overview"
+        tabs={
+          <SlidingTabs
+            tabs={[
+              { value: "classic", label: "Classic", icon: LayoutDashboard },
+              { value: "cashflow", label: "Cashflow", icon: Waves },
+            ]}
+            value={view}
+            onValueChange={handleViewChange}
+          />
+        }
+      />
 
       {view === "cashflow" ? (
         <CashflowSankey incomes={incomes} expenses={expenses} />

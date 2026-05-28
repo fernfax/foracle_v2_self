@@ -25,7 +25,7 @@ export async function listExpenses(
   ctx: AuthContext,
   opts: ListExpensesOpts = {}
 ): Promise<ExpenseRow[]> {
-  const conditions = [eq(expenses.userId, ctx.userId)];
+  const conditions = [eq(expenses.familyId, ctx.familyId)];
   if (opts.isActive !== undefined) {
     conditions.push(eq(expenses.isActive, opts.isActive));
   }
@@ -44,7 +44,7 @@ export async function getExpenseById(
   id: string
 ): Promise<ExpenseRow | null> {
   const row = await db.query.expenses.findFirst({
-    where: and(eq(expenses.id, id), eq(expenses.userId, ctx.userId)),
+    where: and(eq(expenses.id, id), eq(expenses.familyId, ctx.familyId)),
   });
   return row ?? null;
 }
@@ -64,8 +64,8 @@ export async function createExpense(
       where: eq(expenses.id, body.id),
     });
     if (existing) {
-      if (existing.userId !== ctx.userId) {
-        const err = new Error("id collision with another user's row") as Error & {
+      if (existing.familyId !== ctx.familyId) {
+        const err = new Error("id collision with another family's row") as Error & {
           code?: string;
         };
         err.code = "CONFLICT";
@@ -124,7 +124,7 @@ export async function updateExpense(
   const [row] = await db
     .update(expenses)
     .set(update)
-    .where(and(eq(expenses.id, id), eq(expenses.userId, ctx.userId)))
+    .where(and(eq(expenses.id, id), eq(expenses.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -141,7 +141,7 @@ export async function softDeleteExpense(
   const [row] = await db
     .update(expenses)
     .set({ isActive: false, updatedAt: new Date() })
-    .where(and(eq(expenses.id, id), eq(expenses.userId, ctx.userId)))
+    .where(and(eq(expenses.id, id), eq(expenses.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -154,5 +154,5 @@ export async function hardDeleteExpense(
   if (!existing) throw new ExpenseNotFoundError();
   await db
     .delete(expenses)
-    .where(and(eq(expenses.id, id), eq(expenses.userId, ctx.userId)));
+    .where(and(eq(expenses.id, id), eq(expenses.familyId, ctx.familyId)));
 }

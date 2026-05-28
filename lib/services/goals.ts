@@ -61,7 +61,7 @@ export async function listGoals(
   ctx: AuthContext,
   filters: ListGoalsQuery = {}
 ): Promise<GoalRow[]> {
-  const conditions = [eq(goals.userId, ctx.userId)];
+  const conditions = [eq(goals.familyId, ctx.familyId)];
   if (filters.isActive !== undefined) conditions.push(eq(goals.isActive, filters.isActive));
   if (filters.isAchieved !== undefined) conditions.push(eq(goals.isAchieved, filters.isAchieved));
   if (filters.goalType !== undefined) conditions.push(eq(goals.goalType, filters.goalType));
@@ -77,7 +77,7 @@ export async function getGoalById(
   id: string
 ): Promise<GoalRow | null> {
   const row = await db.query.goals.findFirst({
-    where: and(eq(goals.id, id), eq(goals.userId, ctx.userId)),
+    where: and(eq(goals.id, id), eq(goals.familyId, ctx.familyId)),
   });
   return row ?? null;
 }
@@ -179,7 +179,7 @@ export async function updateGoal(
   const [row] = await db
     .update(goals)
     .set(update)
-    .where(and(eq(goals.id, id), eq(goals.userId, ctx.userId)))
+    .where(and(eq(goals.id, id), eq(goals.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -193,7 +193,7 @@ export async function markGoalAchieved(
   const [row] = await db
     .update(goals)
     .set({ isAchieved: true, updatedAt: new Date() })
-    .where(and(eq(goals.id, id), eq(goals.userId, ctx.userId)))
+    .where(and(eq(goals.id, id), eq(goals.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -206,5 +206,5 @@ export async function deleteGoal(ctx: AuthContext, id: string): Promise<void> {
   }
   await db
     .delete(goals)
-    .where(and(eq(goals.id, id), eq(goals.userId, ctx.userId)));
+    .where(and(eq(goals.id, id), eq(goals.familyId, ctx.familyId)));
 }

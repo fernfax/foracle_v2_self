@@ -14,6 +14,7 @@ interface DeveloperTableAccordionProps {
 const SCOPE_LABEL: Record<DeveloperTableScope, string> = {
   self: "your user row",
   primaryFamily: "your family row",
+  familyId: "rows where family_id = your family",
   userId: "rows where user_id = you",
   global: "global table (capped 100)",
 };

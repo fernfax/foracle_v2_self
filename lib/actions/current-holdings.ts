@@ -1,10 +1,10 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { currentHoldings, familyMembers, holdingAmountHistory } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
 export type CurrentHolding = {
   id: string;
@@ -22,10 +22,7 @@ export type CurrentHolding = {
  */
 export async function getCurrentHoldings(): Promise<CurrentHolding[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+    const { familyId } = await getCurrentUserAndFamily();
 
     const holdings = await db
       .select({
@@ -40,7 +37,7 @@ export async function getCurrentHoldings(): Promise<CurrentHolding[]> {
       })
       .from(currentHoldings)
       .leftJoin(familyMembers, eq(currentHoldings.familyMemberId, familyMembers.id))
-      .where(eq(currentHoldings.userId, userId))
+      .where(eq(currentHoldings.familyId, familyId))
       .orderBy(desc(currentHoldings.createdAt));
 
     return holdings;
@@ -58,10 +55,7 @@ export async function addCurrentHolding(data: {
   bankName: string;
   holdingAmount: number;
 }): Promise<CurrentHolding> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { userId, familyId } = await getCurrentUserAndFamily();
 
   const id = randomUUID();
 
@@ -70,6 +64,7 @@ export async function addCurrentHolding(data: {
     .values({
       id,
       userId,
+      familyId,
       familyMemberId: data.familyMemberId,
       bankName: data.bankName,
       holdingAmount: data.holdingAmount.toString(),
@@ -81,14 +76,18 @@ export async function addCurrentHolding(data: {
     id: randomUUID(),
     holdingId: id,
     userId,
+    familyId,
     amount: data.holdingAmount.toString(),
   });
 
-  // Fetch family member name if linked
+  // Fetch family member name if linked (scoped to family)
   let familyMemberName: string | null = null;
   if (data.familyMemberId) {
     const familyMember = await db.query.familyMembers.findFirst({
-      where: eq(familyMembers.id, data.familyMemberId),
+      where: and(
+        eq(familyMembers.id, data.familyMemberId),
+        eq(familyMembers.familyId, familyId)
+      ),
     });
     familyMemberName = familyMember?.name || null;
   }
@@ -111,14 +110,11 @@ export async function updateCurrentHolding(
     holdingAmount?: number;
   }
 ): Promise<CurrentHolding> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { userId, familyId } = await getCurrentUserAndFamily();
 
-  // Verify ownership
+  // Verify the holding belongs to caller's family
   const existing = await db.query.currentHoldings.findFirst({
-    where: and(eq(currentHoldings.id, id), eq(currentHoldings.userId, userId)),
+    where: and(eq(currentHoldings.id, id), eq(currentHoldings.familyId, familyId)),
   });
 
   if (!existing) {
@@ -142,7 +138,7 @@ export async function updateCurrentHolding(
   const [updatedHolding] = await db
     .update(currentHoldings)
     .set(updateData)
-    .where(and(eq(currentHoldings.id, id), eq(currentHoldings.userId, userId)))
+    .where(and(eq(currentHoldings.id, id), eq(currentHoldings.familyId, familyId)))
     .returning();
 
   // Record amount snapshot in history if amount changed
@@ -151,15 +147,19 @@ export async function updateCurrentHolding(
       id: randomUUID(),
       holdingId: id,
       userId,
+      familyId,
       amount: data.holdingAmount.toString(),
     });
   }
 
-  // Fetch family member name if linked
+  // Fetch family member name if linked (scoped to family)
   let familyMemberName: string | null = null;
   if (updatedHolding.familyMemberId) {
     const familyMember = await db.query.familyMembers.findFirst({
-      where: eq(familyMembers.id, updatedHolding.familyMemberId),
+      where: and(
+        eq(familyMembers.id, updatedHolding.familyMemberId),
+        eq(familyMembers.familyId, familyId)
+      ),
     });
     familyMemberName = familyMember?.name || null;
   }
@@ -175,12 +175,9 @@ export async function updateCurrentHolding(
  * Delete a current holding
  */
 export async function deleteCurrentHolding(id: string): Promise<void> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  const { familyId } = await getCurrentUserAndFamily();
 
   await db
     .delete(currentHoldings)
-    .where(and(eq(currentHoldings.id, id), eq(currentHoldings.userId, userId)));
+    .where(and(eq(currentHoldings.id, id), eq(currentHoldings.familyId, familyId)));
 }

@@ -1,17 +1,13 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { incomes, familyMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { calculateCPF } from "@/lib/cpf-calculator";
-import { format } from "date-fns";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
-/**
- * Calculate age from date of birth
- */
 function calculateAge(dateOfBirth: Date): number {
   const today = new Date();
   let age = today.getFullYear() - dateOfBirth.getFullYear();
@@ -22,17 +18,6 @@ function calculateAge(dateOfBirth: Date): number {
   }
 
   return age;
-}
-
-/**
- * Get the current authenticated user's ID
- */
-async function getCurrentUserId() {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-  return userId;
 }
 
 /**
@@ -60,7 +45,7 @@ export async function createIncome(data: {
   cpfSpecialAccount?: number;
   cpfMedisaveAccount?: number;
 }) {
-  const userId = await getCurrentUserId();
+  const { userId, familyId } = await getCurrentUserAndFamily();
 
   // Calculate CPF if applicable
   let employeeCpfContribution: string | null = null;
@@ -79,6 +64,7 @@ export async function createIncome(data: {
   const newIncome = await db.insert(incomes).values({
     id: nanoid(),
     userId,
+    familyId,
     familyMemberId: data.familyMemberId || null,
     name: data.name,
     category: data.category,
@@ -137,11 +123,11 @@ export async function updateIncome(
     cpfMedisaveAccount?: number;
   }
 ) {
-  const userId = await getCurrentUserId();
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Verify ownership
+  // Verify the row belongs to caller's family
   const existing = await db.query.incomes.findFirst({
-    where: and(eq(incomes.id, id), eq(incomes.userId, userId)),
+    where: and(eq(incomes.id, id), eq(incomes.familyId, familyId)),
   });
 
   if (!existing) {
@@ -186,7 +172,10 @@ export async function updateIncome(
       data.familyMemberId !== undefined ? data.familyMemberId : existing.familyMemberId;
     if (!data.familyMemberAge && effectiveFamilyMemberId) {
       const familyMember = await db.query.familyMembers.findFirst({
-        where: eq(familyMembers.id, effectiveFamilyMemberId),
+        where: and(
+          eq(familyMembers.id, effectiveFamilyMemberId),
+          eq(familyMembers.familyId, familyId)
+        ),
       });
 
       if (familyMember?.dateOfBirth) {
@@ -208,7 +197,7 @@ export async function updateIncome(
   const updated = await db
     .update(incomes)
     .set(updateData)
-    .where(and(eq(incomes.id, id), eq(incomes.userId, userId)))
+    .where(and(eq(incomes.id, id), eq(incomes.familyId, familyId)))
     .returning();
 
   revalidatePath("/user");
@@ -219,11 +208,11 @@ export async function updateIncome(
  * Delete an income record
  */
 export async function deleteIncome(id: string) {
-  const userId = await getCurrentUserId();
+  const { familyId } = await getCurrentUserAndFamily();
 
-  // Verify ownership and get income with family member details
+  // Verify the row belongs to caller's family and get family member details
   const existing = await db.query.incomes.findFirst({
-    where: and(eq(incomes.id, id), eq(incomes.userId, userId)),
+    where: and(eq(incomes.id, id), eq(incomes.familyId, familyId)),
     with: {
       familyMember: {
         columns: {
@@ -243,7 +232,7 @@ export async function deleteIncome(id: string) {
     throw new Error(`This income is linked to ${existing.familyMember.name} and cannot be deleted independently. Please delete the family member to remove their associated incomes.`);
   }
 
-  await db.delete(incomes).where(and(eq(incomes.id, id), eq(incomes.userId, userId)));
+  await db.delete(incomes).where(and(eq(incomes.id, id), eq(incomes.familyId, familyId)));
 
   revalidatePath("/user");
   return { success: true };
@@ -253,10 +242,10 @@ export async function deleteIncome(id: string) {
  * Toggle income active status
  */
 export async function toggleIncomeStatus(id: string) {
-  const userId = await getCurrentUserId();
+  const { familyId } = await getCurrentUserAndFamily();
 
   const existing = await db.query.incomes.findFirst({
-    where: and(eq(incomes.id, id), eq(incomes.userId, userId)),
+    where: and(eq(incomes.id, id), eq(incomes.familyId, familyId)),
   });
 
   if (!existing) {
@@ -269,7 +258,7 @@ export async function toggleIncomeStatus(id: string) {
       isActive: !existing.isActive,
       updatedAt: new Date(),
     })
-    .where(and(eq(incomes.id, id), eq(incomes.userId, userId)))
+    .where(and(eq(incomes.id, id), eq(incomes.familyId, familyId)))
     .returning();
 
   revalidatePath("/user");
@@ -277,13 +266,13 @@ export async function toggleIncomeStatus(id: string) {
 }
 
 /**
- * Get all incomes for the current user
+ * Get all incomes for the current family
  */
 export async function getIncomes() {
-  const userId = await getCurrentUserId();
+  const { familyId } = await getCurrentUserAndFamily();
 
-  const userIncomes = await db.query.incomes.findMany({
-    where: eq(incomes.userId, userId),
+  const familyIncomes = await db.query.incomes.findMany({
+    where: eq(incomes.familyId, familyId),
     orderBy: (incomes, { desc }) => [desc(incomes.createdAt)],
     with: {
       familyMember: {
@@ -298,5 +287,5 @@ export async function getIncomes() {
     },
   });
 
-  return userIncomes;
+  return familyIncomes;
 }

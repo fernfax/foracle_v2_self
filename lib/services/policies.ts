@@ -25,7 +25,7 @@ export async function listPolicies(
   ctx: AuthContext,
   filters: ListPoliciesQuery = {}
 ): Promise<PolicyRow[]> {
-  const conditions = [eq(policies.userId, ctx.userId)];
+  const conditions = [eq(policies.familyId, ctx.familyId)];
   if (filters.status !== undefined) conditions.push(eq(policies.status, filters.status));
   if (filters.isActive !== undefined) conditions.push(eq(policies.isActive, filters.isActive));
   if (filters.policyType !== undefined) conditions.push(eq(policies.policyType, filters.policyType));
@@ -44,7 +44,7 @@ export async function getPolicyById(
   id: string
 ): Promise<PolicyRow | null> {
   const row = await db.query.policies.findFirst({
-    where: and(eq(policies.id, id), eq(policies.userId, ctx.userId)),
+    where: and(eq(policies.id, id), eq(policies.familyId, ctx.familyId)),
   });
   return row ?? null;
 }
@@ -60,8 +60,8 @@ export async function createPolicy(
       where: eq(policies.id, body.id),
     });
     if (existing) {
-      if (existing.userId !== ctx.userId) {
-        const err = new Error("id collision with another user's row") as Error & {
+      if (existing.familyId !== ctx.familyId) {
+        const err = new Error("id collision with another family's row") as Error & {
           code?: string;
         };
         err.code = "CONFLICT";
@@ -131,7 +131,7 @@ export async function updatePolicy(
   const [row] = await db
     .update(policies)
     .set(update)
-    .where(and(eq(policies.id, id), eq(policies.userId, ctx.userId)))
+    .where(and(eq(policies.id, id), eq(policies.familyId, ctx.familyId)))
     .returning();
   return row;
 }
@@ -150,5 +150,5 @@ export async function deletePolicy(
   }
   await db
     .delete(policies)
-    .where(and(eq(policies.id, id), eq(policies.userId, ctx.userId)));
+    .where(and(eq(policies.id, id), eq(policies.familyId, ctx.familyId)));
 }

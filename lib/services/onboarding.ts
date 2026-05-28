@@ -63,13 +63,13 @@ export async function completeOnboarding(ctx: AuthContext): Promise<void> {
 export async function getOnboardingData(ctx: AuthContext) {
   const [members, incomeRows, holdings] = await Promise.all([
     db.query.familyMembers.findMany({
-      where: eq(familyMembers.userId, ctx.userId),
+      where: eq(familyMembers.familyId, ctx.familyId),
     }),
     db.query.incomes.findMany({
-      where: eq(incomes.userId, ctx.userId),
+      where: eq(incomes.familyId, ctx.familyId),
     }),
     db.query.currentHoldings.findMany({
-      where: eq(currentHoldings.userId, ctx.userId),
+      where: eq(currentHoldings.familyId, ctx.familyId),
     }),
   ]);
   return { familyMembers: members, incomes: incomeRows, currentHoldings: holdings };
@@ -85,7 +85,7 @@ export async function createOnboardingExpenses(
 
   await db.delete(expenses).where(
     and(
-      eq(expenses.userId, ctx.userId),
+      eq(expenses.familyId, ctx.familyId),
       eq(expenses.expenseCategory, "current-recurring")
     )
   );

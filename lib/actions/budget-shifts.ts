@@ -1,11 +1,11 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { budgetShifts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
+import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
 export interface BudgetShift {
   id: string;
@@ -31,10 +31,7 @@ export async function createBudgetShift(data: {
   note?: string;
 }): Promise<{ success: boolean; error?: string; shift?: BudgetShift }> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return { success: false, error: "Unauthorized" };
-    }
+    const { userId, familyId } = await getCurrentUserAndFamily();
 
     // Validate amount
     if (data.amount <= 0) {
@@ -52,6 +49,7 @@ export async function createBudgetShift(data: {
       .values({
         id,
         userId,
+        familyId,
         year: data.year,
         month: data.month,
         fromCategoryName: data.fromCategoryName,
@@ -78,17 +76,14 @@ export async function getBudgetShiftsForMonth(
   month: number
 ): Promise<BudgetShift[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return [];
-    }
+    const { familyId } = await getCurrentUserAndFamily();
 
     const shifts = await db
       .select()
       .from(budgetShifts)
       .where(
         and(
-          eq(budgetShifts.userId, userId),
+          eq(budgetShifts.familyId, familyId),
           eq(budgetShifts.year, year),
           eq(budgetShifts.month, month)
         )
@@ -109,17 +104,14 @@ export async function deleteBudgetShift(
   shiftId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return { success: false, error: "Unauthorized" };
-    }
+    const { familyId } = await getCurrentUserAndFamily();
 
     await db
       .delete(budgetShifts)
       .where(
         and(
           eq(budgetShifts.id, shiftId),
-          eq(budgetShifts.userId, userId)
+          eq(budgetShifts.familyId, familyId)
         )
       );
 
