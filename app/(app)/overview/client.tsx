@@ -127,8 +127,8 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
         tabs={
           <SlidingTabs
             tabs={[
-              { value: "classic", label: "Classic", icon: LayoutDashboard },
               { value: "cashflow", label: "Cashflow", icon: Waves },
+              { value: "classic", label: "Classic", icon: LayoutDashboard },
             ]}
             value={view}
             onValueChange={handleViewChange}
