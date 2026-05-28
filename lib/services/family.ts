@@ -26,7 +26,8 @@ export class InvitationError extends Error {
     | "INVALID_RELATIONSHIP"
     | "INVALID_EMAIL"
     | "INVALID_STATUS"
-    | "ALREADY_LINKED";
+    | "ALREADY_LINKED"
+    | "EXISTING_USER";
   constructor(code: InvitationError["code"], message: string) {
     super(message);
     this.code = code;
@@ -279,6 +280,24 @@ export async function inviteFamilyMember(
   }
 
   const ctx = await callerAsMaster();
+
+  // Block invites for emails that already have a fully-signed-up Foracle
+  // account. Clerk's `createInvitation` with `ignoreExisting: true` happily
+  // sends an invite link to existing users, but those users already have a
+  // `users.family_id` so accepting the invite doesn't reroute them — they
+  // end up in their original family, and the inviting master is left with
+  // an orphan pending row. This was the prod bug behind the "logged in to
+  // realise the family ID is different" complaint.
+  const existingUserByEmail = await db.query.users.findFirst({
+    where: eq(users.email, normalizedEmail),
+    columns: { id: true, email: true, familyId: true },
+  });
+  if (existingUserByEmail && existingUserByEmail.familyId !== ctx.familyId) {
+    throw new InvitationError(
+      "EXISTING_USER",
+      `${normalizedEmail} already has a Foracle account in another family. They can't be added to this family — ask them to delete their account first, or invite them at a different email.`
+    );
+  }
 
   const existingByEmail = await db.query.familyMembers.findFirst({
     where: eq(familyMembers.invitedEmail, normalizedEmail),
