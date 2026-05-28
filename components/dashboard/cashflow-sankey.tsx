@@ -44,7 +44,8 @@ interface SankeyLinkRenderProps {
   payload: unknown;
 }
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Layers } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, ChevronLeft, ChevronRight, Layers } from "lucide-react";
 import { CHART_PALETTE, STATUS_COLORS } from "@/lib/chart-palette";
 import {
   buildCashflowModel,
@@ -73,7 +74,10 @@ interface SankeyInputNode {
 interface SankeyInputLink {
   source: number;
   target: number;
+  /** Visualized (sqrt-compressed + outflow-rescaled) value Recharts uses for ribbon thickness. */
   value: number;
+  /** Real monthly dollar amount the ribbon represents — shown in the tooltip. */
+  realValue: number;
   /** Pre-computed link color so the custom link renderer doesn't need lookups. */
   color: string;
 }
@@ -116,9 +120,45 @@ function truncateLabel(name: string, max: number): string {
 }
 
 export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
-  const model = useMemo(() => buildCashflowModel(incomes, expenses), [incomes, expenses]);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const model = useMemo(
+    () =>
+      buildCashflowModel(incomes, expenses, {
+        year: selectedMonth.getFullYear(),
+        month: selectedMonth.getMonth() + 1,
+      }),
+    [incomes, expenses, selectedMonth]
+  );
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const isNarrow = useIsNarrow();
+
+  const isCurrentMonth = (() => {
+    const now = new Date();
+    return (
+      selectedMonth.getFullYear() === now.getFullYear() &&
+      selectedMonth.getMonth() === now.getMonth()
+    );
+  })();
+  const goToPreviousMonth = () =>
+    setSelectedMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1));
+  const goToNextMonth = () =>
+    setSelectedMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1));
+  const goToCurrentMonth = () => {
+    const now = new Date();
+    setSelectedMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+  };
+  const formatMonthDisplay = (date: Date) =>
+    date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  // Drilldown state should reset whenever the chart's data shape changes —
+  // a category from May might not exist in April, so its expandedId would
+  // be a dangling reference. Reset on month change to keep things tidy.
+  useEffect(() => {
+    setExpandedId(null);
+  }, [selectedMonth]);
 
   // Recharts' Sankey mutates the nodes you pass in (it overwrites `value`
   // with cumulative throughput, ~2x the real number for the hub). Snapshot
@@ -241,7 +281,13 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       const isFromHub = nodes[s].kind === "hub";
       const linkValue =
         visualize(link.value) * (isFromHub ? outflowScale : 1);
-      links.push({ source: s, target: t, value: linkValue, color });
+      links.push({
+        source: s,
+        target: t,
+        value: linkValue,
+        realValue: link.value,
+        color,
+      });
     }
 
     return { nodes, links };
@@ -251,14 +297,48 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
   if (model.incomeNodes.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Layers className="h-4 w-4 text-primary" /> Monthly Cashflow
-          </CardTitle>
+        <CardHeader className="pb-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <Layers className="h-4 w-4 text-primary" /> Monthly Cashflow
+            </CardTitle>
+            <div className="flex items-center gap-2 shrink-0">
+              {!isCurrentMonth && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs px-2"
+                  onClick={goToCurrentMonth}
+                >
+                  Current Month
+                </Button>
+              )}
+              <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[210px] sm:w-[230px]">
+                <button
+                  onClick={goToPreviousMonth}
+                  className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </button>
+                <div className="flex items-center gap-1.5 px-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
+                </div>
+                <button
+                  onClick={goToNextMonth}
+                  className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground">
-            Add an income to see your monthly cashflow.
+          <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground text-center px-6">
+            No income recorded for {formatMonthDisplay(selectedMonth)} — try a different month or add an income.
           </div>
         </CardContent>
       </Card>
@@ -298,6 +378,9 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       !isExpandedSelf &&
       (n.kind === "category" || n.kind === "cpf" || n.kind === "savings" || n.kind === "shortfall");
     const nodeOpacity = isDimTarget ? 0.18 : 1;
+    // Only opacity needs to animate (drill-down dim/fade). Recharts re-keys
+    // every node on layout change, so CSS transitions on geometry never fire
+    // — see the comment in the renderer for the gory details.
     const transition: CSSProperties = {
       transition: `opacity ${TRANSITION_MS}ms ease`,
     };
@@ -327,8 +410,12 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
       >
         {/* The category/outflow rectangle stays a single solid bar even
             when expanded — the **ribbon** is what splits into sub-tendrils
-            (see renderLink). */}
-        <Rectangle
+            (see renderLink). Note: Recharts bakes the node's x/y into the
+            React key on every layout change (`node-${i}-${x}-${y}`), so
+            month-toggle remounts the whole tree fresh — CSS transitions on
+            geometry never fire. Tried both styled x/y and transform-wrap
+            approaches; both snapped. Leaving as plain attributes. */}
+        <rect
           x={x}
           y={y}
           width={width}
@@ -535,16 +622,18 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
     if (isLink) {
       // `ours.source` / `.target` are Recharts-wrapped nodes with my input
       // fields spread at the top level — `name`, `kind`, etc. are direct.
+      // `ours.value` is the visualized (sqrt-compressed) ribbon width; read
+      // `realValue` instead so the tooltip shows actual monthly dollars.
       const src = ours.source as { name?: string };
       const tgt = ours.target as { name?: string };
-      const value = (ours.value as number) ?? entry.value ?? 0;
+      const value = (ours.realValue as number) ?? (ours.value as number) ?? 0;
       return (
         <div className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm max-w-[260px]">
           <div className="font-display text-[13px] font-semibold mb-1">
             {src.name ?? "Source"} → {tgt.name ?? "Target"}
           </div>
           <div className="text-xs text-muted-foreground">
-            Flow: <span className="text-foreground font-medium tabular-nums">{fmt(value)}</span>
+            Monthly: <span className="text-foreground font-medium tabular-nums">{fmt(value)}</span>
           </div>
         </div>
       );
@@ -598,34 +687,73 @@ export function CashflowSankey({ incomes, expenses }: CashflowSankeyProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-display flex items-center gap-2">
-          <Layers className="h-4 w-4 text-primary" /> Monthly Cashflow
-        </CardTitle>
-        {/* Inline status text — same line height as the default description,
-            so swapping between the two never reflows the chart below. */}
-        {expandedCategory ? (
-          <p className="text-xs text-muted-foreground">
-            Showing{" "}
-            <span className="font-display font-semibold text-foreground">
-              {expandedCategory.name}
-            </span>{" "}
-            breakdown · {fmt(expandedCategory.value)} across{" "}
-            {expandedCategory.items.length}{" "}
-            {expandedCategory.items.length === 1 ? "item" : "items"} ·{" "}
-            <button
-              type="button"
-              onClick={() => setExpandedId(null)}
-              className="font-display font-medium text-foreground underline-offset-2 hover:underline"
-            >
-              Show categories
-            </button>
-          </p>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Gross income flows into the pool, then out to CPF, your expense categories, and savings.
-            Click a category to break it down. Hover any node or ribbon for detail.
-          </p>
-        )}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <Layers className="h-4 w-4 text-primary" /> Monthly Cashflow
+            </CardTitle>
+            {/* Inline status text — same line height as the default description,
+                so swapping between the two never reflows the chart below. */}
+            {expandedCategory ? (
+              <p className="text-xs text-muted-foreground mt-1">
+                Showing{" "}
+                <span className="font-display font-semibold text-foreground">
+                  {expandedCategory.name}
+                </span>{" "}
+                breakdown · {fmt(expandedCategory.value)} across{" "}
+                {expandedCategory.items.length}{" "}
+                {expandedCategory.items.length === 1 ? "item" : "items"} ·{" "}
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(null)}
+                  className="font-display font-medium text-foreground underline-offset-2 hover:underline"
+                >
+                  Show categories
+                </button>
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">
+                Gross income flows into the pool, then out to CPF, your expense categories, and savings.
+                Click a category to break it down. Hover any node or ribbon for detail.
+              </p>
+            )}
+          </div>
+
+          {/* Month nav — mirrors the pill in DashboardHeader so users get a
+              consistent control across Classic and Cashflow views. */}
+          <div className="flex items-center gap-2 shrink-0">
+            {!isCurrentMonth && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs px-2"
+                onClick={goToCurrentMonth}
+              >
+                Current Month
+              </Button>
+            )}
+            <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[210px] sm:w-[230px]">
+              <button
+                onClick={goToPreviousMonth}
+                className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                aria-label="Previous month"
+              >
+                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              </button>
+              <div className="flex items-center gap-1.5 px-2">
+                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{formatMonthDisplay(selectedMonth)}</span>
+              </div>
+              <button
+                onClick={goToNextMonth}
+                className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                aria-label="Next month"
+              >
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div
