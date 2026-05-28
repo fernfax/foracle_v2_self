@@ -98,9 +98,9 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  // `?view=` selects the layout. Default = "classic" — the existing dashboard
-  // stays the entry point so this is purely additive for users who don't opt in.
-  const view = searchParams.get("view") === "cashflow" ? "cashflow" : "classic";
+  // `?view=` selects the layout. Default = "cashflow" — the sankey is now the
+  // primary entry point. Users can flip to ?view=classic via the toggle.
+  const view = searchParams.get("view") === "classic" ? "classic" : "cashflow";
 
   useEffect(() => {
     setMounted(true);
@@ -112,7 +112,9 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
 
   const handleViewChange = (next: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (next === "classic") params.delete("view");
+    // Strip the param when picking the default (cashflow) so the URL stays
+    // clean. Explicitly set it only when opting into Classic.
+    if (next === "cashflow") params.delete("view");
     else params.set("view", next);
     const qs = params.toString();
     router.replace(qs ? `/overview?${qs}` : "/overview", { scroll: false });

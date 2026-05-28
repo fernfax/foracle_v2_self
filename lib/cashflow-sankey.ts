@@ -27,6 +27,8 @@ export interface CashflowIncomeInput {
   isActive: boolean | null;
   netTakeHome: string | null;
   subjectToCpf: boolean | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 /** Minimal shape this transform needs from an expense row. */
@@ -38,6 +40,8 @@ export interface CashflowExpenseInput {
   frequency: string;
   customMonths: string | null;
   isActive: boolean | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export type CashflowNodeKind =
@@ -119,6 +123,93 @@ const monthly = (
   customMonths: string | null,
 ): number => calculateMonthlyAmount(toNum(amount), frequency, customMonths);
 
+/** Parse a YYYY-MM-DD string as a local date (no TZ shift). */
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/**
+ * Per-target-month flow for a row. Unlike `calculateMonthlyAmount` (which
+ * averages everything to a monthly equivalent), this returns the actual
+ * amount that contributes to the given target month — useful when the chart
+ * is showing "what does my cashflow look like in May 2026?" rather than
+ * "what's my typical monthly flow?".
+ *
+ * Semantics:
+ *   monthly         → full amount
+ *   yearly          → 1/12 of amount (assumed paid pro-rata throughout the year)
+ *   quarterly       → 1/3 of amount
+ *   semi-yearly     → 1/6 of amount
+ *   weekly          → amount × 52 / 12
+ *   bi-weekly       → amount × 26 / 12
+ *   one-time        → full amount iff startDate's month matches target
+ *   custom          → full amount iff target month is in customMonths array
+ *
+ * Returns 0 when the row's start/end dates exclude the target month.
+ */
+function monthlyForTargetMonth(opts: {
+  amount: string;
+  frequency: string;
+  customMonths: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  targetYear: number;
+  targetMonth: number; // 1-12
+}): number {
+  const amt = toNum(opts.amount);
+  if (amt <= 0) return 0;
+
+  const monthStart = new Date(opts.targetYear, opts.targetMonth - 1, 1);
+  const monthEnd = new Date(opts.targetYear, opts.targetMonth, 0);
+
+  if (opts.startDate) {
+    const start = parseLocalDate(opts.startDate);
+    if (start > monthEnd) return 0;
+  }
+  if (opts.endDate) {
+    const end = parseLocalDate(opts.endDate);
+    if (end < monthStart) return 0;
+  }
+
+  const freq = opts.frequency.toLowerCase();
+  switch (freq) {
+    case "monthly":
+      return amt;
+    case "yearly":
+    case "annual":
+      return amt / 12;
+    case "quarterly":
+      return amt / 3;
+    case "semi-yearly":
+      return amt / 6;
+    case "weekly":
+      return (amt * 52) / 12;
+    case "bi-weekly":
+    case "biweekly":
+      return (amt * 26) / 12;
+    case "one-time": {
+      if (!opts.startDate) return 0;
+      const start = parseLocalDate(opts.startDate);
+      return start.getFullYear() === opts.targetYear &&
+        start.getMonth() + 1 === opts.targetMonth
+        ? amt
+        : 0;
+    }
+    case "custom": {
+      if (!opts.customMonths) return 0;
+      try {
+        const months = JSON.parse(opts.customMonths) as number[];
+        return months.includes(opts.targetMonth) ? amt : 0;
+      } catch {
+        return 0;
+      }
+    }
+    default:
+      return 0;
+  }
+}
+
 /** Past / future incomes don't belong in *this month's* cashflow. */
 function isCurrentIncome(inc: CashflowIncomeInput): boolean {
   if (inc.isActive === false) return false;
@@ -130,11 +221,41 @@ const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 /**
  * Build the cashflow graph. Pure — same inputs always yield the same model.
+ *
+ * When `targetMonth` is supplied, values are computed for that specific
+ * month (one-time rows count only when they fall in it; custom-month rows
+ * count only when the target month is in their schedule; start/end dates
+ * exclude rows outside the window). When `targetMonth` is undefined, the
+ * legacy "typical monthly" averaging via `calculateMonthlyAmount` is used.
  */
 export function buildCashflowModel(
   incomes: CashflowIncomeInput[],
   expenses: CashflowExpenseInput[],
+  targetMonth?: { year: number; month: number }, // month is 1-12
 ): CashflowModel {
+  // Pick the amount calculator once per call. The legacy path stays for
+  // callers that don't care about a specific month (tests, classic view).
+  const amountFor = (row: {
+    amount: string;
+    frequency: string;
+    customMonths: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
+  }): number => {
+    if (!targetMonth) {
+      return monthly(row.amount, row.frequency, row.customMonths);
+    }
+    return monthlyForTargetMonth({
+      amount: row.amount,
+      frequency: row.frequency,
+      customMonths: row.customMonths,
+      startDate: row.startDate,
+      endDate: row.endDate,
+      targetYear: targetMonth.year,
+      targetMonth: targetMonth.month,
+    });
+  };
+
   // --- Income side (gross) + CPF derivation -------------------------------
   const incomeNodes: CashflowNode[] = [];
   let totalGross = 0;
@@ -142,16 +263,21 @@ export function buildCashflowModel(
 
   for (const inc of incomes) {
     if (!isCurrentIncome(inc)) continue;
-    const gross = monthly(inc.amount, inc.frequency, inc.customMonths);
+    const gross = amountFor(inc);
     if (gross <= 0) continue;
 
     // Employee CPF = gross − net take-home (employer CPF is excluded as it
     // never lands as spendable cash). Only when the income is CPF-subject and
-    // a net figure is stored.
+    // a net figure is stored. Scale the stored CPF by the same ratio as the
+    // amount so per-month targets stay self-consistent (e.g. a yearly bonus
+    // that contributes 1/12 also contributes 1/12 of its CPF deduction).
     let cpf = 0;
     if (inc.subjectToCpf && inc.netTakeHome != null) {
-      const net = monthly(inc.netTakeHome, inc.frequency, inc.customMonths);
-      cpf = Math.max(0, gross - net);
+      const rawGross = toNum(inc.amount);
+      const ratio = rawGross > 0 ? gross / rawGross : 0;
+      const netRaw = toNum(inc.netTakeHome);
+      const cpfRaw = Math.max(0, rawGross - netRaw);
+      cpf = cpfRaw * ratio;
     }
 
     totalGross += gross;
@@ -173,7 +299,7 @@ export function buildCashflowModel(
 
   for (const exp of expenses) {
     if (exp.isActive === false) continue;
-    const amt = monthly(exp.amount, exp.frequency, exp.customMonths);
+    const amt = amountFor(exp);
     if (amt <= 0) continue; // one-time / zero rows drop out
 
     const name = exp.category?.trim() || "Uncategorized";
