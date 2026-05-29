@@ -22,6 +22,10 @@ interface PageHeaderProps {
  * pt-0 (no app-shell header to clear), so the negative margin zeroes out
  * too — otherwise the header would scroll up past the column edge.
  *
+ * Uses the custom `desktop:` variant (width ≥ 768 AND height ≥ 600) instead
+ * of `md:` so phone-landscape (width-passes, height-fails) stays on the
+ * mobile sticky offset and below the still-visible mobile shell header.
+ *
  * Negative horizontal margins (-mx-*) bleed the bar to the edges of the
  * main column container.
  *
@@ -30,7 +34,7 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
   return (
-    <div className="sticky top-[70px] md:top-0 z-30 bg-background border-b border-border/20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 md:mt-0">
+    <div className="sticky top-[70px] desktop:top-0 z-30 bg-background border-b border-border/20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 desktop:mt-0">
       <div className="flex items-center justify-between gap-4 py-2">
         <h1 className="text-[17px] font-display font-medium tracking-tight text-foreground">
           {title}

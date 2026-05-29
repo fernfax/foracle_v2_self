@@ -25,6 +25,13 @@ interface DashboardShellProps {
 const SIDEBAR_W_EXPANDED = 260;
 const SIDEBAR_W_COLLAPSED = 72;
 
+// Width-only checks (≥ 768px) treat phones in landscape as desktop, which
+// is wrong — a 932×430 iPhone has no room for a sidebar + content. Require
+// BOTH width AND height so phones in landscape stay on the mobile layout
+// (bottom tabs) while tablets (≥ 600px tall) still get the sidebar.
+const DESKTOP_MIN_WIDTH = 768;
+const DESKTOP_MIN_HEIGHT = 600;
+
 function useIsDesktop() {
   // Default to true for SSR — corrected on client mount.
   const [isDesktop, setIsDesktop] = useState(true);
@@ -33,12 +40,21 @@ function useIsDesktop() {
   useEffect(() => {
     setMounted(true);
     const checkIsDesktop = () => {
-      setIsDesktop(window.innerWidth >= 768);
+      setIsDesktop(
+        window.innerWidth >= DESKTOP_MIN_WIDTH &&
+        window.innerHeight >= DESKTOP_MIN_HEIGHT
+      );
     };
 
     checkIsDesktop();
     window.addEventListener("resize", checkIsDesktop);
-    return () => window.removeEventListener("resize", checkIsDesktop);
+    // Orientation changes on iOS sometimes fire before innerWidth/Height
+    // settle, so listen to that explicitly too.
+    window.addEventListener("orientationchange", checkIsDesktop);
+    return () => {
+      window.removeEventListener("resize", checkIsDesktop);
+      window.removeEventListener("orientationchange", checkIsDesktop);
+    };
   }, []);
 
   return mounted ? isDesktop : true;
@@ -69,10 +85,11 @@ function DashboardContent({ children }: { children: ReactNode }) {
 
       {/* Main column — the min-w-0 prevents grid items from refusing to shrink below their content size */}
       <div className="min-w-0 flex flex-col">
-        {/* Header — mobile only. Desktop has the sidebar (logo + avatar); the
-            "Install on iPhone" action moved into the floating HelpButton, so
-            the desktop header had nothing left to render. */}
-        <header className="sticky top-0 z-40 border-b border-border/30 bg-background/95 md:hidden">
+        {/* Header — mobile only. Driven by the JS `isDesktop` check rather
+            than `md:hidden` so phone-landscape (width ≥ 768 but height < 600)
+            still gets the mobile header + bottom nav layout. */}
+        {!isDesktop && (
+        <header className="sticky top-0 z-40 border-b border-border/30 bg-background/95">
           <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-[70px] flex items-center">
             <Link href="/overview" className="flex items-center">
               <Image
@@ -93,14 +110,17 @@ function DashboardContent({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
+        )}
 
         {/* Main Content — contain layout so internal reflows don't bubble to the grid wrapper */}
         <div className="flex-1 [contain:layout_paint]">
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Desktop has no top header anymore — let page headers sit flush
-                against the top edge. Mobile keeps the standard top padding
-                because its header is rendered above. */}
-            <main id="main" className="pt-6 sm:pt-8 md:pt-0 pb-6 sm:pb-8">{children}</main>
+                against the top edge. Mobile (incl. phone-landscape) keeps the
+                standard top padding because its header is rendered above. The
+                `desktop:` variant requires both width and height, so phone
+                landscape stays in mobile layout — see globals.css. */}
+            <main id="main" className="pt-6 sm:pt-8 desktop:pt-0 pb-6 sm:pb-8">{children}</main>
           </div>
         </div>
       </div>
