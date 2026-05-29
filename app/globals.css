@@ -2,6 +2,20 @@
 @config "../tailwind.config.ts";
 
 /*
+ * Custom variant: `desktop:*` only activates when BOTH width ≥ 768px AND
+ * height ≥ 600px. The default `md:*` checks width only, which treats a
+ * phone in landscape (e.g. iPhone 14 Pro Max at 932×430) as desktop and
+ * gives it a sidebar that can't fit. The height clause keeps phones in
+ * landscape on the mobile layout while real tablets (still ≥ 600 tall)
+ * get the sidebar.
+ */
+@custom-variant desktop {
+  @media (min-width: 768px) and (min-height: 600px) {
+    @slot;
+  }
+}
+
+/*
   Foracle design tokens — see /design_guide/design_guide.md.
   Two-layer system:
     1) Brand vars (--brand-*, --p, --g, --go, --tl, --err, --cr, --h, --h2, --h3, --dk)
@@ -256,7 +270,7 @@
     display: block;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 768px) and (min-height: 600px) {
     .sidebar-nav {
       display: flex;
     }
