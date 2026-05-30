@@ -238,8 +238,8 @@ INSERT INTO policies (
 SELECT
   'seed_pol_evan_life',
   :EVAN_USER, :EVAN_FAMILY, fm.id,
-  'Manulife', 'life', 'active',
-  '2020-01-01', '245', 'monthly', 25,
+  'Manulife', 'Whole Life', 'Active',
+  '2020-01-01', '245', 'Monthly', 25,
   'Seed — whole life', true, now(), now()
 FROM family_members fm
 WHERE fm.family_id = :EVAN_FAMILY
@@ -255,8 +255,8 @@ INSERT INTO policies (
 SELECT
   'seed_pol_evan_ci',
   :EVAN_USER, :EVAN_FAMILY, fm.id,
-  'AIA', 'health', 'active',
-  '2021-06-01', '120', 'monthly', 30,
+  'AIA', 'Critical Illness', 'Active',
+  '2021-06-01', '120', 'Monthly', 30,
   'Seed — critical illness', true, now(), now()
 FROM family_members fm
 WHERE fm.family_id = :EVAN_FAMILY
@@ -272,8 +272,8 @@ INSERT INTO policies (
 SELECT
   'seed_pol_bei_life',
   :EVAN_USER, :EVAN_FAMILY, fm.id,
-  'Prudential', 'life', 'active',
-  '2022-04-01', '180', 'monthly', 25,
+  'Prudential', 'Whole Life', 'Active',
+  '2022-04-01', '180', 'Monthly', 25,
   'Seed — whole life Bei Yu', true, now(), now()
 FROM family_members fm
 WHERE fm.family_id = :EVAN_FAMILY
@@ -289,8 +289,8 @@ INSERT INTO policies (
 SELECT
   'seed_pol_elea_health',
   :EVAN_USER, :EVAN_FAMILY, fm.id,
-  'Great Eastern', 'health', 'active',
-  '2023-01-15', '65', 'monthly', 18,
+  'Great Eastern', 'Hospitalisation Plan', 'Active',
+  '2023-01-15', '65', 'Monthly', 18,
   'Seed — child hospital plan', true, now(), now()
 FROM family_members fm
 WHERE fm.family_id = :EVAN_FAMILY
@@ -305,8 +305,8 @@ INSERT INTO policies (
 SELECT
   'seed_pol_ethel_health',
   :EVAN_USER, :EVAN_FAMILY, fm.id,
-  'Great Eastern', 'health', 'active',
-  '2023-01-15', '65', 'monthly', 18,
+  'Great Eastern', 'Hospitalisation Plan', 'Active',
+  '2023-01-15', '65', 'Monthly', 18,
   'Seed — child hospital plan', true, now(), now()
 FROM family_members fm
 WHERE fm.family_id = :EVAN_FAMILY
@@ -352,11 +352,49 @@ INSERT INTO budget_shifts (
 ON CONFLICT (id) DO NOTHING;
 
 -- ════════════════════════════════════════════════════════════════════════════
+-- 13. Fix-up & policy↔expense linking (idempotent)
+-- ────────────────────────────────────────────────────────────────────────────
+-- An earlier version of this seed used lowercase enums (`'life'`, `'active'`,
+-- `'monthly'`). The UI dropdowns expect canonical title-case strings, so any
+-- row seeded under the old values needs its policy_type / status /
+-- premium_frequency rewritten. Safe to re-run.
+-- ════════════════════════════════════════════════════════════════════════════
+
+UPDATE policies SET policy_type = 'Whole Life',          status = 'Active', premium_frequency = 'Monthly', updated_at = now() WHERE id = 'seed_pol_evan_life';
+UPDATE policies SET policy_type = 'Critical Illness',    status = 'Active', premium_frequency = 'Monthly', updated_at = now() WHERE id = 'seed_pol_evan_ci';
+UPDATE policies SET policy_type = 'Whole Life',          status = 'Active', premium_frequency = 'Monthly', updated_at = now() WHERE id = 'seed_pol_bei_life';
+UPDATE policies SET policy_type = 'Hospitalisation Plan', status = 'Active', premium_frequency = 'Monthly', updated_at = now() WHERE id = 'seed_pol_elea_health';
+UPDATE policies SET policy_type = 'Hospitalisation Plan', status = 'Active', premium_frequency = 'Monthly', updated_at = now() WHERE id = 'seed_pol_ethel_health';
+
+-- Auto-generated Insurance expenses, one per policy. The expense.frequency
+-- value stays lowercase per the expense form's contract (UI shows "Monthly"
+-- via a label, stores "monthly" in the value).
+INSERT INTO expenses (
+  id, user_id, family_id, linked_policy_id, name, category, expense_category,
+  amount, frequency, description, is_active, tracked_in_budget,
+  created_at, updated_at
+) VALUES
+  ('seed_pol_exp_evan_life',    :EVAN_USER, :EVAN_FAMILY, 'seed_pol_evan_life',    'Whole Life - Manulife',        'Insurance', 'current-recurring', '245', 'monthly', 'Auto-generated from policy', true, true, now(), now()),
+  ('seed_pol_exp_evan_ci',      :EVAN_USER, :EVAN_FAMILY, 'seed_pol_evan_ci',      'Critical Illness - AIA',       'Insurance', 'current-recurring', '120', 'monthly', 'Auto-generated from policy', true, true, now(), now()),
+  ('seed_pol_exp_bei_life',     :EVAN_USER, :EVAN_FAMILY, 'seed_pol_bei_life',     'Whole Life - Prudential',      'Insurance', 'current-recurring', '180', 'monthly', 'Auto-generated from policy', true, true, now(), now()),
+  ('seed_pol_exp_elea_health',  :EVAN_USER, :EVAN_FAMILY, 'seed_pol_elea_health',  'Hospitalisation Plan - Great Eastern (Elea)',  'Insurance', 'current-recurring', '65', 'monthly', 'Auto-generated from policy', true, true, now(), now()),
+  ('seed_pol_exp_ethel_health', :EVAN_USER, :EVAN_FAMILY, 'seed_pol_ethel_health', 'Hospitalisation Plan - Great Eastern (Ethel)', 'Insurance', 'current-recurring', '65', 'monthly', 'Auto-generated from policy', true, true, now(), now())
+ON CONFLICT (id) DO NOTHING;
+
+-- Close the other side of the link.
+UPDATE policies SET linked_expense_id = 'seed_pol_exp_evan_life',    updated_at = now() WHERE id = 'seed_pol_evan_life'    AND (linked_expense_id IS NULL OR linked_expense_id <> 'seed_pol_exp_evan_life');
+UPDATE policies SET linked_expense_id = 'seed_pol_exp_evan_ci',      updated_at = now() WHERE id = 'seed_pol_evan_ci'      AND (linked_expense_id IS NULL OR linked_expense_id <> 'seed_pol_exp_evan_ci');
+UPDATE policies SET linked_expense_id = 'seed_pol_exp_bei_life',     updated_at = now() WHERE id = 'seed_pol_bei_life'     AND (linked_expense_id IS NULL OR linked_expense_id <> 'seed_pol_exp_bei_life');
+UPDATE policies SET linked_expense_id = 'seed_pol_exp_elea_health',  updated_at = now() WHERE id = 'seed_pol_elea_health'  AND (linked_expense_id IS NULL OR linked_expense_id <> 'seed_pol_exp_elea_health');
+UPDATE policies SET linked_expense_id = 'seed_pol_exp_ethel_health', updated_at = now() WHERE id = 'seed_pol_ethel_health' AND (linked_expense_id IS NULL OR linked_expense_id <> 'seed_pol_exp_ethel_health');
+
+-- ════════════════════════════════════════════════════════════════════════════
 -- Post-flight: row counts of seeded data
 -- ════════════════════════════════════════════════════════════════════════════
 \echo
 \echo === Post-flight: seeded row counts ===
 SELECT 'family_members'         AS tbl, count(*) FROM family_members         WHERE id LIKE 'seed_%'
+UNION ALL SELECT 'policies w/ linked expense', count(*) FROM policies         WHERE id LIKE 'seed_pol_%' AND linked_expense_id IS NOT NULL
 UNION ALL SELECT 'incomes',               count(*) FROM incomes              WHERE id LIKE 'seed_%'
 UNION ALL SELECT 'current_holdings',      count(*) FROM current_holdings     WHERE id LIKE 'seed_%'
 UNION ALL SELECT 'holding_amount_history', count(*) FROM holding_amount_history WHERE id LIKE 'seed_%'
