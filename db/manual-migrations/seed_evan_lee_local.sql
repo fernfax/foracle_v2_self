@@ -91,6 +91,50 @@ WHERE fm.family_id = :EVAN_FAMILY
   AND fm.relationship = 'Spouse'
 ON CONFLICT (id) DO NOTHING;
 
+-- Past income (Bei Yu's previous role, ended 2023-12). Tests past-income
+-- handling in the timeline + beta view.
+INSERT INTO incomes (
+  id, user_id, family_id, family_member_id, name, category, income_category,
+  amount, frequency, subject_to_cpf, description,
+  start_date, end_date, is_active, created_at, updated_at
+)
+SELECT
+  'seed_inc_bei_prev_job',
+  :EVAN_USER, :EVAN_FAMILY, fm.id,
+  'Previous Job (Bei Yu)', 'salary', 'past-recurring',
+  '4500.00', 'monthly',
+  true,
+  'Seed — historical salary, ended Dec 2023',
+  '2022-01-01', '2023-12-31', false,
+  now(), now()
+FROM family_members fm
+WHERE fm.family_id = :EVAN_FAMILY
+  AND fm.name = 'Bei Yu'
+  AND fm.relationship = 'Spouse'
+ON CONFLICT (id) DO NOTHING;
+
+-- Yearly bonus (Evan). Tests yearly-frequency normalisation to monthly in
+-- the beta copy below.
+INSERT INTO incomes (
+  id, user_id, family_id, family_member_id, name, category, income_category,
+  amount, frequency, subject_to_cpf, description,
+  start_date, is_active, created_at, updated_at
+)
+SELECT
+  'seed_inc_evan_bonus',
+  :EVAN_USER, :EVAN_FAMILY, fm.id,
+  'Year-End Bonus', 'salary', 'current-recurring',
+  '30000.00', 'yearly',
+  false,
+  'Seed — annual bonus, paid Dec',
+  '2024-12-01', true,
+  now(), now()
+FROM family_members fm
+WHERE fm.family_id = :EVAN_FAMILY
+  AND fm.relationship = 'Self'
+  AND fm.clerk_user_id = :EVAN_USER
+ON CONFLICT (id) DO NOTHING;
+
 -- ════════════════════════════════════════════════════════════════════════════
 -- 3. Current Holdings + initial history snapshot
 -- ════════════════════════════════════════════════════════════════════════════
@@ -389,6 +433,83 @@ UPDATE policies SET linked_expense_id = 'seed_pol_exp_elea_health',  updated_at 
 UPDATE policies SET linked_expense_id = 'seed_pol_exp_ethel_health', updated_at = now() WHERE id = 'seed_pol_ethel_health' AND (linked_expense_id IS NULL OR linked_expense_id <> 'seed_pol_exp_ethel_health');
 
 -- ════════════════════════════════════════════════════════════════════════════
+-- 14. Replicate incomes → incomes_beta
+-- ────────────────────────────────────────────────────────────────────────────
+-- incomes_beta drops the `frequency` + `custom_months` columns (beta assumes
+-- monthly-only) and uses a simpler 3-value income_category (past|current|
+-- future). For every row in Evan's family's `incomes`, copy across with
+-- amount + CPF fields scaled to their monthly-equivalent value, and the
+-- income_category collapsed to the beta enum.
+--
+-- Mapping ratios:
+--   monthly        ×1
+--   yearly         ÷12
+--   quarterly      ÷3
+--   weekly         ×52/12
+--   bi-weekly      ×26/12
+--   custom         × (count of selected months) / 12
+--   one-time       skipped (ratio = 0)
+--
+-- Beta row IDs are `beta_<original_id>` so the replication is idempotent and
+-- easy to spot. Re-runs use ON CONFLICT DO NOTHING (first replication wins;
+-- to re-sync after editing incomes, DELETE FROM incomes_beta WHERE id LIKE
+-- 'beta_%' first).
+-- ════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO incomes_beta (
+  id, user_id, family_id, family_member_id, name, category, income_category,
+  amount, start_date, end_date,
+  subject_to_cpf, account_for_bonus, bonus_groups,
+  employee_cpf_contribution, employer_cpf_contribution, net_take_home,
+  cpf_ordinary_account, cpf_special_account, cpf_medisave_account,
+  description, past_income_history, future_milestones,
+  account_for_future_change, is_active, created_at, updated_at
+)
+SELECT
+  'beta_' || i.id,
+  i.user_id, i.family_id, i.family_member_id, i.name, i.category,
+  CASE
+    WHEN i.income_category LIKE 'past%'   THEN 'past'
+    WHEN i.income_category LIKE 'future%' THEN 'future'
+    ELSE 'current'
+  END,
+  ROUND((i.amount * ratio.r)::numeric, 2),
+  i.start_date, i.end_date,
+  i.subject_to_cpf, i.account_for_bonus, i.bonus_groups,
+  CASE WHEN i.employee_cpf_contribution IS NULL THEN NULL ELSE ROUND((i.employee_cpf_contribution * ratio.r)::numeric, 2) END,
+  CASE WHEN i.employer_cpf_contribution IS NULL THEN NULL ELSE ROUND((i.employer_cpf_contribution * ratio.r)::numeric, 2) END,
+  CASE WHEN i.net_take_home              IS NULL THEN NULL ELSE ROUND((i.net_take_home * ratio.r)::numeric, 2) END,
+  CASE WHEN i.cpf_ordinary_account       IS NULL THEN NULL ELSE ROUND((i.cpf_ordinary_account * ratio.r)::numeric, 2) END,
+  CASE WHEN i.cpf_special_account        IS NULL THEN NULL ELSE ROUND((i.cpf_special_account * ratio.r)::numeric, 2) END,
+  CASE WHEN i.cpf_medisave_account       IS NULL THEN NULL ELSE ROUND((i.cpf_medisave_account * ratio.r)::numeric, 2) END,
+  COALESCE(i.description, '') || ' (replicated from incomes ' || i.id || ')',
+  i.past_income_history, i.future_milestones,
+  i.account_for_future_change, i.is_active,
+  now(), now()
+FROM incomes i
+CROSS JOIN LATERAL (
+  SELECT CASE LOWER(COALESCE(i.frequency, 'monthly'))
+    WHEN 'monthly'    THEN 1.0
+    WHEN 'yearly'     THEN 1.0/12.0
+    WHEN 'annual'     THEN 1.0/12.0
+    WHEN 'quarterly'  THEN 1.0/3.0
+    WHEN 'weekly'     THEN 52.0/12.0
+    WHEN 'bi-weekly'  THEN 26.0/12.0
+    WHEN 'biweekly'   THEN 26.0/12.0
+    WHEN 'custom'     THEN
+      CASE WHEN i.custom_months IS NOT NULL
+        THEN jsonb_array_length(i.custom_months::jsonb)::numeric / 12.0
+        ELSE 1.0
+      END
+    WHEN 'one-time'   THEN 0
+    ELSE 1.0
+  END AS r
+) AS ratio
+WHERE i.family_id = :EVAN_FAMILY
+  AND ratio.r > 0
+ON CONFLICT (id) DO NOTHING;
+
+-- ════════════════════════════════════════════════════════════════════════════
 -- Post-flight: row counts of seeded data
 -- ════════════════════════════════════════════════════════════════════════════
 \echo
@@ -396,6 +517,7 @@ UPDATE policies SET linked_expense_id = 'seed_pol_exp_ethel_health', updated_at 
 SELECT 'family_members'         AS tbl, count(*) FROM family_members         WHERE id LIKE 'seed_%'
 UNION ALL SELECT 'policies w/ linked expense', count(*) FROM policies         WHERE id LIKE 'seed_pol_%' AND linked_expense_id IS NOT NULL
 UNION ALL SELECT 'incomes',               count(*) FROM incomes              WHERE id LIKE 'seed_%'
+UNION ALL SELECT 'incomes_beta (replicated)', count(*) FROM incomes_beta      WHERE id LIKE 'beta_%' AND family_id = :EVAN_FAMILY
 UNION ALL SELECT 'current_holdings',      count(*) FROM current_holdings     WHERE id LIKE 'seed_%'
 UNION ALL SELECT 'holding_amount_history', count(*) FROM holding_amount_history WHERE id LIKE 'seed_%'
 UNION ALL SELECT 'expense_categories',    count(*) FROM expense_categories   WHERE id LIKE 'seed_%'
@@ -428,4 +550,5 @@ COMMIT;
 -- DELETE FROM expense_categories     WHERE id LIKE 'seed_%';
 -- DELETE FROM incomes                WHERE id LIKE 'seed_%';
 -- DELETE FROM family_members         WHERE id LIKE 'seed_%';
+-- DELETE FROM incomes_beta           WHERE id LIKE 'beta_%';
 -- COMMIT;
