@@ -44,6 +44,8 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /playwright/.cache/
+# captured auth session for local e2e (contains real Clerk cookies — never commit)
+/tests/e2e/.auth/
 
 # Mobile (Expo)
 mobile/node_modules

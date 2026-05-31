@@ -55,6 +55,7 @@ export const families = pgTable("families", {
   // Clerk account does not orphan-delete the family — admin promotion is a separate flow.
   masterUserId: varchar("master_user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }),
   name: varchar("name", { length: 255 }), // Optional household name
+  featureFlags: text("feature_flags"), // JSON map of FlagKey -> boolean overrides for this household; absent key = registry default
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

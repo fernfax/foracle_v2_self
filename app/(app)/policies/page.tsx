@@ -6,8 +6,10 @@ import { redirect } from "next/navigation";
 import { getUserPolicies } from "@/lib/actions/policies";
 import { getUserFamilyMembers } from "@/lib/actions/user";
 import { PoliciesClient } from "./client";
+import { assertFeatureEnabled } from "@/lib/feature-flags/guard";
 
 export default async function PoliciesPage() {
+  await assertFeatureEnabled("policies");
   const user = await currentUser();
 
   if (!user) {

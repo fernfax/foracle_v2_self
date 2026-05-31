@@ -48,6 +48,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, ChevronLeft, ChevronRight, Layers, LineChart, Waves } from "lucide-react";
 import { CHART_PALETTE, STATUS_COLORS } from "@/lib/chart-palette";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import { useFeatureFlag } from "@/components/feature-flags/feature-flag-provider";
 import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
 import {
   buildCashflowModel,
@@ -159,6 +160,10 @@ function colorForKind(kind: ModelNode["kind"]): string {
     case "shortfall": return STATUS_COLORS.danger;
     case "income": return "#3A6B52"; // brand-jungle
     case "hub": return "#2C3E3D"; // forest-mid
+    case "investment":
+      // Same teal as Savings — both are non-discretionary money flows the
+      // user has chosen to set aside rather than spend.
+      return STATUS_COLORS.positive;
     case "category":
     case "item":
       return CHART_PALETTE[0]; // overridden per category in build step
@@ -187,8 +192,30 @@ function truncateLabel(name: string, max: number): string {
 }
 
 export function CashflowSankey({ incomes, expenses, holdings = [], investments = [] }: CashflowSankeyProps) {
-  // Inner toggle between the two views of the same card.
-  const [chartView, setChartView] = useState<"sankey" | "projection">("sankey");
+  // Feature flags gating each of the two views of this card. The provider
+  // wraps every app route, so these are always available here.
+  const sankeyEnabled = useFeatureFlag("dashboard.sankey");
+  const projectionEnabled = useFeatureFlag("dashboard.projection");
+  const bothDisabled = !sankeyEnabled && !projectionEnabled;
+
+  // Inner toggle between the two views of the same card. Guard the initial
+  // selection so it never starts on a disabled view: prefer Sankey when it's
+  // enabled, otherwise fall back to Projection (the both-off case renders a
+  // placeholder and never reads this value).
+  const [chartView, setChartView] = useState<"sankey" | "projection">(() =>
+    sankeyEnabled ? "sankey" : "projection"
+  );
+
+  // If the currently-selected view's flag flips off at runtime (e.g. toggled
+  // in the developer panel), fall back to the still-enabled view so we never
+  // render a disabled chart.
+  useEffect(() => {
+    if (chartView === "sankey" && !sankeyEnabled && projectionEnabled) {
+      setChartView("projection");
+    } else if (chartView === "projection" && !projectionEnabled && sankeyEnabled) {
+      setChartView("sankey");
+    }
+  }, [chartView, sankeyEnabled, projectionEnabled]);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -322,17 +349,22 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
     });
 
     // Layer 2: outflows — assign categorical colors in stable order.
-    // Mark the first category so the renderer can draw a divider above it,
-    // visually separating Savings + CPF (anchored at top) from the spending
-    // categories below.
+    // Mark the first SPENDING category so the renderer can draw a divider
+    // above it, visually separating Savings + CPF + investment-like buckets
+    // (anchored at top) from the discretionary spending categories below.
     let catIdx = 0;
     let firstCategoryMarked = false;
     for (const out of model.outflowNodes) {
-      const isCategory = out.kind === "category";
-      const color = isCategory
+      const isSpending = out.kind === "category";
+      // Investments share the same categorical palette as spending so multiple
+      // investment buckets stay visually distinguishable from each other and
+      // from Savings (which would otherwise be the same teal). Grouping is
+      // conveyed by position + the dashed divider below them.
+      const usesPalette = isSpending || out.kind === "investment";
+      const color = usesPalette
         ? CHART_PALETTE[catIdx++ % CHART_PALETTE.length]
         : colorForKind(out.kind);
-      const isFirstCategory = isCategory && !firstCategoryMarked;
+      const isFirstCategory = isSpending && !firstCategoryMarked;
       if (isFirstCategory) firstCategoryMarked = true;
       addNode({
         id: out.id,
@@ -390,7 +422,9 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
     const n = payload as unknown as SankeyInputNode & { depth: number };
     const isLeft = n.depth === 0;
     const isHub = n.kind === "hub";
-    const isCategory = n.kind === "category";
+    // Both spending categories and investment buckets are drill-downable —
+    // they each have line items in the underlying model.
+    const isCategory = n.kind === "category" || n.kind === "investment";
     const labelX = isLeft ? x - 6 : x + width + 6;
     const labelAnchor = isLeft ? "end" : "start";
 
@@ -399,13 +433,19 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
     const realValue = realValueById.get(n.id) ?? n.value;
 
     const isExpandedSelf = isCategory && expandedId === n.id;
-    // Dim non-focus outflow nodes (other categories, CPF, savings, shortfall)
-    // when something is expanded — sources (incomes) and the hub stay bright
-    // so the user can still see where the money came from.
+    // Dim non-focus outflow nodes (other categories, investments, CPF,
+    // savings, shortfall) when something is expanded — sources (incomes) and
+    // the hub stay bright so the user can still see where the money came from.
     const isDimTarget =
       expandedId !== null &&
       !isExpandedSelf &&
-      (n.kind === "category" || n.kind === "cpf" || n.kind === "savings" || n.kind === "shortfall");
+      (
+        n.kind === "category" ||
+        n.kind === "investment" ||
+        n.kind === "cpf" ||
+        n.kind === "savings" ||
+        n.kind === "shortfall"
+      );
     const nodeOpacity = isDimTarget ? 0.18 : 1;
     // Only opacity needs to animate (drill-down dim/fade). Recharts re-keys
     // every node on layout change, so CSS transitions on geometry never fire
@@ -523,6 +563,23 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
               >
                 <tspan x={labelX} dy={-2} fontWeight={600}>{truncateLabel(n.name, 12)}</tspan>
                 <tspan x={labelX} dy={11} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
+              </text>
+            ) : isLeft ? (
+              // Source (income) labels can be long ("Consulting Side Income").
+              // Stack name over amount so a wide label never overflows the
+              // left margin and gets clipped at the SVG edge.
+              <text
+                x={labelX}
+                y={y + height / 2}
+                textAnchor={labelAnchor}
+                fontSize={12}
+                fontFamily='"Space Grotesk", system-ui, sans-serif'
+                fill="#1C2B2A"
+                style={transition}
+                opacity={isDimTarget ? 0.25 : 1}
+              >
+                <tspan x={labelX} dy={-2} fontWeight={600}>{n.name}</tspan>
+                <tspan x={labelX} dy={15} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
               </text>
             ) : (
               <text
@@ -732,7 +789,20 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
   }
 
   // ---- Render ----------------------------------------------------------
-  const isProjection = chartView === "projection";
+  // Effective view: derive from the flags directly so the very first render
+  // (before the fallback effect commits) already shows an enabled view rather
+  // than flashing a disabled one. When both flags are off we short-circuit to
+  // a placeholder below, so this value is only consulted when at least one is on.
+  const effectiveView: "sankey" | "projection" =
+    chartView === "sankey" && !sankeyEnabled
+      ? "projection"
+      : chartView === "projection" && !projectionEnabled
+      ? "sankey"
+      : chartView;
+  const isProjection = effectiveView === "projection";
+  // Only show the toggle when BOTH views are available; with a single view
+  // enabled there's nothing to switch to, so we render it title-only.
+  const showToggle = sankeyEnabled && projectionEnabled;
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -740,11 +810,19 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
           <div className="min-w-0 flex-1">
             <CardTitle className="text-base font-display flex items-center gap-2">
               <Layers className="h-4 w-4 text-primary" />
-              {isProjection ? "Balance Projection" : "Monthly Cashflow"}
+              {bothDisabled
+                ? "Cashflow"
+                : isProjection
+                ? "Balance Projection"
+                : "Monthly Cashflow"}
             </CardTitle>
             {/* Inline status text — same line height as the default description,
                 so swapping between the two never reflows the chart below. */}
-            {isProjection ? (
+            {bothDisabled ? (
+              <p className="text-xs text-muted-foreground mt-1">
+                Cashflow views are turned off.
+              </p>
+            ) : isProjection ? (
               <p className="text-xs text-muted-foreground mt-1">
                 Projected balance based on current recurring income, expenses, and one-off items.
               </p>
@@ -774,19 +852,24 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
           </div>
 
           <div className="flex flex-col gap-2 sm:items-end shrink-0">
-            {/* Sankey / Projection view toggle. */}
-            <SlidingTabs
-              tabs={[
-                { value: "sankey", label: "Sankey", icon: Waves },
-                { value: "projection", label: "Projection", icon: LineChart },
-              ]}
-              value={chartView}
-              onValueChange={(v) => setChartView(v as "sankey" | "projection")}
-            />
+            {/* Sankey / Projection view toggle. Only the enabled views appear
+                as options; when a single view is enabled the toggle is hidden
+                entirely (nothing to switch to). */}
+            {showToggle && (
+              <SlidingTabs
+                tabs={[
+                  { value: "sankey", label: "Sankey", icon: Waves },
+                  { value: "projection", label: "Projection", icon: LineChart },
+                ]}
+                value={effectiveView}
+                onValueChange={(v) => setChartView(v as "sankey" | "projection")}
+              />
+            )}
 
             {/* Month nav — only meaningful for the Sankey view (the projection
-                has its own time-range controls inside MBG's header). */}
-            {!isProjection && (
+                has its own time-range controls inside MBG's header). Hidden
+                when both views are off (placeholder state). */}
+            {!bothDisabled && !isProjection && (
               <div className="flex items-center gap-2">
                 {!isCurrentMonth && (
                   <Button
@@ -825,7 +908,11 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
         </div>
       </CardHeader>
       <CardContent>
-        {isProjection ? (
+        {bothDisabled ? (
+          <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground text-center px-6">
+            Cashflow views are turned off.
+          </div>
+        ) : isProjection ? (
           // MBG provides its own controls (View Mode, Time Range, Investment
           // toggle), summary stats, and the chart. Rendering in embedded mode
           // skips the Card wrapper so it sits cleanly inside ours.
@@ -879,7 +966,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
                   margin={
                     isNarrow
                       ? { top: 20, right: 80, bottom: 8, left: 80 }
-                      : { top: 12, right: 160, bottom: 8, left: 140 }
+                      : { top: 12, right: 160, bottom: 8, left: 168 }
                   }
                 >
                   <Tooltip content={renderTooltip} />

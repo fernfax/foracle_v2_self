@@ -5,6 +5,7 @@ import { getBudgetVsActual, getBudgetSummary } from "@/lib/actions/budget-calcul
 import { getDailyExpensesForMonth, getTodaySpending } from "@/lib/actions/daily-expenses";
 import { getBudgetShiftsForMonth } from "@/lib/actions/budget-shifts";
 import { BudgetClient } from "./client";
+import { assertFeatureEnabled } from "@/lib/feature-flags/guard";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export const metadata = {
 };
 
 export default async function BudgetPage() {
+  await assertFeatureEnabled("budget");
   const { userId } = await auth();
   if (!userId) {
     redirect("/sign-in");

@@ -49,9 +49,22 @@ export type CashflowNodeKind =
   | "hub"
   | "cpf"
   | "category"
+  | "investment"   // expense category whose name suggests it's an investment
+                   // contribution (e.g. "Investments", "Retirement"). Visually
+                   // grouped with Savings + CPF above the divider so the user
+                   // sees their non-discretionary money allocations together.
   | "savings"
   | "shortfall"
   | "item";
+
+/**
+ * Heuristic: should this expense category be grouped with Savings + CPF
+ * (above the discretionary divider) instead of with normal spending?
+ * Matches common investment / retirement category names case-insensitively.
+ */
+export function isSavingsLikeCategory(categoryName: string): boolean {
+  return /\b(invest|retire|cpf|sa\b|srs\b)/i.test(categoryName);
+}
 
 export interface CashflowNode {
   id: string;
@@ -314,13 +327,24 @@ export function buildCashflowModel(
     totalExpenses += amt;
   }
 
-  const categories = [...catMap.values()]
+  const allCategories = [...catMap.values()]
     .map((c) => ({
       ...c,
       value: round2(c.value),
       items: c.items.sort((a, b) => b.value - a.value),
     }))
     .sort((a, b) => b.value - a.value);
+
+  // Split into savings-like (Investments etc.) and discretionary spend so the
+  // outflow stack groups them: Savings → CPF → savings-like categories →
+  // divider → spending categories. Both groups stay sorted by value desc.
+  const savingsLikeCategories = allCategories.filter((c) =>
+    isSavingsLikeCategory(c.name)
+  );
+  const spendingCategories = allCategories.filter(
+    (c) => !isSavingsLikeCategory(c.name)
+  );
+  const categories = [...savingsLikeCategories, ...spendingCategories];
 
   // --- Balance node: savings (surplus) or shortfall (overspend) -----------
   const net = totalGross - totalCpf - totalExpenses;
@@ -378,7 +402,10 @@ export function buildCashflowModel(
       id: cat.id,
       label: cat.name,
       value: cat.value,
-      kind: "category",
+      // Tag investment-style buckets with a distinct kind so the renderer
+      // knows to group them above the spending divider while keeping the
+      // drill-down behaviour they get as a category.
+      kind: isSavingsLikeCategory(cat.name) ? "investment" : "category",
     });
   }
   for (const node of outflowNodes) {

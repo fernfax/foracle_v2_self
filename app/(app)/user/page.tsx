@@ -10,8 +10,10 @@ import { getCurrentHoldings } from "@/lib/actions/current-holdings";
 import { getUserPolicies } from "@/lib/actions/policies";
 import { getPropertyAssets } from "@/lib/actions/property-assets";
 import { UserHomepageClient } from "./client";
+import { assertFeatureEnabled } from "@/lib/feature-flags/guard";
 
 export default async function UserHomepage() {
+  await assertFeatureEnabled("income");
   const { userId } = await auth();
 
   if (!userId) {

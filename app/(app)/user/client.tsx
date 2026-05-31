@@ -23,6 +23,7 @@ import { CurrentHoldingList } from "@/components/current-holdings/current-holdin
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
 import { CurrentHolding } from "@/lib/actions/current-holdings";
 import { cn } from "@/lib/utils";
+import { useFeatureFlag } from "@/components/feature-flags/feature-flag-provider";
 
 type Policy = {
   id: string;
@@ -117,6 +118,10 @@ interface UserHomepageClientProps {
 export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets }: UserHomepageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // The beta income view is gated behind the `income.beta` feature flag. When
+  // the flag is off the `?view=beta` URL param is ignored and the toggle is
+  // hidden — the standard income view is always shown.
+  const betaEnabled = useFeatureFlag("income.beta");
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "family");
   const [incomeView, setIncomeView] = useState<"standard" | "beta">(
@@ -139,6 +144,10 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
     }
   }, [searchParams]);
 
+  // Flag is the authoritative gate: even if the URL still says ?view=beta,
+  // resolve to the standard view whenever the flag is off.
+  const showBeta = betaEnabled && incomeView === "beta";
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     // Switching tabs always returns to the standard view
@@ -159,7 +168,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
       <PageHeader
         title="User Homepage"
         actions={
-          activeTab === "incomes" ? (
+          activeTab === "incomes" && betaEnabled ? (
             <Button
               type="button"
               variant="outline"
@@ -167,13 +176,13 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
               onClick={handleToggleIncomeView}
               className={cn(
                 "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm",
-                incomeView === "beta"
+                showBeta
                   ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90 hover:border-brand-terracotta"
                   : "border-brand-terracotta/40 bg-brand-terracotta/10 text-brand-terracotta hover:bg-brand-terracotta/15 hover:border-brand-terracotta/60"
               )}
             >
               <Sparkles className="h-4 w-4 mr-1" />
-              {incomeView === "beta" ? "Standard View" : "Beta View"}
+              {showBeta ? "Standard View" : "Beta View"}
             </Button>
           ) : null
         }
@@ -208,7 +217,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         </TabsContent>
 
         <TabsContent value="incomes" className="mt-4">
-          {incomeView === "beta" ? (
+          {showBeta ? (
             <IncomesBetaView
               incomes={initialIncomesBeta}
               familyMembers={initialFamilyMembers}

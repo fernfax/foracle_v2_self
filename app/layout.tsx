@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans, Lora } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
@@ -30,15 +30,30 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "Foracle - Personal Finance Management",
   description: "Take control of your financial future with Foracle",
+  applicationName: "Foracle",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Foracle",
+    statusBarStyle: "default",
+  },
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/logo-72.png", sizes: "72x72", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: [
-      { url: "/logo-144.png", sizes: "144x144", type: "image/png" },
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1C2B2A",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

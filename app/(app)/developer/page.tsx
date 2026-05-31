@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { DEVELOPER_TABLES } from "@/lib/developer-tables";
 import { DeveloperTableAccordion } from "@/components/developer/developer-table-accordion";
 import { DeveloperNav } from "@/components/developer/developer-nav";
+import { FeatureFlagsPanel } from "@/components/developer/feature-flags-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,10 @@ export default function DeveloperPage() {
       </header>
 
       <DeveloperNav />
+
+      <section className="mb-8">
+        <FeatureFlagsPanel />
+      </section>
 
       <div className="space-y-2">
         {DEVELOPER_TABLES.map((t) => (

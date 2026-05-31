@@ -26,18 +26,30 @@ import {
   PanelLeft,
   LineChart,
   Sparkles,
+  ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useFeatureFlags } from "@/components/feature-flags/feature-flag-provider";
+import type { FlagKey } from "@/lib/feature-flags/registry";
 import { SidebarNavItem } from "./sidebar-nav-item";
 import { useSidebar } from "./sidebar-context";
 
-const mainNavItems = [
-  { href: "/overview", label: "Overview", icon: Home },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof Home;
+  flag?: FlagKey;
+  subItems?: { href: string; label: string; icon: typeof Home }[];
+};
+
+const mainNavItems: NavItem[] = [
+  { href: "/overview", label: "Overview", icon: Home, flag: "overview" },
   {
     href: "/user",
     label: "User Homepage",
     icon: User,
+    flag: "income",
     subItems: [
       { href: "/user?tab=family", label: "Family", icon: Users },
       { href: "/user?tab=incomes", label: "Incomes", icon: DollarSign },
@@ -49,6 +61,7 @@ const mainNavItems = [
     href: "/expenses",
     label: "Expenses",
     icon: Wallet,
+    flag: "expenses",
     subItems: [
       { href: "/expenses?tab=expenses", label: "Expenses", icon: Receipt },
       { href: "/expenses?tab=graph", label: "Graph", icon: TrendingUp },
@@ -59,23 +72,29 @@ const mainNavItems = [
     href: "/assets",
     label: "Assets",
     icon: TrendingUp,
+    flag: "assets",
     subItems: [
       { href: "/assets?tab=property", label: "Property", icon: PropertyIcon },
       { href: "/assets?tab=vehicle", label: "Vehicle", icon: Car },
       { href: "/assets?tab=others", label: "Others", icon: Package },
     ],
   },
-  { href: "/policies", label: "Insurance", icon: Shield },
-  { href: "/investments", label: "Investments", icon: LineChart },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/budget", label: "Budget", icon: Calculator },
-  { href: "/assistant", label: "AI Assistant", icon: Sparkles },
+  { href: "/policies", label: "Insurance", icon: Shield, flag: "policies" },
+  { href: "/investments", label: "Investments", icon: LineChart, flag: "investments" },
+  { href: "/goals", label: "Goals", icon: Target, flag: "goals" },
+  { href: "/budget", label: "Budget", icon: Calculator, flag: "budget" },
+  { href: "/assistant", label: "AI Assistant", icon: Sparkles, flag: "assistant" },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isSuperAdmin }: { isSuperAdmin?: boolean } = {}) {
   const { isPinned, setIsPinned, isHovered, setIsHovered, isExpanded } = useSidebar();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const { user, isLoaded } = useUser();
+  const flags = useFeatureFlags();
+
+  const visibleNavItems = mainNavItems.filter(
+    (item) => item.flag === undefined || flags[item.flag]
+  );
 
   const handleToggleSubmenu = (href: string) => {
     setOpenSubmenu(openSubmenu === href ? null : href);
@@ -134,7 +153,7 @@ export function Sidebar() {
 
         {/* Navigation — overflow-x-hidden prevents label overflow from creating horizontal scroll */}
         <nav className="flex-1 pt-6 sm:pt-8 pb-4 space-y-0.5 overflow-y-auto overflow-x-hidden px-3">
-          {mainNavItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <SidebarNavItem
               key={item.href}
               {...item}
@@ -143,6 +162,18 @@ export function Sidebar() {
               onToggleSubmenu={() => handleToggleSubmenu(item.href)}
             />
           ))}
+          {/* Platform-admin link — only rendered for superadmins. Gated by a
+              server-resolved boolean threaded through DashboardShell so the
+              link never appears in the DOM for ordinary users. Sits at the
+              bottom of the main nav, below the flag-filtered items. */}
+          {isSuperAdmin && (
+            <SidebarNavItem
+              href="/admin"
+              label="Admin"
+              icon={ShieldAlert}
+              isExpanded={isExpanded}
+            />
+          )}
         </nav>
 
         {/* Bottom section — pin toggle + user profile */}

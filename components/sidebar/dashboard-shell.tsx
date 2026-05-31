@@ -20,6 +20,7 @@ import type { BackgroundDecor } from "@/lib/services/user-prefs";
 interface DashboardShellProps {
   children: ReactNode;
   backgroundDecor?: BackgroundDecor;
+  isSuperAdmin?: boolean;
 }
 
 const SIDEBAR_W_EXPANDED = 260;
@@ -60,7 +61,13 @@ function useIsDesktop() {
   return mounted ? isDesktop : true;
 }
 
-function DashboardContent({ children }: { children: ReactNode }) {
+function DashboardContent({
+  children,
+  isSuperAdmin,
+}: {
+  children: ReactNode;
+  isSuperAdmin?: boolean;
+}) {
   const { isExpanded } = useSidebar();
   const isDesktop = useIsDesktop();
 
@@ -81,7 +88,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
       >
         Skip to main content
       </a>
-      {isDesktop && <Sidebar />}
+      {isDesktop && <Sidebar isSuperAdmin={isSuperAdmin} />}
 
       {/* Main column — the min-w-0 prevents grid items from refusing to shrink below their content size */}
       <div className="min-w-0 flex flex-col">
@@ -140,6 +147,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
 export function DashboardShell({
   children,
   backgroundDecor = "radial",
+  isSuperAdmin,
 }: DashboardShellProps) {
   return (
     <SidebarProvider>
@@ -150,7 +158,7 @@ export function DashboardShell({
             content but above the parent's bg-background fill. */}
         {backgroundDecor === "radial" && <RadialDecor />}
         {backgroundDecor === "peranakan" && <PeranakanTilesDecor />}
-        <DashboardContent>{children}</DashboardContent>
+        <DashboardContent isSuperAdmin={isSuperAdmin}>{children}</DashboardContent>
       </div>
     </SidebarProvider>
   );

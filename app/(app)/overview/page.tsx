@@ -6,10 +6,12 @@ import { getCurrentHoldings } from "@/lib/actions/current-holdings";
 import { getInvestments } from "@/lib/actions/investments";
 import { getBudgetVsActual } from "@/lib/actions/budget-calculator";
 import { DashboardClient } from "./client";
+import { assertFeatureEnabled } from "@/lib/feature-flags/guard";
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
+  await assertFeatureEnabled("overview");
   const { userId } = await auth();
 
   if (!userId) {
