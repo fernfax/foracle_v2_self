@@ -35,56 +35,34 @@ export async function getCurrentUserAndFamily(): Promise<AuthContext> {
     columns: { id: true, familyId: true },
   });
 
-  if (!userRow) {
+  // True iff this user joined an existing family via invite acceptance. Invitees
+  // inherit the family's setup, so they skip the /onboarding wizard even when
+  // the Clerk webhook hasn't fired yet (local dev).
+  let joinedViaInvite = false;
+  let familyId = userRow?.familyId ?? null;
+
+  // Resolve the family BEFORE materializing the user. `users.family_id` is NOT
+  // NULL in production, so a new user row must be inserted WITH a familyId in one
+  // shot (the old two-step insert-then-backfill violated the constraint). Two
+  // paths, mirroring the Clerk webhook:
+  //   1. Invite acceptance — Clerk public metadata carries a foracleFamilyMemberId.
+  //   2. Self-signup — create a fresh family-of-1 with this user as master.
+  if (!familyId) {
     const clerkUser = await currentUser();
     if (!clerkUser) {
       throw new Error("Unauthorized");
     }
-    await db
-      .insert(users)
-      .values({
-        id: clerkUser.id,
-        email: clerkUser.emailAddresses[0]?.emailAddress || "",
-        firstName: clerkUser.firstName,
-        lastName: clerkUser.lastName,
-        imageUrl: clerkUser.imageUrl,
-        onboardingCompleted: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .onConflictDoNothing();
-    userRow = await db.query.users.findFirst({
-      where: eq(users.id, userId),
-      columns: { id: true, familyId: true },
-    });
-  }
 
-  if (!userRow) {
-    throw new Error("Failed to materialize user row");
-  }
-
-  let familyId = userRow.familyId;
-
-  if (!familyId) {
-    // Resolve missing familyId. Two paths:
-    //   1. Clerk public metadata carries a foracleFamilyMemberId from invite acceptance.
-    //   2. No invite metadata → user is a fresh self-signup; create their family-of-1.
-    const clerkUser = await currentUser();
     const invitedRowId =
-      typeof clerkUser?.publicMetadata?.foracleFamilyMemberId === "string"
+      typeof clerkUser.publicMetadata?.foracleFamilyMemberId === "string"
         ? (clerkUser.publicMetadata.foracleFamilyMemberId as string)
         : null;
-
-    // Tracks whether this user came in via an invite. Invitees inherit the
-    // family's setup, so they should not be sent through the onboarding wizard
-    // even when the Clerk webhook hasn't fired yet (local dev).
-    let joinedViaInvite = false;
 
     if (invitedRowId) {
       const invitedRow = await db.query.familyMembers.findFirst({
         where: eq(familyMembers.id, invitedRowId),
       });
-      const primaryEmail = clerkUser?.emailAddresses[0]?.emailAddress?.toLowerCase();
+      const primaryEmail = clerkUser.emailAddresses[0]?.emailAddress?.toLowerCase();
       if (
         invitedRow &&
         invitedRow.status === "pending" &&
@@ -107,6 +85,8 @@ export async function getCurrentUserAndFamily(): Promise<AuthContext> {
     }
 
     if (!familyId) {
+      // Self-signup: family-of-1. `families.masterUserId` FK is `set null`, so
+      // creating the family before the user row is fine.
       familyId = `fam_${userId}`;
       await db
         .insert(families)
@@ -119,16 +99,44 @@ export async function getCurrentUserAndFamily(): Promise<AuthContext> {
         .onConflictDoNothing();
     }
 
-    await db
-      .update(users)
-      .set({
-        familyId,
-        // Mark invitees as onboarded so the /onboarding wizard is skipped —
-        // only the first user of a family (the master) needs to run it.
-        ...(joinedViaInvite ? { onboardingCompleted: true } : {}),
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId));
+    if (!userRow) {
+      // Materialize the user row WITH the resolved familyId (webhook fallback
+      // for local dev / webhook races).
+      await db
+        .insert(users)
+        .values({
+          id: clerkUser.id,
+          email: clerkUser.emailAddresses[0]?.emailAddress || "",
+          firstName: clerkUser.firstName,
+          lastName: clerkUser.lastName,
+          imageUrl: clerkUser.imageUrl,
+          onboardingCompleted: joinedViaInvite,
+          familyId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .onConflictDoNothing();
+    } else {
+      // User row exists but has no familyId (mid-rollout backfill). Attach it.
+      await db
+        .update(users)
+        .set({
+          familyId,
+          // Mark invitees as onboarded — only the family master runs the wizard.
+          ...(joinedViaInvite ? { onboardingCompleted: true } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+    }
+
+    userRow = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: { id: true, familyId: true },
+    });
+  }
+
+  if (!userRow || !familyId) {
+    throw new Error("Failed to materialize user row");
   }
 
   const family = await db.query.families.findFirst({
