@@ -38,9 +38,11 @@ export const users = pgTable("users", {
   // App-shell background style. 'radial' (default) | 'peranakan' | 'none'.
   // Light-mode visual only; dark mode ignores this and shows no decor.
   backgroundDecor: text("background_decor").default("radial"),
-  // familyId: which Family this user belongs to. Nullable during the initial backfill;
-  // a follow-up migration will set NOT NULL once every user has been assigned to a family.
-  familyId: varchar("family_id", { length: 255 }),
+  // familyId: which Family this user belongs to. NOT NULL — the backfill migration
+  // that set this in production has run; every user belongs to exactly one family.
+  // getCurrentUserAndFamily() / the Clerk webhook always resolve a family before
+  // inserting the user row.
+  familyId: varchar("family_id", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

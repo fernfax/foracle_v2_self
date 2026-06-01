@@ -27,8 +27,11 @@ export async function checkOnboardingStatus(ctx: AuthContext): Promise<boolean> 
     columns: { onboardingCompleted: true },
   });
 
-  // Handles the case where Clerk webhook didn't fire in local dev. Same path
-  // the original action took.
+  // Handles the case where Clerk webhook didn't fire in local dev. The caller
+  // passes an AuthContext, which is produced by getCurrentUserAndFamily() — so
+  // the user row (and its family) has already been materialized by the time we
+  // get here. This insert is a defensive fallback only; it reuses ctx.familyId
+  // because users.family_id is NOT NULL.
   if (!user) {
     const clerk = await currentUser();
     if (!clerk) return false;
@@ -41,6 +44,7 @@ export async function checkOnboardingStatus(ctx: AuthContext): Promise<boolean> 
         lastName: clerk.lastName,
         imageUrl: clerk.imageUrl,
         onboardingCompleted: false,
+        familyId: ctx.familyId,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
