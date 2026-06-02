@@ -10,8 +10,95 @@ const CPF_RATES = {
 // CPF Ordinary Wage Ceiling
 const OW_CEILING = 8000;
 
+// Exposed for UI (the OW-ceiling explainer tooltip).
+export const OW_CEILING_AMOUNT = OW_CEILING;
+export const OW_CEILING_YEAR = 2026;
+
+// CPF contribution rate brackets (as % of wage) for display, mirroring
+// CPF_RATES. Effective 1 Jan 2025. Keep in sync with CPF_RATES above.
+export const CPF_RATE_BRACKETS = [
+  { label: "55 and below", employer: 17, employee: 20, total: 37 },
+  { label: "Above 55 to 60", employer: 15.5, employee: 17, total: 32.5 },
+  { label: "Above 60 to 65", employer: 12, employee: 11.5, total: 23.5 },
+  { label: "Above 65 to 70", employer: 9, employee: 7.5, total: 16.5 },
+  { label: "Above 70", employer: 7.5, employee: 5, total: 12.5 },
+] as const;
+
+// Index into CPF_RATE_BRACKETS for a given age.
+export function getCPFBracketIndex(age: number): number {
+  if (age <= 55) return 0;
+  if (age <= 60) return 1;
+  if (age <= 65) return 2;
+  if (age <= 70) return 3;
+  return 4;
+}
+
+// CPF allocation (OA/SA/MA) brackets for display, mirroring
+// CPF_ALLOCATION_RATES. Keep in sync.
+export const CPF_ALLOCATION_BRACKETS = [
+  { label: "35 & below", oa: 0.6217, sa: 0.1622, ma: 0.2162 },
+  { label: "Above 35 to 45", oa: 0.5676, sa: 0.2162, ma: 0.2162 },
+  { label: "Above 45 to 50", oa: 0.5135, sa: 0.2703, ma: 0.2162 },
+  { label: "Above 50 to 55", oa: 0.4324, sa: 0.3514, ma: 0.2162 },
+  { label: "Above 55 to 60", oa: 0.4308, sa: 0.2462, ma: 0.3231 },
+  { label: "Above 60 to 65", oa: 0.3404, sa: 0.1489, ma: 0.5106 },
+  { label: "Above 65", oa: 0.3333, sa: 0.0909, ma: 0.5758 },
+] as const;
+
+// Index into CPF_ALLOCATION_BRACKETS for a given age.
+export function getCPFAllocationBracketIndex(age: number): number {
+  if (age <= 35) return 0;
+  if (age <= 45) return 1;
+  if (age <= 50) return 2;
+  if (age <= 55) return 3;
+  if (age <= 60) return 4;
+  if (age <= 65) return 5;
+  return 6;
+}
+
+// Bonus (Additional Wage) CPF. Bonuses attract CPF only on the part of the
+// Annual Wage Ceiling left after the year's ordinary-wage CPF (OW capped at
+// $8k/month → $96k/yr typical). Returns the CPF-applicable bonus and the
+// employee/employer split at the member's age-based rates.
+export function computeBonusCPF(
+  monthlyGross: number,
+  totalBonusGross: number,
+  age: number | null
+): {
+  annualOrdinaryWage: number;
+  awCeilingRemaining: number;
+  cpfApplicableBonus: number;
+  employee: number;
+  employer: number;
+  employeeRatePct: number;
+  employerRatePct: number;
+} {
+  const annualOrdinaryWage = Math.min(monthlyGross, OW_CEILING) * 12;
+  const awCeilingRemaining = Math.max(
+    0,
+    ANNUAL_WAGE_CEILING - annualOrdinaryWage
+  );
+  const cpfApplicableBonus = Math.max(
+    0,
+    Math.min(totalBonusGross, awCeilingRemaining)
+  );
+  const rates = getCPFRatesByAge(age ?? 30);
+  return {
+    annualOrdinaryWage,
+    awCeilingRemaining,
+    cpfApplicableBonus,
+    employee: cpfApplicableBonus * rates.employee,
+    employer: cpfApplicableBonus * rates.employer,
+    employeeRatePct: rates.employee * 100,
+    employerRatePct: rates.employer * 100,
+  };
+}
+
 // CPF Annual Wage Ceiling
 const ANNUAL_WAGE_CEILING = 102000;
+
+// Annual (Additional Wage) ceiling — exposed for the bonus-tab explainer.
+export const ANNUAL_WAGE_CEILING_AMOUNT = ANNUAL_WAGE_CEILING;
 
 // CPF Allocation Rates (how total CPF is distributed across OA, SA, MA) based on age
 const CPF_ALLOCATION_RATES = {
