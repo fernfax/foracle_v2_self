@@ -15,8 +15,15 @@ import {
   ChevronRight,
   LocateFixed,
   Pencil,
+  CalendarDays,
 } from "lucide-react";
-import { addMonths, format, parseISO, startOfMonth } from "date-fns";
+import {
+  addMonths,
+  differenceInCalendarMonths,
+  format,
+  parseISO,
+  startOfMonth,
+} from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -26,6 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -418,6 +426,38 @@ function buildPlaceholderIncomes(): Income[] {
 // has amount=0 (so buildBarSegments returns an empty array — nothing renders
 // visually) but carries the familyMemberId so handleDrawSave wires the
 // freshly-drawn income to the correct member.
+// Classify a drawn/edited range against the source row as past / current /
+// future, or "unknown" when it straddles today on a row with no current income
+// (the popup then asks the user). Shared by the initial pointer-up detection
+// and by live month-picker edits in the commit popup so the category, the
+// "Will save as X" label, and the saved record never drift apart.
+// Keys are "yyyy-MM".
+function detectDrawCategory(
+  income: Income,
+  startKey: string,
+  endKey: string
+): "past" | "current" | "future" | "unknown" {
+  const todayKey = format(startOfMonth(new Date()), "yyyy-MM");
+  const sourceArchetype = getArchetype(income);
+  const sourceIsCurrent =
+    sourceArchetype === "recurring" ||
+    (income.endDate
+      ? format(startOfMonth(parseISO(income.endDate)), "yyyy-MM") >= todayKey
+      : false);
+  if (sourceIsCurrent) {
+    const sourceStartKey = format(
+      startOfMonth(parseISO(income.startDate)),
+      "yyyy-MM"
+    );
+    if (endKey < sourceStartKey) return "past";
+    if (startKey > todayKey) return "future";
+    return "current";
+  }
+  if (startKey > todayKey) return "future";
+  if (endKey < todayKey) return "past";
+  return "unknown";
+}
+
 function buildGhostIncome(
   familyMember: FamilyMember | null,
   todayIso: string
@@ -997,31 +1037,7 @@ export function IncomesBetaView({
           finalKey > prev.anchorKey ? finalKey : prev.anchorKey;
 
         // Detect past / current / future per the user's rule.
-        const todayKey = format(startOfMonth(new Date()), "yyyy-MM");
-        const sourceArchetype = getArchetype(income);
-        const sourceIsCurrent =
-          sourceArchetype === "recurring" ||
-          (income.endDate
-            ? format(startOfMonth(parseISO(income.endDate)), "yyyy-MM") >= todayKey
-            : false);
-        let detected: "past" | "current" | "future" | "unknown";
-        if (sourceIsCurrent) {
-          const sourceStartKey = format(
-            startOfMonth(parseISO(income.startDate)),
-            "yyyy-MM"
-          );
-          if (endKey < sourceStartKey) detected = "past";
-          else if (startKey > todayKey) detected = "future";
-          else detected = "current";
-        } else if (startKey > todayKey) {
-          detected = "future";
-        } else if (endKey < todayKey) {
-          detected = "past";
-        } else {
-          // Source row has no current income and the new bar straddles today
-          // — let the user choose.
-          detected = "unknown";
-        }
+        const detected = detectDrawCategory(income, startKey, endKey);
 
         setDrawCommit({
           rowIncome: income,
@@ -1133,6 +1149,9 @@ export function IncomesBetaView({
   // bar's current rect, follows along).
   const handleDraftReshape = useCallback(
     (newAnchorKey: string, newEndKey: string) => {
+      const lo = newAnchorKey < newEndKey ? newAnchorKey : newEndKey;
+      const hi = newAnchorKey > newEndKey ? newAnchorKey : newEndKey;
+
       setDrawState((prev) =>
         prev
           ? { ...prev, anchorKey: newAnchorKey, endKey: newEndKey }
@@ -1140,14 +1159,44 @@ export function IncomesBetaView({
       );
       setDrawCommit((prev) => {
         if (!prev) return prev;
-        const lo =
-          newAnchorKey < newEndKey ? newAnchorKey : newEndKey;
-        const hi =
-          newAnchorKey > newEndKey ? newAnchorKey : newEndKey;
-        return { ...prev, startKey: lo, endKey: hi };
+        // Re-detect the category against the new range so the popup's "Will
+        // save as X" label and the eventual save classification stay correct
+        // when the user edits the months (e.g. drags a past bar into the
+        // future). A range that was auto-detected ('past'/'current'/'future')
+        // can re-resolve to another concrete category; one that needs the
+        // user's choice stays 'unknown'.
+        const redetected = detectDrawCategory(prev.rowIncome, lo, hi);
+        return { ...prev, startKey: lo, endKey: hi, detectedCategory: redetected };
       });
+
+      // The dashed bar only renders within the visible window (`cells`), so a
+      // picked month outside it would strand the bar (and its commit popup)
+      // off-screen. If either end falls outside the window — minus a 1-month
+      // padding so the bar isn't flush against the edge — scroll the window to
+      // bring the range into view. `windowOffset` is the source of truth via
+      // `animateTo`. Offset of a month from today's `base` = its
+      // calendar-month difference; a month is visible at column index
+      // `diff - startOffset - windowOffsetMonths`, valid in [0, monthCount-1].
+      const base = startOfMonth(new Date());
+      const loDiff = differenceInCalendarMonths(parseISO(`${lo}-01`), base);
+      const hiDiff = differenceInCalendarMonths(parseISO(`${hi}-01`), base);
+      const firstVisible = tlConfig.startOffset + windowOffsetMonths;
+      const lastVisible = firstVisible + tlConfig.monthCount - 1;
+      const PAD = 1;
+      let nextOffsetMonths = windowOffsetMonths;
+      if (loDiff - PAD < firstVisible) {
+        // Range starts before the window — scroll back so `lo` sits PAD in.
+        nextOffsetMonths = loDiff - PAD - tlConfig.startOffset;
+      } else if (hiDiff + PAD > lastVisible) {
+        // Range ends after the window — scroll forward so `hi` sits PAD in.
+        nextOffsetMonths =
+          hiDiff + PAD - tlConfig.startOffset - (tlConfig.monthCount - 1);
+      }
+      if (nextOffsetMonths !== windowOffsetMonths) {
+        animateTo(nextOffsetMonths);
+      }
     },
-    []
+    [tlConfig.startOffset, tlConfig.monthCount, windowOffsetMonths]
   );
 
   return (
@@ -1509,23 +1558,8 @@ function TimelineHeader({
         <span className="hidden sm:inline-block min-w-[140px] text-right font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {rangeLabel}
         </span>
-        {onToggleEditMode && (
-          <button
-            type="button"
-            onClick={onToggleEditMode}
-            aria-pressed={editMode}
-            aria-label={editMode ? "Exit edit mode" : "Enter edit mode"}
-            className={cn(
-              "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-semibold uppercase tracking-wider transition-colors shadow-sm",
-              editMode
-                ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90"
-                : "border-border/40 bg-card text-foreground hover:bg-muted"
-            )}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            {editMode ? "Editing…" : "Edit"}
-          </button>
-        )}
+        {/* The edit toggle now floats at the bottom of the viewport (see
+            FloatingEditButton), so it's removed from this header row. */}
         <div className="inline-flex items-center rounded-full border border-border/40 bg-card p-0.5 shadow-sm">
           <button
             type="button"
@@ -1751,7 +1785,15 @@ function TimelineStudio({
       <div
         ref={dawRef}
         style={tsStyle}
-        className="relative rounded-2xl border border-border/30 bg-card shadow-sm overflow-hidden overscroll-x-contain"
+        className={cn(
+          // bg-card stays opaque in BOTH states — the card must never go
+          // translucent (the app-shell wallpaper would show through). The
+          // edit-mode difference is expressed only via the ring/border/shadow.
+          "relative rounded-2xl border bg-card overflow-hidden overscroll-x-contain transition-[box-shadow,border-color] duration-200",
+          editMode
+            ? "border-brand-terracotta ring-2 ring-brand-terracotta/50 shadow-lg shadow-brand-terracotta/10"
+            : "border-border/30 shadow-sm"
+        )}
       >
         {/* Time-range scale slider — overlaid at the top-right of the
             river graph card. Desktop only; mobile keeps the compact
@@ -2063,12 +2105,54 @@ function TimelineStudio({
             endIdx={eIdx}
             cellsLength={cells.length}
             subMonthFraction={subMonthFraction}
+            onReshape={onDraftReshape}
             onSave={onDrawSave}
             onDiscard={onDrawDiscard}
           />
         );
       })()}
+
+      {/* Floating edit toggle — portaled to document.body so it's anchored to
+          the viewport (the page content sits inside a `contain: layout paint`
+          wrapper that would otherwise capture `position: fixed`). Stacks just
+          above the global "?" help button (bottom-24 / md:bottom-6). */}
+      {onToggleEditMode && <FloatingEditButton editMode={editMode} onToggle={onToggleEditMode} />}
     </div>
+  );
+}
+
+// Viewport-fixed edit-mode toggle for the Timeline Studio. Portaled to body so
+// `position: fixed` resolves against the viewport, then positioned just above
+// the "?" help button. Brighter/filled when edit mode is on so the on/off
+// state reads at a glance, matching the canvas's edit-mode highlight.
+function FloatingEditButton({
+  editMode,
+  onToggle,
+}: {
+  editMode: boolean;
+  onToggle: () => void;
+}) {
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={editMode}
+      aria-label={editMode ? "Exit edit mode" : "Enter edit mode"}
+      className={cn(
+        "fixed right-6 z-40 inline-flex h-12 items-center gap-2 rounded-full px-5 text-xs font-semibold uppercase tracking-wider shadow-lg backdrop-blur-sm transition-colors",
+        // Sit just above the "?" help button: it's bottom-24 on mobile,
+        // md:bottom-6 on desktop. Offset one button-height up at each.
+        "bottom-40 md:bottom-20",
+        editMode
+          ? "bg-brand-terracotta text-white hover:bg-brand-terracotta/90 ring-2 ring-brand-terracotta/40"
+          : "border border-border/40 bg-background/95 text-foreground hover:bg-accent"
+      )}
+    >
+      <Pencil className="h-4 w-4" />
+      {editMode ? "Editing…" : "Edit"}
+    </button>,
+    document.body
   );
 }
 
@@ -2402,6 +2486,7 @@ function DrawCommitCard({
   endIdx,
   cellsLength,
   subMonthFraction,
+  onReshape,
   onSave,
   onDiscard,
 }: {
@@ -2416,6 +2501,10 @@ function DrawCommitCard({
   endIdx: number;
   cellsLength: number;
   subMonthFraction: number;
+  // Reshapes the draft: updates BOTH the dashed bar and this popup live, so
+  // changing a month picker moves the bar before save (same path the bar's
+  // drag-resize handles use).
+  onReshape?: (startKey: string, endKey: string) => void;
   onSave: (data: { name: string; amount: number; isCurrent: boolean | null }) => void;
   onDiscard: () => void;
 }) {
@@ -2423,6 +2512,8 @@ function DrawCommitCard({
   const [amount, setAmount] = useState<string>(rowIncome.amount ?? "");
   const [isCurrent, setIsCurrent] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [startCalOpen, setStartCalOpen] = useState(false);
+  const [endCalOpen, setEndCalOpen] = useState(false);
 
   // Imperative position loop. The popup is a fixed-position element that
   // must stay glued to the drawn bar through every kind of motion:
@@ -2542,13 +2633,29 @@ function DrawCommitCard({
     });
   };
 
-  const dateRangeLabel =
-    startKey === endKey
-      ? format(parseISO(`${startKey}-01`), "MMM yyyy")
-      : `${format(parseISO(`${startKey}-01`), "MMM yyyy")} → ${format(
-          parseISO(`${endKey}-01`),
-          "MMM yyyy"
-        )}`;
+  // Month pickers use the app-standard Popover + Calendar (matching the income
+  // creator drawer) rather than native <select>s, so the user can navigate to
+  // any month — including far in the past — not just the visible window.
+  // Changing a date clamps so start never passes end, then pushes through
+  // onReshape, which moves the dashed bar live (auto-scrolling the timeline if
+  // the pick lands off-window) and keeps this popup's keys in sync — no save
+  // required to preview.
+  const startDate = parseISO(`${startKey}-01`);
+  const endDate = parseISO(`${endKey}-01`);
+  const handleStartPick = (d: Date | undefined) => {
+    if (!d || !onReshape) return;
+    const newStart = format(startOfMonth(d), "yyyy-MM");
+    const clampedEnd = newStart > endKey ? newStart : endKey;
+    onReshape(newStart, clampedEnd);
+    setStartCalOpen(false);
+  };
+  const handleEndPick = (d: Date | undefined) => {
+    if (!d || !onReshape) return;
+    const newEnd = format(startOfMonth(d), "yyyy-MM");
+    const clampedStart = newEnd < startKey ? newEnd : startKey;
+    onReshape(clampedStart, newEnd);
+    setEndCalOpen(false);
+  };
 
   // Portal to document.body so the fixed-positioned card escapes any
   // ancestor with `contain: layout paint` / `transform` / `will-change`,
@@ -2592,8 +2699,59 @@ function DrawCommitCard({
           }}
         />
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-          New income · {dateRangeLabel}
+          New income
         </p>
+        {onReshape ? (
+          <div className="mt-2 flex items-center gap-1.5">
+            <Popover open={startCalOpen} onOpenChange={setStartCalOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 justify-start gap-1.5 px-2 font-display text-xs"
+                  aria-label="Start month"
+                >
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  {format(startDate, "MMM yyyy")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={handleStartPick}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <span className="text-muted-foreground" aria-hidden>
+              →
+            </span>
+            <Popover open={endCalOpen} onOpenChange={setEndCalOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 justify-start gap-1.5 px-2 font-display text-xs"
+                  aria-label="End month"
+                >
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  {format(endDate, "MMM yyyy")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={handleEndPick}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        ) : null}
         <label className="mt-3 block text-xs font-semibold text-foreground">
           Name
           <input

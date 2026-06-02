@@ -876,10 +876,18 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
                   // the ribbons themselves get the screen width they need.
                   // Stacked labels (renderNode) compensate for the lost
                   // horizontal room.
+                  //
+                  // The left margin reserves the space inflow labels render
+                  // into (income name + amount, drawn left of the bar with
+                  // textAnchor="end"). Long names like "Recurring Side Income
+                  // $2,000" were clipping at the SVG edge against the old 140px
+                  // budget. 220px fits the realistic longest names in full —
+                  // desktop labels are intentionally NOT truncated, so the
+                  // margin is what guarantees they stay visible.
                   margin={
                     isNarrow
                       ? { top: 20, right: 80, bottom: 8, left: 80 }
-                      : { top: 12, right: 160, bottom: 8, left: 140 }
+                      : { top: 12, right: 160, bottom: 8, left: 220 }
                   }
                 >
                   <Tooltip content={renderTooltip} />
