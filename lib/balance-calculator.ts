@@ -1,13 +1,7 @@
 import { parse, format, addMonths, isSameMonth, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import { calculateCPF, calculateBonusCPF } from "./cpf-calculator";
 
-interface FutureMilestone {
-  id: string;
-  targetMonth: string;  // "2025-06" (YYYY-MM format)
-  amount: number;
-  reason?: string;
-  notes?: string;
-}
+import { resolveEffectiveAmount, type FutureMilestone } from "@/lib/future-change";
 
 interface BonusGroup {
   month: number;  // 1-12 (calendar month)
@@ -242,20 +236,21 @@ export function calculateMonthlyBalance(
           const milestones: FutureMilestone[] = JSON.parse(income.futureMilestones);
           const targetPeriod = format(targetMonth, "yyyy-MM");
 
-          // Find the most recent milestone that applies to this month
-          const applicableMilestones = milestones
-            .filter(m => m.targetMonth <= targetPeriod)
-            .sort((a, b) => b.targetMonth.localeCompare(a.targetMonth));
-
-          if (applicableMilestones.length > 0) {
-            amount = applicableMilestones[0].amount;
+          // Resolve the effective amount honouring permanent + temporary
+          // (end-dated) changes — a temporary change reverts to the prior
+          // amount after its endMonth (see lib/future-change).
+          const resolved = resolveEffectiveAmount(amount, milestones, targetPeriod);
+          if (resolved !== amount) {
+            amount = resolved;
             isUsingMilestone = true;
           }
 
-          // If there are future milestones, the income should continue indefinitely
-          // (or at least until well beyond the last milestone for projection purposes)
-          if (milestones.length > 0 && effectiveEndDate) {
-            // Remove end date restriction - income with future milestones continues indefinitely
+          // If there are any PERMANENT future changes, the income continues
+          // indefinitely (the latest permanent amount carries forward), so drop
+          // any end-date restriction for projection. Temporary-only changes
+          // don't extend the income past its real end date.
+          const hasPermanent = milestones.some((m) => !m.endMonth);
+          if (hasPermanent && effectiveEndDate) {
             effectiveEndDate = null;
           }
         } catch {
