@@ -47,6 +47,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   updateIncomeBeta as updateIncome,
   deleteIncomeBeta as deleteIncome,
   createIncomeBeta,
@@ -58,7 +65,13 @@ import {
   TextPillEditor,
   DatePillEditor,
 } from "./editable-pill";
-import { FutureChangeDialog, type FutureMilestone } from "./future-change-dialog";
+import {
+  FutureChangeDialog,
+  resolveEffectiveAmount,
+  priorEffectiveAmount,
+  activeMilestoneAt,
+  type FutureMilestone,
+} from "./future-change-dialog";
 import { IncomeCreatorDrawer } from "./income-creator-drawer";
 import { IncomeDetailDrawer } from "./income-detail-drawer";
 
@@ -116,6 +129,7 @@ interface FutureMilestoneRaw {
   id: string;
   targetMonth: string;
   amount: number;
+  endMonth?: string | null;
   reason?: string;
   notes?: string;
 }
@@ -213,6 +227,21 @@ const ARCHETYPE_META: Record<
   },
 };
 
+// Bar fill for a segment changed by a future adjustment. An increment (income
+// raised above base) reads brighter green; a decrement (lowered below base)
+// reads amber/gold — signed but not alarming (no red for a planned change).
+// "base" segments keep the income's archetype color (returned as null here).
+const DIRECTION_BAR: Record<"up" | "down", string> = {
+  up: "bg-gradient-to-r from-[#2E8B57] to-[#4FB477]",
+  down: "bg-gradient-to-r from-[#C68A1E] to-[#E0BD5C]",
+};
+
+function segmentBarClass(direction: SegmentDirection, archetypeBar: string): string {
+  if (direction === "up") return DIRECTION_BAR.up;
+  if (direction === "down") return DIRECTION_BAR.down;
+  return archetypeBar;
+}
+
 function getArchetype(income: Income): Archetype {
   if (income.incomeCategory === "one-off" || income.frequency === "one-time") {
     return "one-off";
@@ -236,6 +265,8 @@ function safeParseMilestones(json: string | null): FutureMilestoneRaw[] {
         id: String(m.id ?? m.targetMonth),
         targetMonth: m.targetMonth,
         amount: Number(m.amount) || 0,
+        endMonth:
+          typeof m.endMonth === "string" && m.endMonth ? m.endMonth : null,
         reason: m.reason,
         notes: m.notes,
       }))
@@ -297,12 +328,11 @@ function getAmountForMonth(income: Income, cell: MonthCell): number {
   const milestones = income.accountForFutureChange
     ? safeParseMilestones(income.futureMilestones)
     : [];
-  const applicableMilestone = milestones
-    .filter((m) => m.targetMonth <= cell.key)
-    .pop();
-  const effectiveAmount = applicableMilestone
-    ? applicableMilestone.amount
-    : baseAmount;
+  const effectiveAmount = resolveEffectiveAmount(
+    baseAmount,
+    milestones,
+    cell.key
+  );
 
   switch (income.frequency) {
     case "monthly":
@@ -358,23 +388,111 @@ function netFactor(income: Income): number {
   return Math.max(0, Math.min(1, net / base));
 }
 
+// Direction of a bar segment relative to the income's base amount. Drives the
+// increment/decrement coloring: a future change that raises the income reads
+// "up" (green), one that lowers it reads "down" (amber). "base" = unchanged.
+type SegmentDirection = "base" | "up" | "down";
+
 interface BarSegment {
   startIndex: number;
   spanCount: number;
   amount: number;
+  direction: SegmentDirection;
+  // The future change driving this segment, or null when it's the income's
+  // base (no change in effect). Lets the popup show the segment's own period
+  // and label it CURRENT vs FUTURE CHANGE, and edit the right value.
+  milestoneId: string | null;
+  // The segment's own month range ("YYYY-MM"), independent of the income's
+  // overall start/end. startKey is the first month, endKey the last.
+  startKey: string;
+  endKey: string;
+}
+
+// Direction at a month, computed from the milestone-resolved monthly base vs
+// the income's stored base — BEFORE any frequency multiplier. Because the same
+// frequency factor scales both, this comparison is frequency-independent, so it
+// stays correct for yearly/weekly/custom incomes too.
+function directionForMonth(
+  income: Income,
+  baseAmount: number,
+  milestones: FutureMilestoneRaw[],
+  monthKey: string
+): SegmentDirection {
+  const effective = resolveEffectiveAmount(baseAmount, milestones, monthKey);
+  if (effective > baseAmount + 0.5) return "up";
+  if (effective < baseAmount - 0.5) return "down";
+  return "base";
+}
+
+// The effective amount a change starts from — what the dialog shows as the
+// "current" amount and what a temporary change reverts to. For an EXISTING
+// milestone being edited, it's the effective amount ignoring that milestone in
+// the month before its start. For a NEW change at `defaultStartMonth`, it's the
+// current effective amount at that month.
+function priorAmountForChange(
+  income: Income,
+  milestone: FutureMilestone | undefined,
+  defaultStartMonth: string | undefined
+): number {
+  const base = Number(income.amount) || 0;
+  const milestones = safeParseMilestones(income.futureMilestones);
+  if (milestone) return priorEffectiveAmount(base, milestones, milestone);
+  const monthKey = defaultStartMonth ?? format(startOfMonth(new Date()), "yyyy-MM");
+  return resolveEffectiveAmount(base, milestones, monthKey);
+}
+
+// Human label for a segment's own month range, e.g. "Mar 2026 → May 2026" or
+// "Jun 2026 → ongoing" (a permanent change / base with no income end date that
+// runs to the end of the window).
+function segmentPeriodLabel(seg: BarSegment, income: Income): string {
+  const start = format(parseISO(`${seg.startKey}-01`), "MMM yyyy");
+  // The segment is "ongoing" when it's driven by the base or a permanent change
+  // (no milestone end) AND the income itself has no end date. A temporary
+  // change always shows its concrete end month.
+  const milestones = safeParseMilestones(income.futureMilestones);
+  const m = seg.milestoneId
+    ? milestones.find((x) => x.id === seg.milestoneId)
+    : null;
+  const isTemporary = !!m?.endMonth;
+  const runsOpen = !isTemporary && !income.endDate;
+  if (runsOpen) return `${start} → ongoing`;
+  const end = format(parseISO(`${seg.endKey}-01`), "MMM yyyy");
+  return seg.startKey === seg.endKey ? start : `${start} → ${end}`;
 }
 
 function buildBarSegments(income: Income, cells: MonthCell[]): BarSegment[] {
   const segments: BarSegment[] = [];
+  const baseAmount = Number(income.amount) || 0;
+  const milestones = income.accountForFutureChange
+    ? safeParseMilestones(income.futureMilestones)
+    : [];
+
   let current: BarSegment | null = null;
   cells.forEach((cell, i) => {
     const amount = getAmountForMonth(income, cell);
     if (amount > 0) {
-      if (current && current.amount === amount && current.startIndex + current.spanCount === i) {
+      const direction = directionForMonth(income, baseAmount, milestones, cell.key);
+      const milestoneId = activeMilestoneAt(milestones, cell.key)?.id ?? null;
+      if (
+        current &&
+        current.amount === amount &&
+        current.direction === direction &&
+        current.milestoneId === milestoneId &&
+        current.startIndex + current.spanCount === i
+      ) {
         current.spanCount += 1;
+        current.endKey = cell.key;
       } else {
         if (current) segments.push(current);
-        current = { startIndex: i, spanCount: 1, amount };
+        current = {
+          startIndex: i,
+          spanCount: 1,
+          amount,
+          direction,
+          milestoneId,
+          startKey: cell.key,
+          endKey: cell.key,
+        };
       }
     } else {
       if (current) {
@@ -435,12 +553,11 @@ function getBonusForMonth(income: Income, cell: MonthCell): number {
   const milestones = income.accountForFutureChange
     ? safeParseMilestones(income.futureMilestones)
     : [];
-  const applicableMilestone = milestones
-    .filter((m) => m.targetMonth <= cell.key)
-    .pop();
-  const effectiveMonthly = applicableMilestone
-    ? applicableMilestone.amount
-    : baseAmount;
+  const effectiveMonthly = resolveEffectiveAmount(
+    baseAmount,
+    milestones,
+    cell.key
+  );
   return effectiveMonthly * match.multiplier;
 }
 
@@ -693,6 +810,28 @@ export function IncomesBetaView({
   // toggle is always available, so the effective view is just the selected one.
   const effectiveView: ViewMode = view;
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  // Clearing hover is deferred by a tick so the pointer can travel from an axis
+  // cell into the (interactive, edit-mode) tooltip without the tooltip blinking
+  // out first. Re-hovering a column (axis cell or the tooltip's own
+  // mouseenter) cancels the pending clear. Setting a number is immediate.
+  const hoverClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const setHoverIndexDeferred = useCallback((i: number | null) => {
+    if (hoverClearTimer.current) {
+      clearTimeout(hoverClearTimer.current);
+      hoverClearTimer.current = null;
+    }
+    if (i === null) {
+      hoverClearTimer.current = setTimeout(() => setHoverIndex(null), 80);
+    } else {
+      setHoverIndex(i);
+    }
+  }, []);
+  useEffect(
+    () => () => {
+      if (hoverClearTimer.current) clearTimeout(hoverClearTimer.current);
+    },
+    []
+  );
 
   const activeRaw = useMemo(
     () => rawIncomes.filter((i) => i.isActive !== false),
@@ -751,8 +890,27 @@ export function IncomesBetaView({
   const [futureChangeContext, setFutureChangeContext] = useState<{
     incomeId: string;
     milestone?: FutureMilestone;
+    // Pre-fill the dialog's start month (e.g. the month the user clicked on the
+    // timeline). Editable in the dialog.
+    defaultStartMonth?: string;
   } | null>(null);
   const [deleteContext, setDeleteContext] = useState<Income | null>(null);
+  // When the user clicks a month on the timeline in edit mode, we collect the
+  // incomes active that month and let them pick which one to adjust before
+  // opening the change dialog. null when the chooser is closed.
+  const [monthAdjustContext, setMonthAdjustContext] = useState<{
+    monthKey: string;
+    monthLabel: string;
+    choices: { income: Income; amount: number }[];
+  } | null>(null);
+  // When a just-saved future change has the SAME amount as the segment before
+  // it, the change is a no-op (the bar would look split for no reason). Prompt
+  // to merge — i.e. delete the redundant milestone so it's one continuous bar.
+  const [mergeContext, setMergeContext] = useState<{
+    incomeId: string;
+    milestoneId: string;
+    amount: number;
+  } | null>(null);
 
   // Edit mode — the umbrella state for any modification of bars. When true,
   // bars accept drag/resize/click-popover, lane areas accept pointerdown to
@@ -983,6 +1141,61 @@ export function IncomesBetaView({
     [mutate]
   );
 
+  // Editing a specific bar segment's amount. A "future change" segment edits
+  // that milestone's amount in the futureMilestones JSON; a base/current
+  // segment falls through to the income's base amount (handleAmountChange).
+  const handleSegmentAmountChange = useCallback(
+    (
+      income: Income,
+      seg: BarSegment,
+      nextAmount: number,
+      extra?: {
+        accountForBonus?: boolean;
+        bonusGroups?: string | null;
+        subjectToCpf?: boolean;
+        familyMemberAge?: number;
+      }
+    ) => {
+      if (!seg.milestoneId) {
+        handleAmountChange(income, nextAmount, extra);
+        return;
+      }
+      const existing = safeParseMilestones(income.futureMilestones);
+      const next = existing.map((m) =>
+        m.id === seg.milestoneId ? { ...m, amount: nextAmount } : m
+      );
+      const json = JSON.stringify(next);
+      mutate(
+        {
+          kind: "update",
+          id: income.id,
+          patch: { futureMilestones: json, accountForFutureChange: true },
+        },
+        () =>
+          updateIncome(income.id, {
+            futureMilestones: json,
+            accountForFutureChange: true,
+          })
+      );
+
+      // Editing this change to match the segment before it makes it a no-op —
+      // offer to merge (delete it) so the bar reads as one continuous segment.
+      const edited = next.find((m) => m.id === seg.milestoneId);
+      if (edited) {
+        const base = Number(income.amount) || 0;
+        const prior = priorEffectiveAmount(base, next, edited);
+        if (Math.abs(prior - nextAmount) < 0.5) {
+          setMergeContext({
+            incomeId: income.id,
+            milestoneId: seg.milestoneId,
+            amount: nextAmount,
+          });
+        }
+      }
+    },
+    [mutate, handleAmountChange]
+  );
+
   const handleNameChange = useCallback((income: Income, name: string) => {
     mutate(
       { kind: "update", id: income.id, patch: { name } },
@@ -1111,6 +1324,81 @@ export function IncomesBetaView({
           accountForFutureChange: true,
         })
     );
+
+    // If the change sets the same amount as the segment immediately before it,
+    // it's a no-op that just splits the bar. Offer to merge (delete it).
+    const base = Number(income.amount) || 0;
+    const prior = priorEffectiveAmount(base, next, milestone);
+    if (Math.abs(prior - milestone.amount) < 0.5) {
+      setMergeContext({
+        incomeId: income.id,
+        milestoneId: milestone.id,
+        amount: milestone.amount,
+      });
+    }
+  };
+
+  // User accepted the merge: drop the redundant milestone so the bar is one
+  // continuous segment again.
+  const handleMergeRedundant = () => {
+    if (!mergeContext) return;
+    const income = effectiveIncomes.find((i) => i.id === mergeContext.incomeId);
+    if (income) handleDeleteMilestone(income, mergeContext.milestoneId);
+    setMergeContext(null);
+  };
+
+  // Edit-mode: the user clicked month `cellIndex` on the timeline (not on a
+  // bar). Gather the incomes that pay in that month and open the chooser so
+  // they can pick which one to adjust from then on. If only one income is
+  // active, skip the chooser and open the change dialog directly.
+  const handleMonthClick = (cellIndex: number) => {
+    // A tap routes here instead of the draw flow — clear any in-progress draft.
+    setDrawState(null);
+    setDrawCommit(null);
+    const cell = cells[cellIndex];
+    if (!cell) return;
+    const choices = effectiveIncomes
+      .map((income) => ({ income, amount: getAmountForMonth(income, cell) }))
+      .filter((c) => c.amount > 0);
+    if (choices.length === 0) return;
+    if (choices.length === 1) {
+      openChangeForIncome(choices[0].income, cell.key);
+      return;
+    }
+    setMonthAdjustContext({
+      monthKey: cell.key,
+      monthLabel: format(cell.date, "MMMM yyyy"),
+      choices,
+    });
+  };
+
+  // Open the change dialog for one income, defaulting the start to `monthKey`.
+  // The dialog's "prior amount" (for the increment/decrement hint + temporary
+  // revert target) is derived at render via priorAmountForChange().
+  const openChangeForIncome = (income: Income, monthKey: string) => {
+    setMonthAdjustContext(null);
+    setFutureChangeContext({ incomeId: income.id, defaultStartMonth: monthKey });
+  };
+
+  // Pencil button in the hover tooltip: edit a specific income from this month.
+  const handleEditIncomeFromMonth = (incomeId: string, monthKey: string) => {
+    const income = effectiveIncomes.find((i) => i.id === incomeId);
+    if (income) openChangeForIncome(income, monthKey);
+  };
+
+  // Pencil next to "Period" in a bar segment's popup → edit that segment's
+  // start/end. A future-change segment opens the dialog editing its milestone
+  // (so the start/end pickers are pre-filled); a base segment opens a new
+  // change starting at the segment's first month.
+  const handleEditSegmentPeriod = (income: Income, seg: BarSegment) => {
+    if (seg.milestoneId) {
+      const milestone = safeParseMilestones(income.futureMilestones).find(
+        (m) => m.id === seg.milestoneId
+      );
+      setFutureChangeContext({ incomeId: income.id, milestone });
+    } else {
+      openChangeForIncome(income, seg.startKey);
+    }
   };
 
   const handleDeleteMilestone = (income: Income, milestoneId: string) => {
@@ -1442,7 +1730,7 @@ export function IncomesBetaView({
           monthlyTotals={monthlyTotals}
           peakTotal={peakTotal}
           hoverIndex={hoverIndex}
-          onHover={setHoverIndex}
+          onHover={setHoverIndexDeferred}
           windowOffsetMonths={windowOffsetMonths}
           subMonthFraction={subMonthFraction}
           tlConfig={tlConfig}
@@ -1451,6 +1739,8 @@ export function IncomesBetaView({
           onScrollToToday={scrollToToday}
           onShiftWindow={shiftWindowMonths}
           onAmountChange={handleAmountChange}
+          onSegmentAmountChange={handleSegmentAmountChange}
+          onEditSegmentPeriod={handleEditSegmentPeriod}
           onRequestDelete={setDeleteContext}
           onOpenCreator={() => setEditMode(true)}
           onOpenDetail={setDetailIncomeId}
@@ -1469,6 +1759,8 @@ export function IncomesBetaView({
           onDrawSave={handleDrawSave}
           onDrawDiscard={handleDrawDiscard}
           onDraftReshape={handleDraftReshape}
+          onMonthClick={handleMonthClick}
+          onMonthEditIncome={handleEditIncomeFromMonth}
           windowYears={windowYears}
           onWindowYearsChange={setWindowYears}
         />
@@ -1532,10 +1824,56 @@ export function IncomesBetaView({
         }))}
       />
 
+      {/* Income chooser — shown when a clicked month has more than one active
+          income. Pick which stream to adjust from that month. */}
+      <Dialog
+        open={monthAdjustContext !== null}
+        onOpenChange={(o) => !o && setMonthAdjustContext(null)}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Adjust income</DialogTitle>
+            <DialogDescription>
+              Which income changes from{" "}
+              <span className="font-semibold">{monthAdjustContext?.monthLabel}</span>?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5 py-1">
+            {monthAdjustContext?.choices.map(({ income, amount }) => (
+              <button
+                key={income.id}
+                type="button"
+                onClick={() =>
+                  openChangeForIncome(income, monthAdjustContext.monthKey)
+                }
+                className="flex w-full items-center justify-between rounded-lg border border-border/40 px-3 py-2 text-left transition-colors hover:bg-muted"
+              >
+                <span className="text-sm font-medium text-foreground">
+                  {income.name}
+                </span>
+                <span className="font-display text-sm font-semibold tabular-nums text-muted-foreground">
+                  ${Math.round(amount).toLocaleString()}/mo
+                </span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <FutureChangeDialog
         open={futureChangeContext !== null}
         onOpenChange={(o) => !o && setFutureChangeContext(null)}
         incomeName={futureChangeIncome?.name ?? ""}
+        defaultStartMonth={futureChangeContext?.defaultStartMonth}
+        priorAmount={
+          futureChangeIncome
+            ? priorAmountForChange(
+                futureChangeIncome,
+                futureChangeContext?.milestone,
+                futureChangeContext?.defaultStartMonth
+              )
+            : undefined
+        }
         initial={futureChangeContext?.milestone}
         onSave={(m) => futureChangeIncome && handleSaveMilestone(futureChangeIncome, m)}
         onDelete={
@@ -1570,6 +1908,36 @@ export function IncomesBetaView({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Merge prompt — a future change ended up at the same amount as the
+          period before it, so it's a no-op that just splits the bar. */}
+      <AlertDialog
+        open={mergeContext !== null}
+        onOpenChange={(o) => !o && setMergeContext(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Merge into one bar?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This change keeps the income at{" "}
+              <span className="font-semibold">
+                ${Math.round(mergeContext?.amount ?? 0).toLocaleString()}
+              </span>
+              {" "}— the same as before it. Merge them so the timeline shows one
+              continuous bar instead of a split?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep separate</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleMergeRedundant}
+              className="bg-brand-jungle text-white hover:bg-brand-jungle/90"
+            >
+              Merge
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1841,6 +2209,8 @@ function TimelineStudio({
   onScrollToToday,
   onShiftWindow,
   onAmountChange,
+  onSegmentAmountChange,
+  onEditSegmentPeriod,
   onRequestDelete,
   onOpenCreator,
   onOpenDetail,
@@ -1859,6 +2229,8 @@ function TimelineStudio({
   onDrawSave,
   onDrawDiscard,
   onDraftReshape,
+  onMonthClick,
+  onMonthEditIncome,
   windowYears,
   onWindowYearsChange,
 }: {
@@ -1886,6 +2258,20 @@ function TimelineStudio({
       familyMemberAge?: number;
     }
   ) => void;
+  // Edit one bar segment's amount (base or a specific future change).
+  onSegmentAmountChange?: (
+    income: Income,
+    seg: BarSegment,
+    amount: number,
+    extra?: {
+      accountForBonus?: boolean;
+      bonusGroups?: string | null;
+      subjectToCpf?: boolean;
+      familyMemberAge?: number;
+    }
+  ) => void;
+  // Edit a segment's period (start/end) — opens the change dialog.
+  onEditSegmentPeriod?: (income: Income, seg: BarSegment) => void;
   onRequestDelete: (income: Income) => void;
   onOpenCreator: () => void;
   onOpenDetail: (id: string) => void;
@@ -1924,6 +2310,10 @@ function TimelineStudio({
   }) => void;
   onDrawDiscard?: () => void;
   onDraftReshape?: (newAnchorKey: string, newEndKey: string) => void;
+  onMonthClick?: (cellIndex: number) => void;
+  // Edit one income from a month, triggered by the per-income pencil button in
+  // the hover tooltip (edit mode only).
+  onMonthEditIncome?: (incomeId: string, monthKey: string) => void;
   windowYears?: number;
   onWindowYearsChange?: (years: number) => void;
 }) {
@@ -2272,6 +2662,8 @@ function TimelineStudio({
                     alternate={alternate}
                     tlConfig={tlConfig}
                     onAmountChange={onAmountChange}
+                    onSegmentAmountChange={onSegmentAmountChange}
+                    onEditSegmentPeriod={onEditSegmentPeriod}
                     onRequestDelete={onRequestDelete}
                     onOpenDetail={onOpenDetail}
                     onDragPreview={onDragPreview}
@@ -2288,6 +2680,7 @@ function TimelineStudio({
                     onDrawMove={onDrawMove}
                     onDrawEnd={onDrawEnd}
                     onDraftReshape={onDraftReshape}
+                    onMonthClick={onMonthClick}
                     rowFamilyMemberId={group.familyMember?.id ?? null}
                   />,
                 ];
@@ -2321,6 +2714,8 @@ function TimelineStudio({
                     alternate={alternate}
                     tlConfig={tlConfig}
                     onAmountChange={onAmountChange}
+                    onSegmentAmountChange={onSegmentAmountChange}
+                    onEditSegmentPeriod={onEditSegmentPeriod}
                     onRequestDelete={onRequestDelete}
                     onOpenDetail={onOpenDetail}
                     onDragPreview={onDragPreview}
@@ -2337,6 +2732,7 @@ function TimelineStudio({
                     onDrawMove={onDrawMove}
                     onDrawEnd={onDrawEnd}
                     onDraftReshape={onDraftReshape}
+                    onMonthClick={onMonthClick}
                     rowFamilyMemberId={group.familyMember?.id ?? null}
                   />
                 );
@@ -2374,6 +2770,9 @@ function TimelineStudio({
               breakdown={totals[hoverIndex].breakdown}
               total={totals[hoverIndex].total}
               totalCount={cells.length}
+              editMode={editMode}
+              onEditIncome={onMonthEditIncome}
+              onKeepAlive={onHover}
             />
           </div>
         </div>
@@ -2635,7 +3034,7 @@ const RiverChart = memo(function RiverChart({
       </defs>
       <path d={fill} fill="url(#river-fill)" />
       <path d={path} fill="none" stroke="#3A6B52" strokeWidth={2} strokeLinejoin="round" />
-      {hoverIndex !== null && (
+      {hoverIndex !== null && totals[hoverIndex] && (
         <>
           <line
             x1={hoverIndex * stepX}
@@ -2741,12 +3140,21 @@ function HoverTooltip({
   breakdown,
   total,
   totalCount,
+  editMode = false,
+  onEditIncome,
+  onKeepAlive,
 }: {
   index: number;
   cell: MonthCell;
   breakdown: Array<{ income: Income; amount: number }>;
   total: number;
   totalCount: number;
+  editMode?: boolean;
+  onEditIncome?: (incomeId: string, monthKey: string) => void;
+  // Re-assert / clear the hovered column so the tooltip stays open while the
+  // pointer is over it (otherwise leaving the axis cell would hide it before
+  // the user can click an edit button).
+  onKeepAlive?: (i: number | null) => void;
 }) {
   // Center the tooltip on the hovered column. At the edges, snap to the
   // visible side so the card doesn't get clipped by the rack edge.
@@ -2758,13 +3166,21 @@ function HoverTooltip({
         ? "-translate-x-full"
         : "-translate-x-1/2";
 
+  // Pencil edit buttons are interactive, so in edit mode the card must accept
+  // pointer events (the overlay wrapper is pointer-events-none). We keep the
+  // tooltip alive while hovered so the user can reach the buttons.
+  const interactive = editMode && Boolean(onEditIncome);
+
   return (
     <div
       className={cn(
-        "absolute z-30 w-56 rounded-xl border border-border/40 bg-popover text-popover-foreground px-4 py-3 shadow-xl pointer-events-none",
+        "absolute z-30 w-56 rounded-xl border border-border/40 bg-popover text-popover-foreground px-4 py-3 shadow-xl",
+        interactive ? "pointer-events-auto" : "pointer-events-none",
         align
       )}
       style={{ left: `${centerPct}%`, top: "12px" }}
+      onMouseEnter={interactive ? () => onKeepAlive?.(index) : undefined}
+      onMouseLeave={interactive ? () => onKeepAlive?.(null) : undefined}
     >
       <p className="font-display text-sm font-semibold">
         {format(cell.date, "MMM yy")}
@@ -2773,23 +3189,40 @@ function HoverTooltip({
         {breakdown.length === 0 ? (
           <p className="text-xs text-muted-foreground">No income this month</p>
         ) : (
-          breakdown.map(({ income, amount }, i) => (
-            <div
-              key={`${income.id}-${i}`}
-              className="flex items-center justify-between gap-3 text-xs"
-            >
-              <span className="flex items-center gap-1.5 truncate">
-                <span
-                  className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                  style={{ backgroundColor: CHART_PALETTE[i % CHART_PALETTE.length] }}
-                />
-                {income.name}
-              </span>
-              <span className="font-display font-medium">
-                {formatCurrency(amount)}
-              </span>
-            </div>
-          ))
+          breakdown.map(({ income, amount }, i) => {
+            // Bonus rows are synthetic (id suffixed with "__bonus") — they
+            // aren't directly editable, so no pencil for them.
+            const isBonusRow = income.id.endsWith("__bonus");
+            return (
+              <div
+                key={`${income.id}-${i}`}
+                className="flex items-center justify-between gap-2 text-xs"
+              >
+                <span className="flex items-center gap-1.5 truncate">
+                  <span
+                    className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: CHART_PALETTE[i % CHART_PALETTE.length] }}
+                  />
+                  {income.name}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="font-display font-medium">
+                    {formatCurrency(amount)}
+                  </span>
+                  {interactive && !isBonusRow && (
+                    <button
+                      type="button"
+                      onClick={() => onEditIncome?.(income.id, cell.key)}
+                      className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-brand-jungle"
+                      aria-label={`Adjust ${income.name} from ${format(cell.date, "MMMM yyyy")}`}
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  )}
+                </span>
+              </div>
+            );
+          })
         )}
       </div>
       <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-2">
@@ -3209,6 +3642,18 @@ interface IncomeStreamRowProps {
       familyMemberAge?: number;
     }
   ) => void;
+  onSegmentAmountChange?: (
+    income: Income,
+    seg: BarSegment,
+    amount: number,
+    extra?: {
+      accountForBonus?: boolean;
+      bonusGroups?: string | null;
+      subjectToCpf?: boolean;
+      familyMemberAge?: number;
+    }
+  ) => void;
+  onEditSegmentPeriod?: (income: Income, seg: BarSegment) => void;
   onRequestDelete: (income: Income) => void;
   onOpenDetail: (id: string) => void;
   onDragPreview: (preview: { id: string; patch: Partial<Income> } | null) => void;
@@ -3232,6 +3677,9 @@ interface IncomeStreamRowProps {
   // Lateral drag of an existing draft bar. Called by the bar's resize-left,
   // resize-right, and body-move handles with the new keys to apply.
   onDraftReshape?: (newAnchorKey: string, newEndKey: string) => void;
+  // Tap (no drag) on the lane in edit mode → adjust an existing income from
+  // that month. cellIndex is the clicked month within `cells`.
+  onMonthClick?: (cellIndex: number) => void;
 }
 
 type BarDragKind = "move" | "resize-left" | "resize-right";
@@ -3291,6 +3739,8 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   alternate = false,
   tlConfig,
   onAmountChange,
+  onSegmentAmountChange,
+  onEditSegmentPeriod,
   onRequestDelete,
   onOpenDetail,
   onDragPreview,
@@ -3303,6 +3753,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   onDrawMove,
   onDrawEnd,
   onDraftReshape,
+  onMonthClick,
 }: IncomeStreamRowProps) {
   // Representative income for the draw context (drawing in this row carries
   // the row's familyMemberId). Prefer the current/recurring income if any —
@@ -3768,6 +4219,17 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
               )
             )
           );
+          // Tap (no horizontal drag across months) → the user is adjusting an
+          // existing income from this month, not drawing a new bar. Route to
+          // the month-click handler and discard the zero-width draft. Drawing
+          // requires dragging across at least one month boundary.
+          const anchorIdxForTap = cells.findIndex(
+            (c) => c.key === drawState.anchorKey
+          );
+          if (onMonthClick && anchorIdxForTap === finalIdx) {
+            onMonthClick(finalIdx);
+            return;
+          }
           // Compute the bar's center in viewport coordinates so the popup's
           // speech-bubble tail can point at the actual bar (not at where the
           // cursor happened to be released).
@@ -3921,7 +4383,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                           : "cursor-default",
                         draftStacked || rowHasBonus ? "top-[25%]" : "top-1/2",
                         isOngoingTail ? "rounded-l-md rounded-r-none" : "rounded-md",
-                        meta.bar
+                        segmentBarClass(seg.direction, meta.bar)
                       )}
                       style={{
                         left: `${leftPct}%`,
@@ -3938,6 +4400,21 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                       }}
                       aria-label={`Adjust ${income.name} amount, currently ${formatCurrency(displayAmount)}${amountMode === "nett" ? " net" : ""}${isOngoingTail ? " (ongoing)" : ""}`}
                     >
+                      {/* Change marker — a small notch at the start of a
+                          future-change segment so the change-point is obvious
+                          on the bar (beyond the green/amber color). Not shown
+                          for the income's first/base segment. */}
+                      {seg.milestoneId && !isFirstSegment && (
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "absolute left-0 top-0 bottom-0 w-[3px] rounded-l-md",
+                            seg.direction === "down"
+                              ? "bg-[#7A5400]/70"
+                              : "bg-[#1C4A33]/70"
+                          )}
+                        />
+                      )}
                       {/* Label is rendered in a separate non-translated overlay
                           (see below) so it can stay centered/static while the
                           bar fills the viewport and glide only when an edge
@@ -4004,15 +4481,27 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                   </PopoverTrigger>
                   <PopoverContent
                     align="center"
+                    collisionPadding={12}
                     className="p-0 border-0 bg-transparent shadow-none w-auto"
                   >
                     <IncomeBarPopup
                       income={income}
                       initialAmount={seg.amount}
                       canEditBonus={archetype === "recurring"}
-                      onConfirm={(next, bonus) =>
-                        onAmountChange(income, next, bonus)
+                      segmentKind={seg.milestoneId ? "future-change" : "current"}
+                      segmentPeriod={segmentPeriodLabel(seg, income)}
+                      onEditPeriod={
+                        editMode && onEditSegmentPeriod
+                          ? () => onEditSegmentPeriod(income, seg)
+                          : undefined
                       }
+                      onConfirm={(next, bonus) => {
+                        if (onSegmentAmountChange) {
+                          onSegmentAmountChange(income, seg, next, bonus);
+                        } else {
+                          onAmountChange(income, next, bonus);
+                        }
+                      }}
                       onOpenDetail={() => onOpenDetail(income.id)}
                     />
                   </PopoverContent>
@@ -4075,6 +4564,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                     </PopoverTrigger>
                     <PopoverContent
                       align="center"
+                      collisionPadding={12}
                       className="p-0 border-0 bg-transparent shadow-none w-auto"
                     >
                       <IncomeBarPopup

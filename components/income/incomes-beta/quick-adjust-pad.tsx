@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { differenceInCalendarMonths, format, parseISO } from "date-fns";
-import { ChevronRight, Info, Plus, X } from "lucide-react";
+import { ChevronRight, Info, Pencil, Plus, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -384,6 +384,18 @@ interface IncomeBarPopupProps {
   canEditBonus?: boolean;
   /** Open the popup directly on the Bonus tab (e.g. clicking a bonus pill). */
   openToBonus?: boolean;
+  /**
+   * Identifies the clicked bar SEGMENT (vs the whole income). "current" = the
+   * income's base/in-effect amount; "future-change" = a raised/lowered segment
+   * driven by a future change. Drives the Overview badge + period so clicking
+   * different parts of a multi-segment bar reads correctly.
+   */
+  segmentKind?: "current" | "future-change";
+  /** The clicked segment's own period label, e.g. "Jun 2026 → ongoing". */
+  segmentPeriod?: string;
+  /** Edit button next to the Period row (Overview tab) → opens the change
+   *  dialog to adjust this segment's start/end. Omitted = read-only. */
+  onEditPeriod?: () => void;
 }
 
 interface DetailPage {
@@ -411,10 +423,32 @@ function fmtMoney(n: number): string {
   return `$${Math.round(n).toLocaleString()}`;
 }
 
-function DetailRow({ k, v }: { k: string; v: string }) {
+function DetailRow({
+  k,
+  v,
+  onEdit,
+  editLabel,
+}: {
+  k: string;
+  v: string;
+  onEdit?: () => void;
+  editLabel?: string;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3 text-xs">
-      <span className="text-muted-foreground shrink-0">{k}</span>
+      <span className="flex items-center gap-1 text-muted-foreground shrink-0">
+        {k}
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-brand-jungle"
+            aria-label={editLabel ?? `Edit ${k.toLowerCase()}`}
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        )}
+      </span>
       <span className="font-semibold text-foreground tabular-nums truncate text-right">
         {v}
       </span>
@@ -452,7 +486,18 @@ function CpfSplitRow({
 
 function buildPages(
   income: IncomeForPopup,
-  opts?: { skipBonus?: boolean; skipCpf?: boolean }
+  opts?: {
+    skipBonus?: boolean;
+    skipCpf?: boolean;
+    // When the popup was opened from a specific bar SEGMENT, these describe it
+    // so the Overview shows that segment's period + a CURRENT / FUTURE CHANGE
+    // badge instead of the income-wide start→ongoing.
+    segmentKind?: "current" | "future-change";
+    segmentPeriod?: string;
+    // Pencil next to the Period row → open the change dialog to edit this
+    // segment's start/end. Absent (read-only) when not in edit mode.
+    onEditPeriod?: () => void;
+  }
 ): DetailPage[] {
   const pages: DetailPage[] = [];
 
@@ -460,22 +505,39 @@ function buildPages(
   // Always present so the popup never renders an empty carousel.
   const start = parseISO(income.startDate);
   const end = income.endDate ? parseISO(income.endDate) : null;
-  const period = end
+  const incomePeriod = end
     ? `${format(start, "MMM yyyy")} → ${format(end, "MMM yyyy")}`
     : `${format(start, "MMM yyyy")} → ongoing`;
+  // Prefer the clicked segment's own period when provided.
+  const period = opts?.segmentPeriod ?? incomePeriod;
   const months = end ? differenceInCalendarMonths(end, start) + 1 : null;
   const duration =
     months !== null
       ? `${months} mo${months === 1 ? "" : "s"}`
       : "Ongoing";
+  const isFutureChange = opts?.segmentKind === "future-change";
   pages.push({
     key: "overview",
     title: "Overview",
     body: (
       <div className="space-y-2.5">
-        <p className="font-display text-sm font-semibold text-foreground truncate">
-          {income.name}
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-display text-sm font-semibold text-foreground truncate">
+            {income.name}
+          </p>
+          {opts?.segmentKind && (
+            <span
+              className={cn(
+                "flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                isFutureChange
+                  ? "bg-[#C68A1E]/15 text-[#9A6A12]"
+                  : "bg-brand-jungle/10 text-brand-jungle"
+              )}
+            >
+              {isFutureChange ? "Future change" : "Current"}
+            </span>
+          )}
+        </div>
         <div className="flex flex-wrap gap-1">
           {income.familyMember && (
             <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -487,7 +549,12 @@ function buildPages(
           </span>
         </div>
         <div className="space-y-1 pt-1">
-          <DetailRow k="Period" v={period} />
+          <DetailRow
+            k="Period"
+            v={period}
+            onEdit={opts?.onEditPeriod}
+            editLabel="Edit period"
+          />
           <DetailRow k="Duration" v={duration} />
         </div>
       </div>
@@ -597,6 +664,9 @@ export function IncomeBarPopup({
   onCancel,
   canEditBonus = false,
   openToBonus = false,
+  segmentKind = "current",
+  segmentPeriod,
+  onEditPeriod,
 }: IncomeBarPopupProps) {
   // Typeable monthly amount (string-backed so the field can be cleared/edited
   // freely); `value` is the derived number used for confirm + the bonus math.
@@ -678,7 +748,13 @@ export function IncomeBarPopup({
 
   const pages = useMemo<DetailPage[]>(() => {
     // Overview comes from buildPages; CPF + bonus are built here (editable).
-    const base = buildPages(income, { skipBonus: true, skipCpf: true });
+    const base = buildPages(income, {
+      skipBonus: true,
+      skipCpf: true,
+      segmentKind,
+      segmentPeriod,
+      onEditPeriod,
+    });
 
     // Editable CPF page — always present so the user can mark an income
     // CPF-applicable (or not) via the checkbox.
@@ -862,6 +938,9 @@ export function IncomeBarPopup({
     value,
     subjectToCpf,
     memberAge,
+    segmentKind,
+    segmentPeriod,
+    onEditPeriod,
   ]);
 
   // Tabs are the primary nav now, so we render only the active page (the popup
@@ -931,8 +1010,13 @@ export function IncomeBarPopup({
         </div>
       )}
 
-      {/* Active page only — the popup sizes to its content (no tall empty gap). */}
-      <div className="px-5 pt-3 pb-2">{pages[activeIdx]?.body}</div>
+      {/* Active page only — the popup sizes to its content (no tall empty gap).
+          A viewport-relative max-height keeps tall pages (e.g. the Bonus tab,
+          with a full CPF table) from overflowing the screen; the body scrolls
+          while the tabs above and the amount/footer below stay fixed. */}
+      <div className="max-h-[min(60vh,28rem)] overflow-y-auto px-5 pt-3 pb-2">
+        {pages[activeIdx]?.body}
+      </div>
 
       <div className="border-t border-border/40 px-5 pb-4 pt-3">
         <label
