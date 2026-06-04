@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Switch } from "@/components/ui/switch";
-import { Info, TrendingUp } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Info, TrendingUp, ArrowRight } from "lucide-react";
 import { ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, Customized } from "recharts";
 import { calculateMonthlyBalance, timeRangeToMonths, type MonthlyBalanceData, type SpecialItem } from "@/lib/balance-calculator";
 
@@ -349,11 +349,11 @@ function CustomTooltip({ active, payload, viewMode }: any) {
                 Expenses: {formatCurrency(data.expense)}
               </p>
               <p className={`font-semibold ${data.monthlyBalance >= 0 ? "text-[#7A3A0A]" : "text-[#8B0000]"}`}>
-                Net Balance: {formatCurrency(data.monthlyBalance)}
+                Savings: {formatCurrency(data.monthlyBalance)}
               </p>
               {hasInvestmentData && data.monthlyBalanceWithInvestments !== undefined && (
                 <p className={`font-semibold ${data.monthlyBalanceWithInvestments >= 0 ? "text-[#007A68]" : "text-[#8B0000]"}`}>
-                  Net + Investments: {formatCurrency(data.monthlyBalanceWithInvestments)}
+                  Savings + Investments: {formatCurrency(data.monthlyBalanceWithInvestments)}
                 </p>
               )}
             </>
@@ -586,7 +586,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
               <CardDescription className="mt-0.5 text-xs sm:text-sm">
                 {viewMode === "cumulative"
                   ? "Cumulative balance projection based on current recurring income and expenses"
-                  : "Monthly breakdown of income, expenses, and net balance"
+                  : "Monthly breakdown of income, expenses, and savings"
                 }
               </CardDescription>
             </div>
@@ -626,82 +626,112 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
           </div>
         )}
 
-        {/* Investment Toggle (both modes). Reclaims a row in embedded mode
-            because the rest collapses into a single line below. */}
-        {hasInvestments && (
-          <div className={`flex items-center gap-2 ${embedded ? "mb-2" : "mt-3 sm:mt-4"} px-3 py-2 bg-[rgba(0,196,170,0.12)] rounded-lg border border-[rgba(0,196,170,0.25)] w-fit`}>
-            <TrendingUp className="h-4 w-4 text-[#007A68] flex-shrink-0" />
-            <Label
-              htmlFor="includeInvestments"
-              className="text-sm font-medium text-[#007A68] cursor-pointer whitespace-nowrap"
-            >
-              Include Investments
-            </Label>
-            <Switch
-              id="includeInvestments"
-              checked={includeInvestments}
-              onCheckedChange={handleIncludeInvestmentsChange}
-            />
-          </div>
-        )}
 
-        {/* Summary stats — in embedded mode, Time Range pill rides along as the
-            first cell so the chart gets full vertical budget. Standalone mode
-            keeps the original 3-up grid. */}
-        <div className={`grid gap-2 sm:gap-3 ${embedded ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3 mt-3 sm:mt-4"}`}>
+        {/* Controls (embedded only) sit on the SAME row as the balance summary
+            so we don't waste vertical space. Standalone keeps controls in the
+            header and shows the card full-width below. */}
+        <div
+          className={
+            embedded
+              ? "flex flex-col gap-2 sm:flex-row sm:items-stretch sm:gap-3"
+              : "mt-3 sm:mt-4"
+          }
+        >
           {embedded && (
-            <div className="bg-muted rounded-lg p-2 sm:p-3 flex flex-col justify-between min-h-[64px]">
-              <Label htmlFor="timeRange" className="text-xs text-foreground mb-0.5 font-normal">
-                Time Range
-              </Label>
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger id="timeRange" className="bg-white text-xs sm:text-sm h-7 sm:h-8 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_RANGES.map((range) => (
-                    <SelectItem key={range.value} value={range.value}>
-                      {range.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3 sm:shrink-0">
+              <div className="bg-muted rounded-lg p-2 sm:p-3 flex flex-col justify-between min-h-[64px] sm:w-36">
+                <Label htmlFor="viewModeEmbedded" className="text-xs text-foreground mb-0.5 font-normal">
+                  View Mode
+                </Label>
+                <Select
+                  value={viewMode}
+                  onValueChange={(value: "cumulative" | "non-cumulative") => setViewMode(value)}
+                >
+                  <SelectTrigger id="viewModeEmbedded" className="bg-white text-xs sm:text-sm h-7 sm:h-8 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cumulative">Cumulative</SelectItem>
+                    <SelectItem value="non-cumulative">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="bg-muted rounded-lg p-2 sm:p-3 flex flex-col justify-between min-h-[64px] sm:w-36">
+                <Label htmlFor="timeRange" className="text-xs text-foreground mb-0.5 font-normal">
+                  Time Range
+                </Label>
+                <Select value={timeRange} onValueChange={setTimeRange}>
+                  <SelectTrigger id="timeRange" className="bg-white text-xs sm:text-sm h-7 sm:h-8 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_RANGES.map((range) => (
+                      <SelectItem key={range.value} value={range.value}>
+                        {range.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
-          <div className="bg-muted rounded-lg p-2 sm:p-3">
-            <p className="text-xs text-foreground mb-0.5">Starting Balance</p>
-            <p className="text-sm sm:text-lg font-semibold text-foreground">
-              {formatCurrency(startingBalance)}
-            </p>
-            {includeInvestments && (
-              <p className="text-[10px] text-[#007A68]">
-                + {formatCurrency(investmentStartingCapital)} investments
+
+          {/* Balance summary — Starting Balance → (Net Change) → Projected Balance. */}
+          <div className="rounded-lg bg-muted p-3 sm:p-4 flex-1">
+            <div className="flex h-full items-center justify-between gap-2 sm:gap-4">
+            <div className="min-w-0">
+              <p className="text-xs text-foreground mb-0.5">Starting Balance</p>
+              <p className="text-base sm:text-xl font-semibold text-foreground tabular-nums">
+                {formatCurrency(startingBalance)}
               </p>
-            )}
-          </div>
-          <div className={`rounded-lg p-2 sm:p-3 ${isPositive ? "bg-[rgba(0,196,170,0.12)]" : "bg-[rgba(224,85,85,0.12)]"}`}>
-            <p className="text-xs text-foreground mb-0.5">Projected Balance</p>
-            <p className={`text-sm sm:text-lg font-semibold ${isPositive ? "text-[#007A68]" : "text-[#8B0000]"}`}>
-              {formatCurrency(finalBalance)}
-            </p>
-            {includeInvestments && (
-              <p className={`text-[10px] ${isCombinedPositive ? "text-[#007A68]" : "text-[#8B0000]"}`}>
-                Combined: {formatCurrency(finalBalanceWithInvestments)}
+              {includeInvestments && (
+                <p className="text-[10px] text-[#007A68] tabular-nums">
+                  + {formatCurrency(investmentStartingCapital)} investments
+                </p>
+              )}
+            </div>
+
+            {/* Net Change above an arrow pointing Starting → Projected. */}
+            <div className="flex flex-1 flex-col items-center justify-center px-1 min-w-[76px]">
+              <span
+                className={`mb-0.5 text-[11px] sm:text-xs font-semibold tabular-nums ${
+                  finalBalance - startingBalance >= 0 ? "text-[#007A68]" : "text-[#8B0000]"
+                }`}
+              >
+                {finalBalance - startingBalance >= 0 ? "+" : ""}
+                {formatCurrency(finalBalance - startingBalance)}
+              </span>
+              <div className="flex w-full items-center text-muted-foreground/50" aria-hidden>
+                <span className="h-px flex-1 bg-current" />
+                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 -ml-1" />
+              </div>
+              <span className="mt-0.5 text-[9px] sm:text-[10px] text-muted-foreground">Net change</span>
+              {includeInvestments && (
+                <span className="mt-0.5 text-[9px] text-[#007A68] tabular-nums">
+                  combined{" "}
+                  {finalBalanceWithInvestments - startingBalance - investmentStartingCapital >= 0 ? "+" : ""}
+                  {formatCurrency(finalBalanceWithInvestments - startingBalance - investmentStartingCapital)}
+                </span>
+              )}
+            </div>
+
+            <div className="min-w-0 text-right">
+              <p className="text-xs text-foreground mb-0.5">Projected Balance</p>
+              <p
+                className={`text-base sm:text-xl font-semibold tabular-nums ${
+                  isPositive ? "text-[#007A68]" : "text-[#8B0000]"
+                }`}
+              >
+                {formatCurrency(finalBalance)}
               </p>
-            )}
+              {includeInvestments && (
+                <p className={`text-[10px] tabular-nums ${isCombinedPositive ? "text-[#007A68]" : "text-[#8B0000]"}`}>
+                  Combined: {formatCurrency(finalBalanceWithInvestments)}
+                </p>
+              )}
+            </div>
           </div>
-          <div className={`rounded-lg p-2 sm:p-3 ${(finalBalance - startingBalance) >= 0 ? "bg-[rgba(0,196,170,0.12)]" : "bg-[rgba(224,85,85,0.12)]"}`}>
-            <p className="text-xs text-foreground mb-0.5">Net Change</p>
-            <p className={`text-sm sm:text-lg font-semibold ${(finalBalance - startingBalance) >= 0 ? "text-[#007A68]" : "text-[#8B0000]"}`}>
-              {(finalBalance - startingBalance) >= 0 ? "+" : ""}{formatCurrency(finalBalance - startingBalance)}
-            </p>
-            {includeInvestments && (
-              <p className="text-[10px] text-[#007A68]">
-                Combined: {(finalBalanceWithInvestments - startingBalance - investmentStartingCapital) >= 0 ? "+" : ""}
-                {formatCurrency(finalBalanceWithInvestments - startingBalance - investmentStartingCapital)}
-              </p>
-            )}
-          </div>
+        </div>
         </div>
       </CardHeader>
 
@@ -710,7 +740,26 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
             Sankey's responsive height so flipping the Sankey/Projection toggle
             doesn't shift the card height. Standalone (Classic view) keeps the
             original fixed 350px which the dashboard grid expects. */}
-        <div className={embedded ? "w-full h-[340px] sm:h-[calc(90vh-198px)] sm:min-h-[400px]" : "w-full h-[350px]"}>
+        <div className={`relative ${embedded ? "w-full h-[340px] sm:h-[calc(90vh-198px)] sm:min-h-[400px]" : "w-full h-[350px]"}`}>
+          {/* Include-investments checkbox floats over the bottom-right of the
+              chart (overlapping the grid is fine) to reclaim vertical space. */}
+          {hasInvestments && (
+            <label
+              htmlFor="includeInvestments"
+              className="absolute bottom-14 right-3 z-10 flex items-center gap-2 px-2.5 py-1.5 bg-[rgba(0,196,170,0.18)] rounded-lg border border-[rgba(0,196,170,0.3)] cursor-pointer backdrop-blur-sm"
+            >
+              <Checkbox
+                id="includeInvestments"
+                checked={includeInvestments}
+                onCheckedChange={(checked) => handleIncludeInvestmentsChange(checked === true)}
+                className="border-[#007A68] data-[state=checked]:bg-[#007A68] data-[state=checked]:border-[#007A68] data-[state=checked]:text-white"
+              />
+              <TrendingUp className="h-4 w-4 text-[#007A68] flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-[#007A68] whitespace-nowrap">
+                Include Investments
+              </span>
+            </label>
+          )}
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={balanceData}
@@ -868,7 +917,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                     activeDot={{ r: 5 }}
                     fillOpacity={1}
                     fill="url(#colorNetBalance)"
-                    name="Net Balance"
+                    name="Savings"
                   />
                   {includeInvestments && (
                     <Area
@@ -880,7 +929,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                       activeDot={{ r: 5 }}
                       fillOpacity={1}
                       fill="url(#colorCombined)"
-                      name="Net Balance + Investments"
+                      name="Savings + Investments"
                     />
                   )}
                 </>

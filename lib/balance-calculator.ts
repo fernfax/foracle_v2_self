@@ -2,6 +2,7 @@ import { parse, format, addMonths, isSameMonth, isWithinInterval, startOfMonth, 
 import { calculateCPF, calculateBonusCPF } from "./cpf-calculator";
 
 import { resolveEffectiveAmount, type FutureMilestone } from "@/lib/future-change";
+import { isSpendingCategory } from "@/lib/expense-classification";
 
 interface BonusGroup {
   month: number;  // 1-12 (calendar month)
@@ -33,6 +34,9 @@ interface Expense {
   startDate: string | null;
   endDate: string | null;
   expenseCategory: string | null;
+  /** Display category (Food, Investments, …). Used to exclude savings/investment
+   *  categories from spending so they count toward Net Balance instead. */
+  category?: string | null;
   isActive: boolean | null;
 }
 
@@ -347,6 +351,9 @@ export function calculateMonthlyBalance(
 
     // Calculate total expenses for this month
     const monthlyExpense = activeExpenses.reduce((total, expense) => {
+      // Savings/investment/retirement categories count toward Net Balance, not
+      // spending — skip them so they stay in the balance (matches the Sankey).
+      if (!isSpendingCategory(expense.category)) return total;
       const amount = parseFloat(expense.amount);
       const allocatedAmount = allocateAmountToMonth(
         amount,
