@@ -12,11 +12,12 @@
  * items (an extra column appears on the right); click again to collapse.
  */
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import {
   ResponsiveContainer,
   Sankey,
-  Tooltip,
   Rectangle,
 } from "recharts";
 
@@ -45,6 +46,16 @@ interface SankeyLinkRenderProps {
 }
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CalendarDays, ChevronLeft, ChevronRight, Layers, LineChart, Waves } from "lucide-react";
 import { CHART_PALETTE, STATUS_COLORS } from "@/lib/chart-palette";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
@@ -187,6 +198,45 @@ function truncateLabel(name: string, max: number): string {
 }
 
 export function CashflowSankey({ incomes, expenses, holdings = [], investments = [] }: CashflowSankeyProps) {
+  const router = useRouter();
+
+  // Custom hover tooltip for inflow/outflow nodes + their ribbons. Replaces the
+  // Recharts <Tooltip> so it can STAY open while the cursor moves onto it — the
+  // user needs to reach the "Go to …" link inside. Hover-intent: a short close
+  // delay bridges the gap between the bar/ribbon and the tooltip.
+  type NodeTip = {
+    x: number;
+    y: number;
+    nodeId: string;
+    name: string;
+    kind: ModelNode["kind"];
+    realValue: number;
+    meta?: ModelNode["meta"];
+    link?: "incomes" | "expenses";
+  };
+  const [nodeTip, setNodeTip] = useState<NodeTip | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelHideTip = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  };
+  const scheduleHideTip = () => {
+    cancelHideTip();
+    hideTimer.current = setTimeout(() => setNodeTip(null), 220);
+  };
+  // The highlighted ("lit up") node follows whatever the tooltip is showing.
+  const hoveredNodeId = nodeTip?.nodeId ?? null;
+
+  // Navigation from a tooltip link is gated behind a confirm dialog. Clicking a
+  // bar / ribbon never navigates — only the "Go to …" link does.
+  const [confirmNav, setConfirmNav] = useState<"incomes" | "expenses" | null>(null);
+  const NAV_TARGET: Record<"incomes" | "expenses", string> = {
+    incomes: "/user?tab=incomes",
+    expenses: "/expenses",
+  };
+
   // Inner toggle between the two views of the same card.
   const [chartView, setChartView] = useState<"sankey" | "projection">("sankey");
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -243,8 +293,44 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
   }, [model]);
   const realTotalGross = model.totalGross;
 
+  // Open the hover tooltip for a node — shared by the node rect and its ribbon,
+  // so hovering the inflow/outflow BODY behaves the same as hovering the bar.
+  const showNodeTip = (
+    node: { id: string; name: string; kind: ModelNode["kind"]; meta?: ModelNode["meta"] },
+    clientX: number,
+    clientY: number
+  ) => {
+    cancelHideTip();
+    setNodeTip({
+      x: clientX,
+      y: clientY,
+      nodeId: node.id,
+      name: node.name,
+      kind: node.kind,
+      realValue: realValueById.get(node.id) ?? 0,
+      meta: node.meta,
+      link:
+        node.kind === "income"
+          ? "incomes"
+          : node.kind === "category"
+          ? "expenses"
+          : undefined,
+    });
+  };
+
   const expandedCategory =
     expandedId ? model.categories.find((c) => c.id === expandedId) ?? null : null;
+
+  // Headline "Total Expenses" = consumption only. The model already excludes
+  // savings/investment/retirement categories (they roll into Savings), so this
+  // is simply the model's expense total.
+  const totalSpending = model.totalExpenses;
+
+  // Total take-home = gross income minus employee CPF. Shown alongside gross in
+  // the summary so it matches the per-inflow gross/nett split. Only meaningful
+  // when CPF actually applies.
+  const totalNetIncome = model.totalGross - model.totalCpf;
+  const showNetTotal = model.totalCpf > 0 && totalNetIncome < model.totalGross - 0.5;
 
   // Hover state for the in-bar item overlay — items are NOT part of the
   // Recharts graph, so they need their own cursor-following tooltip.
@@ -398,6 +484,17 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
     // cumulative throughput). Always render the *real* monthly amount.
     const realValue = realValueById.get(n.id) ?? n.value;
 
+    // For income inflows that are CPF-subject, show the take-home (nett) next
+    // to the gross so the label reflects gross/nett. Only when CPF actually
+    // applies (net < gross) — otherwise gross == net and the second figure is
+    // noise. `realValue` is the gross for an income node.
+    const netValue = n.meta?.net;
+    const showNet =
+      n.kind === "income" &&
+      netValue != null &&
+      (n.meta?.cpf ?? 0) > 0 &&
+      netValue < realValue - 0.5;
+
     const isExpandedSelf = isCategory && expandedId === n.id;
     // Dim non-focus outflow nodes (other categories, CPF, savings, shortfall)
     // when something is expanded — sources (incomes) and the hub stay bright
@@ -414,17 +511,29 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
       transition: `opacity ${TRANSITION_MS}ms ease`,
     };
 
+    // Any node lights up while its tooltip is showing. Navigation never happens
+    // from a node click — only from the tooltip's "Go to …" link.
+    const isHovered = hoveredNodeId === n.id;
+
     return (
       <g
         role={isCategory ? "button" : "img"}
         tabIndex={isCategory ? 0 : -1}
-        aria-label={`${n.name}, ${fmt(realValue)} monthly${isCategory ? (isExpandedSelf ? ". Expanded. Click to collapse." : ". Click to drill down.") : ""}`}
+        aria-label={`${n.name}, ${fmt(realValue)} monthly${
+          isCategory
+            ? isExpandedSelf
+              ? ". Expanded. Click to collapse."
+              : ". Click to drill down."
+            : ""
+        }`}
         aria-pressed={isCategory ? isExpandedSelf : undefined}
         style={{ cursor: isCategory ? "pointer" : "default", outline: "none" }}
+        onMouseEnter={(e) => showNodeTip(n, e.clientX, e.clientY)}
+        onMouseLeave={scheduleHideTip}
         onClick={(e) => {
           if (!isCategory) return;
-          // Stop the bubble — the chart's click-away handler would
-          // otherwise immediately collapse us right after we expand.
+          // Stop the bubble — the chart's click-away handler would otherwise
+          // immediately collapse us right after we expand.
           e.stopPropagation();
           setExpandedId(isExpandedSelf ? null : n.id);
         }}
@@ -470,45 +579,43 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
           height={height}
           fill={n.color}
           fillOpacity={1}
-          style={{ ...transition, opacity: nodeOpacity }}
+          style={{
+            ...transition,
+            opacity: nodeOpacity,
+            // Light up the hovered node (inflow or outflow): brighten + glow.
+            filter: isHovered
+              ? `brightness(1.15) drop-shadow(0 0 4px ${n.color})`
+              : undefined,
+          }}
         />
 
-        {/* Hub label sits above the rectangle so it doesn't compete with the
-            ribbons crossing through. On narrow viewports we stack name above
-            amount so it fits in the constrained column. */}
-        {isHub ? (
-          isNarrow ? (
-            <text
-              x={x + width / 2}
-              y={y - 18}
-              textAnchor="middle"
-              fontSize={10}
-              fontFamily='"Space Grotesk", system-ui, sans-serif'
-              fill="#1C2B2A"
-              style={transition}
-              opacity={expandedId ? 0.6 : 1}
-            >
-              <tspan x={x + width / 2} fontWeight={600}>{n.name}</tspan>
-              <tspan x={x + width / 2} dy={12} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
-            </text>
-          ) : (
-            <text
-              x={x + width / 2}
-              y={y - 6}
-              textAnchor="middle"
-              fontSize={12}
-              fontWeight={600}
-              fontFamily='"Space Grotesk", system-ui, sans-serif'
-              fill="#1C2B2A"
-              style={transition}
-              opacity={expandedId ? 0.6 : 1}
-            >
-              {n.name} · {fmt(realValue)}
-            </text>
-          )
-        ) : (
+        {/* The hub no longer carries a label — the "Total Income" figure now
+            lives in the totals strip below the chart, so a hub caption would
+            just duplicate it. */}
+        {isHub ? null : (
           height > 10 && (
-            isNarrow ? (
+            showNet ? (
+              // Income with CPF: two lines — name, then "gross · net take-home"
+              // so the inflow reflects gross/nett. Stacks on both layouts since
+              // it's two pieces of info; "take-home" word dropped on narrow.
+              <text
+                x={labelX}
+                y={y + height / 2}
+                textAnchor={labelAnchor}
+                fontSize={isNarrow ? 10 : 12}
+                fontFamily='"Space Grotesk", system-ui, sans-serif'
+                fill="#1C2B2A"
+                style={transition}
+                opacity={isDimTarget ? 0.25 : 1}
+              >
+                <tspan x={labelX} dy={isNarrow ? -2 : -3} fontWeight={600}>
+                  {isNarrow ? truncateLabel(n.name, 12) : n.name}
+                </tspan>
+                <tspan x={labelX} dy={isNarrow ? 11 : 13} fill="rgba(28,43,42,0.6)">
+                  {fmt(realValue)} · {fmt(netValue ?? realValue)}{isNarrow ? "" : " take-home"}
+                </tspan>
+              </text>
+            ) : isNarrow ? (
               // Stacked label: name on top, amount below. Easier to fit in
               // the ~80px left/right margin on phones than a single wide row.
               <text
@@ -553,8 +660,8 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
     // target id to decide if this ribbon should dim when something else is
     // expanded.
     const pl = payload as unknown as SankeyInputLink & {
-      source: { id?: string };
-      target: { id?: string };
+      source: SankeyInputNode & { id?: string };
+      target: SankeyInputNode & { id?: string };
     };
     const color = pl.color ?? "#3A6B52";
     const sourceId = pl.source?.id;
@@ -562,7 +669,25 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
     const isHubToOutflow = sourceId === model.hub.id;
     const isFocusRibbon = expandedId !== null && targetId === expandedId;
     const dimmed = expandedId !== null && isHubToOutflow && !isFocusRibbon;
-    const baseOpacity = expandedId === null ? 0.42 : dimmed ? 0.08 : 0.42;
+    // Hovering a ribbon BODY shows the same tooltip / light-up as its node — the
+    // "interesting" (non-hub) end of the ribbon.
+    const tipNode = pl.source?.kind === "hub" ? pl.target : pl.source;
+    const ribbonHandlers = {
+      onMouseEnter: (e: { clientX: number; clientY: number }) =>
+        tipNode && showNodeTip(tipNode, e.clientX, e.clientY),
+      onMouseLeave: scheduleHideTip,
+    };
+    // The ribbon brightens with whichever node it connects to the hub.
+    const linkHovered =
+      hoveredNodeId !== null &&
+      (sourceId === hoveredNodeId || targetId === hoveredNodeId);
+    const baseOpacity = linkHovered
+      ? 0.72
+      : expandedId === null
+      ? 0.42
+      : dimmed
+      ? 0.08
+      : 0.42;
 
     const transitionStyle: CSSProperties = {
       transition: `stroke-opacity ${TRANSITION_MS}ms ease`,
@@ -641,6 +766,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
 
     return (
       <path
+        {...ribbonHandlers}
         d={`M${sourceX},${sourceY}C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`}
         fill="none"
         stroke={color}
@@ -651,85 +777,9 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
     );
   }
 
-  // Custom tooltip — Recharts wraps the hovered item twice:
-  //   entry            = payload[0]               // { name, value, payload: <wrap> }
-  //   wrap             = entry.payload            // { payload: <ours>, name, value }
-  //   ours             = wrap.payload             // for nodes: the input node
-  //                                              // for links: { source: <wrap>, target: <wrap>, value, color }
-  // Detect a link by whether `ours.source` is a node-like object.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function renderTooltip({ active, payload }: { active?: boolean; payload?: any }) {
-    if (!active || !payload || payload.length === 0) return null;
-    const entry = payload[0];
-    const wrap = entry?.payload;
-    const ours = wrap?.payload;
-    if (!ours) return null;
-
-    const isLink = typeof ours.source === "object" && typeof ours.target === "object";
-
-    if (isLink) {
-      // `ours.source` / `.target` are Recharts-wrapped nodes with my input
-      // fields spread at the top level — `name`, `kind`, etc. are direct.
-      // `ours.value` is the visualized (sqrt-compressed) ribbon width; read
-      // `realValue` instead so the tooltip shows actual monthly dollars.
-      const src = ours.source as { name?: string };
-      const tgt = ours.target as { name?: string };
-      const value = (ours.realValue as number) ?? (ours.value as number) ?? 0;
-      return (
-        <div className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm max-w-[260px]">
-          <div className="font-display text-[13px] font-semibold mb-1">
-            {src.name ?? "Source"} → {tgt.name ?? "Target"}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Monthly: <span className="text-foreground font-medium tabular-nums">{fmt(value)}</span>
-          </div>
-        </div>
-      );
-    }
-
-    // Node hover. Read amounts from the snapshot map — `ours.value` and
-    // even `model.*.value` are unreliable here because Recharts mutates the
-    // node objects in place during layout.
-    const n = ours as SankeyInputNode;
-    const realValue = realValueById.get(n.id) ?? n.value;
-    const pct = realTotalGross > 0 ? (realValue / realTotalGross) * 100 : 0;
-    return (
-      <div className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm max-w-[260px]">
-        <div className="font-display text-[13px] font-semibold mb-1">{n.name}</div>
-        <div className="text-xs text-muted-foreground space-y-0.5">
-          <div>
-            Monthly: <span className="text-foreground font-medium tabular-nums">{fmt(realValue)}</span>
-          </div>
-          {n.kind !== "shortfall" && n.kind !== "hub" && (
-            <div>
-              Share of income:{" "}
-              <span className="text-foreground font-medium tabular-nums">{pct.toFixed(1)}%</span>
-            </div>
-          )}
-          {n.kind === "income" && n.meta?.cpf != null && n.meta.cpf > 0 && (
-            <div className="pt-1 mt-1 border-t border-border/50">
-              <div>
-                Gross: <span className="text-foreground tabular-nums">{fmt(n.meta.gross ?? 0)}</span>
-              </div>
-              <div>
-                Employee CPF:{" "}
-                <span className="text-foreground tabular-nums">{fmt(n.meta.cpf)}</span>
-              </div>
-              <div>
-                Net take-home:{" "}
-                <span className="text-foreground tabular-nums">{fmt(n.meta.net ?? 0)}</span>
-              </div>
-            </div>
-          )}
-          {n.kind === "category" && (
-            <div className="pt-1 mt-1 border-t border-border/50 text-[11px]">
-              {expandedId === n.id ? "Click to collapse" : "Click to see line items"}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  // (Node/ribbon hover info is rendered by the custom, hoverable tooltip in the
+  // render tree below — see `nodeTip`. Recharts' built-in <Tooltip> was replaced
+  // because it can't stay open long enough for the user to click its link.)
 
   // ---- Render ----------------------------------------------------------
   const isProjection = chartView === "projection";
@@ -890,9 +940,33 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
                       : { top: 12, right: 160, bottom: 8, left: 220 }
                   }
                 >
-                  <Tooltip content={renderTooltip} />
                 </Sankey>
               </ResponsiveContainer>
+            </div>
+
+            {/* Column totals — total income sits under the inflow (left),
+                total expenses under the outflow (right), mirroring the two
+                sides of the diagram. */}
+            <div className="mt-1 flex items-center justify-between gap-3 text-xs sm:text-sm font-display pr-12 sm:pr-0">
+              <div className="text-left">
+                <span className="text-muted-foreground">Total Income</span>{" "}
+                <span className="font-semibold text-foreground tabular-nums">
+                  {fmt(model.totalGross)}
+                </span>
+                {showNetTotal && (
+                  <span className="text-muted-foreground tabular-nums">
+                    {" · "}
+                    {fmt(totalNetIncome)}
+                    <span className="hidden sm:inline"> take-home</span>
+                  </span>
+                )}
+              </div>
+              <div className="text-right">
+                <span className="text-muted-foreground">Total Expenses</span>{" "}
+                <span className="font-semibold text-foreground tabular-nums">
+                  {fmt(totalSpending)}
+                </span>
+              </div>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -911,7 +985,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
           so the Recharts <Tooltip> never sees them — this fixed-positioned
           floater fills the gap. Rendered last + pointer-events: none so it
           never steals hover from anything below. */}
-      {itemHover && (
+      {itemHover && typeof document !== "undefined" && createPortal(
         <div
           role="tooltip"
           className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm pointer-events-none animate-in fade-in"
@@ -939,8 +1013,118 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
               Click to collapse
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
+      {/* Hoverable node/ribbon tooltip. Unlike the Recharts default it has
+          pointer-events:auto and a hover-intent close delay, so the cursor can
+          travel onto it and click the "Go to …" link. Hovering a bar OR its
+          ribbon opens it (see showNodeTip in renderNode/renderLink). */}
+      {/* Portaled to <body> so its position:fixed is viewport-relative — a
+          transformed ancestor (the app shell) would otherwise offset it by the
+          sidebar width, the "far from cursor" bug. */}
+      {nodeTip && typeof document !== "undefined" && createPortal(
+        <div
+          role="tooltip"
+          className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm animate-in fade-in"
+          style={{ ...tooltipStyle(nodeTip.x, nodeTip.y), pointerEvents: "auto" }}
+          onMouseEnter={cancelHideTip}
+          onMouseLeave={scheduleHideTip}
+        >
+          <div className="font-display text-[13px] font-semibold mb-1">{nodeTip.name}</div>
+          <div className="text-xs text-muted-foreground space-y-0.5">
+            <div>
+              Monthly:{" "}
+              <span className="text-foreground font-medium tabular-nums">
+                {fmt(nodeTip.realValue)}
+              </span>
+            </div>
+            {nodeTip.kind !== "shortfall" && nodeTip.kind !== "hub" && (
+              <div>
+                Share of income:{" "}
+                <span className="text-foreground font-medium tabular-nums">
+                  {(realTotalGross > 0 ? (nodeTip.realValue / realTotalGross) * 100 : 0).toFixed(1)}%
+                </span>
+              </div>
+            )}
+            {nodeTip.kind === "income" && nodeTip.meta?.cpf != null && nodeTip.meta.cpf > 0 && (
+              <div className="pt-1 mt-1 border-t border-border/50">
+                <div>
+                  Gross:{" "}
+                  <span className="text-foreground tabular-nums">{fmt(nodeTip.meta.gross ?? 0)}</span>
+                </div>
+                <div>
+                  Employee CPF:{" "}
+                  <span className="text-foreground tabular-nums">{fmt(nodeTip.meta.cpf)}</span>
+                </div>
+                <div>
+                  Net take-home:{" "}
+                  <span className="text-foreground tabular-nums">{fmt(nodeTip.meta.net ?? 0)}</span>
+                </div>
+              </div>
+            )}
+            {nodeTip.kind === "category" && (
+              <div className="pt-1 mt-1 text-[11px]">
+                {expandedId === nodeTip.nodeId
+                  ? "Click the bar to collapse"
+                  : "Click the bar to see line items"}
+              </div>
+            )}
+            {nodeTip.link && (
+              <div className="pt-1.5 mt-1.5 border-t border-border/50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = nodeTip.link!;
+                    cancelHideTip();
+                    setNodeTip(null);
+                    setConfirmNav(target);
+                  }}
+                  className="inline-flex items-center gap-1 font-medium text-brand-terracotta hover:underline"
+                >
+                  {nodeTip.link === "incomes" ? "Go to Incomes" : "Go to Expenses"}{" "}
+                  <span aria-hidden>→</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Confirm before leaving the dashboard. Only the tooltip link opens this;
+          clicking a bar or ribbon never navigates. */}
+      <AlertDialog
+        open={confirmNav !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmNav(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmNav === "expenses" ? "Go to Expenses?" : "Go to Incomes?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You&apos;ll leave the dashboard and open the{" "}
+              {confirmNav === "expenses" ? "Expenses" : "Incomes"} page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmNav(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmNav) router.push(NAV_TARGET[confirmNav]);
+                setConfirmNav(null);
+              }}
+              className="bg-brand-terracotta hover:bg-brand-terracotta/90 text-white"
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
@@ -949,9 +1133,14 @@ function tooltipStyle(x: number, y: number): CSSProperties {
   const vw = typeof window !== "undefined" ? window.innerWidth : 9999;
   const vh = typeof window !== "undefined" ? window.innerHeight : 9999;
   const TIP_W = 240;
-  const TIP_H = 120;
-  const left = Math.min(Math.max(8, x + 14), vw - TIP_W - 8);
-  const top = y + 14 + TIP_H > vh ? Math.max(8, y - TIP_H - 14) : y + 14;
+  const TIP_H = 160;
+  const OFFSET = 14;
+  // Flip to the other side of the cursor (rather than clamping) when it would
+  // overflow, so the tooltip always sits right next to the pointer.
+  const left =
+    x + OFFSET + TIP_W > vw ? Math.max(8, x - OFFSET - TIP_W) : x + OFFSET;
+  const top =
+    y + OFFSET + TIP_H > vh ? Math.max(8, y - OFFSET - TIP_H) : y + OFFSET;
   return { position: "fixed", left, top, zIndex: 60, maxWidth: TIP_W };
 }
 

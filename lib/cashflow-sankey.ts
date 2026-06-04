@@ -15,6 +15,8 @@
  */
 
 import { calculateMonthlyAmount } from "@/lib/expense-calculator";
+import { grossForMonth, bonusForMonth } from "@/lib/income-month";
+import { isSpendingCategory } from "@/lib/expense-classification";
 
 /** Minimal shape this transform needs from an income row. */
 export interface CashflowIncomeInput {
@@ -29,6 +31,13 @@ export interface CashflowIncomeInput {
   subjectToCpf: boolean | null;
   startDate?: string | null;
   endDate?: string | null;
+  // Future income changes + bonuses (incomes_beta). When a target month is
+  // supplied, the per-month gross honours these so the Sankey matches the
+  // Timeline Studio exactly.
+  futureMilestones?: string | null;
+  accountForFutureChange?: boolean | null;
+  accountForBonus?: boolean | null;
+  bonusGroups?: string | null;
 }
 
 /** Minimal shape this transform needs from an expense row. */
@@ -256,39 +265,80 @@ export function buildCashflowModel(
     });
   };
 
+  // "YYYY-MM" for the target month — drives the milestone/bonus-aware per-month
+  // income math (shared with the Timeline Studio via lib/income-month).
+  const monthKey = targetMonth
+    ? `${targetMonth.year}-${String(targetMonth.month).padStart(2, "0")}`
+    : null;
+
+  // CPF deduction ratio for an income (employee CPF as a fraction of gross),
+  // derived from the stored net take-home. Applied identically to the base
+  // income and to any bonus so per-month CPF stays self-consistent and matches
+  // the Studio's nett bars. 0 when the income isn't CPF-subject / has no net.
+  const cpfRatioFor = (inc: CashflowIncomeInput): number => {
+    if (!inc.subjectToCpf || inc.netTakeHome == null) return 0;
+    const rawGross = toNum(inc.amount);
+    if (rawGross <= 0) return 0;
+    const netRaw = toNum(inc.netTakeHome);
+    return Math.max(0, rawGross - netRaw) / rawGross;
+  };
+
   // --- Income side (gross) + CPF derivation -------------------------------
   const incomeNodes: CashflowNode[] = [];
   let totalGross = 0;
   let totalCpf = 0;
 
   for (const inc of incomes) {
-    if (!isCurrentIncome(inc)) continue;
-    const gross = amountFor(inc);
-    if (gross <= 0) continue;
+    // On the target-month path the income's own date window (grossForMonth /
+    // bonusForMonth, plus the gross > 0 guard below) decides whether it counts —
+    // so a "future"-tagged income that has ALREADY started is included and a
+    // "past" income that has ended is dropped, matching the balance projection.
+    // The legacy no-target path keeps the coarse past/current/future filter.
+    if (!monthKey && !isCurrentIncome(inc)) continue;
 
-    // Employee CPF = gross − net take-home (employer CPF is excluded as it
-    // never lands as spendable cash). Only when the income is CPF-subject and
-    // a net figure is stored. Scale the stored CPF by the same ratio as the
-    // amount so per-month targets stay self-consistent (e.g. a yearly bonus
-    // that contributes 1/12 also contributes 1/12 of its CPF deduction).
-    let cpf = 0;
-    if (inc.subjectToCpf && inc.netTakeHome != null) {
-      const rawGross = toNum(inc.amount);
-      const ratio = rawGross > 0 ? gross / rawGross : 0;
-      const netRaw = toNum(inc.netTakeHome);
-      const cpfRaw = Math.max(0, rawGross - netRaw);
-      cpf = cpfRaw * ratio;
+    // On the target-month path use the shared milestone/bonus-aware math so the
+    // Sankey matches the Timeline Studio; fall back to the legacy averaging for
+    // callers without a target month (classic view, tests).
+    const gross = monthKey
+      ? grossForMonth({ ...inc, startDate: inc.startDate ?? "" }, monthKey)
+      : amountFor(inc);
+
+    const cpfRatio = cpfRatioFor(inc);
+
+    if (gross > 0) {
+      const cpf = gross * cpfRatio;
+      totalGross += gross;
+      totalCpf += cpf;
+      incomeNodes.push({
+        id: inc.id,
+        label: inc.name,
+        value: round2(gross),
+        kind: "income",
+        meta: { gross: round2(gross), cpf: round2(cpf), net: round2(gross - cpf) },
+      });
     }
 
-    totalGross += gross;
-    totalCpf += cpf;
-    incomeNodes.push({
-      id: inc.id,
-      label: inc.name,
-      value: round2(gross),
-      kind: "income",
-      meta: { gross: round2(gross), cpf: round2(cpf), net: round2(gross - cpf) },
-    });
+    // A bonus payable in the target month renders as its own inflow node (the
+    // "<name> Bonus" spike), mirroring the Studio's separate bonus bar.
+    if (monthKey) {
+      const bonus = bonusForMonth({ ...inc, startDate: inc.startDate ?? "" }, monthKey);
+      if (bonus > 0) {
+        const bonusCpf = bonus * cpfRatio;
+        totalGross += bonus;
+        totalCpf += bonusCpf;
+        incomeNodes.push({
+          id: `${inc.id}:bonus`,
+          label: `${inc.name} Bonus`,
+          value: round2(bonus),
+          kind: "income",
+          meta: {
+            gross: round2(bonus),
+            cpf: round2(bonusCpf),
+            net: round2(bonus - bonusCpf),
+          },
+        });
+      }
+    }
   }
 
   incomeNodes.sort((a, b) => b.value - a.value);
@@ -299,6 +349,11 @@ export function buildCashflowModel(
 
   for (const exp of expenses) {
     if (exp.isActive === false) continue;
+    // Savings/investment/retirement categories aren't spending — skip them here
+    // so they don't render as expense bars or count toward totalExpenses. The
+    // money instead falls through to the Savings node (net = gross − CPF −
+    // spending), matching the balance projection's Net Balance.
+    if (!isSpendingCategory(exp.category)) continue;
     const amt = amountFor(exp);
     if (amt <= 0) continue; // one-time / zero rows drop out
 

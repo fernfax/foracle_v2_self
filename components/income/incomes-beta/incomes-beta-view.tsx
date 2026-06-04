@@ -74,6 +74,7 @@ import {
 } from "./future-change-dialog";
 import { IncomeCreatorDrawer } from "./income-creator-drawer";
 import { IncomeDetailDrawer } from "./income-detail-drawer";
+import { grossForMonth, bonusForMonth } from "@/lib/income-month";
 
 type Income = {
   id: string;
@@ -309,59 +310,10 @@ function buildMonthCells(
   });
 }
 
-function isMonthInIncomeWindow(income: Income, cell: MonthCell): boolean {
-  const start = parseISO(income.startDate);
-  const startKey = format(startOfMonth(start), "yyyy-MM");
-  if (cell.key < startKey) return false;
-  if (income.endDate) {
-    const endKey = format(startOfMonth(parseISO(income.endDate)), "yyyy-MM");
-    if (cell.key > endKey) return false;
-  }
-  return true;
-}
-
+// Gross income for a month. Delegates to the shared lib/income-month so the
+// timeline bars and the dashboard Sankey compute identical numbers.
 function getAmountForMonth(income: Income, cell: MonthCell): number {
-  if (!income.isActive) return 0;
-  if (!isMonthInIncomeWindow(income, cell)) return 0;
-
-  const baseAmount = Number(income.amount) || 0;
-  const milestones = income.accountForFutureChange
-    ? safeParseMilestones(income.futureMilestones)
-    : [];
-  const effectiveAmount = resolveEffectiveAmount(
-    baseAmount,
-    milestones,
-    cell.key
-  );
-
-  switch (income.frequency) {
-    case "monthly":
-      return effectiveAmount;
-    case "yearly": {
-      const startMonth = format(parseISO(income.startDate), "MM");
-      const cellMonth = format(cell.date, "MM");
-      return startMonth === cellMonth ? effectiveAmount : 0;
-    }
-    case "weekly":
-      return effectiveAmount * (52 / 12);
-    case "bi-weekly":
-      return effectiveAmount * (26 / 12);
-    case "one-time": {
-      const startKey = format(startOfMonth(parseISO(income.startDate)), "yyyy-MM");
-      return cell.key === startKey ? effectiveAmount : 0;
-    }
-    case "custom": {
-      try {
-        const months: number[] = JSON.parse(income.customMonths || "[]");
-        const cellMonthNum = cell.date.getMonth() + 1;
-        return months.includes(cellMonthNum) ? effectiveAmount : 0;
-      } catch {
-        return 0;
-      }
-    }
-    default:
-      return effectiveAmount;
-  }
+  return grossForMonth(income, cell.key);
 }
 
 
@@ -506,59 +458,11 @@ function buildBarSegments(income: Income, cells: MonthCell[]): BarSegment[] {
 }
 
 // ─── Bonus ────────────────────────────────────────────────────────────────
-// Bonus groups are stored as a JSON string of [{ month: 1-12, amount: "1.5" }]
-// where `amount` is a months-multiplier (e.g. a 13th-month bonus in Dec =
-// { month: 12, amount: "1" }). The gross bonus for a month is the effective
-// monthly amount × multiplier — the same formula used by lib/balance-calculator.
-interface ParsedBonus {
-  month: number;
-  multiplier: number;
-}
-
-function parseBonusGroups(json: string | null): ParsedBonus[] {
-  if (!json) return [];
-  try {
-    const raw = JSON.parse(json);
-    if (!Array.isArray(raw)) return [];
-    return raw
-      .filter(
-        (g) =>
-          g &&
-          typeof g.month === "number" &&
-          g.amount !== undefined &&
-          g.amount !== null &&
-          g.amount !== ""
-      )
-      .map((g) => ({ month: g.month, multiplier: Number(g.amount) || 0 }))
-      .filter((g) => g.multiplier > 0);
-  } catch {
-    return [];
-  }
-}
-
-// Gross bonus payable in a given month (0 when none). Mirrors getAmountForMonth's
-// milestone handling so the bonus scales off the income's effective monthly base.
+// Gross bonus payable in a given month (0 when none). Delegates to the shared
+// lib/income-month so the timeline bonus bars and the dashboard Sankey bonus
+// node compute identical numbers.
 function getBonusForMonth(income: Income, cell: MonthCell): number {
-  if (!income.isActive || !income.accountForBonus || !income.bonusGroups) {
-    return 0;
-  }
-  if (!isMonthInIncomeWindow(income, cell)) return 0;
-  const groups = parseBonusGroups(income.bonusGroups);
-  if (groups.length === 0) return 0;
-  const cellMonthNum = cell.date.getMonth() + 1;
-  const match = groups.find((g) => g.month === cellMonthNum);
-  if (!match) return 0;
-
-  const baseAmount = Number(income.amount) || 0;
-  const milestones = income.accountForFutureChange
-    ? safeParseMilestones(income.futureMilestones)
-    : [];
-  const effectiveMonthly = resolveEffectiveAmount(
-    baseAmount,
-    milestones,
-    cell.key
-  );
-  return effectiveMonthly * match.multiplier;
+  return bonusForMonth(income, cell.key);
 }
 
 interface BonusBar {
@@ -805,9 +709,10 @@ export function IncomesBetaView({
   incomes: rawIncomes,
   familyMembers,
 }: IncomesBetaViewProps) {
-  const [view, setView] = useState<ViewMode>("cards");
-  // Alias kept so the call sites below read uniformly. The Timeline/Cards
-  // toggle is always available, so the effective view is just the selected one.
+  // Timeline Studio is the default (and currently only) view. The Action Cards
+  // view is hidden for now — the toggle is removed below. `view`/`setView` stay
+  // wired so re-enabling the toggle later is a one-line change.
+  const [view, setView] = useState<ViewMode>("timeline");
   const effectiveView: ViewMode = view;
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   // Clearing hover is deferred by a tick so the pointer can travel from an axis
@@ -1640,7 +1545,9 @@ export function IncomesBetaView({
 
   return (
     <div className="space-y-6">
-      <ViewToggle view={effectiveView} onChangeView={setView} />
+      {/* Action Cards view is hidden for now — Timeline Studio is the only view.
+          Re-add <ViewToggle view={effectiveView} onChangeView={setView} /> to
+          bring the toggle back. */}
 
       {error && (
         <div className="flex items-center justify-between rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">
@@ -5234,12 +5141,12 @@ function BetaFooter({
   return (
     <div className="rounded-xl border border-border/30 bg-muted/40 p-4 text-xs text-muted-foreground">
       <p className="font-semibold uppercase tracking-[0.18em] text-foreground/70">
-        Beta preview · live editing
+        Live editing
       </p>
       <p className="mt-1">
         Showing {incomeCount} active income stream{incomeCount === 1 ? "" : "s"} across{" "}
         {familyMembers.length} family member{familyMembers.length === 1 ? "" : "s"}. Click any
-        amount, name, or date to edit. Changes save to the same data the Standard View uses.
+        amount, name, or date to edit. Changes save to the same data the Legacy view uses.
       </p>
     </div>
   );
