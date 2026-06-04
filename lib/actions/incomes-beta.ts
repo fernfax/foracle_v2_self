@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import { effectiveIncomeCategory } from "@/lib/income-category";
 import {
   createIncome,
   deleteIncome,
@@ -34,6 +35,9 @@ export async function getIncomesBeta() {
   const rows = await listIncomes(ctx);
   return rows.map((r) => ({
     ...r,
+    // A "future" income whose start date has arrived reads as "current" (see
+    // lib/income-category). Non-destructive — derived fresh on every read.
+    incomeCategory: effectiveIncomeCategory(r.incomeCategory, r.startDate),
     frequency: "monthly" as const,
     customMonths: null as string | null,
   }));
