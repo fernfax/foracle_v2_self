@@ -1,6 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { getDashboardMetrics } from "@/lib/actions/user";
-import { getIncomes } from "@/lib/actions/income";
+// The dashboard Sankey + balance projection read from incomes_beta (the table
+// the Timeline Studio edits) so a month toggle reflects the Studio exactly.
+// Other consumers (metrics, CPF tab, etc.) still use the legacy incomes table.
+import { getIncomesBeta } from "@/lib/actions/incomes-beta";
 import { getExpenses } from "@/lib/actions/expenses";
 import { getCurrentHoldings } from "@/lib/actions/current-holdings";
 import { getInvestments } from "@/lib/actions/investments";
@@ -24,7 +27,7 @@ export default async function DashboardPage() {
   // Fetch user-specific metrics and data with data isolation
   const [metrics, incomes, expenses, holdings, investments, budgetData] = await Promise.all([
     getDashboardMetrics(),
-    getIncomes(),
+    getIncomesBeta(),
     getExpenses(),
     getCurrentHoldings(),
     getInvestments(),

@@ -119,8 +119,10 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "family");
-  const [incomeView, setIncomeView] = useState<"standard" | "beta">(
-    searchParams.get("view") === "beta" ? "beta" : "standard"
+  // "standard" = the Timeline Studio (formerly "beta") — now the default.
+  // "legacy" = the old income table view. Opt into it with ?view=legacy.
+  const [incomeView, setIncomeView] = useState<"legacy" | "standard">(
+    searchParams.get("view") === "legacy" ? "legacy" : "standard"
   );
 
   useEffect(() => {
@@ -133,7 +135,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
     if (tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
     }
-    const viewFromUrl = searchParams.get("view") === "beta" ? "beta" : "standard";
+    const viewFromUrl = searchParams.get("view") === "legacy" ? "legacy" : "standard";
     if (viewFromUrl !== incomeView) {
       setIncomeView(viewFromUrl);
     }
@@ -146,11 +148,11 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
   };
 
   const handleToggleIncomeView = () => {
-    const next = incomeView === "beta" ? "standard" : "beta";
+    const next = incomeView === "legacy" ? "standard" : "legacy";
     setIncomeView(next);
     const params = new URLSearchParams();
     params.set("tab", "incomes");
-    if (next === "beta") params.set("view", "beta");
+    if (next === "legacy") params.set("view", "legacy");
     router.push(`/user?${params.toString()}`, { scroll: false });
   };
 
@@ -167,13 +169,13 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
               onClick={handleToggleIncomeView}
               className={cn(
                 "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm",
-                incomeView === "beta"
+                incomeView === "legacy"
                   ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90 hover:border-brand-terracotta"
                   : "border-brand-terracotta/40 bg-brand-terracotta/10 text-brand-terracotta hover:bg-brand-terracotta/15 hover:border-brand-terracotta/60"
               )}
             >
               <Sparkles className="h-4 w-4 mr-1" />
-              {incomeView === "beta" ? "Standard View" : "Beta View"}
+              {incomeView === "legacy" ? "Standard View" : "Legacy"}
             </Button>
           ) : null
         }
@@ -208,7 +210,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         </TabsContent>
 
         <TabsContent value="incomes" className="mt-4">
-          {incomeView === "beta" ? (
+          {incomeView === "standard" ? (
             <IncomesBetaView
               incomes={initialIncomesBeta}
               familyMembers={initialFamilyMembers}
