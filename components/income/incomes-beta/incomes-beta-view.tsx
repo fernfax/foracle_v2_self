@@ -4126,17 +4126,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
               )
             )
           );
-          // Tap (no horizontal drag across months) → the user is adjusting an
-          // existing income from this month, not drawing a new bar. Route to
-          // the month-click handler and discard the zero-width draft. Drawing
-          // requires dragging across at least one month boundary.
-          const anchorIdxForTap = cells.findIndex(
-            (c) => c.key === drawState.anchorKey
-          );
-          if (onMonthClick && anchorIdxForTap === finalIdx) {
-            onMonthClick(finalIdx);
-            return;
-          }
+          // A draw on a single month creates a NEW income (one-month bar), the
+          // same as dragging across a range — it just opens the New Income popup
+          // with start == end. (Adjusting an existing income is done by clicking
+          // its bar, not by drawing on the lane.)
           // Compute the bar's center in viewport coordinates so the popup's
           // speech-bubble tail can point at the actual bar (not at where the
           // cursor happened to be released).
@@ -4284,7 +4277,12 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                       onPointerCancel={handlePointerCancel}
                       onClickCapture={handleClickCapture}
                       className={cn(
-                        "absolute -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 touch-none select-none",
+                        // z-[5] keeps the bar above the bonus connector line (which
+                        // renders later in the DOM at the default z) while staying
+                        // below the bonus pill + the "today" marker, both z-10. So
+                        // the connector emerges from under the bar and the bar stays
+                        // on top when it scales up on hover.
+                        "absolute z-[5] -translate-y-1/2 flex items-center justify-center px-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-y-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 touch-none select-none",
                         editMode
                           ? "cursor-grab active:cursor-grabbing"
                           : "cursor-default",
