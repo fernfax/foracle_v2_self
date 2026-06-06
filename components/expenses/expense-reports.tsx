@@ -19,7 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowUpDown, PieChart as PieChartIcon } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import {
   calculateExpensesByCategory,
   filterExpensesByDateRange,
@@ -250,7 +251,7 @@ export function ExpenseReports({ expenses }: ExpenseReportsProps) {
             <CardContent>
               <div className="flex flex-col lg:flex-row gap-8 items-center">
                 <div className="w-full lg:w-2/3">
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveChart width="100%" height={400}>
                     <PieChart>
                       <Pie
                         data={pieChartData}
@@ -268,7 +269,7 @@ export function ExpenseReports({ expenses }: ExpenseReportsProps) {
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </ResponsiveChart>
                 </div>
                 <div className="w-full lg:w-1/3">
                   <div className="text-center lg:text-left mb-4">

@@ -2,7 +2,7 @@ import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { familyMembers, incomes, users } from "@/db/schema";
+import { familyMembers, incomesBeta, users } from "@/db/schema";
 import type { AuthContext } from "@/lib/auth-context";
 import { assertCallerIsMaster } from "@/lib/auth-context";
 import { RELATIONSHIP_VALUES, type RelationshipValue } from "@/lib/family-relationships";
@@ -112,20 +112,26 @@ export async function deleteFamilyMember(
 }> {
   const existing = await db.query.familyMembers.findFirst({
     where: and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)),
-    with: {
-      incomes: {
-        columns: { id: true, name: true, amount: true, category: true },
-      },
-    },
   });
   if (!existing) throw new FamilyMemberNotFoundError();
 
-  await db.delete(incomes).where(eq(incomes.familyMemberId, id));
+  // Capture the linked incomes (for the confirmation summary) before deleting.
+  const linkedIncomes = await db
+    .select({
+      id: incomesBeta.id,
+      name: incomesBeta.name,
+      amount: incomesBeta.amount,
+      category: incomesBeta.category,
+    })
+    .from(incomesBeta)
+    .where(eq(incomesBeta.familyMemberId, id));
+
+  await db.delete(incomesBeta).where(eq(incomesBeta.familyMemberId, id));
   await db
     .delete(familyMembers)
     .where(and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)));
 
-  return { deletedIncomes: existing.incomes ?? [] };
+  return { deletedIncomes: linkedIncomes };
 }
 
 export async function getFamilyMemberIncomes(
@@ -134,14 +140,17 @@ export async function getFamilyMemberIncomes(
 ): Promise<{ id: string; name: string; amount: string; category: string }[]> {
   const member = await db.query.familyMembers.findFirst({
     where: and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)),
-    with: {
-      incomes: {
-        columns: { id: true, name: true, amount: true, category: true },
-      },
-    },
   });
   if (!member) throw new FamilyMemberNotFoundError();
-  return member.incomes ?? [];
+  return db
+    .select({
+      id: incomesBeta.id,
+      name: incomesBeta.name,
+      amount: incomesBeta.amount,
+      category: incomesBeta.category,
+    })
+    .from(incomesBeta)
+    .where(eq(incomesBeta.familyMemberId, id));
 }
 
 // Finds the caller's own Self row in the current family. Adopts legacy rows

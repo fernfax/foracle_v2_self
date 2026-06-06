@@ -93,38 +93,6 @@ export const familyMembers = pgTable("family_members", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Incomes table
-export const incomes = pgTable("incomes", {
-  id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
-  familyId: varchar("family_id", { length: 255 }),
-  familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Optional link to family member
-  name: varchar("name", { length: 255 }).notNull(), // Income source name (e.g., "Primary Income", "Monthly Salary")
-  category: varchar("category", { length: 100 }).notNull(), // salary, freelance, business, investment, etc.
-  incomeCategory: varchar("income_category", { length: 50 }).default("current-recurring"), // current-recurring, future-recurring, temporary, one-off
-  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
-  frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time, weekly, bi-weekly, custom
-  customMonths: text("custom_months"), // JSON array of month numbers for custom frequency (e.g., "[1,3,6,12]" for Jan, Mar, Jun, Dec)
-  subjectToCpf: boolean("subject_to_cpf").default(false), // Subject to CPF deductions
-  accountForBonus: boolean("account_for_bonus").default(false), // Whether to account for bonuses
-  bonusGroups: text("bonus_groups"), // JSON array of bonus groups (e.g., '[{"month": 12, "amount": "1.5"}]')
-  employeeCpfContribution: decimal("employee_cpf_contribution", { precision: 12, scale: 2 }), // Calculated employee CPF share
-  employerCpfContribution: decimal("employer_cpf_contribution", { precision: 12, scale: 2 }), // Calculated employer CPF share
-  netTakeHome: decimal("net_take_home", { precision: 12, scale: 2 }), // Gross minus employee CPF
-  cpfOrdinaryAccount: decimal("cpf_ordinary_account", { precision: 12, scale: 2 }), // CPF OA allocation
-  cpfSpecialAccount: decimal("cpf_special_account", { precision: 12, scale: 2 }), // CPF SA allocation
-  cpfMedisaveAccount: decimal("cpf_medisave_account", { precision: 12, scale: 2 }), // CPF MA allocation
-  description: text("description"), // Payment notes
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date"), // Optional - leave empty for ongoing income
-  pastIncomeHistory: text("past_income_history"), // JSON: historical income data [{period, granularity, amount, notes}]
-  futureMilestones: text("future_milestones"), // JSON: planned income changes [{id, targetMonth, amount, reason, notes}]
-  accountForFutureChange: boolean("account_for_future_change").default(false), // Include future milestones in balance projections
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
 // Expense categories table
 export const expenseCategories = pgTable("expense_categories", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -267,6 +235,9 @@ export const vehicleAssets = pgTable("vehicle_assets", {
   // Purchase Details
   originalPurchasePrice: decimal("original_purchase_price", { precision: 15, scale: 2 }).notNull(),
   loanAmountTaken: decimal("loan_amount_taken", { precision: 15, scale: 2 }),
+  loanInterestRate: decimal("loan_interest_rate", { precision: 5, scale: 2 }), // annual interest rate %
+  loanTenureYears: integer("loan_tenure_years"),
+  loanTenureMonths: integer("loan_tenure_months"),
 
   // Loan Repayment
   loanAmountRepaid: decimal("loan_amount_repaid", { precision: 15, scale: 2 }),
@@ -489,7 +460,6 @@ export const familiesRelations = relations(families, ({ many }) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
-  incomes: many(incomes),
   expenses: many(expenses),
   expenseCategories: many(expenseCategories),
   expenseSubcategories: many(expenseSubcategories),
@@ -511,20 +481,8 @@ export const familyMembersRelations = relations(familyMembers, ({ one, many }) =
     fields: [familyMembers.userId],
     references: [users.id],
   }),
-  incomes: many(incomes),
   currentHoldings: many(currentHoldings),
   policies: many(policies),
-}));
-
-export const incomesRelations = relations(incomes, ({ one }) => ({
-  user: one(users, {
-    fields: [incomes.userId],
-    references: [users.id],
-  }),
-  familyMember: one(familyMembers, {
-    fields: [incomes.familyMemberId],
-    references: [familyMembers.id],
-  }),
 }));
 
 // Parallel incomes table that powers the Beta view. Same column set as

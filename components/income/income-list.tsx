@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceDot, LabelList } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, ReferenceDot, LabelList } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import {
   Table,
   TableBody,
@@ -1031,7 +1032,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
                                   {/* Right side - Income Chart using Recharts (2/3 width) - fills container height */}
                                   <div className="col-span-2 relative bg-muted rounded-xl overflow-hidden h-full">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    <ResponsiveChart width="100%" height="100%">
                                       <AreaChart data={mergedChartData} margin={{ top: 20, right: 40, left: 50, bottom: 20 }}>
                                         <defs>
                                           <linearGradient id={`gradient-past-${income.id}`} x1="0" y1="0" x2="0" y2="1">
@@ -1105,7 +1106,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                           />
                                         )}
                                       </AreaChart>
-                                    </ResponsiveContainer>
+                                    </ResponsiveChart>
                                   </div>
                                 </div>
                               </div>

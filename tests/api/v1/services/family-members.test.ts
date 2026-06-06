@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { db } from "@/db";
-import { familyMembers, incomes } from "@/db/schema";
+import { familyMembers, incomesBeta } from "@/db/schema";
 import {
   FamilyMemberNotFoundError,
   createFamilyMember,
@@ -123,8 +123,8 @@ describe("family members (real DB)", () => {
       name: "Alice",
       relationship: "Spouse",
     });
-    // Seed two legacy `incomes` rows linked to this member.
-    await db.insert(incomes).values([
+    // Seed two incomes_beta rows linked to this member.
+    await db.insert(incomesBeta).values([
       {
         id: randomUUID(),
         userId: ctx.userId,
@@ -133,7 +133,6 @@ describe("family members (real DB)", () => {
         name: "Salary",
         category: "Employment",
         amount: "5000.00",
-        frequency: "monthly",
         startDate: "2026-01-01",
       },
       {
@@ -144,7 +143,6 @@ describe("family members (real DB)", () => {
         name: "Bonus",
         category: "Employment",
         amount: "1000.00",
-        frequency: "yearly",
         startDate: "2026-01-01",
       },
     ]);
@@ -160,8 +158,8 @@ describe("family members (real DB)", () => {
 
     const remainingIncomes = await db
       .select()
-      .from(incomes)
-      .where(eq(incomes.familyMemberId, member.id));
+      .from(incomesBeta)
+      .where(eq(incomesBeta.familyMemberId, member.id));
     expect(remainingIncomes).toHaveLength(0);
   });
 

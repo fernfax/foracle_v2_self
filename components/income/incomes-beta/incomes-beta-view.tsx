@@ -4409,7 +4409,6 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                           onAmountChange(income, next, bonus);
                         }
                       }}
-                      onOpenDetail={() => onOpenDetail(income.id)}
                     />
                   </PopoverContent>
                 </Popover>
@@ -4451,8 +4450,8 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                 <div key={`${income.id}-bonus-${b.index}`}>
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute w-0.5 -translate-x-1/2 rounded-full bg-[#D4A843]/55"
-                    style={{ left: `${centerPct}%`, top: "44%", height: "16%" }}
+                    className="pointer-events-none absolute w-1.5 -translate-x-1/2 bg-gradient-to-b from-[#3A6B52] to-[#D4A843]"
+                    style={{ left: `${centerPct}%`, top: "44%", height: "20%" }}
                   />
                   <Popover {...(editMode ? {} : { open: false })}>
                     <PopoverTrigger asChild>
@@ -4482,7 +4481,6 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         onConfirm={(next, bonus) =>
                           onAmountChange(income, next, bonus)
                         }
-                        onOpenDetail={() => onOpenDetail(income.id)}
                       />
                     </PopoverContent>
                   </Popover>

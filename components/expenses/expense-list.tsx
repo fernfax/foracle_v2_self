@@ -49,7 +49,8 @@ import { ManageCategoriesDialog } from "./manage-categories-dialog";
 import { ExpenseBreakdownModal } from "./expense-breakdown-modal";
 import { deleteExpense } from "@/lib/actions/expenses";
 import { getExpenseCategories, type ExpenseCategory } from "@/lib/actions/expense-categories";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip, PieChart, Pie, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Cell, Tooltip, PieChart, Pie, Legend } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { getCategoryColor } from "@/lib/expense-calculator";
 
 interface Expense {
@@ -524,7 +525,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
                     {/* Right: Pie Chart */}
                     <div className="flex items-center justify-center">
-                      <ResponsiveContainer width="100%" height={200}>
+                      <ResponsiveChart width="100%" height={200}>
                         <PieChart>
                           <Pie
                             data={breakdownDetails.categories.map((cat) => ({
@@ -579,7 +580,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                             }}
                           />
                         </PieChart>
-                      </ResponsiveContainer>
+                      </ResponsiveChart>
                     </div>
                   </div>
                 </div>

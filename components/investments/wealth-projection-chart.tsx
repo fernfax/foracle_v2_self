@@ -8,9 +8,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
-  ResponsiveContainer,
   Legend,
 } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
@@ -360,7 +360,7 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
 
       <CardContent className="pt-2">
         <div className="w-full h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveChart width="100%" height="100%">
             <AreaChart
               data={projectionData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -416,7 +416,7 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
                 fill="url(#colorWithout)"
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ResponsiveChart>
         </div>
       </CardContent>
     </Card>

@@ -8,9 +8,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   Cell,
 } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
@@ -90,7 +90,7 @@ export function CategoryBudgetBarChart({ budgetData }: CategoryBudgetBarChartPro
       </CardHeader>
       <CardContent>
         <div style={{ height: chartHeight }} className="w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveChart width="100%" height="100%">
             <BarChart
               layout="vertical"
               data={chartData}
@@ -120,7 +120,7 @@ export function CategoryBudgetBarChart({ budgetData }: CategoryBudgetBarChartPro
               </Bar>
               <Bar dataKey="remaining" stackId="a" fill="rgba(28,43,42,0.10)" radius={[0, 4, 4, 0]} />
             </BarChart>
-          </ResponsiveContainer>
+          </ResponsiveChart>
         </div>
 
         {/* Legend */}

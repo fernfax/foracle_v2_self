@@ -54,3 +54,6 @@ mobile/ios
 mobile/android
 mobile/.env*.local
 mobile/expo-env.d.ts
+
+# Playwright stored auth state (session cookies — never commit)
+tests/e2e/.auth/

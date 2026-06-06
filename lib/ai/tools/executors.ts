@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
-import { expenses, incomes, familyMembers, expenseCategories, currentHoldings, propertyAssets, vehicleAssets, assets, policies, dailyExpenses, expenseSubcategories } from "@/db/schema";
+import { expenses, incomesBeta, familyMembers, expenseCategories, currentHoldings, propertyAssets, vehicleAssets, assets, policies, dailyExpenses, expenseSubcategories } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf-calculator";
 import {
@@ -35,6 +35,12 @@ interface FutureMilestone {
 // =============================================================================
 // Types
 // =============================================================================
+
+// incomes_beta is monthly-only; synthesize the legacy frequency fields
+// the AI summary math reads.
+function asMonthly<T extends object>(rows: T[]) {
+  return rows.map((r) => ({ ...r, frequency: "monthly" as string, customMonths: null as string | null }));
+}
 
 export interface ToolExecutionResult<T = unknown> {
   success: boolean;
@@ -611,15 +617,15 @@ async function executeGetIncomeSummary(
   const { year, month } = parseMonth(params.month);
 
   // Get all active incomes for the user
-  const userIncomes = await db
+  const userIncomes = asMonthly(await db
     .select()
-    .from(incomes)
+    .from(incomesBeta)
     .where(
       and(
-        eq(incomes.familyId, familyId),
-        eq(incomes.isActive, true)
+        eq(incomesBeta.familyId, familyId),
+        eq(incomesBeta.isActive, true)
       )
-    );
+    ));
 
   // Get family members to map IDs to names
   const userFamilyMembers = await db
@@ -1037,13 +1043,13 @@ async function executeGetFamilySummary(
     .where(eq(familyMembers.familyId, familyId));
 
   // Get all incomes for this user (to link to family members)
-  const userIncomes = await db
+  const userIncomes = asMonthly(await db
     .select()
-    .from(incomes)
+    .from(incomesBeta)
     .where(and(
-      eq(incomes.familyId, familyId),
-      eq(incomes.isActive, true)
-    ));
+      eq(incomesBeta.familyId, familyId),
+      eq(incomesBeta.isActive, true)
+    )));
 
   // Build family member summaries
   const householdMembers: FamilyMemberSummary[] = [];
@@ -1349,10 +1355,10 @@ async function executeGetBalanceSummary(
   assumptions.push("Starting balance taken from current_holdings table");
 
   // Fetch all active incomes and expenses
-  const userIncomes = await db
+  const userIncomes = asMonthly(await db
     .select()
-    .from(incomes)
-    .where(and(eq(incomes.familyId, familyId), eq(incomes.isActive, true)));
+    .from(incomesBeta)
+    .where(and(eq(incomesBeta.familyId, familyId), eq(incomesBeta.isActive, true))));
 
   const userExpenses = await db
     .select()

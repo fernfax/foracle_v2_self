@@ -202,7 +202,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         <TabsContent value="family" className="mt-4">
           <FamilyMemberList
             initialMembers={initialFamilyMembers}
-            incomes={initialIncomes}
+            incomes={initialIncomesBeta}
             cpfData={initialCpfData}
             holdings={initialCurrentHoldings}
             policies={initialPolicies}
@@ -223,7 +223,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         <TabsContent value="cpf" className="mt-4">
           <CpfList initialCpfData={initialCpfData} />
           <div className="mt-6">
-            <CpfProjectionGraph cpfData={initialCpfData} incomes={initialIncomes} propertyAssets={initialPropertyAssets} />
+            <CpfProjectionGraph cpfData={initialCpfData} incomes={initialIncomesBeta} propertyAssets={initialPropertyAssets} />
           </div>
         </TabsContent>
 
