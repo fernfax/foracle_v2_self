@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +30,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInMonths } from "date-fns";
 import { cn } from "@/lib/utils";
 import { createVehicleAsset, updateVehicleAsset } from "@/lib/actions/vehicle-assets";
 
@@ -41,6 +41,9 @@ interface VehicleAsset {
   coeExpiryDate: string | null;
   originalPurchasePrice: string;
   loanAmountTaken: string | null;
+  loanInterestRate: string | null;
+  loanTenureYears: number | null;
+  loanTenureMonths: number | null;
   loanAmountRepaid: string | null;
   monthlyLoanPayment: string | null;
   linkedExpenseId: string | null;
@@ -77,6 +80,15 @@ export function AddVehicleDialog({
   const [loanAmountTaken, setLoanAmountTaken] = useState(
     vehicle?.loanAmountTaken || ""
   );
+  const [loanInterestRate, setLoanInterestRate] = useState(
+    vehicle?.loanInterestRate || ""
+  );
+  const [loanTenureYears, setLoanTenureYears] = useState(
+    vehicle?.loanTenureYears != null ? String(vehicle.loanTenureYears) : ""
+  );
+  const [loanTenureMonths, setLoanTenureMonths] = useState(
+    vehicle?.loanTenureMonths != null ? String(vehicle.loanTenureMonths) : ""
+  );
 
   // Loan Repayment
   const [loanAmountRepaid, setLoanAmountRepaid] = useState(
@@ -96,20 +108,39 @@ export function AddVehicleDialog({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Auto-calculated field: Outstanding Loan
-  const outstandingLoan = useMemo(() => {
-    const taken = parseFloat(loanAmountTaken) || 0;
+  // Auto-calculated field: Outstanding Loan (amortization-based when rate + tenure provided)
+  const { outstandingLoan, outstandingLoanMethod } = useMemo(() => {
+    const principal = parseFloat(loanAmountTaken) || 0;
+    const rate = parseFloat(loanInterestRate) || 0;
+    const tenureYears = parseInt(loanTenureYears) || 0;
+    const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
+    const totalMonths = tenureYears * 12 + tenureMonthsPart;
+
+    if (principal > 0 && totalMonths > 0 && purchaseDate) {
+      const monthsElapsed = Math.max(0, differenceInMonths(new Date(), purchaseDate));
+      const k = Math.min(monthsElapsed, totalMonths);
+      let balance: number;
+      if (rate === 0) {
+        balance = principal * (totalMonths - k) / totalMonths;
+      } else {
+        const r = rate / 100 / 12;
+        const n = totalMonths;
+        balance = principal * (Math.pow(1 + r, n) - Math.pow(1 + r, k)) / (Math.pow(1 + r, n) - 1);
+      }
+      return { outstandingLoan: Math.max(0, balance), outstandingLoanMethod: "amortization" as const };
+    }
+
+    // Fallback: simple subtraction
     const repaid = parseFloat(loanAmountRepaid) || 0;
-    return Math.max(0, taken - repaid);
-  }, [loanAmountTaken, loanAmountRepaid]);
+    return { outstandingLoan: Math.max(0, principal - repaid), outstandingLoanMethod: "simple" as const };
+  }, [loanAmountTaken, loanInterestRate, loanTenureYears, loanTenureMonths, purchaseDate, loanAmountRepaid]);
 
   // Calculate loan progress
   const loanProgress = useMemo(() => {
     const taken = parseFloat(loanAmountTaken) || 0;
     if (taken === 0) return 100;
-    const repaid = parseFloat(loanAmountRepaid) || 0;
-    return Math.min(100, Math.max(0, (repaid / taken) * 100));
-  }, [loanAmountTaken, loanAmountRepaid]);
+    return Math.min(100, Math.max(0, ((taken - outstandingLoan) / taken) * 100));
+  }, [loanAmountTaken, outstandingLoan]);
 
   const resetForm = () => {
     setVehicleName("");
@@ -117,6 +148,9 @@ export function AddVehicleDialog({
     setCoeExpiryDate(undefined);
     setOriginalPurchasePrice("");
     setLoanAmountTaken("");
+    setLoanInterestRate("");
+    setLoanTenureYears("");
+    setLoanTenureMonths("");
     setLoanAmountRepaid("");
     setMonthlyLoanPayment("");
     setAddToExpenditures(false);
@@ -163,6 +197,9 @@ export function AddVehicleDialog({
       setCoeExpiryDate(vehicle.coeExpiryDate ? new Date(vehicle.coeExpiryDate) : undefined);
       setOriginalPurchasePrice(vehicle.originalPurchasePrice);
       setLoanAmountTaken(vehicle.loanAmountTaken || "");
+      setLoanInterestRate(vehicle.loanInterestRate || "");
+      setLoanTenureYears(vehicle.loanTenureYears != null ? String(vehicle.loanTenureYears) : "");
+      setLoanTenureMonths(vehicle.loanTenureMonths != null ? String(vehicle.loanTenureMonths) : "");
       setLoanAmountRepaid(vehicle.loanAmountRepaid || "");
       setMonthlyLoanPayment(vehicle.monthlyLoanPayment || "");
       setAddToExpenditures(!!vehicle.linkedExpenseId);
@@ -190,6 +227,9 @@ export function AddVehicleDialog({
         coeExpiryDate: coeExpiryDate ? format(coeExpiryDate, "yyyy-MM-dd") : undefined,
         originalPurchasePrice: parseFloat(originalPurchasePrice),
         loanAmountTaken: loanAmountTaken ? parseFloat(loanAmountTaken) : undefined,
+        loanInterestRate: loanInterestRate ? parseFloat(loanInterestRate) : undefined,
+        loanTenureYears: loanTenureYears ? parseInt(loanTenureYears) : undefined,
+        loanTenureMonths: loanTenureMonths ? parseInt(loanTenureMonths) : undefined,
         loanAmountRepaid: loanAmountRepaid ? parseFloat(loanAmountRepaid) : undefined,
         monthlyLoanPayment: monthlyLoanPayment ? parseFloat(monthlyLoanPayment) : undefined,
         addToExpenditures,
@@ -353,6 +393,58 @@ export function AddVehicleDialog({
                   </div>
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="loanInterestRate">Loan Interest Rate (%)</Label>
+                  <div className="relative">
+                    <Input
+                      id="loanInterestRate"
+                      type="number"
+                      placeholder="e.g. 2.5"
+                      value={loanInterestRate}
+                      onChange={(e) => setLoanInterestRate(e.target.value)}
+                      min="0"
+                      step="0.01"
+                      className="bg-white pr-8"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Annual interest rate</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Loan Tenure</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        id="loanTenureYears"
+                        type="number"
+                        placeholder="0"
+                        value={loanTenureYears}
+                        onChange={(e) => setLoanTenureYears(e.target.value)}
+                        min="0"
+                        step="1"
+                        className="bg-white pr-10"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">yr</span>
+                    </div>
+                    <div className="relative flex-1">
+                      <Input
+                        id="loanTenureMonths"
+                        type="number"
+                        placeholder="0"
+                        value={loanTenureMonths}
+                        onChange={(e) => setLoanTenureMonths(e.target.value)}
+                        min="0"
+                        max="11"
+                        step="1"
+                        className="bg-white pr-10"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">mo</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Total loan duration</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -392,7 +484,9 @@ export function AddVehicleDialog({
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Automatically calculated as: Loan Amount Taken - Loan Amount Repaid
+                    {outstandingLoanMethod === "amortization"
+                      ? "Calculated via loan amortization (principal × rate × tenure)"
+                      : "Calculated as: Loan Amount Taken − Loan Amount Repaid"}
                   </p>
                 </div>
               </div>

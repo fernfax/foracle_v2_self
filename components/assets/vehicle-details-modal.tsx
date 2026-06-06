@@ -18,6 +18,9 @@ interface VehicleAsset {
   coeExpiryDate: string | null;
   originalPurchasePrice: string;
   loanAmountTaken: string | null;
+  loanInterestRate: string | null;
+  loanTenureYears: number | null;
+  loanTenureMonths: number | null;
   loanAmountRepaid: string | null;
   monthlyLoanPayment: string | null;
   linkedExpenseId: string | null;
@@ -38,8 +41,27 @@ export function VehicleDetailsModal({
 
   const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
   const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
-  const outstandingLoan = Math.max(0, loanTaken - loanRepaid);
-  const progress = loanTaken > 0 ? (loanRepaid / loanTaken) * 100 : 100;
+  const rate = parseFloat(vehicle.loanInterestRate || "0");
+  const tenureYears = vehicle.loanTenureYears ?? 0;
+  const tenureMonthsPart = vehicle.loanTenureMonths ?? 0;
+  const totalMonths = tenureYears * 12 + tenureMonthsPart;
+
+  let outstandingLoan: number;
+  if (loanTaken > 0 && totalMonths > 0) {
+    const monthsElapsed = Math.max(0, differenceInMonths(new Date(), new Date(vehicle.purchaseDate)));
+    const k = Math.min(monthsElapsed, totalMonths);
+    if (rate === 0) {
+      outstandingLoan = Math.max(0, loanTaken * (totalMonths - k) / totalMonths);
+    } else {
+      const r = rate / 100 / 12;
+      const n = totalMonths;
+      outstandingLoan = Math.max(0, loanTaken * (Math.pow(1 + r, n) - Math.pow(1 + r, k)) / (Math.pow(1 + r, n) - 1));
+    }
+  } else {
+    outstandingLoan = Math.max(0, loanTaken - loanRepaid);
+  }
+
+  const progress = loanTaken > 0 ? ((loanTaken - outstandingLoan) / loanTaken) * 100 : 100;
   const monthlyPayment = parseFloat(vehicle.monthlyLoanPayment || "0");
 
   // Calculate estimated payoff

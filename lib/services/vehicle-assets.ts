@@ -139,6 +139,9 @@ export async function createVehicleAsset(
       coeExpiryDate: body.coeExpiryDate ?? null,
       originalPurchasePrice: body.originalPurchasePrice,
       loanAmountTaken: body.loanAmountTaken ?? null,
+      loanInterestRate: body.loanInterestRate ?? null,
+      loanTenureYears: body.loanTenureYears ?? null,
+      loanTenureMonths: body.loanTenureMonths ?? null,
       loanAmountRepaid: body.loanAmountRepaid ?? null,
       monthlyLoanPayment: body.monthlyLoanPayment ?? null,
       isActive: true,
@@ -195,6 +198,12 @@ export async function updateVehicleAsset(
     update.originalPurchasePrice = patch.originalPurchasePrice;
   if (patch.loanAmountTaken !== undefined)
     update.loanAmountTaken = patch.loanAmountTaken ?? null;
+  if (patch.loanInterestRate !== undefined)
+    update.loanInterestRate = patch.loanInterestRate ?? null;
+  if (patch.loanTenureYears !== undefined)
+    update.loanTenureYears = patch.loanTenureYears ?? null;
+  if (patch.loanTenureMonths !== undefined)
+    update.loanTenureMonths = patch.loanTenureMonths ?? null;
   if (patch.loanAmountRepaid !== undefined)
     update.loanAmountRepaid = patch.loanAmountRepaid ?? null;
   if (patch.monthlyLoanPayment !== undefined)

@@ -33,6 +33,9 @@ interface VehicleAsset {
   coeExpiryDate: string | null;
   originalPurchasePrice: string;
   loanAmountTaken: string | null;
+  loanInterestRate: string | null;
+  loanTenureYears: number | null;
+  loanTenureMonths: number | null;
   loanAmountRepaid: string | null;
   monthlyLoanPayment: string | null;
   linkedExpenseId: string | null;
@@ -70,11 +73,27 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
     }
   };
 
+  const calculateOutstandingLoan = (vehicle: VehicleAsset): number => {
+    const principal = parseFloat(vehicle.loanAmountTaken || "0");
+    const rate = parseFloat(vehicle.loanInterestRate || "0");
+    const totalMonths = (vehicle.loanTenureYears ?? 0) * 12 + (vehicle.loanTenureMonths ?? 0);
+    if (principal > 0 && totalMonths > 0) {
+      const monthsElapsed = Math.max(0, differenceInMonths(new Date(), new Date(vehicle.purchaseDate)));
+      const k = Math.min(monthsElapsed, totalMonths);
+      if (rate === 0) return Math.max(0, principal * (totalMonths - k) / totalMonths);
+      const r = rate / 100 / 12;
+      const n = totalMonths;
+      return Math.max(0, principal * (Math.pow(1 + r, n) - Math.pow(1 + r, k)) / (Math.pow(1 + r, n) - 1));
+    }
+    const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
+    return Math.max(0, principal - loanRepaid);
+  };
+
   const calculateProgress = (vehicle: VehicleAsset) => {
     const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
-    const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
-    if (loanTaken === 0) return 100; // Fully paid or no loan
-    return Math.min(100, Math.max(0, (loanRepaid / loanTaken) * 100));
+    if (loanTaken === 0) return 100;
+    const outstanding = calculateOutstandingLoan(vehicle);
+    return Math.min(100, Math.max(0, ((loanTaken - outstanding) / loanTaken) * 100));
   };
 
   const getCoeCountdown = (coeExpiryDate: string | null) => {
@@ -157,7 +176,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
             const progress = calculateProgress(vehicle);
             const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
             const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
-            const outstandingLoan = Math.max(0, loanTaken - loanRepaid);
+            const outstandingLoan = calculateOutstandingLoan(vehicle);
             const coeCountdown = getCoeCountdown(vehicle.coeExpiryDate);
 
             return (
@@ -235,7 +254,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                     <div>
                       <p className="text-sm text-muted-foreground">Outstanding Loan</p>
                       <p className="text-2xl font-semibold tabular-nums text-[#7A5A00]">
-                        ${outstandingLoan.toLocaleString()}
+                        ${outstandingLoan.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </p>
                     </div>
                   </div>
