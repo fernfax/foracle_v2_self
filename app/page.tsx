@@ -3,15 +3,10 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { TileMotif } from "@/components/ui/tile-motif";
 import { LandingShader } from "@/components/landing/landing-shader";
+import { HeroPreview } from "@/components/landing/hero-preview";
+import { LifeStages } from "@/components/landing/life-stages";
 import {
   TrendingUp,
   Shield,
@@ -20,50 +15,117 @@ import {
   Wallet,
   BarChart3,
   ArrowRight,
+  Check,
+  X,
+  Plus,
 } from "lucide-react";
+
+const NAV_LINKS = [
+  { href: "#how", label: "How it works" },
+  { href: "#features", label: "Features" },
+  { href: "#compare", label: "Why Foracle" },
+  { href: "#faq", label: "FAQ" },
+] as const;
+
+const STEPS = [
+  {
+    n: "01",
+    title: "Bring it together",
+    body: "Add your income, expenses, assets, and policies once. Foracle holds the whole picture so nothing lives in a forgotten spreadsheet.",
+  },
+  {
+    n: "02",
+    title: "See it clearly",
+    body: "Calm dashboards turn the numbers into a story you can read at a glance — cashflow, net worth, and where every dollar goes.",
+  },
+  {
+    n: "03",
+    title: "Plan ahead",
+    body: "Project your future, set goals, and watch Foracle tell you whether you're on track — months and years before it matters.",
+  },
+] as const;
 
 const FEATURES = [
   {
+    n: "01",
     icon: Wallet,
-    title: "Income & Expense Tracking",
+    title: "Income & expense tracking",
     description:
-      "Monitor your cash flow with ease. Track multiple income sources and categorize expenses to understand where your money goes.",
-    accent: "text-[#3A6B52] bg-[rgba(58,107,82,0.10)]",
+      "Monitor cashflow with ease. Track multiple income sources and categorise spending to see exactly where your money goes.",
+    color: "#3A6B52",
+    tint: "rgba(58,107,82,0.10)",
   },
   {
+    n: "02",
     icon: Target,
-    title: "Goal Setting",
+    title: "Goal setting",
     description:
-      "Set financial goals and track your progress. Whether it's a house, retirement, or emergency fund, we'll help you get there.",
-    accent: "text-[#B8622A] bg-[rgba(184,98,42,0.10)]",
+      "Set financial goals and track progress. A house, retirement, or emergency fund — Foracle helps you get there.",
+    color: "#B8622A",
+    tint: "rgba(184,98,42,0.10)",
   },
   {
+    n: "03",
     icon: TrendingUp,
-    title: "Asset Management",
+    title: "Asset management",
     description:
-      "Keep track of all your assets in one place. Monitor investments, property, vehicles, and watch your net worth grow.",
-    accent: "text-[#D4A843] bg-[rgba(212,168,67,0.12)]",
+      "Keep every asset in one place. Monitor investments, property, and vehicles, and watch your net worth grow.",
+    color: "#D4A843",
+    tint: "rgba(212,168,67,0.12)",
   },
   {
+    n: "04",
     icon: Shield,
-    title: "Policy Management",
+    title: "Policy management",
     description:
       "Manage insurance policies and subscriptions. Never miss a renewal date or overpay for coverage again.",
-    accent: "text-[#00C4AA] bg-[rgba(0,196,170,0.10)]",
+    color: "#00C4AA",
+    tint: "rgba(0,196,170,0.10)",
   },
   {
+    n: "05",
     icon: Users,
-    title: "Family Planning",
+    title: "Family planning",
     description:
       "Add family members and plan for their future. Track expenses and goals for your entire household.",
-    accent: "text-[#D4845A] bg-[rgba(212,132,90,0.12)]",
+    color: "#D4845A",
+    tint: "rgba(212,132,90,0.12)",
   },
   {
+    n: "06",
     icon: BarChart3,
-    title: "Insightful Analytics",
+    title: "Insightful analytics",
     description:
-      "Get personalized insights and recommendations. Make smarter financial decisions with data-driven guidance.",
-    accent: "text-[#3A6B52] bg-[rgba(58,107,82,0.10)]",
+      "Get personalised insights and recommendations. Make smarter decisions with data-driven, calm guidance.",
+    color: "#3A6B52",
+    tint: "rgba(58,107,82,0.10)",
+  },
+] as const;
+
+const COMPARE = [
+  ["A spreadsheet that breaks every month", "One calm picture, always up to date"],
+  ["Guessing whether you can afford it", "Projections that tell you, before you commit"],
+  ["Renewals and goals slip through cracks", "Gentle nudges for what needs attention"],
+  ["Numbers scattered across ten apps", "Income, assets, and policies in one place"],
+  ["Generic advice built for elsewhere", "Rooted in Singaporean rhythms"],
+] as const;
+
+const FAQS = [
+  {
+    q: "Is Foracle built for Singapore?",
+    a: "Yes. Foracle is made for Singaporean households — from CPF and local insurance rhythms to the way we think about HDB, savings, and family planning. The defaults feel familiar, not borrowed from elsewhere.",
+  },
+  {
+    q: "Do I need to connect my bank?",
+    a: "No. You can start by adding your income, expenses, and assets manually — it takes minutes, and you stay fully in control of what Foracle sees.",
+  },
+  {
+    q: "Is my financial data private?",
+    a: "Your data is yours. Foracle is designed around a calm, private experience — we don't sell your information, and you decide what to track.",
+  },
+  {
+    q: "How much does it cost to start?",
+    a: "Getting started is free. Create an account, bring your picture together, and see your whole financial life in one place — no card required.",
   },
 ] as const;
 
@@ -72,23 +134,39 @@ export default async function Home() {
   if (userId) {
     redirect("/overview");
   }
+
   return (
     <main className="min-h-screen bg-transparent">
       <LandingShader />
+
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-border/30 bg-background/85 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center">
+      <nav className="sticky top-0 z-50 border-b border-border/30 bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center">
             <Image
               src="/wordmark-168.png"
               alt="Foracle"
               width={97}
               height={28}
               className="object-contain"
+              priority
             />
+          </Link>
+
+          <div className="hidden items-center gap-8 md:flex">
+            {NAV_LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="font-display text-[13px] font-medium text-foreground/70 transition-colors hover:text-foreground"
+              >
+                {l.label}
+              </a>
+            ))}
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/sign-in">
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/sign-in" className="hidden sm:block">
               <Button variant="ghost" size="sm">
                 Sign In
               </Button>
@@ -100,111 +178,271 @@ export default async function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:py-40 text-center">
-          <p className="font-display text-[11px] font-semibold tracking-[0.2em] uppercase text-[#B8622A] mb-6">
-            A guided companion for your money
-          </p>
-          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.025em] mb-6 inline-block text-foreground">
-            Take control of your
-            <br />
-            <span className="text-foreground/55">finances.</span>
-          </h1>
-
-          <p className="font-editorial text-lg md:text-xl text-foreground/65 max-w-2xl mx-auto mb-8 leading-relaxed">
-            Foracle helps you track income, expenses, assets, and goals — calmly,
-            in one place rooted in Singaporean rhythms.
-          </p>
-
-          <div className="inline-flex items-center rounded-full bg-[rgba(184,98,42,0.10)] px-4 py-1.5 mb-8 border border-[rgba(184,98,42,0.18)]">
-            <span className="font-display text-[11px] font-semibold tracking-wide uppercase text-[#7A3A0A]">
+        <div className="relative z-10 mx-auto max-w-7xl px-5 pb-24 pt-16 text-center sm:px-6 sm:pt-24 lg:px-8 lg:pb-32 lg:pt-28">
+          <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-[rgba(184,98,42,0.18)] bg-[rgba(184,98,42,0.07)] px-4 py-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C4AA] opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C4AA]" />
+            </span>
+            <span className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7A3A0A]">
               Made for Singapore, by Singaporeans
             </span>
           </div>
 
-          <div className="flex justify-center">
-            <Link href="/sign-up">
-              <Button size="lg" className="px-10 transition-all duration-200">
-                Start Your Journey
+          <h1 className="mx-auto max-w-4xl font-display text-[2.6rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-6xl lg:text-7xl">
+            Take control of your money with{" "}
+            <span className="font-editorial font-normal text-[#B8622A]">clarity</span>.
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-balance text-base text-foreground/65 sm:text-lg sm:leading-relaxed">
+            Foracle brings your income, expenses, assets, and goals into one calm view —
+            then shows you the road ahead, rooted in Singaporean rhythms.
+          </p>
+
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link href="/sign-up" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full px-9 sm:w-auto">
+                Start your journey
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
+            <a href="#how" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="w-full px-9 sm:w-auto">
+                See how it works
+              </Button>
+            </a>
           </div>
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pb-12">
-          <TileMotif size="standard" />
+
+          <p className="mt-5 font-display text-[12px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            Free to start · No card required
+          </p>
+
+          {/* Product preview */}
+          <div className="mt-16 sm:mt-20">
+            <HeroPreview />
+          </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section
-        id="features"
-        className="max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:py-32"
-      >
-        <div className="text-center mb-16">
-          <p className="font-display text-[11px] font-semibold tracking-[0.2em] uppercase text-[#B8622A] mb-4">
-            Features
-          </p>
-          <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] mb-4 text-foreground">
-            Everything you need to succeed
+      {/* How it works */}
+      <section id="how" className="relative z-10 mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <div className="mb-14 max-w-2xl">
+          <p className="sec-num mb-3">How it works</p>
+          <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
+            From scattered to settled, in three steps
           </h2>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive financial tools designed for everyone.
-          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURES.map(({ icon: Icon, title, description, accent }) => (
-            <Card
-              key={title}
-              className="group relative overflow-hidden hover:-translate-y-0.5 hover:border-border/60 transition-all duration-300"
-            >
-              <CardHeader>
-                <div
-                  className={`inline-flex items-center justify-center w-12 h-12 rounded-md mb-5 transition-colors ${accent}`}
-                >
-                  <Icon className="h-6 w-6" />
-                </div>
-                <CardTitle className="text-lg mb-3">{title}</CardTitle>
-                <CardDescription className="leading-relaxed">
-                  {description}
-                </CardDescription>
-              </CardHeader>
-            </Card>
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.08)] bg-[rgba(28,43,42,0.08)] sm:grid-cols-3">
+          {STEPS.map((s) => (
+            <div key={s.n} className="bg-card p-7 sm:p-8">
+              <span className="font-display text-4xl font-semibold tracking-tight text-[#B8622A]/85 tabular-nums">
+                {s.n}
+              </span>
+              <h3 className="mt-5 font-display text-lg font-semibold tracking-tight text-foreground">
+                {s.title}
+              </h3>
+              <p className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground">
+                {s.body}
+              </p>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="max-w-5xl mx-auto px-6 lg:px-8 py-24">
-        <Card className="relative overflow-hidden border-0 bg-[#1C2B2A]">
-          <CardContent className="p-12 lg:p-16 text-center">
-            <p className="font-display text-[11px] font-semibold tracking-[0.2em] uppercase text-[#D4845A] mb-4">
-              Get Started
+      {/* Life stages — companion through life */}
+      <LifeStages />
+
+      {/* Features */}
+      <section
+        id="features"
+        className="relative z-10 mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8"
+      >
+        <div className="mb-14 max-w-2xl">
+          <p className="sec-num mb-3">Features</p>
+          <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
+            Everything you need, nothing you don&apos;t
+          </h2>
+          <p className="mt-4 text-base text-muted-foreground sm:text-lg">
+            A complete set of calm, considered tools for the whole household.
+          </p>
+        </div>
+
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.08)] bg-[rgba(28,43,42,0.08)] sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ n, icon: Icon, title, description, color, tint }) => (
+            <div
+              key={n}
+              className="group relative bg-card p-7 transition-colors hover:bg-muted/30 sm:p-8"
+            >
+              <div className="flex items-center justify-between">
+                <div
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
+                  style={{ backgroundColor: tint, color }}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="font-display text-[12px] font-semibold tabular-nums tracking-[0.1em] text-muted-foreground/60">
+                  {n}
+                </span>
+              </div>
+              <h3 className="mt-5 font-display text-[17px] font-semibold tracking-tight text-foreground">
+                {title}
+              </h3>
+              <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
+                {description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Comparison */}
+      <section id="compare" className="relative z-10 scroll-mt-20 bg-[#1C2B2A] py-20 sm:py-28">
+        <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
+          <div className="mb-12 max-w-2xl">
+            <p className="mb-3 font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D4845A]">
+              Why Foracle
             </p>
-            <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-[#F0EBE0] mb-4">
-              Ready to transform your finances?
+            <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-[#F0EBE0] sm:text-4xl">
+              There&apos;s a calmer way to hold your money
             </h2>
-            <p className="text-base md:text-lg text-[rgba(240,235,224,0.65)] mb-10 max-w-xl mx-auto">
-              Join thousands of users who have taken control of their financial
-              future.
-            </p>
-            <Link href="/sign-up">
-              <Button size="lg" className="px-12 transition-all duration-200">
-                Get Started Free
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
+            {/* Old way */}
+            <div className="rounded-2xl border border-[rgba(240,235,224,0.10)] bg-[rgba(240,235,224,0.03)] p-6 sm:p-8">
+              <p className="mb-6 font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-[rgba(240,235,224,0.5)]">
+                The old way
+              </p>
+              <ul className="space-y-4">
+                {COMPARE.map(([old]) => (
+                  <li key={old} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-[rgba(224,85,85,0.15)]">
+                      <X className="h-3 w-3 text-[#E07070]" />
+                    </span>
+                    <span className="text-[14px] leading-relaxed text-[rgba(240,235,224,0.6)]">
+                      {old}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Foracle way */}
+            <div className="rounded-2xl border border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.06)] p-6 sm:p-8">
+              <p className="mb-6 font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-[#33D4BC]">
+                With Foracle
+              </p>
+              <ul className="space-y-4">
+                {COMPARE.map(([, neu]) => (
+                  <li key={neu} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-[rgba(0,196,170,0.18)]">
+                      <Check className="h-3 w-3 text-[#00C4AA]" />
+                    </span>
+                    <span className="text-[14px] leading-relaxed text-[#F0EBE0]">
+                      {neu}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="relative z-10 mx-auto max-w-3xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <div className="mb-12 text-center">
+          <p className="sec-num mb-3">FAQ</p>
+          <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
+            Questions, answered
+          </h2>
+        </div>
+
+        <div className="divide-y divide-[rgba(28,43,42,0.08)] overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.08)] bg-card">
+          {FAQS.map((f) => (
+            <details key={f.q} className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 sm:p-6 [&::-webkit-details-marker]:hidden">
+                <span className="font-display text-[15px] font-semibold tracking-tight text-foreground sm:text-base">
+                  {f.q}
+                </span>
+                <Plus className="h-4 w-4 flex-none text-muted-foreground transition-transform duration-200 group-open:rotate-45" />
+              </summary>
+              <p className="px-5 pb-6 text-[14px] leading-relaxed text-muted-foreground sm:px-6 sm:text-[15px]">
+                {f.a}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="relative z-10 mx-auto max-w-5xl px-5 pb-24 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl bg-[#1C2B2A] px-6 py-14 text-center sm:px-12 sm:py-20">
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(212,132,90,0.5)] to-transparent"
+          />
+          <p className="mb-4 font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D4845A]">
+            Get started
+          </p>
+          <h2 className="mx-auto max-w-xl font-display text-3xl font-semibold tracking-[-0.02em] text-[#F0EBE0] sm:text-4xl">
+            Ready to see your whole financial life?
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-[rgba(240,235,224,0.6)] sm:text-base">
+            Bring your money into one calm view today. Free to start — no card required.
+          </p>
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link href="/sign-up" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full px-10 sm:w-auto">
+                Get started free
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-          </CardContent>
-        </Card>
+            <Link href="/sign-in" className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full border-[rgba(240,235,224,0.2)] bg-transparent px-10 text-[#F0EBE0] hover:bg-[rgba(240,235,224,0.08)] hover:text-[#F0EBE0] sm:w-auto"
+              >
+                Sign in
+              </Button>
+            </Link>
+          </div>
+          <div className="mx-auto mt-12 max-w-xs">
+            <TileMotif size="standard" />
+          </div>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/30">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 text-center">
-          <TileMotif size="thin" className="mb-6" />
-          <p className="text-sm text-muted-foreground">
-            &copy; 2025 Foracle. All rights reserved.
+      <footer className="relative z-10 border-t border-border/30">
+        <div className="mx-auto max-w-7xl px-5 py-12 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+            <Image
+              src="/wordmark-168.png"
+              alt="Foracle"
+              width={90}
+              height={26}
+              className="object-contain"
+            />
+            <nav className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2">
+              {NAV_LINKS.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {l.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+          <TileMotif size="thin" className="my-7" />
+          <p className="text-center text-[13px] text-muted-foreground">
+            &copy; 2026 Foracle. Made in Singapore.
           </p>
         </div>
       </footer>
