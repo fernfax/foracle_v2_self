@@ -16,10 +16,10 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
-  ResponsiveContainer,
   Sankey,
   Rectangle,
 } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 
 // Recharts doesn't re-export `NodeProps`/`LinkProps` from its root entry, so
 // we mirror the shapes here (matches `recharts/chart/Sankey` exactly).
@@ -909,7 +909,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
                 if (expandedId !== null) setExpandedId(null);
               }}
             >
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveChart width="100%" height="100%">
                 <Sankey
                   data={data}
                   node={renderNode}
@@ -941,7 +941,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
                   }
                 >
                 </Sankey>
-              </ResponsiveContainer>
+              </ResponsiveChart>
             </div>
 
             {/* Column totals — total income sits under the inflow (left),

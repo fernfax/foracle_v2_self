@@ -8,9 +8,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getMonthName } from "@/lib/budget-utils";
@@ -103,7 +103,7 @@ export function DailySpendingChart({
 
             {/* Chart */}
             <div className="flex-1 min-h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveChart width="100%" height="100%">
                 <AreaChart
                   data={chartData}
                   margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
@@ -173,7 +173,7 @@ export function DailySpendingChart({
                     connectNulls
                   />
                 </AreaChart>
-              </ResponsiveContainer>
+              </ResponsiveChart>
             </div>
           </>
         )}

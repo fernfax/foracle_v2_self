@@ -1,12 +1,24 @@
 "use server";
 
 import { db } from "@/db";
-import { incomes, familyMembers } from "@/db/schema";
+import { incomesBeta, familyMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { calculateCPF } from "@/lib/cpf-calculator";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import { effectiveIncomeCategory } from "@/lib/income-category";
+
+// `incomes_beta` is the canonical income table: a 3-value category
+// (past / current / future) and monthly-only. Map the legacy enum; the
+// frequency/customMonths fields the old table carried are dropped.
+function toBetaIncomeCategory(
+  v: string | undefined | null
+): "past" | "current" | "future" {
+  if (v === "past" || v === "current" || v === "future") return v;
+  if (v === "future-recurring") return "future";
+  return "current";
+}
 
 function calculateAge(dateOfBirth: Date): number {
   const today = new Date();
@@ -61,17 +73,15 @@ export async function createIncome(data: {
     netTakeHome = cpfResult.netTakeHome.toString();
   }
 
-  const newIncome = await db.insert(incomes).values({
+  const newIncome = await db.insert(incomesBeta).values({
     id: nanoid(),
     userId,
     familyId,
     familyMemberId: data.familyMemberId || null,
     name: data.name,
     category: data.category,
-    incomeCategory: data.incomeCategory || "current-recurring",
+    incomeCategory: toBetaIncomeCategory(data.incomeCategory),
     amount: data.amount.toString(),
-    frequency: data.frequency,
-    customMonths: data.customMonths || null,
     subjectToCpf: data.subjectToCpf,
     accountForBonus: data.accountForBonus || false,
     bonusGroups: data.bonusGroups || null,
@@ -91,7 +101,7 @@ export async function createIncome(data: {
   }).returning();
 
   revalidatePath("/user");
-  return newIncome[0];
+  return { ...newIncome[0], frequency: "monthly" as string, customMonths: null as string | null };
 }
 
 /**
@@ -126,8 +136,8 @@ export async function updateIncome(
   const { familyId } = await getCurrentUserAndFamily();
 
   // Verify the row belongs to caller's family
-  const existing = await db.query.incomes.findFirst({
-    where: and(eq(incomes.id, id), eq(incomes.familyId, familyId)),
+  const existing = await db.query.incomesBeta.findFirst({
+    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)),
   });
 
   if (!existing) {
@@ -140,10 +150,8 @@ export async function updateIncome(
 
   if (data.name !== undefined) updateData.name = data.name;
   if (data.category !== undefined) updateData.category = data.category;
-  if (data.incomeCategory !== undefined) updateData.incomeCategory = data.incomeCategory;
+  if (data.incomeCategory !== undefined) updateData.incomeCategory = toBetaIncomeCategory(data.incomeCategory);
   if (data.amount !== undefined) updateData.amount = data.amount.toString();
-  if (data.frequency !== undefined) updateData.frequency = data.frequency;
-  if (data.customMonths !== undefined) updateData.customMonths = data.customMonths;
   if (data.subjectToCpf !== undefined) updateData.subjectToCpf = data.subjectToCpf;
   if (data.accountForBonus !== undefined) updateData.accountForBonus = data.accountForBonus;
   if (data.bonusGroups !== undefined) updateData.bonusGroups = data.bonusGroups;
@@ -195,13 +203,13 @@ export async function updateIncome(
   }
 
   const updated = await db
-    .update(incomes)
+    .update(incomesBeta)
     .set(updateData)
-    .where(and(eq(incomes.id, id), eq(incomes.familyId, familyId)))
+    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)))
     .returning();
 
   revalidatePath("/user");
-  return updated[0];
+  return { ...updated[0], frequency: "monthly" as string, customMonths: null as string | null };
 }
 
 /**
@@ -211,8 +219,8 @@ export async function deleteIncome(id: string) {
   const { familyId } = await getCurrentUserAndFamily();
 
   // Verify the row belongs to caller's family and get family member details
-  const existing = await db.query.incomes.findFirst({
-    where: and(eq(incomes.id, id), eq(incomes.familyId, familyId)),
+  const existing = await db.query.incomesBeta.findFirst({
+    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)),
     with: {
       familyMember: {
         columns: {
@@ -229,10 +237,10 @@ export async function deleteIncome(id: string) {
 
   // Block deletion if income is linked to a family member
   if (existing.familyMemberId && existing.familyMember) {
-    throw new Error(`This income is linked to ${existing.familyMember.name} and cannot be deleted independently. Please delete the family member to remove their associated incomes.`);
+    throw new Error(`This income is linked to ${existing.familyMember.name} and cannot be deleted independently. Please delete the family member to remove their associated incomesBeta.`);
   }
 
-  await db.delete(incomes).where(and(eq(incomes.id, id), eq(incomes.familyId, familyId)));
+  await db.delete(incomesBeta).where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)));
 
   revalidatePath("/user");
   return { success: true };
@@ -244,8 +252,8 @@ export async function deleteIncome(id: string) {
 export async function toggleIncomeStatus(id: string) {
   const { familyId } = await getCurrentUserAndFamily();
 
-  const existing = await db.query.incomes.findFirst({
-    where: and(eq(incomes.id, id), eq(incomes.familyId, familyId)),
+  const existing = await db.query.incomesBeta.findFirst({
+    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)),
   });
 
   if (!existing) {
@@ -253,27 +261,27 @@ export async function toggleIncomeStatus(id: string) {
   }
 
   const updated = await db
-    .update(incomes)
+    .update(incomesBeta)
     .set({
       isActive: !existing.isActive,
       updatedAt: new Date(),
     })
-    .where(and(eq(incomes.id, id), eq(incomes.familyId, familyId)))
+    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, familyId)))
     .returning();
 
   revalidatePath("/user");
-  return updated[0];
+  return { ...updated[0], frequency: "monthly" as string, customMonths: null as string | null };
 }
 
 /**
- * Get all incomes for the current family
+ * Get all incomesBeta for the current family
  */
 export async function getIncomes() {
   const { familyId } = await getCurrentUserAndFamily();
 
-  const familyIncomes = await db.query.incomes.findMany({
-    where: eq(incomes.familyId, familyId),
-    orderBy: (incomes, { desc }) => [desc(incomes.createdAt)],
+  const familyIncomes = await db.query.incomesBeta.findMany({
+    where: eq(incomesBeta.familyId, familyId),
+    orderBy: (incomesBeta, { desc }) => [desc(incomesBeta.createdAt)],
     with: {
       familyMember: {
         columns: {
@@ -287,5 +295,12 @@ export async function getIncomes() {
     },
   });
 
-  return familyIncomes;
+  // Synthesize the legacy row shape (monthly frequency, derived category) so
+  // existing callers keep compiling/behaving while reading incomes_beta.
+  return familyIncomes.map((r) => ({
+    ...r,
+    incomeCategory: effectiveIncomeCategory(r.incomeCategory, r.startDate),
+    frequency: "monthly" as string,
+    customMonths: null as string | null,
+  }));
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { users, incomes, expenses, assets, propertyAssets, vehicleAssets, policies, goals, familyMembers } from "@/db/schema";
+import { users, incomesBeta, expenses, assets, propertyAssets, vehicleAssets, policies, goals, familyMembers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
@@ -30,10 +30,17 @@ export async function getCurrentUser() {
  */
 export async function getUserIncomes() {
   const { familyId } = await getCurrentUserAndFamily();
-  return db.query.incomes.findMany({
-    where: eq(incomes.familyId, familyId),
-    orderBy: (incomes, { desc }) => [desc(incomes.createdAt)],
+  // Canonical income source is incomes_beta (monthly-only). Synthesize the
+  // legacy frequency/customMonths fields so dashboard metrics keep working.
+  const rows = await db.query.incomesBeta.findMany({
+    where: eq(incomesBeta.familyId, familyId),
+    orderBy: (incomesBeta, { desc }) => [desc(incomesBeta.createdAt)],
   });
+  return rows.map((r) => ({
+    ...r,
+    frequency: "monthly" as string,
+    customMonths: null as string | null,
+  }));
 }
 
 /**

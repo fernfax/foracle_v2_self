@@ -160,6 +160,50 @@ export function getCPFAllocationByAge(age: number): { oa: number; sa: number; ma
   }
 }
 
+// Low-wage thresholds (Total Wages per month). Below/at these, the employee
+// share is reduced or nil even though the employer still contributes.
+export const CPF_LOW_WAGE_NO_CPF = 50; // TW <= $50: no CPF at all
+export const CPF_LOW_WAGE_NO_EMPLOYEE = 500; // TW <= $500: employer-only, employee nil
+export const CPF_LOW_WAGE_PHASE_IN_END = 750; // $500 < TW <= $750: employee phased in
+
+/**
+ * Apply Singapore's low-wage CPF rules to a CPF-applicable wage.
+ *
+ * - TW <= $50: no CPF (neither share).
+ * - $50 < TW <= $500: employer pays the full rate; employee pays nothing.
+ * - $500 < TW <= $750: employer pays the full rate; the employee share is
+ *   phased in. The phase-in coefficient is `employeeRate * 3` so that the
+ *   phased amount meets the full employee contribution exactly at $750
+ *   (employeeRate*3*(750-500) === employeeRate*750). This keeps the curve
+ *   continuous for every age band without a per-band lookup table.
+ * - TW > $750: full employer and employee rates.
+ *
+ * `cpfApplicableAmount` is the wage already capped at the OW ceiling; since the
+ * thresholds are all well below the ceiling this is equivalent to evaluating on
+ * total wages for the affected range.
+ */
+export function computeCpfContributions(
+  cpfApplicableAmount: number,
+  rates: { employer: number; employee: number }
+): { employee: number; employer: number } {
+  if (cpfApplicableAmount <= CPF_LOW_WAGE_NO_CPF) {
+    return { employee: 0, employer: 0 };
+  }
+
+  const employer = cpfApplicableAmount * rates.employer;
+
+  let employee: number;
+  if (cpfApplicableAmount <= CPF_LOW_WAGE_NO_EMPLOYEE) {
+    employee = 0;
+  } else if (cpfApplicableAmount <= CPF_LOW_WAGE_PHASE_IN_END) {
+    employee = rates.employee * 3 * (cpfApplicableAmount - CPF_LOW_WAGE_NO_EMPLOYEE);
+  } else {
+    employee = cpfApplicableAmount * rates.employee;
+  }
+
+  return { employee, employer };
+}
+
 /**
  * Calculate CPF contributions for a given gross income
  * @param grossAmount - Monthly gross income
@@ -172,9 +216,9 @@ export function calculateCPF(grossAmount: number, age: number = 30): CPFCalculat
   // Apply OW ceiling - only the amount up to ceiling is subject to CPF
   const cpfApplicableAmount = Math.min(grossAmount, OW_CEILING);
 
-  // Calculate contributions
-  const employeeCpfContribution = cpfApplicableAmount * rates.employee;
-  const employerCpfContribution = cpfApplicableAmount * rates.employer;
+  // Calculate contributions (low-wage rules adjust the employee share below $750)
+  const { employee: employeeCpfContribution, employer: employerCpfContribution } =
+    computeCpfContributions(cpfApplicableAmount, rates);
   const totalCpfContribution = employeeCpfContribution + employerCpfContribution;
 
   // Net take home = Gross - Employee CPF Contribution

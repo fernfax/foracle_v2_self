@@ -2,6 +2,7 @@ import {
   getCPFRatesByAge,
   getCPFAllocationByAge,
   calculateBonusCPF,
+  computeCpfContributions,
 } from "@/lib/cpf-calculator";
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
 
@@ -199,7 +200,11 @@ export function calculateCpfProjection(
       if (i > 0) {
         // Month 0 is the starting point (no contribution yet)
         const cpfApplicable = Math.min(input.monthlyGrossIncome, OW_CEILING);
-        const totalCpf = cpfApplicable * (rates.employer + rates.employee);
+        const { employee: empLow, employer: erLow } = computeCpfContributions(
+          cpfApplicable,
+          rates
+        );
+        const totalCpf = empLow + erLow;
         monthlyOa = totalCpf * allocation.oa;
         monthlySa = totalCpf * allocation.sa;
         monthlyMa = totalCpf * allocation.ma;

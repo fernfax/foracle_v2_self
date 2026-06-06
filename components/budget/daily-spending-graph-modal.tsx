@@ -14,9 +14,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { BarChart3 } from "lucide-react";
 import { getMonthName } from "@/lib/budget-utils";
 
@@ -108,7 +108,7 @@ export function DailySpendingGraphModal({
 
         {/* Chart */}
         <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveChart width="100%" height="100%">
             <AreaChart
               data={chartData}
               margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
@@ -183,7 +183,7 @@ export function DailySpendingGraphModal({
                 connectNulls
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ResponsiveChart>
         </div>
       </DialogContent>
     </Dialog>

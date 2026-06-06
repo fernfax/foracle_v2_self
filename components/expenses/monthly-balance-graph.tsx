@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Info, TrendingUp, ArrowRight } from "lucide-react";
-import { ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, Customized } from "recharts";
+import { ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, Customized } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { calculateMonthlyBalance, timeRangeToMonths, type MonthlyBalanceData, type SpecialItem } from "@/lib/balance-calculator";
 
 interface Income {
@@ -746,7 +747,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
           {hasInvestments && (
             <label
               htmlFor="includeInvestments"
-              className="absolute bottom-14 right-3 z-10 flex items-center gap-2 px-2.5 py-1.5 bg-[rgba(0,196,170,0.18)] rounded-lg border border-[rgba(0,196,170,0.3)] cursor-pointer backdrop-blur-sm"
+              className="absolute bottom-40 right-10 z-10 flex items-center gap-2 px-2.5 py-1.5 bg-[rgba(0,196,170,0.18)] rounded-lg border border-[rgba(0,196,170,0.3)] cursor-pointer backdrop-blur-sm"
             >
               <Checkbox
                 id="includeInvestments"
@@ -760,7 +761,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
               </span>
             </label>
           )}
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveChart width="100%" height="100%">
             <ComposedChart
               data={balanceData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -935,7 +936,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                 </>
               )}
             </ComposedChart>
-          </ResponsiveContainer>
+          </ResponsiveChart>
         </div>
 
       </CardContent>

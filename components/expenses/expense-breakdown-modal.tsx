@@ -9,7 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { getCategoryColor } from "@/lib/expense-calculator";
 
 interface Expense {
@@ -254,7 +255,7 @@ export function ExpenseBreakdownModal({
 
               {/* Right: Larger Interactive Pie Chart */}
               <div className="flex items-center justify-center">
-                <ResponsiveContainer width="100%" height={400}>
+                <ResponsiveChart width="100%" height={400}>
                   <PieChart>
                     <Pie
                       data={breakdownDetails.categories.map((cat) => ({
@@ -327,7 +328,7 @@ export function ExpenseBreakdownModal({
                       }}
                     />
                   </PieChart>
-                </ResponsiveContainer>
+                </ResponsiveChart>
               </div>
             </div>
           ) : (

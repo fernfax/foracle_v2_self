@@ -30,9 +30,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
-  ResponsiveContainer,
   Legend,
 } from "recharts";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
 import {
   extractCpfProjectionInputs,
@@ -515,7 +515,7 @@ export function CpfProjectionGraph({
 
       <CardContent className="pt-2">
         <div className="w-full h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveChart width="100%" height="100%">
             <ComposedChart
               data={projectionData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -627,7 +627,7 @@ export function CpfProjectionGraph({
                 );
               })}
             </ComposedChart>
-          </ResponsiveContainer>
+          </ResponsiveChart>
         </div>
       </CardContent>
     </Card>

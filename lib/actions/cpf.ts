@@ -1,9 +1,15 @@
 "use server";
 
 import { db } from "@/db";
-import { incomes, familyMembers } from "@/db/schema";
+import { incomesBeta, familyMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getCPFRatesByAge, getCPFAllocationByAge, calculateBonusCPF } from "@/lib/cpf-calculator";
+import {
+  getCPFRatesByAge,
+  getCPFAllocationByAge,
+  calculateBonusCPF,
+  computeCpfContributions,
+} from "@/lib/cpf-calculator";
+import { effectiveIncomeCategory } from "@/lib/income-category";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
 export interface CpfByFamilyMember {
@@ -57,28 +63,13 @@ function calculateAge(dateOfBirth: Date): number {
 }
 
 /**
- * Normalize income amount to monthly based on frequency
- */
-function normalizeToMonthly(amount: number, frequency: string): number {
-  switch (frequency.toLowerCase()) {
-    case "monthly":
-      return amount;
-    case "yearly":
-    case "annual":
-      return amount / 12;
-    case "weekly":
-      return (amount * 52) / 12;
-    case "bi-weekly":
-    case "biweekly":
-      return (amount * 26) / 12;
-    case "one-time":
-    default:
-      return 0; // Don't include one-time payments in monthly calculations
-  }
-}
-
-/**
- * Get aggregated CPF data grouped by family member
+ * Get aggregated CPF data grouped by family member.
+ *
+ * Reads the `incomes_beta` table (the canonical income source). Beta rows are
+ * monthly by design, so amounts are used as-is. Only income that is *currently*
+ * active counts toward monthly CPF: subject-to-CPF, active, and with an
+ * effective category of "current" (a future income whose start date has already
+ * passed reads as current — see lib/income-category).
  */
 export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
   const { familyId } = await getCurrentUserAndFamily();
@@ -94,22 +85,24 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       )
     );
 
-  // Fetch all incomes in this family
+  // Fetch all incomes in this family (canonical incomes_beta table)
   const allIncomes = await db
     .select()
-    .from(incomes)
-    .where(eq(incomes.familyId, familyId));
+    .from(incomesBeta)
+    .where(eq(incomesBeta.familyId, familyId));
 
   const cpfData: CpfByFamilyMember[] = [];
 
   // Process each contributing family member
   for (const member of members) {
-    // Get all active incomes linked to this family member that are subject to CPF
+    // Get all currently-active incomes linked to this member that attract CPF
     const memberIncomes = allIncomes.filter(
       (income) =>
         income.familyMemberId === member.id &&
         income.subjectToCpf === true &&
-        income.isActive === true
+        income.isActive === true &&
+        effectiveIncomeCategory(income.incomeCategory, income.startDate) ===
+          "current"
     );
 
     // Skip if no CPF-eligible incomes
@@ -149,10 +142,8 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
     let totalBonusAmount = 0;
 
     for (const income of memberIncomes) {
-      const monthlyGross = normalizeToMonthly(
-        parseFloat(income.amount),
-        income.frequency
-      );
+      // Beta incomes are monthly by design — use the amount directly.
+      const monthlyGross = parseFloat(income.amount);
 
       // Aggregate bonus amounts from bonusGroups
       if (income.bonusGroups) {
@@ -192,23 +183,18 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
         }
       }
 
-      // Recalculate CPF contributions using correct age-based rates
+      // Recalculate CPF contributions using correct age-based rates, applying
+      // the low-wage rules (employee share reduced/nil below $750).
       const cpfApplicableAmount = Math.min(monthlyGross, 8000);
-      const monthlyEmployeeCpf = cpfApplicableAmount * (employeeCpfRate / 100);
-      const monthlyEmployerCpf = cpfApplicableAmount * (employerCpfRate / 100);
+      const { employee: monthlyEmployeeCpf, employer: monthlyEmployerCpf } =
+        computeCpfContributions(cpfApplicableAmount, {
+          employee: employeeCpfRate / 100,
+          employer: employerCpfRate / 100,
+        });
 
-      const monthlyOa = normalizeToMonthly(
-        parseFloat(income.cpfOrdinaryAccount || "0"),
-        income.frequency
-      );
-      const monthlySa = normalizeToMonthly(
-        parseFloat(income.cpfSpecialAccount || "0"),
-        income.frequency
-      );
-      const monthlyMa = normalizeToMonthly(
-        parseFloat(income.cpfMedisaveAccount || "0"),
-        income.frequency
-      );
+      const monthlyOa = parseFloat(income.cpfOrdinaryAccount || "0");
+      const monthlySa = parseFloat(income.cpfSpecialAccount || "0");
+      const monthlyMa = parseFloat(income.cpfMedisaveAccount || "0");
 
       totalGross += monthlyGross;
       totalEmployeeCpf += monthlyEmployeeCpf;

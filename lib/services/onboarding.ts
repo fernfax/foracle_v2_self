@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { currentHoldings, expenses, familyMembers, incomes, users } from "@/db/schema";
+import { currentHoldings, expenses, familyMembers, incomesBeta, users } from "@/db/schema";
 import type { AuthContext } from "@/lib/auth-context";
 import type { CreateOnboardingExpensesBody } from "@/lib/api-schemas/onboarding";
 
@@ -69,8 +69,8 @@ export async function getOnboardingData(ctx: AuthContext) {
     db.query.familyMembers.findMany({
       where: eq(familyMembers.familyId, ctx.familyId),
     }),
-    db.query.incomes.findMany({
-      where: eq(incomes.familyId, ctx.familyId),
+    db.query.incomesBeta.findMany({
+      where: eq(incomesBeta.familyId, ctx.familyId),
     }),
     db.query.currentHoldings.findMany({
       where: eq(currentHoldings.familyId, ctx.familyId),

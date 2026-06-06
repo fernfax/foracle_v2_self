@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { differenceInCalendarMonths, format, parseISO } from "date-fns";
-import { ChevronRight, Info, Pencil, Plus, X } from "lucide-react";
+import { Info, Pencil, Plus, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +19,7 @@ import {
   OW_CEILING_AMOUNT,
   OW_CEILING_YEAR,
   computeBonusCPF,
+  computeCpfContributions,
   getCPFAllocationBracketIndex,
   getCPFBracketIndex,
 } from "@/lib/cpf-calculator";
@@ -67,10 +68,12 @@ export function QuickAdjustPad({
   const max = Math.max(initialAmount * 2, initialAmount + 5000, 1000);
 
   const handleConfirm = () => {
+    if (value <= 0) return;
     onConfirm(Math.max(0, Math.round(value / SLIDER_STEP) * SLIDER_STEP));
   };
 
   const dirty = value !== initialAmount;
+  const canConfirm = dirty && value > 0;
 
   return (
     <div className="w-72 rounded-2xl border border-border/40 bg-popover text-popover-foreground p-5 shadow-xl">
@@ -111,9 +114,9 @@ export function QuickAdjustPad({
           type="button"
           className={cn(
             "flex-1 bg-brand-jungle hover:bg-brand-jungle/90 text-white font-semibold",
-            !dirty && "opacity-60 cursor-not-allowed"
+            !canConfirm && "opacity-60 cursor-not-allowed"
           )}
-          disabled={!dirty}
+          disabled={!canConfirm}
           onClick={handleConfirm}
         >
           Confirm Changes
@@ -129,8 +132,7 @@ export function QuickAdjustPad({
 // The popover shown when a timeline bar is clicked. Wraps the amount slider
 // with a swipeable detail carousel above it so the user can flip through the
 // income's metadata (basics, CPF, bonuses, notes/history) without the popup
-// growing tall enough to overlap neighboring rows. Also exposes an "Open
-// full details" button that delegates to the parent's detail dialog.
+// growing tall enough to overlap neighboring rows.
 // ---------------------------------------------------------------------------
 
 interface IncomeForPopup {
@@ -256,6 +258,13 @@ function OWCeilingInfo({
             </tbody>
           </table>
         </div>
+
+        <p className="mt-2 text-[10px] text-muted-foreground">
+          Lower wages get relief on the employee share: wages up to{" "}
+          <span className="font-semibold">$500</span>/month pay no employee CPF,
+          and from <span className="font-semibold">$500–$750</span> the employee
+          share is phased in (the employer still contributes at the full rate).
+        </p>
         {age !== null && bracketIdx >= 0 && (
           <p className="mt-2 text-[10px] text-muted-foreground">
             Highlighted: this member&rsquo;s bracket ({CPF_RATE_BRACKETS[bracketIdx].label}, age {age}).
@@ -378,7 +387,6 @@ interface IncomeBarPopupProps {
       familyMemberAge?: number;
     }
   ) => void;
-  onOpenDetail?: () => void;
   onCancel?: () => void;
   /** Recurring incomes can edit a bonus schedule inline (13th-month etc.). */
   canEditBonus?: boolean;
@@ -660,7 +668,6 @@ export function IncomeBarPopup({
   income,
   initialAmount,
   onConfirm,
-  onOpenDetail,
   onCancel,
   canEditBonus = false,
   openToBonus = false,
@@ -738,8 +745,16 @@ export function IncomeBarPopup({
   const empRatePct = CPF_RATE_BRACKETS[cpfRateIdx].employee;
   const erRatePct = CPF_RATE_BRACKETS[cpfRateIdx].employer;
   const cappedWage = Math.min(value, OW_CEILING_AMOUNT);
-  const liveEmployeeCpf = subjectToCpf ? cappedWage * (empRatePct / 100) : 0;
-  const liveEmployerCpf = subjectToCpf ? cappedWage * (erRatePct / 100) : 0;
+  // Apply low-wage rules: employee share is nil at/below $500 and phased in
+  // over $500–$750 (employer still contributes). Shared with the rest of the app.
+  const liveCpf = subjectToCpf
+    ? computeCpfContributions(cappedWage, {
+        employee: empRatePct / 100,
+        employer: erRatePct / 100,
+      })
+    : { employee: 0, employer: 0 };
+  const liveEmployeeCpf = liveCpf.employee;
+  const liveEmployerCpf = liveCpf.employer;
   const liveNetTakeHome = value - liveEmployeeCpf;
 
   // Open on the Bonus tab when requested (clicking a bonus pill). Page order is
@@ -948,8 +963,12 @@ export function IncomeBarPopup({
   const activeIdx = Math.min(pageIdx, Math.max(0, pages.length - 1));
 
   const amountDirty = value !== initialAmount;
+  // A stream must have a positive amount — block saving $0 / empty / non-numeric.
+  const amountValid = value > 0;
   const dirty = amountDirty || bonusDirty || cpfDirty;
+  const canConfirm = dirty && amountValid;
   const handleConfirm = () => {
+    if (!amountValid) return;
     const roundedAmount = Math.max(0, Math.round(value));
     const extra: {
       accountForBonus?: boolean;
@@ -1040,9 +1059,15 @@ export function IncomeBarPopup({
             onFocus={(e) => e.currentTarget.select()}
             placeholder="0"
             aria-label="Monthly amount"
+            aria-invalid={!amountValid}
             className="w-40 bg-transparent text-center font-display text-3xl font-bold tracking-tight outline-none placeholder:text-muted-foreground/40"
           />
         </div>
+        {!amountValid && (
+          <p className="mt-1 text-center text-xs font-medium text-destructive">
+            Enter an amount greater than $0.
+          </p>
+        )}
 
         <div className="mt-3 flex gap-2">
           {onCancel && (
@@ -1059,25 +1084,15 @@ export function IncomeBarPopup({
             type="button"
             className={cn(
               "flex-1 bg-brand-jungle hover:bg-brand-jungle/90 text-white font-semibold",
-              !dirty && "opacity-60 cursor-not-allowed"
+              !canConfirm && "opacity-60 cursor-not-allowed"
             )}
-            disabled={!dirty}
+            disabled={!canConfirm}
             onClick={handleConfirm}
           >
             Confirm Changes
           </Button>
         </div>
 
-        {onOpenDetail && (
-          <button
-            type="button"
-            onClick={onOpenDetail}
-            className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-md py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Open full details
-            <ChevronRight className="h-3 w-3" />
-          </button>
-        )}
       </div>
     </div>
   );
