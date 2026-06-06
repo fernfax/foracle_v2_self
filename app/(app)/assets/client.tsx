@@ -36,6 +36,9 @@ interface VehicleAsset {
   coeExpiryDate: string | null;
   originalPurchasePrice: string;
   loanAmountTaken: string | null;
+  loanInterestRate: string | null;
+  loanTenureYears: number | null;
+  loanTenureMonths: number | null;
   loanAmountRepaid: string | null;
   monthlyLoanPayment: string | null;
   linkedExpenseId: string | null;

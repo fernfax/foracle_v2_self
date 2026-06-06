@@ -18,6 +18,9 @@ export async function createVehicleAsset(data: {
   coeExpiryDate?: string;
   originalPurchasePrice: number;
   loanAmountTaken?: number;
+  loanInterestRate?: number;
+  loanTenureYears?: number;
+  loanTenureMonths?: number;
   loanAmountRepaid?: number;
   monthlyLoanPayment?: number;
   addToExpenditures?: boolean;
@@ -30,6 +33,9 @@ export async function createVehicleAsset(data: {
     coeExpiryDate: data.coeExpiryDate,
     originalPurchasePrice: data.originalPurchasePrice.toString(),
     loanAmountTaken: data.loanAmountTaken?.toString(),
+    loanInterestRate: data.loanInterestRate?.toString(),
+    loanTenureYears: data.loanTenureYears,
+    loanTenureMonths: data.loanTenureMonths,
     loanAmountRepaid: data.loanAmountRepaid?.toString(),
     monthlyLoanPayment: data.monthlyLoanPayment?.toString(),
     addToExpenditures: data.addToExpenditures,
@@ -59,6 +65,9 @@ export async function updateVehicleAsset(
     coeExpiryDate?: string;
     originalPurchasePrice: number;
     loanAmountTaken?: number;
+    loanInterestRate?: number;
+    loanTenureYears?: number;
+    loanTenureMonths?: number;
     loanAmountRepaid?: number;
     monthlyLoanPayment?: number;
     addToExpenditures?: boolean;
@@ -72,6 +81,9 @@ export async function updateVehicleAsset(
     coeExpiryDate: data.coeExpiryDate ?? null,
     originalPurchasePrice: data.originalPurchasePrice.toString(),
     loanAmountTaken: data.loanAmountTaken?.toString() ?? null,
+    loanInterestRate: data.loanInterestRate?.toString() ?? null,
+    loanTenureYears: data.loanTenureYears ?? null,
+    loanTenureMonths: data.loanTenureMonths ?? null,
     loanAmountRepaid: data.loanAmountRepaid?.toString() ?? null,
     monthlyLoanPayment: data.monthlyLoanPayment?.toString() ?? null,
     addToExpenditures: data.addToExpenditures,
