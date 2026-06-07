@@ -246,10 +246,7 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
             variant={selectedPolicyType === "All" ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedPolicyType("All")}
-            className={cn(
-              "flex-shrink-0",
-              selectedPolicyType === "All" && "bg-black text-white hover:bg-black/90"
-            )}
+            className="flex-shrink-0"
           >
             All
             <Badge variant="secondary" className="ml-2">
@@ -264,10 +261,7 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
                 variant={selectedPolicyType === policyType ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedPolicyType(policyType)}
-                className={cn(
-                  "flex-shrink-0",
-                  selectedPolicyType === policyType && "bg-black text-white hover:bg-black/90"
-                )}
+                className="flex-shrink-0"
               >
                 {policyType}
                 <Badge variant="secondary" className="ml-2">
