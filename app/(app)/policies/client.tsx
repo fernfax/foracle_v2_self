@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Shield, Plus, User, Users, Baby, Heart, UserCircle, LayoutGrid, Table2, ShieldCheck } from "lucide-react";
+import { differenceInDays } from "date-fns";
+import { Shield, Plus, User, Users, Baby, Heart, UserCircle, LayoutGrid, Table2, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
@@ -265,6 +266,16 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
     return ids.size;
   }, [policies]);
 
+  const expiringSoonCount = useMemo(() => {
+    return policies.filter(p => {
+      if (!p.maturityDate) return false;
+      const st = (p.status ?? "active").toLowerCase();
+      if (st !== "active") return false;
+      const days = differenceInDays(new Date(p.maturityDate), new Date());
+      return days >= 0 && days <= 365;
+    }).length;
+  }, [policies]);
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -308,6 +319,15 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
           <span className="text-muted-foreground">
             {policies.length} {policies.length === 1 ? "policy" : "policies"} · {coveredMemberCount} {coveredMemberCount === 1 ? "member" : "members"} covered
           </span>
+          {expiringSoonCount > 0 && (
+            <>
+              <div className="w-px h-4 bg-border" />
+              <span className="flex items-center gap-1 text-[#7A5C00] font-medium">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {expiringSoonCount} expiring within 12 months
+              </span>
+            </>
+          )}
         </div>
       )}
 

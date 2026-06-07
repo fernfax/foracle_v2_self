@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X, Pencil, Trash2, ChevronRight } from "lucide-react";
-import { format } from "date-fns";
+import { Check, X, Pencil, Trash2, ChevronRight, AlertTriangle } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,6 +18,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+function getExpiryAlert(maturityDate: string | null, status: string | null): {
+  label: string;
+  days: number;
+  level: "warning" | "critical";
+} | null {
+  if (!maturityDate) return null;
+  const st = (status ?? "active").toLowerCase();
+  if (st !== "active") return null;
+  const days = differenceInDays(new Date(maturityDate), new Date());
+  if (days < 0 || days > 365) return null;
+  const months = Math.ceil(days / 30);
+  return {
+    days,
+    level: days < 90 ? "critical" : "warning",
+    label: days < 30
+      ? `Expires in ${days}d`
+      : days < 90
+      ? `Expires in ${months}mo`
+      : `Expires in ${months} months`,
+  };
+}
 
 interface PolicyCardProps {
   policy: {
@@ -70,6 +92,7 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
 
   const coverages = getCoverageOptions();
   const isInExpenses = !!policy.linkedExpenseId;
+  const expiryAlert = getExpiryAlert(policy.maturityDate, policy.status);
 
   // Primary sum assured: largest of death, CI, TPD
   const primaryCoverage = coverages.length > 0
@@ -110,9 +133,23 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <Badge variant="outline" className="text-xs font-medium uppercase text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
-              {policy.status || "Active"}
-            </Badge>
+            {expiryAlert ? (
+              <Badge
+                variant="outline"
+                className={`text-xs font-medium flex items-center gap-1 ${
+                  expiryAlert.level === "critical"
+                    ? "text-[#8B0000] border-[rgba(139,0,0,0.25)] bg-[rgba(224,85,85,0.08)]"
+                    : "text-[#7A5C00] border-[rgba(212,168,67,0.35)] bg-[rgba(212,168,67,0.10)]"
+                }`}
+              >
+                <AlertTriangle className="h-3 w-3" />
+                {expiryAlert.label}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs font-medium uppercase text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
+                {policy.status || "Active"}
+              </Badge>
+            )}
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
         </div>
@@ -182,6 +219,25 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
           </DialogHeader>
 
           <div className="space-y-6">
+            {/* Expiry alert banner */}
+            {expiryAlert && (
+              <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm ${
+                expiryAlert.level === "critical"
+                  ? "bg-[rgba(224,85,85,0.08)] border border-[rgba(139,0,0,0.2)] text-[#8B0000]"
+                  : "bg-[rgba(212,168,67,0.10)] border border-[rgba(212,168,67,0.3)] text-[#7A5C00]"
+              }`}>
+                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">{expiryAlert.label}</p>
+                  <p className="text-xs mt-0.5 opacity-80">
+                    {expiryAlert.level === "critical"
+                      ? "Review your coverage and arrange renewal before the policy lapses."
+                      : "This policy matures within the year — plan ahead for renewal or replacement coverage."}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Edit Action */}
             <div className="flex gap-2">
               <Button
