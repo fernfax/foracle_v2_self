@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Plus, AlertTriangle, User, Users, Baby, Heart, UserCircle, Pencil, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -97,6 +97,15 @@ function getAvatarConfig(relationship: string | null) {
     default:
       return { icon: UserCircle, bgColor: "bg-muted", iconColor: "text-foreground" };
   }
+}
+
+function getChipExpiryLevel(policy: Policy): "warning" | "critical" | null {
+  if (!policy.maturityDate) return null;
+  const st = (policy.status ?? "active").toLowerCase();
+  if (st !== "active") return null;
+  const days = differenceInDays(new Date(policy.maturityDate), new Date());
+  if (days < 0 || days > 365) return null;
+  return days < 90 ? "critical" : "warning";
 }
 
 function formatPremium(policy: Policy): string {
@@ -254,8 +263,16 @@ export function CoverageMatrix({
                                 className="flex flex-col gap-0.5 px-2.5 py-2 rounded-lg border border-border bg-white hover:shadow-sm hover:border-border/60 ring-1 ring-transparent hover:ring-border/30 transition-all text-left w-full cursor-pointer"
                                 style={{ borderLeftWidth: 3, borderLeftColor: typeColor }}
                               >
-                                <span className="text-xs font-medium text-foreground leading-tight truncate">
-                                  {policy.provider}
+                                <span className="flex items-center gap-1">
+                                  <span className="text-xs font-medium text-foreground leading-tight truncate">
+                                    {policy.provider}
+                                  </span>
+                                  {getChipExpiryLevel(policy) === "critical" && (
+                                    <AlertTriangle className="h-3 w-3 text-[#8B0000] flex-shrink-0" />
+                                  )}
+                                  {getChipExpiryLevel(policy) === "warning" && (
+                                    <AlertTriangle className="h-3 w-3 text-[#7A5C00] flex-shrink-0" />
+                                  )}
                                 </span>
                                 {policy.planName && (
                                   <span className="text-[10px] text-muted-foreground leading-tight truncate">
