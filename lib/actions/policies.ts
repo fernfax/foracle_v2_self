@@ -28,6 +28,7 @@ export async function createPolicy(data: {
   familyMemberId?: string;
   linkedExpenseId?: string;
   provider: string;
+  planName?: string;
   policyNumber?: string;
   policyType: string;
   status?: string;
@@ -35,10 +36,13 @@ export async function createPolicy(data: {
   maturityDate?: string;
   coverageUntilAge?: number;
   premiumAmount: string;
+  premiumAmountCPF?: string;
   premiumFrequency: string;
   customMonths?: string;
   totalPremiumDuration?: number;
   coverageOptions?: string;
+  cashValue?: string;
+  cashValueDate?: string;
   description?: string;
 }) {
   const ctx = await getCurrentUserAndFamily();
@@ -46,6 +50,7 @@ export async function createPolicy(data: {
     familyMemberId: data.familyMemberId,
     linkedExpenseId: data.linkedExpenseId,
     provider: data.provider,
+    planName: data.planName,
     policyNumber: data.policyNumber,
     policyType: data.policyType,
     status: data.status as
@@ -58,10 +63,13 @@ export async function createPolicy(data: {
     maturityDate: data.maturityDate,
     coverageUntilAge: data.coverageUntilAge,
     premiumAmount: data.premiumAmount,
+    premiumAmountCPF: data.premiumAmountCPF,
     premiumFrequency: data.premiumFrequency,
     customMonths: data.customMonths,
     totalPremiumDuration: data.totalPremiumDuration,
     coverageOptions: data.coverageOptions,
+    cashValue: data.cashValue,
+    cashValueDate: data.cashValueDate,
     description: data.description,
   });
   revalidatePath("/policies");
@@ -78,6 +86,7 @@ export async function updatePolicy(
     familyMemberId: string;
     linkedExpenseId: string;
     provider: string;
+    planName: string;
     policyNumber: string;
     policyType: string;
     status: string;
@@ -85,10 +94,13 @@ export async function updatePolicy(
     maturityDate: string;
     coverageUntilAge: number;
     premiumAmount: string;
+    premiumAmountCPF: string;
     premiumFrequency: string;
     customMonths: string;
     totalPremiumDuration: number;
     coverageOptions: string;
+    cashValue: string;
+    cashValueDate: string;
     description: string;
     isActive: boolean;
   }>
@@ -98,6 +110,7 @@ export async function updatePolicy(
   if (data.familyMemberId !== undefined) patch.familyMemberId = data.familyMemberId;
   if (data.linkedExpenseId !== undefined) patch.linkedExpenseId = data.linkedExpenseId;
   if (data.provider !== undefined) patch.provider = data.provider;
+  if (data.planName !== undefined) patch.planName = data.planName;
   if (data.policyNumber !== undefined) patch.policyNumber = data.policyNumber;
   if (data.policyType !== undefined) patch.policyType = data.policyType;
   if (data.status !== undefined)
@@ -106,11 +119,14 @@ export async function updatePolicy(
   if (data.maturityDate !== undefined) patch.maturityDate = data.maturityDate;
   if (data.coverageUntilAge !== undefined) patch.coverageUntilAge = data.coverageUntilAge;
   if (data.premiumAmount !== undefined) patch.premiumAmount = data.premiumAmount;
+  if (data.premiumAmountCPF !== undefined) patch.premiumAmountCPF = data.premiumAmountCPF;
   if (data.premiumFrequency !== undefined) patch.premiumFrequency = data.premiumFrequency;
   if (data.customMonths !== undefined) patch.customMonths = data.customMonths;
   if (data.totalPremiumDuration !== undefined)
     patch.totalPremiumDuration = data.totalPremiumDuration;
   if (data.coverageOptions !== undefined) patch.coverageOptions = data.coverageOptions;
+  if (data.cashValue !== undefined) patch.cashValue = data.cashValue;
+  if (data.cashValueDate !== undefined) patch.cashValueDate = data.cashValueDate;
   if (data.description !== undefined) patch.description = data.description;
   if (data.isActive !== undefined) patch.isActive = data.isActive;
 

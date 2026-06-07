@@ -50,6 +50,7 @@ interface Policy {
   familyMemberId: string | null;
   linkedExpenseId: string | null;
   provider: string;
+  planName: string | null;
   policyNumber: string | null;
   policyType: string;
   status: string | null;
@@ -57,10 +58,13 @@ interface Policy {
   maturityDate: string | null;
   coverageUntilAge: number | null;
   premiumAmount: string;
+  premiumAmountCPF: string | null;
   premiumFrequency: string;
   customMonths: string | null;
   totalPremiumDuration: number | null;
   coverageOptions: string | null;
+  cashValue: string | null;
+  cashValueDate: string | null;
   isActive: boolean | null;
   description: string | null;
   createdAt: Date;
@@ -145,9 +149,16 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
 
   // Premium Details
   const [premiumAmount, setPremiumAmount] = useState("");
+  const [premiumAmountCPF, setPremiumAmountCPF] = useState("");
   const [premiumFrequency, setPremiumFrequency] = useState("");
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [totalPremiumDuration, setTotalPremiumDuration] = useState("");
+
+  // Plan name & cash value
+  const [planName, setPlanName] = useState("");
+  const [cashValue, setCashValue] = useState("");
+  const [cashValueDate, setCashValueDate] = useState<Date | undefined>(undefined);
+  const [cashValueDateOpen, setCashValueDateOpen] = useState(false);
 
   // Coverage Options
   const [deathCoverage, setDeathCoverage] = useState({ enabled: false, amount: "" });
@@ -182,6 +193,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         if (policy) {
         setSelectedFamilyMember(policy.familyMemberId || "");
         setProvider(policy.provider);
+        setPlanName(policy.planName || "");
         setPolicyNumber(policy.policyNumber || "");
         setPolicyType(policy.policyType);
         setStatus(policy.status || "Active");
@@ -189,8 +201,11 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         setCoverageUntilAge(policy.coverageUntilAge?.toString() || "");
         setMaturityDate(policy.maturityDate ? new Date(policy.maturityDate) : undefined);
         setPremiumAmount(policy.premiumAmount);
+        setPremiumAmountCPF(policy.premiumAmountCPF || "");
         setPremiumFrequency(policy.premiumFrequency);
         setTotalPremiumDuration(policy.totalPremiumDuration?.toString() || "");
+        setCashValue(policy.cashValue || "");
+        setCashValueDate(policy.cashValueDate ? new Date(policy.cashValueDate) : undefined);
 
         // Parse custom months if available
         if (policy.customMonths) {
@@ -413,6 +428,7 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
       await updatePolicy(policy.id, {
         familyMemberId: selectedFamilyMember || undefined,
         provider,
+        planName: planName || undefined,
         policyNumber: policyNumber || undefined,
         policyType,
         status,
@@ -420,10 +436,13 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
         coverageUntilAge: coverageUntilAge ? parseInt(coverageUntilAge) : undefined,
         premiumAmount,
+        premiumAmountCPF: premiumAmountCPF || undefined,
         premiumFrequency,
         customMonths: customMonthsJson,
         totalPremiumDuration: totalPremiumDuration ? parseInt(totalPremiumDuration) : undefined,
         coverageOptions: JSON.stringify(coverageOptions),
+        cashValue: cashValue || undefined,
+        cashValueDate: cashValueDate ? format(cashValueDate, "yyyy-MM-dd") : undefined,
       });
 
       console.log("Policy updated:", policy.id);
@@ -568,6 +587,16 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
                   </SelectContent>
                 </Select>
                 <ProviderManagerPopover providers={providers} onProvidersChanged={loadProviders} />
+              </div>
+
+              <div>
+                <Label htmlFor="planName">Plan Name (Optional)</Label>
+                <Input
+                  id="planName"
+                  placeholder="e.g., Flexi Life III"
+                  value={planName}
+                  onChange={(e) => setPlanName(e.target.value)}
+                />
               </div>
 
               <div>
@@ -733,6 +762,23 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
               </div>
 
               <div>
+                <Label htmlFor="premiumAmountCPF">CPF Premium (Optional)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="premiumAmountCPF"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="pl-7"
+                    value={premiumAmountCPF}
+                    onChange={(e) => setPremiumAmountCPF(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">CPF-funded portion of the premium</p>
+              </div>
+
+              <div>
                 <Label htmlFor="premiumFrequency">
                   Premium Frequency <span className="text-[#8B0000]">*</span>
                 </Label>
@@ -807,6 +853,54 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
                 <p className="text-xs text-muted-foreground mt-1">
                   Total number of years to pay premiums
                 </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Cash / Surrender Value */}
+          <div className="bg-muted rounded-lg p-4 space-y-4">
+            <div className="pb-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">Cash / Surrender Value (Optional)</h3>
+              <p className="text-xs text-foreground/400 mt-1">For whole life or endowment policies with accumulated cash value</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="cashValue">Cash Value</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="cashValue"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="pl-7"
+                    value={cashValue}
+                    onChange={(e) => setCashValue(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>As At Date</Label>
+                <Popover open={cashValueDateOpen} onOpenChange={setCashValueDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn("w-full justify-start text-left font-normal", !cashValueDate && "text-muted-foreground")}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {cashValueDate ? format(cashValueDate, "MMMM do, yyyy") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={cashValueDate}
+                      onSelect={(date) => { setCashValueDate(date); setCashValueDateOpen(false); }}
+                      initialFocus
+                      fixedWeeks
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
