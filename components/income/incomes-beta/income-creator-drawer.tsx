@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
 import {
   Select,
   SelectContent,
@@ -292,16 +292,12 @@ export function IncomeCreatorDrawer({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(d) => {
-                        if (d) {
-                          setStartDate(startOfMonth(d));
-                          setStartCalOpen(false);
-                        }
+                    <MonthYearPicker
+                      value={startDate}
+                      onChange={(d) => {
+                        setStartDate(d);
+                        setStartCalOpen(false);
                       }}
-                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -321,16 +317,12 @@ export function IncomeCreatorDrawer({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate ?? undefined}
-                        onSelect={(d) => {
-                          if (d) {
-                            setEndDate(startOfMonth(d));
-                            setEndCalOpen(false);
-                          }
+                      <MonthYearPicker
+                        value={endDate ?? startDate}
+                        onChange={(d) => {
+                          setEndDate(d);
+                          setEndCalOpen(false);
                         }}
-                        initialFocus
                       />
                     </PopoverContent>
                   </Popover>
