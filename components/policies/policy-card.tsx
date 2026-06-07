@@ -105,7 +105,9 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
             <h3 className="text-sm font-semibold text-foreground leading-tight">
               {policy.policyType}
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{policy.provider}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {policy.provider}{policy.planName ? ` · ${policy.planName}` : ""}
+            </p>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <Badge variant="outline" className="text-xs font-medium uppercase text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
@@ -135,13 +137,29 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
               ${premiumAmt.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
               <span className="text-xs text-muted-foreground font-normal"> /{policy.premiumFrequency.toLowerCase()}</span>
             </p>
-            <p className="text-xs text-muted-foreground">
-              ${annualPremium.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} /yr
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs text-muted-foreground">
+                ${annualPremium.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} /yr
+              </p>
+              {policy.premiumAmountCPF && parseFloat(policy.premiumAmountCPF) > 0 && (
+                <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                  +${parseFloat(policy.premiumAmountCPF).toLocaleString(undefined, { maximumFractionDigits: 0 })} CPF
+                </span>
+              )}
+            </div>
           </div>
-          {payableTerm && (
-            <p className="text-xs text-muted-foreground text-right">{payableTerm}</p>
-          )}
+          <div className="text-right">
+            {payableTerm && (
+              <p className="text-xs text-muted-foreground">{payableTerm}</p>
+            )}
+            {policy.cashValue && parseFloat(policy.cashValue) > 0 && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                CV ${parseFloat(policy.cashValue) >= 1000
+                  ? `${(parseFloat(policy.cashValue) / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
+                  : parseFloat(policy.cashValue).toLocaleString()}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* In expenses indicator */}
@@ -200,6 +218,12 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Policy Information</h3>
               <div className="grid grid-cols-2 gap-4">
+                {policy.planName && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-foreground">Plan Name</p>
+                    <p className="font-medium">{policy.planName}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-foreground">Policy Number</p>
                   <p className="font-medium">{policy.policyNumber || "TBC"}</p>
@@ -215,11 +239,19 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
                   </div>
                 )}
                 <div>
-                  <p className="text-sm text-foreground">Premium</p>
+                  <p className="text-sm text-foreground">Premium (Cash)</p>
                   <p className="font-medium text-[#007A68]">
                     ${parseFloat(policy.premiumAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} /{policy.premiumFrequency.toLowerCase()}
                   </p>
                 </div>
+                {policy.premiumAmountCPF && parseFloat(policy.premiumAmountCPF) > 0 && (
+                  <div>
+                    <p className="text-sm text-foreground">Premium (CPF)</p>
+                    <p className="font-medium">
+                      ${parseFloat(policy.premiumAmountCPF).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} /{policy.premiumFrequency.toLowerCase()}
+                    </p>
+                  </div>
+                )}
                 {policy.totalPremiumDuration && (
                   <div>
                     <p className="text-sm text-foreground">Premium Duration</p>
@@ -248,6 +280,27 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
                       </p>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Cash Value */}
+            {policy.cashValue && parseFloat(policy.cashValue) > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Cash / Surrender Value</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-foreground">Cash Value</p>
+                    <p className="font-medium">
+                      ${parseFloat(policy.cashValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  {policy.cashValueDate && (
+                    <div>
+                      <p className="text-sm text-foreground">As At</p>
+                      <p className="font-medium">{format(new Date(policy.cashValueDate), "MMMM d, yyyy")}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

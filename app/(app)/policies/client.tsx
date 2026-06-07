@@ -246,6 +246,20 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
     }, 0);
   }, [policies]);
 
+  const totalMonthlyCPF = useMemo(() => {
+    return policies.reduce((sum, p) => {
+      if (!p.premiumAmountCPF) return sum;
+      const amount = parseFloat(p.premiumAmountCPF);
+      if (!amount) return sum;
+      switch (p.premiumFrequency.toLowerCase()) {
+        case "monthly": return sum + amount;
+        case "quarterly": return sum + amount / 3;
+        case "annual": case "yearly": return sum + amount / 12;
+        default: return sum + amount;
+      }
+    }, 0);
+  }, [policies]);
+
   const coveredMemberCount = useMemo(() => {
     const ids = new Set(policies.map(p => p.familyMemberId).filter(Boolean));
     return ids.size;
@@ -265,19 +279,30 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
 
       {/* Summary Bar */}
       {policies.length > 0 && (
-        <div className="flex items-center gap-4 px-4 py-3 rounded-lg bg-muted/50 text-sm">
+        <div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-lg bg-muted/50 text-sm">
           <div>
             <span className="font-semibold text-foreground">
               ${totalMonthlyPremium.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <span className="text-muted-foreground"> /month</span>
+            <span className="text-muted-foreground"> /month cash</span>
           </div>
+          {totalMonthlyCPF > 0 && (
+            <>
+              <div className="w-px h-4 bg-border" />
+              <div>
+                <span className="font-semibold text-foreground">
+                  ${totalMonthlyCPF.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <span className="text-muted-foreground"> /month CPF</span>
+              </div>
+            </>
+          )}
           <div className="w-px h-4 bg-border" />
           <div>
             <span className="font-semibold text-foreground">
-              ${(totalMonthlyPremium * 12).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${((totalMonthlyPremium + totalMonthlyCPF) * 12).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <span className="text-muted-foreground"> /year</span>
+            <span className="text-muted-foreground"> /year total</span>
           </div>
           <div className="w-px h-4 bg-border" />
           <span className="text-muted-foreground">
