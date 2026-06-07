@@ -347,6 +347,7 @@ export function CpfProjectionGraph({
     ? (firstMonthlyPoint.householdMonthlyTotal as number)
     : 0;
   const projectedTotal = (lastPoint?.householdTotal as number) ?? 0;
+  const monthlyLoanDeductionTotal = loanDeductions.reduce((s, d) => s + d.monthlyAmount, 0);
 
   // Y-axis domain
   const allValues = projectionData.flatMap((d) =>
@@ -495,6 +496,11 @@ export function CpfProjectionGraph({
             <p className="text-sm sm:text-lg font-semibold text-foreground">
               {formatCurrency(monthlyHouseholdCpf)}
             </p>
+            {monthlyLoanDeductionTotal > 0 && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                After OA loan: −{formatCurrency(monthlyLoanDeductionTotal)}/mo
+              </p>
+            )}
           </div>
           <div className="bg-[rgba(184,98,42,0.10)] rounded-lg p-2 sm:p-3">
             <p className="text-xs text-foreground mb-0.5">
