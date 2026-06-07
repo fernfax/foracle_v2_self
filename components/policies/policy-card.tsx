@@ -69,7 +69,7 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-border p-4 hover:shadow-md transition-shadow relative cursor-pointer" onClick={() => setIsModalOpen(true)}>
+      <div className="bg-white rounded-lg border border-border p-4 hover:shadow-md hover:border-border/80 ring-1 ring-transparent hover:ring-border/40 transition-all relative cursor-pointer" onClick={() => setIsModalOpen(true)}>
         {/* Expand Icon */}
         <Expand className="h-3.5 w-3.5 text-muted-foreground absolute top-3 right-3" />
 
@@ -79,11 +79,11 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
             {policy.policyType}
           </h3>
           <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline" className="text-xs font-medium uppercase text-[#7A3A0A] border-[rgba(184,98,42,0.25)]">
+            <Badge variant="outline" className="text-xs font-medium text-[#7A3A0A] border-[rgba(184,98,42,0.25)]">
               {policy.provider}
             </Badge>
             <Badge variant="outline" className="text-xs font-medium uppercase text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
-              {policy.status || "ACTIVE"}
+              {policy.status || "Active"}
             </Badge>
           </div>
           <div className={`flex items-center gap-1 mt-2 text-xs ${isInExpenses ? 'text-[#007A68]' : 'text-muted-foreground'}`}>
@@ -134,11 +134,11 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
               <Badge variant="secondary" className="text-xs font-medium uppercase">
                 {policy.policyType}
               </Badge>
-              <Badge variant="outline" className="text-xs font-medium uppercase text-[#7A3A0A] border-[rgba(184,98,42,0.25)]">
+              <Badge variant="outline" className="text-xs font-medium text-[#7A3A0A] border-[rgba(184,98,42,0.25)]">
                 {policy.provider}
               </Badge>
               <Badge variant="outline" className="text-xs font-medium uppercase text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
-                {policy.status || "ACTIVE"}
+                {policy.status || "Active"}
               </Badge>
               <Badge variant="outline" className={`text-xs font-medium ${isInExpenses ? 'text-[#007A68] border-[rgba(0,196,170,0.25)]' : 'text-muted-foreground border-border'}`}>
                 {isInExpenses ? <Check className="h-3 w-3 mr-1" /> : <X className="h-3 w-3 mr-1" />}
