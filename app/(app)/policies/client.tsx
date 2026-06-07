@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Shield, Plus, User, Users, Baby, Heart, UserCircle } from "lucide-react";
+import { Shield, Plus, User, Users, Baby, Heart, UserCircle, LayoutGrid, Table2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { AddPolicyDialog } from "@/components/policies/add-policy-dialog";
 import { EditPolicyDialog } from "@/components/policies/edit-policy-dialog";
 import { PolicyCard } from "@/components/policies/policy-card";
+import { CoverageMatrix } from "@/components/policies/coverage-matrix";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +63,7 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
   const router = useRouter();
   const searchParams = useSearchParams();
   const [policies, setPolicies] = useState<Policy[]>(initialPolicies);
+  const [view, setView] = useState<"cards" | "matrix">("cards");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -279,9 +281,10 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
         </div>
       )}
 
-      {/* Policy Type Filters */}
+      {/* View toggle + Policy Type Filters */}
       {policies.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 flex-1">
           <Button
             variant={selectedPolicyType === "All" ? "default" : "outline"}
             size="sm"
@@ -309,6 +312,26 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
                 </Badge>
               </Button>
             ))}
+          </div>
+          {/* View toggle */}
+          <div className="flex items-center gap-1 flex-shrink-0 pb-2">
+            <Button
+              variant={view === "cards" ? "secondary" : "ghost"}
+              size="icon-sm"
+              onClick={() => setView("cards")}
+              title="Card view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={view === "matrix" ? "secondary" : "ghost"}
+              size="icon-sm"
+              onClick={() => setView("matrix")}
+              title="Coverage matrix"
+            >
+              <Table2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -325,6 +348,14 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
             Add Your First Policy
           </Button>
         </div>
+      ) : view === "matrix" ? (
+        <CoverageMatrix
+          familyMembers={sortedFamilyMembers}
+          policies={filteredPolicies}
+          onEditPolicy={handleEditPolicy}
+          onDeletePolicy={handleDeletePolicy}
+          onAddPolicy={handleAddPolicy}
+        />
       ) : (
         <div className="space-y-8">
           {sortedPoliciesByMember.map(({ member, policies: memberPolicies }) => {
