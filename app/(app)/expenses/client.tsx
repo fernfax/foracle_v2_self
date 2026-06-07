@@ -74,49 +74,54 @@ interface ExpensesClientProps {
   initialIncomes: Income[];
   initialHoldings: CurrentHolding[];
   initialInvestments: Investment[];
+  // When embedded inside another page (e.g. the User Homepage "Expenses" tab),
+  // skip the standalone PageHeader and keep the sub-tabs on local state so we
+  // don't fight the host page over the shared `?tab=` query param.
+  embedded?: boolean;
 }
 
-export function ExpensesClient({ initialExpenses, initialIncomes, initialHoldings, initialInvestments }: ExpensesClientProps) {
+export function ExpensesClient({ initialExpenses, initialIncomes, initialHoldings, initialInvestments, embedded = false }: ExpensesClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "expenses");
+  const [activeTab, setActiveTab] = useState(
+    embedded ? "expenses" : searchParams.get("tab") || "expenses"
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Sync activeTab with URL search params when they change
+  // Sync activeTab with URL search params when they change — only when this is
+  // the standalone /expenses page. Embedded, the host owns `?tab=`.
   useEffect(() => {
+    if (embedded) return;
     const tabFromUrl = searchParams.get("tab") || "expenses";
     if (tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
     }
-  }, [searchParams]);
+  }, [searchParams, embedded]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    router.push(`/expenses?tab=${value}`, { scroll: false });
+    if (!embedded) router.push(`/expenses?tab=${value}`, { scroll: false });
   };
+
+  const subTabs = mounted ? (
+    <SlidingTabs
+      tabs={[
+        { value: "expenses", label: "Expenses", icon: Receipt },
+        { value: "graph", label: "Graph", icon: TrendingUp },
+        { value: "reports", label: "Reports", icon: PieChart },
+      ]}
+      value={activeTab}
+      onValueChange={handleTabChange}
+    />
+  ) : null;
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Expenses"
-        tabs={
-          mounted ? (
-            <SlidingTabs
-              tabs={[
-                { value: "expenses", label: "Expenses", icon: Receipt },
-                { value: "graph", label: "Graph", icon: TrendingUp },
-                { value: "reports", label: "Reports", icon: PieChart },
-              ]}
-              value={activeTab}
-              onValueChange={handleTabChange}
-            />
-          ) : null
-        }
-      />
+      {embedded ? subTabs : <PageHeader title="Expenses" tabs={subTabs} />}
 
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />

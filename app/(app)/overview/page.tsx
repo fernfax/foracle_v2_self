@@ -1,8 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
 import { getDashboardMetrics } from "@/lib/actions/user";
-// The dashboard Sankey + balance projection read from incomes_beta (the table
-// the Timeline Studio edits) so a month toggle reflects the Studio exactly.
-// Other consumers (metrics, CPF tab, etc.) still use the legacy incomes table.
 import { getIncomesBeta } from "@/lib/actions/incomes-beta";
 import { getExpenses } from "@/lib/actions/expenses";
 import { getCurrentHoldings } from "@/lib/actions/current-holdings";

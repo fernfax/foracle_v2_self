@@ -108,10 +108,9 @@ export function AddVehicleDialog({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Auto-calculated field: Outstanding Loan (amortization-based when rate + tenure provided)
+  // Flat-rate outstanding loan: P × (n − k) / n (SG banks use flat rate, not compound)
   const { outstandingLoan, outstandingLoanMethod } = useMemo(() => {
     const principal = parseFloat(loanAmountTaken) || 0;
-    const rate = parseFloat(loanInterestRate) || 0;
     const tenureYears = parseInt(loanTenureYears) || 0;
     const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
     const totalMonths = tenureYears * 12 + tenureMonthsPart;
@@ -119,21 +118,55 @@ export function AddVehicleDialog({
     if (principal > 0 && totalMonths > 0 && purchaseDate) {
       const monthsElapsed = Math.max(0, differenceInMonths(new Date(), purchaseDate));
       const k = Math.min(monthsElapsed, totalMonths);
-      let balance: number;
-      if (rate === 0) {
-        balance = principal * (totalMonths - k) / totalMonths;
-      } else {
-        const r = rate / 100 / 12;
-        const n = totalMonths;
-        balance = principal * (Math.pow(1 + r, n) - Math.pow(1 + r, k)) / (Math.pow(1 + r, n) - 1);
-      }
-      return { outstandingLoan: Math.max(0, balance), outstandingLoanMethod: "amortization" as const };
+      const balance = principal * (totalMonths - k) / totalMonths;
+      return { outstandingLoan: Math.max(0, balance), outstandingLoanMethod: "flat" as const };
     }
 
     // Fallback: simple subtraction
     const repaid = parseFloat(loanAmountRepaid) || 0;
     return { outstandingLoan: Math.max(0, principal - repaid), outstandingLoanMethod: "simple" as const };
-  }, [loanAmountTaken, loanInterestRate, loanTenureYears, loanTenureMonths, purchaseDate, loanAmountRepaid]);
+  }, [loanAmountTaken, loanTenureYears, loanTenureMonths, purchaseDate, loanAmountRepaid]);
+
+  // Suggested monthly payment from flat rate formula: (P + P × rate × years) / totalMonths
+  const suggestedMonthlyPayment = useMemo(() => {
+    const principal = parseFloat(loanAmountTaken) || 0;
+    const rate = parseFloat(loanInterestRate) || 0;
+    const tenureYears = parseInt(loanTenureYears) || 0;
+    const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
+    const totalMonths = tenureYears * 12 + tenureMonthsPart;
+    if (principal > 0 && rate > 0 && totalMonths > 0) {
+      const years = totalMonths / 12;
+      return (principal + principal * (rate / 100) * years) / totalMonths;
+    }
+    return null;
+  }, [loanAmountTaken, loanInterestRate, loanTenureYears, loanTenureMonths]);
+
+  // MAS quantum warning: loan > 70% of purchase price
+  const masWarning = useMemo(() => {
+    const principal = parseFloat(loanAmountTaken) || 0;
+    const price = parseFloat(originalPurchasePrice) || 0;
+    if (principal > 0 && price > 0 && principal > price * 0.70) return true;
+    return false;
+  }, [loanAmountTaken, originalPurchasePrice]);
+
+  // COE vs tenure mismatch warning
+  const coeOverlapWarning = useMemo(() => {
+    if (!purchaseDate || !coeExpiryDate) return false;
+    const tenureYears = parseInt(loanTenureYears) || 0;
+    const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
+    const totalMonths = tenureYears * 12 + tenureMonthsPart;
+    if (totalMonths === 0) return false;
+    const loanEndDate = new Date(purchaseDate);
+    loanEndDate.setMonth(loanEndDate.getMonth() + totalMonths);
+    return loanEndDate > coeExpiryDate;
+  }, [purchaseDate, coeExpiryDate, loanTenureYears, loanTenureMonths]);
+
+  // MAS max tenure warning: > 7 years
+  const tenureWarning = useMemo(() => {
+    const tenureYears = parseInt(loanTenureYears) || 0;
+    const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
+    return (tenureYears * 12 + tenureMonthsPart) > 84;
+  }, [loanTenureYears, loanTenureMonths]);
 
   // Calculate loan progress
   const loanProgress = useMemo(() => {
@@ -391,16 +424,19 @@ export function AddVehicleDialog({
                       className="bg-white pl-7"
                     />
                   </div>
+                  {masWarning && (
+                    <p className="text-xs text-[#7A5A00]">Exceeds MAS cap of 70% of purchase price</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="loanInterestRate">Loan Interest Rate (%)</Label>
+                  <Label htmlFor="loanInterestRate">Flat Interest Rate (%)</Label>
                   <div className="relative">
                     <Input
                       id="loanInterestRate"
                       type="number"
-                      placeholder="e.g. 2.5"
+                      placeholder="e.g. 2.68"
                       value={loanInterestRate}
                       onChange={(e) => setLoanInterestRate(e.target.value)}
                       min="0"
@@ -409,7 +445,7 @@ export function AddVehicleDialog({
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">Annual interest rate</p>
+                  <p className="text-xs text-muted-foreground">Flat rate p.a. as quoted by your bank</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Loan Tenure</Label>
@@ -422,6 +458,7 @@ export function AddVehicleDialog({
                         value={loanTenureYears}
                         onChange={(e) => setLoanTenureYears(e.target.value)}
                         min="0"
+                        max="7"
                         step="1"
                         className="bg-white pr-10"
                       />
@@ -442,7 +479,13 @@ export function AddVehicleDialog({
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">mo</span>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">Total loan duration</p>
+                  {tenureWarning ? (
+                    <p className="text-xs text-[#7A5A00]">MAS caps car loans at 7 years</p>
+                  ) : coeOverlapWarning ? (
+                    <p className="text-xs text-[#7A5A00]">Loan tenure extends past COE expiry date</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Max 7 years (MAS)</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -484,8 +527,8 @@ export function AddVehicleDialog({
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {outstandingLoanMethod === "amortization"
-                      ? "Calculated via loan amortization (principal × rate × tenure)"
+                    {outstandingLoanMethod === "flat"
+                      ? "Flat rate: principal reduces linearly over tenure"
                       : "Calculated as: Loan Amount Taken − Loan Amount Repaid"}
                   </p>
                 </div>
@@ -507,6 +550,19 @@ export function AddVehicleDialog({
                       className="bg-white pl-7"
                     />
                   </div>
+                  {suggestedMonthlyPayment !== null && (
+                    <p className="text-xs text-muted-foreground">
+                      Suggested:{" "}
+                      <button
+                        type="button"
+                        className="text-[#007A68] underline-offset-2 hover:underline"
+                        onClick={() => setMonthlyLoanPayment(suggestedMonthlyPayment.toFixed(2))}
+                      >
+                        ${suggestedMonthlyPayment.toFixed(2)}
+                      </button>
+                      {" "}(from flat rate)
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
