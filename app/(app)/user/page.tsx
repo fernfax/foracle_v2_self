@@ -11,6 +11,7 @@ import { getPropertyAssets } from "@/lib/actions/property-assets";
 import { getExpenses } from "@/lib/actions/expenses";
 import { getInvestments } from "@/lib/actions/investments";
 import { UserHomepageClient } from "./client";
+import { computeHouseholdSummary } from "@/lib/household-summary";
 
 export default async function UserHomepage() {
   const { userId } = await auth();
@@ -36,6 +37,13 @@ export default async function UserHomepage() {
     (m) => m.status !== "pending" && m.status !== "revoked"
   );
 
+  const householdSummary = computeHouseholdSummary(
+    incomesBeta,
+    expenses,
+    currentHoldings,
+    visibleFamilyMembers,
+  );
+
   return (
     <UserHomepageClient
       initialIncomes={incomesBeta}
@@ -47,6 +55,7 @@ export default async function UserHomepage() {
       initialPropertyAssets={propertyAssets}
       initialExpenses={expenses}
       initialInvestments={investments}
+      householdSummary={householdSummary}
     />
   );
 }

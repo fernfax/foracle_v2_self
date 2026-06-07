@@ -24,6 +24,8 @@ import { CurrentHoldingList } from "@/components/current-holdings/current-holdin
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
 import { CurrentHolding } from "@/lib/actions/current-holdings";
 import { cn } from "@/lib/utils";
+import { HouseholdContextStrip } from "@/components/ui/household-context-strip";
+import type { HouseholdSummary } from "@/lib/household-summary";
 
 type Policy = {
   id: string;
@@ -117,9 +119,10 @@ interface UserHomepageClientProps {
   // Expenses tab type-checks without re-declaring the Expense/Investment types.
   initialExpenses: ComponentProps<typeof ExpensesClient>["initialExpenses"];
   initialInvestments: ComponentProps<typeof ExpensesClient>["initialInvestments"];
+  householdSummary: HouseholdSummary;
 }
 
-export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets, initialExpenses, initialInvestments }: UserHomepageClientProps) {
+export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets, initialExpenses, initialInvestments, householdSummary }: UserHomepageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -211,6 +214,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
       ) : (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsContent value="family" className="mt-4">
+          <HouseholdContextStrip summary={householdSummary} tab="family" />
           <FamilyMemberList
             initialMembers={initialFamilyMembers}
             incomes={initialIncomesBeta}
@@ -221,6 +225,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         </TabsContent>
 
         <TabsContent value="incomes" className="mt-4">
+          <HouseholdContextStrip summary={householdSummary} tab="incomes" />
           {incomeView === "standard" ? (
             <IncomesBetaView
               incomes={initialIncomesBeta}
@@ -232,6 +237,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         </TabsContent>
 
         <TabsContent value="expenses" className="mt-4">
+          <HouseholdContextStrip summary={householdSummary} tab="expenses" />
           <ExpensesClient
             embedded
             initialExpenses={initialExpenses}
@@ -242,6 +248,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         </TabsContent>
 
         <TabsContent value="cpf" className="mt-4">
+          <HouseholdContextStrip summary={householdSummary} tab="cpf" />
           <CpfList initialCpfData={initialCpfData} />
           <div className="mt-6">
             <CpfProjectionGraph cpfData={initialCpfData} incomes={initialIncomesBeta} propertyAssets={initialPropertyAssets} />
@@ -249,6 +256,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         </TabsContent>
 
         <TabsContent value="holdings" className="mt-4">
+          <HouseholdContextStrip summary={householdSummary} tab="holdings" />
           <CurrentHoldingList initialHoldings={initialCurrentHoldings} />
         </TabsContent>
         </Tabs>
