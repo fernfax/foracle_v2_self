@@ -123,7 +123,10 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "family");
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get("tab") || "family";
+    return tab === "current" ? "holdings" : tab;
+  });
   // "standard" = the Timeline Studio (formerly "beta") — now the default.
   // "legacy" = the old income table view. Opt into it with ?view=legacy.
   const [incomeView, setIncomeView] = useState<"legacy" | "standard">(
@@ -136,7 +139,9 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
 
   // Sync activeTab + incomeView with URL search params when they change
   useEffect(() => {
-    const tabFromUrl = searchParams.get("tab") || "family";
+    // "current" was the legacy slug for the Holdings tab — redirect to "holdings".
+    const raw = searchParams.get("tab") || "family";
+    const tabFromUrl = raw === "current" ? "holdings" : raw;
     if (tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
     }
@@ -174,7 +179,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
                   { value: "incomes", label: "Incomes", icon: DollarSign },
                   { value: "expenses", label: "Expenses", icon: Receipt },
                   { value: "cpf", label: "CPF", icon: Building2 },
-                  { value: "current", label: "Holdings", icon: Briefcase },
+                  { value: "holdings", label: "Holdings", icon: Briefcase },
                 ]}
                 value={activeTab}
                 onValueChange={handleTabChange}
@@ -243,7 +248,7 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
           </div>
         </TabsContent>
 
-        <TabsContent value="current" className="mt-4">
+        <TabsContent value="holdings" className="mt-4">
           <CurrentHoldingList initialHoldings={initialCurrentHoldings} />
         </TabsContent>
         </Tabs>

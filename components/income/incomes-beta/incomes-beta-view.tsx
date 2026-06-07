@@ -2681,13 +2681,24 @@ function TimelineStudio({
           )
         );
   const focalDate = cells.length > 0 ? cells[focalIndex].date : null;
+
+  // Gross vs net (take-home) display for the bars.
+  const [amountMode, setAmountMode] = useState<"gross" | "nett">("gross");
+
   // Total monthly income at the focal month — the live figure for the river's
-  // centred callout (#D). Reads the same gross monthly totals the river curve
-  // is plotted from, so the number matches the curve height under it.
-  const focalTotal =
-    cells.length > 0 && (monthlyTotals as Array<{ total: number }>)[focalIndex]
-      ? (monthlyTotals as Array<{ total: number }>)[focalIndex].total
-      : null;
+  // centred callout (#D). In NETT mode, applies each income's net factor so
+  // the chip matches the bar labels (both use the same salary-based ratio).
+  const focalMonthData = cells.length > 0
+    ? (monthlyTotals as Array<{ total: number; breakdown: Array<{ income: Income; amount: number }> }>)[focalIndex]
+    : null;
+  const focalTotal = focalMonthData
+    ? amountMode === "nett"
+      ? focalMonthData.breakdown.reduce(
+          (sum, b) => sum + b.amount * netFactor(b.income),
+          0
+        )
+      : focalMonthData.total
+    : null;
 
   // Centred age readout (#17): "<year> · Alex 47 · Jamie 42 · …" for every
   // contributing member who has a birthdate, evaluated at the focal month.
@@ -2711,9 +2722,6 @@ function TimelineStudio({
       ? `${format(cells[0].date, "MMM yy")} – ${format(cells[cells.length - 1].date, "MMM yy")}`
       : "";
   const atToday = windowOffsetMonths === 0;
-
-  // Gross vs net (take-home) display for the bars.
-  const [amountMode, setAmountMode] = useState<"gross" | "nett">("gross");
 
   const dawRef = useRef<HTMLDivElement | null>(null);
   useHorizontalWheelScroll(dawRef, onShiftWindow, tlConfig.headerPx, tlConfig.monthCount);
