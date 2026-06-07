@@ -36,6 +36,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -869,17 +870,14 @@ function AddIncomeStreamDialog({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={(d) => {
-                      if (!d) return;
-                      const m = format(startOfMonth(d), "yyyy-MM");
+                  <MonthYearPicker
+                    value={startDate}
+                    onChange={(d) => {
+                      const m = format(d, "yyyy-MM");
                       setStartMonth(m);
                       if (m > endMonth) setEndMonth(m);
                       setStartCalOpen(false);
                     }}
-                    initialFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -905,16 +903,13 @@ function AddIncomeStreamDialog({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(d) => {
-                        if (!d) return;
-                        const m = format(startOfMonth(d), "yyyy-MM");
+                    <MonthYearPicker
+                      value={endDate}
+                      onChange={(d) => {
+                        const m = format(d, "yyyy-MM");
                         setEndMonth(m < startMonth ? startMonth : m);
                         setEndCalOpen(false);
                       }}
-                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -3959,11 +3954,9 @@ function DrawCommitCard({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={handleStartPick}
-                  initialFocus
+                <MonthYearPicker
+                  value={startDate}
+                  onChange={handleStartPick}
                 />
               </PopoverContent>
             </Popover>
@@ -3989,11 +3982,9 @@ function DrawCommitCard({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={handleEndPick}
-                    initialFocus
+                  <MonthYearPicker
+                    value={endDate}
+                    onChange={handleEndPick}
                   />
                 </PopoverContent>
               </Popover>
