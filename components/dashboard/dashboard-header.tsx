@@ -397,8 +397,7 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
               <div className="flex items-center justify-between bg-muted rounded-full px-1 py-1 w-[230px]">
                 <button
                   onClick={goToPreviousMonth}
-                  disabled={isCurrentMonth()}
-                  className="p-1.5 hover:bg-muted rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1.5 hover:bg-muted rounded-full transition-colors"
                 >
                   <ChevronLeft className="h-4 w-4 text-muted-foreground" />
                 </button>
