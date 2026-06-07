@@ -227,6 +227,23 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
     router.refresh();
   };
 
+  const totalMonthlyPremium = useMemo(() => {
+    return policies.reduce((sum, p) => {
+      const amount = parseFloat(p.premiumAmount);
+      switch (p.premiumFrequency.toLowerCase()) {
+        case "monthly": return sum + amount;
+        case "quarterly": return sum + amount / 3;
+        case "annual": case "yearly": return sum + amount / 12;
+        default: return sum + amount;
+      }
+    }, 0);
+  }, [policies]);
+
+  const coveredMemberCount = useMemo(() => {
+    const ids = new Set(policies.map(p => p.familyMemberId).filter(Boolean));
+    return ids.size;
+  }, [policies]);
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -238,6 +255,29 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
           </Button>
         }
       />
+
+      {/* Summary Bar */}
+      {policies.length > 0 && (
+        <div className="flex items-center gap-4 px-4 py-3 rounded-lg bg-muted/50 text-sm">
+          <div>
+            <span className="font-semibold text-foreground">
+              ${totalMonthlyPremium.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            <span className="text-muted-foreground"> /month</span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+          <div>
+            <span className="font-semibold text-foreground">
+              ${(totalMonthlyPremium * 12).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            <span className="text-muted-foreground"> /year</span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+          <span className="text-muted-foreground">
+            {policies.length} {policies.length === 1 ? "policy" : "policies"} · {coveredMemberCount} {coveredMemberCount === 1 ? "member" : "members"} covered
+          </span>
+        </div>
+      )}
 
       {/* Policy Type Filters */}
       {policies.length > 0 && (
