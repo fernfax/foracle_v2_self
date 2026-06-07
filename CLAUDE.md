@@ -46,3 +46,21 @@ For any UI/UX change — especially in `components/income/`, `components/expense
 2. If preview state can diverge from committed state, screenshot or read DOM/network state **before** and **after** the gesture and verify both agree. The Mar→Feb drag bug shipped because preview math was correct in isolation but the commit pipeline double-applied the delta — only an end-to-end gesture test would have caught it.
 3. For substantial features, proactively suggest `/qa` so the user can opt into the full test-fix-verify loop.
 4. If you can't browser-test the change (no dev server, headless dependencies missing, auth flow blocking), say so explicitly rather than claiming success.
+
+## Skill routing
+
+When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
+
+Key routing rules:
+- Product ideas/brainstorming → invoke /office-hours
+- Strategy/scope → invoke /plan-ceo-review
+- Architecture → invoke /plan-eng-review
+- Design system/plan review → invoke /design-consultation or /plan-design-review
+- Full review pipeline → invoke /autoplan
+- Bugs/errors → invoke /investigate
+- QA/testing site behavior → invoke /qa or /qa-only
+- Code review/diff check → invoke /review
+- Visual polish → invoke /design-review
+- Ship/deploy/PR → invoke /ship or /land-and-deploy
+- Save progress → invoke /context-save
+- Resume context → invoke /context-restore
