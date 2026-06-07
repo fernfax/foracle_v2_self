@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { addMonths, format, parseISO, startOfMonth } from "date-fns";
+import { addMonths, format, max, parseISO, startOfMonth } from "date-fns";
 import { ArrowDownRight, ArrowUpRight, CalendarDays } from "lucide-react";
 import {
   Dialog,
@@ -14,7 +14,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { FutureMilestone } from "@/lib/future-change";
@@ -59,14 +59,20 @@ export function FutureChangeDialog({
   onSave,
   onDelete,
 }: FutureChangeDialogProps) {
-  const defaultStart = () =>
-    defaultStartMonth ? parseISO(`${defaultStartMonth}-01`) : nextMonthStart();
+  const defaultStart = () => {
+    const today = startOfMonth(new Date());
+    if (defaultStartMonth) {
+      const proposed = parseISO(`${defaultStartMonth}-01`);
+      return max([proposed, today]);
+    }
+    return nextMonthStart();
+  };
 
   const [targetMonth, setTargetMonth] = useState<Date>(() =>
     initial ? parseISO(`${initial.targetMonth}-01`) : defaultStart()
   );
   const [amount, setAmount] = useState<string>(() =>
-    (initial?.amount ?? "").toString()
+    initial?.amount != null ? String(initial.amount) : priorAmount != null ? String(priorAmount) : ""
   );
   // "permanent" = ongoing until a later change; "temporary" = reverts after end.
   const [mode, setMode] = useState<"permanent" | "temporary">(() =>
@@ -84,7 +90,7 @@ export function FutureChangeDialog({
     if (!open) return;
     const start = initial ? parseISO(`${initial.targetMonth}-01`) : defaultStart();
     setTargetMonth(start);
-    setAmount(initial?.amount != null ? String(initial.amount) : "");
+    setAmount(initial?.amount != null ? String(initial.amount) : priorAmount != null ? String(priorAmount) : "");
     setMode(initial?.endMonth ? "temporary" : "permanent");
     setEndMonth(initial?.endMonth ? parseISO(`${initial.endMonth}-01`) : addMonths(start, 6));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -313,16 +319,12 @@ function MonthPicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={value}
-          onSelect={(d) => {
-            if (d) {
-              onChange(startOfMonth(d));
-              onOpenChange(false);
-            }
+        <MonthYearPicker
+          value={value}
+          onChange={(d) => {
+            onChange(d);
+            onOpenChange(false);
           }}
-          initialFocus
         />
       </PopoverContent>
     </Popover>
