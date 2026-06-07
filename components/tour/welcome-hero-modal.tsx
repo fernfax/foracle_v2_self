@@ -210,7 +210,7 @@ const TOUR_CONTENT: Record<TourName, { title: string; description: string }> = {
   },
   incomes: {
     title: "Incomes Tour",
-    description: "Learn how to manage your income sources effectively. We'll cover adding incomes, filtering by frequency, and understanding your CPF contributions.",
+    description: "Meet your Projected Income River — a living timeline of every stream. We'll show you how to read the curve, switch between gross and take-home, zoom across the years, and edit your income directly.",
   },
   expenses: {
     title: "Expenses Tour",

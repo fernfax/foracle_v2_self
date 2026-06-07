@@ -4,9 +4,15 @@ import { calculateCPF, calculateBonusCPF } from "./cpf-calculator";
 import { resolveEffectiveAmount, type FutureMilestone } from "@/lib/future-change";
 import { isSpendingCategory } from "@/lib/expense-classification";
 
+// A bonus entry is one of two shapes (discriminated by which key is present):
+//  - recurring: { month: 1-12, amount } where amount is a months-of-salary
+//    multiplier that repeats every year.
+//  - one-off:   { date: "yyyy-MM", amount } where amount is a direct dollar
+//    payout that lands once in that exact month.
 interface BonusGroup {
-  month: number;  // 1-12 (calendar month)
-  amount: string;  // Bonus multiplier (e.g., "1.5" for 1.5 months)
+  month?: number;   // 1-12 (calendar month) — recurring
+  date?: string;    // "yyyy-MM" — one-off
+  amount: string;   // recurring: multiplier (e.g. "1.5"); one-off: dollars
 }
 
 interface Income {
@@ -316,37 +322,55 @@ export function calculateMonthlyBalance(
         return total;
       }
 
-      // Find bonus for this month
-      const bonusForMonth = bonusGroups.find(bg => bg.month === targetMonthNumber);
-      if (!bonusForMonth) {
+      // Find bonuses landing this month. Recurring entries match on the
+      // month-of-year; one-off entries match on the exact "yyyy-MM" key (and
+      // there may be more than one of each in a given month).
+      const targetMonthKey = format(targetMonth, "yyyy-MM");
+      const grossSalary = parseFloat(income.amount);
+      const matched = bonusGroups.filter((bg) =>
+        typeof bg.date === "string"
+          ? bg.date === targetMonthKey
+          : bg.month === targetMonthNumber
+      );
+      if (matched.length === 0) {
         return total;
       }
 
-      // Calculate gross bonus amount (monthly salary * multiplier)
-      const grossSalary = parseFloat(income.amount);
-      const bonusMultiplier = parseFloat(bonusForMonth.amount);
-      const grossBonus = grossSalary * bonusMultiplier;
+      let monthBonusNet = 0;
+      for (const bonus of matched) {
+        const isOneOff = typeof bonus.date === "string";
+        // Recurring: monthly salary × multiplier. One-off: the dollar amount.
+        const grossBonus = isOneOff
+          ? parseFloat(bonus.amount)
+          : grossSalary * parseFloat(bonus.amount);
+        if (!Number.isFinite(grossBonus) || grossBonus <= 0) continue;
 
-      // Calculate net bonus after CPF deductions (if subject to CPF)
-      let netBonus = grossBonus;
-      if (income.subjectToCpf) {
-        // Use calculateBonusCPF for AW ceiling calculation
-        const bonusCpf = calculateBonusCPF(
-          grossSalary,  // Monthly OW for ceiling calc
-          grossBonus,   // Gross bonus
-          30            // Default age
-        );
-        netBonus = grossBonus - bonusCpf.bonusEmployeeCpf;
+        // Calculate net bonus after CPF deductions (if subject to CPF). The
+        // gross bonus is passed to calculateBonusCPF whether it came from a
+        // multiplier or a direct dollar amount.
+        let netBonus = grossBonus;
+        if (income.subjectToCpf) {
+          const bonusCpf = calculateBonusCPF(
+            grossSalary,  // Monthly OW for ceiling calc
+            grossBonus,   // Gross bonus
+            30            // Default age
+          );
+          netBonus = grossBonus - bonusCpf.bonusEmployeeCpf;
+        }
+
+        // Track bonus in specialItems for tooltip display
+        specialItems.push({
+          name: isOneOff
+            ? `${income.name} Bonus (one-off ${format(targetMonth, "MMM yyyy")})`
+            : `${income.name} Bonus (${parseFloat(bonus.amount)}x)`,
+          amount: Math.round(netBonus * 100) / 100,
+          type: 'bonus',
+        });
+
+        monthBonusNet += netBonus;
       }
 
-      // Track bonus in specialItems for tooltip display
-      specialItems.push({
-        name: `${income.name} Bonus (${bonusMultiplier}x)`,
-        amount: Math.round(netBonus * 100) / 100,
-        type: 'bonus',
-      });
-
-      return total + netBonus;
+      return total + monthBonusNet;
     }, 0);
 
     // Calculate total expenses for this month

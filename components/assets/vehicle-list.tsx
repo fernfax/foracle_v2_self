@@ -75,15 +75,11 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
 
   const calculateOutstandingLoan = (vehicle: VehicleAsset): number => {
     const principal = parseFloat(vehicle.loanAmountTaken || "0");
-    const rate = parseFloat(vehicle.loanInterestRate || "0");
     const totalMonths = (vehicle.loanTenureYears ?? 0) * 12 + (vehicle.loanTenureMonths ?? 0);
     if (principal > 0 && totalMonths > 0) {
       const monthsElapsed = Math.max(0, differenceInMonths(new Date(), new Date(vehicle.purchaseDate)));
       const k = Math.min(monthsElapsed, totalMonths);
-      if (rate === 0) return Math.max(0, principal * (totalMonths - k) / totalMonths);
-      const r = rate / 100 / 12;
-      const n = totalMonths;
-      return Math.max(0, principal * (Math.pow(1 + r, n) - Math.pow(1 + r, k)) / (Math.pow(1 + r, n) - 1));
+      return Math.max(0, principal * (totalMonths - k) / totalMonths);
     }
     const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
     return Math.max(0, principal - loanRepaid);

@@ -41,7 +41,6 @@ export function VehicleDetailsModal({
 
   const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
   const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
-  const rate = parseFloat(vehicle.loanInterestRate || "0");
   const tenureYears = vehicle.loanTenureYears ?? 0;
   const tenureMonthsPart = vehicle.loanTenureMonths ?? 0;
   const totalMonths = tenureYears * 12 + tenureMonthsPart;
@@ -50,13 +49,7 @@ export function VehicleDetailsModal({
   if (loanTaken > 0 && totalMonths > 0) {
     const monthsElapsed = Math.max(0, differenceInMonths(new Date(), new Date(vehicle.purchaseDate)));
     const k = Math.min(monthsElapsed, totalMonths);
-    if (rate === 0) {
-      outstandingLoan = Math.max(0, loanTaken * (totalMonths - k) / totalMonths);
-    } else {
-      const r = rate / 100 / 12;
-      const n = totalMonths;
-      outstandingLoan = Math.max(0, loanTaken * (Math.pow(1 + r, n) - Math.pow(1 + r, k)) / (Math.pow(1 + r, n) - 1));
-    }
+    outstandingLoan = Math.max(0, loanTaken * (totalMonths - k) / totalMonths);
   } else {
     outstandingLoan = Math.max(0, loanTaken - loanRepaid);
   }
@@ -207,11 +200,11 @@ export function VehicleDetailsModal({
               <div className="flex justify-between text-sm">
                 <div>
                   <span className="text-muted-foreground">Repaid: </span>
-                  <span className="font-semibold text-[#007A68]">${loanRepaid.toLocaleString()}</span>
+                  <span className="font-semibold text-[#007A68]">${loanRepaid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Remaining: </span>
-                  <span className="font-semibold text-[#7A5A00]">${outstandingLoan.toLocaleString()}</span>
+                  <span className="font-semibold text-[#7A5A00]">${outstandingLoan.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
               {monthsRemaining > 0 && (

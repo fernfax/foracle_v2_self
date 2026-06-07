@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { differenceInCalendarMonths, format, parseISO } from "date-fns";
-import { Info, Pencil, Plus, X } from "lucide-react";
+import {
+  differenceInCalendarMonths,
+  format,
+  parse,
+  parseISO,
+  startOfMonth,
+} from "date-fns";
+import { CalendarDays, Info, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,10 +32,13 @@ import {
 } from "@/lib/cpf-calculator";
 import { cn } from "@/lib/utils";
 
-interface BonusGroupDraft {
-  month: number;
-  amount: string;
-}
+// A bonus draft is a discriminated union persisted to the `bonusGroups` JSON
+// string. Recurring entries carry a calendar `month` (1-12) whose `amount` is a
+// MULTIPLIER of the monthly salary and repeat every year. One-off entries carry
+// a `date` ("yyyy-MM") whose `amount` is a DIRECT DOLLAR payout that lands once.
+type BonusGroupDraft =
+  | { kind: "recurring"; month: number; amount: string }
+  | { kind: "one-off"; date: string; amount: string };
 
 function parseBonusDraft(json: string | null): BonusGroupDraft[] {
   if (!json) return [];
@@ -36,11 +46,26 @@ function parseBonusDraft(json: string | null): BonusGroupDraft[] {
     const raw = JSON.parse(json);
     if (!Array.isArray(raw)) return [];
     return raw
-      .filter((g) => g && typeof g.month === "number")
-      .map((g) => ({ month: g.month, amount: String(g.amount ?? "") }));
+      .filter((g) => g && (typeof g.date === "string" || typeof g.month === "number"))
+      .map((g): BonusGroupDraft =>
+        typeof g.date === "string"
+          ? { kind: "one-off", date: g.date, amount: String(g.amount ?? "") }
+          : { kind: "recurring", month: g.month, amount: String(g.amount ?? "") }
+      );
   } catch {
     return [];
   }
+}
+
+// Serialize a draft entry back to the stored wire shape: recurring keeps
+// `{ month, amount }`, one-off keeps `{ date, amount }` — so the JSON stays
+// backward compatible with existing recurring-only data.
+function serializeBonusDraft(
+  g: BonusGroupDraft
+): { month: number; amount: string } | { date: string; amount: string } {
+  return g.kind === "one-off"
+    ? { date: g.date, amount: g.amount }
+    : { month: g.month, amount: g.amount };
 }
 
 interface QuickAdjustPadProps {
@@ -375,6 +400,81 @@ function AWCeilingInfo({
   );
 }
 
+// Editor row for a single one-off bonus: a month/year picker (Popover +
+// Calendar, matching the rest of the modal) plus a direct dollar amount.
+function OneOffBonusRow({
+  date,
+  amount,
+  onDateChange,
+  onAmountChange,
+  onRemove,
+}: {
+  date: string;
+  amount: string;
+  onDateChange: (date: string) => void;
+  onAmountChange: (amount: string) => void;
+  onRemove: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = (() => {
+    const d = parse(date, "yyyy-MM", new Date());
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  })();
+  return (
+    <div className="flex items-center gap-1.5">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 flex-1 justify-start px-2 text-xs font-normal"
+            aria-label="Bonus month and year"
+          >
+            <CalendarDays className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+            {selected ? format(selected, "MMM yyyy") : "Pick month"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-auto p-0"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <Calendar
+            mode="single"
+            selected={selected}
+            onSelect={(d) => {
+              if (d) {
+                onDateChange(format(startOfMonth(d), "yyyy-MM"));
+                setOpen(false);
+              }
+            }}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Input
+        type="number"
+        step="100"
+        min="0"
+        inputMode="decimal"
+        placeholder="e.g. 5000"
+        value={amount}
+        onChange={(e) => onAmountChange(e.target.value)}
+        className="h-8 w-20 shrink-0 text-xs"
+        aria-label="One-off bonus dollar amount"
+      />
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label="Remove bonus"
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 interface IncomeBarPopupProps {
   income: IncomeForPopup;
   initialAmount: number;
@@ -388,6 +488,9 @@ interface IncomeBarPopupProps {
     }
   ) => void;
   onCancel?: () => void;
+  /** Delete this income. The PARENT owns the confirmation AlertDialog; this just
+   *  fires it. When omitted, no delete affordance is shown. */
+  onDelete?: () => void;
   /** Recurring incomes can edit a bonus schedule inline (13th-month etc.). */
   canEditBonus?: boolean;
   /** Open the popup directly on the Bonus tab (e.g. clicking a bonus pill). */
@@ -404,6 +507,13 @@ interface IncomeBarPopupProps {
   /** Edit button next to the Period row (Overview tab) → opens the change
    *  dialog to adjust this segment's start/end. Omitted = read-only. */
   onEditPeriod?: () => void;
+  /**
+   * VIEW-ONLY mode. When true, the popup renders the same tabbed detail surface
+   * (Overview / CPF / Bonus) as a read-only viewer: all informational content
+   * stays visible, but every data-mutating control is hidden or rendered as
+   * static text, and neither `onConfirm` nor `onDelete` is ever called.
+   */
+  readOnly?: boolean;
 }
 
 interface DetailPage {
@@ -505,6 +615,10 @@ function buildPages(
     // Pencil next to the Period row → open the change dialog to edit this
     // segment's start/end. Absent (read-only) when not in edit mode.
     onEditPeriod?: () => void;
+    // Monthly gross used to render the read-only bonus totals + BONUS CPF
+    // summary (recurring multipliers scale this base). Falls back to the
+    // income's stored amount when omitted.
+    monthlyAmount?: number;
   }
 ): DetailPage[] {
   const pages: DetailPage[] = [];
@@ -573,7 +687,7 @@ function buildPages(
   // CPF page (with the applicability checkbox) instead. Shows the employee/
   // employer split with each side's % of the (capped) wage, plus an
   // OW-ceiling explainer. Computed values are stored as decimal strings.
-  if (!opts?.skipCpf && income.subjectToCpf) {
+  if (!opts?.skipCpf) {
     const age = ageFromDob(income.familyMember?.dateOfBirth);
     const gross = Number(income.amount) || 0;
     // % of wage is derived from the stored contribution over the capped wage,
@@ -589,70 +703,152 @@ function buildPages(
       key: "cpf",
       title: "CPF",
       body: (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="flex items-center gap-1 text-muted-foreground">
-              OW ceiling
-              <OWCeilingInfo age={age} grossMonthly={gross} />
-            </span>
-            <span className="font-semibold tabular-nums text-foreground">
-              {fmtMoney(OW_CEILING_AMOUNT)}
+        <div className="space-y-2">
+          {/* Static state indicator — read-only stand-in for the editable
+              "CPF applicable" checkbox. */}
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="font-semibold text-foreground">CPF applicable</span>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                income.subjectToCpf
+                  ? "bg-brand-jungle/10 text-brand-jungle"
+                  : "bg-muted text-muted-foreground"
+              )}
+            >
+              {income.subjectToCpf ? "On" : "Off"}
             </span>
           </div>
-          {income.employeeCpfContribution && (
-            <CpfSplitRow
-              label="Employee"
-              pct={pctOf(income.employeeCpfContribution)}
-              amount={fmtMoney(Number(income.employeeCpfContribution))}
-            />
-          )}
-          {income.employerCpfContribution && (
-            <CpfSplitRow
-              label="Employer"
-              pct={pctOf(income.employerCpfContribution)}
-              amount={fmtMoney(Number(income.employerCpfContribution))}
-            />
-          )}
-          {income.netTakeHome && (
-            <DetailRow
-              k="Net take-home"
-              v={fmtMoney(Number(income.netTakeHome))}
-            />
+          {income.subjectToCpf ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  OW ceiling
+                  <OWCeilingInfo age={age} grossMonthly={gross} />
+                </span>
+                <span className="font-semibold tabular-nums text-foreground">
+                  {fmtMoney(OW_CEILING_AMOUNT)}
+                </span>
+              </div>
+              {income.employeeCpfContribution && (
+                <CpfSplitRow
+                  label="Employee"
+                  pct={pctOf(income.employeeCpfContribution)}
+                  amount={fmtMoney(Number(income.employeeCpfContribution))}
+                />
+              )}
+              {income.employerCpfContribution && (
+                <CpfSplitRow
+                  label="Employer"
+                  pct={pctOf(income.employerCpfContribution)}
+                  amount={fmtMoney(Number(income.employerCpfContribution))}
+                />
+              )}
+              {income.netTakeHome && (
+                <DetailRow
+                  k="Net take-home"
+                  v={fmtMoney(Number(income.netTakeHome))}
+                />
+              )}
+            </div>
+          ) : (
+            <p className="text-xs leading-snug text-muted-foreground">
+              This income isn&rsquo;t subject to CPF — take-home equals the gross
+              amount.
+            </p>
           )}
         </div>
       ),
     });
   }
 
-  // Page 3 — bonus months. The amount in bonusGroups is a multiplier-as-string
-  // (e.g. "1.5"); render as "× 1.5x" so the user understands it scales the
-  // monthly base, not adds a fixed dollar amount.
+  // Page 3 — bonuses. Recurring entries store a multiplier-as-string (e.g.
+  // "1.5") and render as "× 1.5" since they scale the monthly base; one-off
+  // entries store a direct dollar amount on a specific yyyy-MM date.
   if (!opts?.skipBonus && income.accountForBonus && income.bonusGroups) {
-    let parsed: Array<{ month: number; amount: string | number }> = [];
-    try {
-      const raw = JSON.parse(income.bonusGroups);
-      if (Array.isArray(raw)) {
-        parsed = raw.filter(
-          (g): g is { month: number; amount: string | number } =>
-            typeof g?.month === "number"
-        );
-      }
-    } catch {
-      parsed = [];
-    }
+    const parsed = parseBonusDraft(income.bonusGroups);
     if (parsed.length > 0) {
+      const monthlyGross =
+        opts?.monthlyAmount ?? (Number(income.amount) || 0);
+      const recurring = parsed.filter(
+        (g): g is Extract<BonusGroupDraft, { kind: "recurring" }> =>
+          g.kind === "recurring"
+      );
+      const oneOffs = parsed.filter(
+        (g): g is Extract<BonusGroupDraft, { kind: "one-off" }> =>
+          g.kind === "one-off"
+      );
+      const totalBonusMonths = recurring.reduce(
+        (s, g) => s + (parseFloat(g.amount) || 0),
+        0
+      );
+      const totalOneOffGross = oneOffs.reduce(
+        (s, g) => s + (parseFloat(g.amount) || 0),
+        0
+      );
+      const totalBonusGross = totalBonusMonths * monthlyGross + totalOneOffGross;
+      const bonusAge = ageFromDob(income.familyMember?.dateOfBirth);
+      const bonusCpf = income.subjectToCpf
+        ? computeBonusCPF(monthlyGross, totalBonusGross, bonusAge)
+        : null;
       pages.push({
         key: "bonus",
         title: "Bonuses",
         body: (
-          <div className="space-y-1.5">
-            {parsed.map((g, i) => (
-              <DetailRow
-                key={i}
-                k={MONTH_LABELS[Math.min(11, Math.max(0, g.month - 1))]}
-                v={`× ${g.amount}`}
-              />
-            ))}
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              {parsed.map((g, i) =>
+                g.kind === "one-off" ? (
+                  <DetailRow
+                    key={i}
+                    k={(() => {
+                      const d = parse(g.date, "yyyy-MM", new Date());
+                      return Number.isNaN(d.getTime())
+                        ? g.date
+                        : `${format(d, "MMM yyyy")} (one-off)`;
+                    })()}
+                    v={fmtMoney(Number(g.amount) || 0)}
+                  />
+                ) : (
+                  <DetailRow
+                    key={i}
+                    k={MONTH_LABELS[Math.min(11, Math.max(0, g.month - 1))]}
+                    v={`× ${g.amount}`}
+                  />
+                )
+              )}
+            </div>
+            <div className="space-y-1 rounded-md bg-muted/60 px-2.5 py-2">
+              <DetailRow k="Total bonus months" v={`${totalBonusMonths}`} />
+              <DetailRow k="Total bonus (gross)" v={fmtMoney(totalBonusGross)} />
+            </div>
+            {bonusCpf && (
+              <div className="space-y-1 rounded-md bg-muted/60 px-2.5 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Bonus CPF
+                    <AWCeilingInfo
+                      age={bonusAge}
+                      monthlyGross={monthlyGross}
+                      totalBonusGross={totalBonusGross}
+                    />
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    on {fmtMoney(bonusCpf.cpfApplicableBonus)}
+                  </span>
+                </div>
+                <CpfSplitRow
+                  label="Employee"
+                  pct={`${bonusCpf.employeeRatePct}%`}
+                  amount={fmtMoney(bonusCpf.employee)}
+                />
+                <CpfSplitRow
+                  label="Employer"
+                  pct={`${bonusCpf.employerRatePct}%`}
+                  amount={fmtMoney(bonusCpf.employer)}
+                />
+              </div>
+            )}
           </div>
         ),
       });
@@ -669,11 +865,13 @@ export function IncomeBarPopup({
   initialAmount,
   onConfirm,
   onCancel,
+  onDelete,
   canEditBonus = false,
   openToBonus = false,
   segmentKind = "current",
   segmentPeriod,
   onEditPeriod,
+  readOnly = false,
 }: IncomeBarPopupProps) {
   // Typeable monthly amount (string-backed so the field can be cleared/edited
   // freely); `value` is the derived number used for confirm + the bonus math.
@@ -694,25 +892,35 @@ export function IncomeBarPopup({
     setBonusGroups(parseBonusDraft(income.bonusGroups));
   }, [income.id, income.accountForBonus, income.bonusGroups]);
 
-  const addBonusGroup = () =>
-    setBonusGroups((prev) => [...prev, { month: 12, amount: "" }]);
-  const updateBonusGroup = (
-    idx: number,
-    field: "month" | "amount",
-    val: number | string
-  ) =>
+  const addRecurringBonus = () =>
+    setBonusGroups((prev) => [
+      ...prev,
+      { kind: "recurring", month: 12, amount: "" },
+    ]);
+  const addOneOffBonus = () =>
+    setBonusGroups((prev) => [
+      ...prev,
+      { kind: "one-off", date: format(startOfMonth(new Date()), "yyyy-MM"), amount: "" },
+    ]);
+  const updateBonusGroup = (idx: number, patch: Partial<BonusGroupDraft>) =>
     setBonusGroups((prev) =>
-      prev.map((g, i) => (i === idx ? { ...g, [field]: val } : g))
+      prev.map((g, i) => (i === idx ? ({ ...g, ...patch } as BonusGroupDraft) : g))
     );
   const removeBonusGroup = (idx: number) =>
     setBonusGroups((prev) => prev.filter((_, i) => i !== idx));
 
-  // Cleaned/serialized bonus for save + dirty comparison.
+  // Cleaned/serialized bonus for save + dirty comparison. One-off entries also
+  // require a date; recurring entries always have a month.
   const cleanedBonus = bonusGroups.filter(
-    (g) => g.amount !== "" && parseFloat(g.amount) > 0
+    (g) =>
+      g.amount !== "" &&
+      parseFloat(g.amount) > 0 &&
+      (g.kind === "recurring" || !!g.date)
   );
   const bonusOn = accountForBonus && cleanedBonus.length > 0;
-  const serializedBonus = bonusOn ? JSON.stringify(cleanedBonus) : null;
+  const serializedBonus = bonusOn
+    ? JSON.stringify(cleanedBonus.map(serializeBonusDraft))
+    : null;
   const currentBonusKey = JSON.stringify({
     on: accountForBonus,
     g: cleanedBonus,
@@ -722,14 +930,33 @@ export function IncomeBarPopup({
     currentBonusKey !==
       JSON.stringify({
         on: initialAccountForBonus,
-        g: parseBonusDraft(income.bonusGroups),
+        g: parseBonusDraft(income.bonusGroups).filter(
+          (g) =>
+            g.amount !== "" &&
+            parseFloat(g.amount) > 0 &&
+            (g.kind === "recurring" || !!g.date)
+        ),
       });
 
-  const totalBonusMonths = cleanedBonus.reduce(
+  const recurringBonuses = cleanedBonus.filter(
+    (g): g is Extract<BonusGroupDraft, { kind: "recurring" }> =>
+      g.kind === "recurring"
+  );
+  const oneOffBonuses = cleanedBonus.filter(
+    (g): g is Extract<BonusGroupDraft, { kind: "one-off" }> => g.kind === "one-off"
+  );
+  // Recurring contributes multiplier × monthly base; one-off contributes its
+  // dollar amount directly. "Total bonus months" reflects only the recurring
+  // multipliers (one-offs aren't expressed in months of salary).
+  const totalBonusMonths = recurringBonuses.reduce(
     (s, g) => s + (parseFloat(g.amount) || 0),
     0
   );
-  const totalBonusGross = totalBonusMonths * value;
+  const totalOneOffGross = oneOffBonuses.reduce(
+    (s, g) => s + (parseFloat(g.amount) || 0),
+    0
+  );
+  const totalBonusGross = totalBonusMonths * value + totalOneOffGross;
 
   // ─── CPF applicability (editable) ────────────────────────────────────────
   const initialSubjectToCpf = !!income.subjectToCpf;
@@ -762,6 +989,17 @@ export function IncomeBarPopup({
   const [pageIdx, setPageIdx] = useState(() => (openToBonus ? 2 : 0));
 
   const pages = useMemo<DetailPage[]>(() => {
+    // VIEW-ONLY: build the fully read-only Overview / CPF / Bonus pages (static
+    // figures, no editors, no period pencil). Uses the live `value` so the
+    // bonus totals scale off the displayed monthly amount.
+    if (readOnly) {
+      return buildPages(income, {
+        segmentKind,
+        segmentPeriod,
+        monthlyAmount: value,
+      });
+    }
+
     // Overview comes from buildPages; CPF + bonus are built here (editable).
     const base = buildPages(income, {
       skipBonus: true,
@@ -836,63 +1074,112 @@ export function IncomeBarPopup({
             </span>
           </label>
           {accountForBonus && (
-            <div className="space-y-2">
-              {bonusGroups.length > 0 && (
-                <div className="flex gap-1.5 px-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <span className="flex-1">Month</span>
-                  <span className="w-16 shrink-0">× Months</span>
-                  <span className="w-5 shrink-0" />
-                </div>
-              )}
-              {bonusGroups.map((g, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <select
-                    value={g.month}
-                    onChange={(e) =>
-                      updateBonusGroup(i, "month", Number(e.target.value))
-                    }
-                    className="h-8 flex-1 rounded-md border border-border bg-background px-2 text-xs"
-                    aria-label="Bonus month"
-                  >
-                    {MONTH_LABELS.map((m, idx) => (
-                      <option key={idx} value={idx + 1}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                  <Input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    inputMode="decimal"
-                    placeholder="e.g. 1.5"
-                    value={g.amount}
-                    onChange={(e) =>
-                      updateBonusGroup(i, "amount", e.target.value)
-                    }
-                    className="h-8 w-16 shrink-0 text-xs"
-                    aria-label="Bonus number of months"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeBonusGroup(i)}
-                    aria-label="Remove bonus"
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addBonusGroup}
-                className="h-8 w-full text-xs"
-              >
-                <Plus className="mr-1 h-3 w-3" />
-                Add Bonus
-              </Button>
+            <div className="space-y-3">
+              {/* Recurring bonuses — repeat every year, expressed as a
+                  multiplier of the monthly salary. */}
+              <div className="space-y-2 rounded-md border border-border/60 p-2.5">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-brand-jungle">
+                  Recurring · every year
+                </p>
+                {bonusGroups.some((g) => g.kind === "recurring") && (
+                  <div className="flex gap-1.5 px-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="flex-1">Month</span>
+                    <span className="w-16 shrink-0">× Months</span>
+                    <span className="w-5 shrink-0" />
+                  </div>
+                )}
+                {bonusGroups.map((g, i) =>
+                  g.kind !== "recurring" ? null : (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <select
+                        value={g.month}
+                        onChange={(e) =>
+                          updateBonusGroup(i, { month: Number(e.target.value) })
+                        }
+                        className="h-8 flex-1 rounded-md border border-border bg-background px-2 text-xs"
+                        aria-label="Bonus month"
+                      >
+                        {MONTH_LABELS.map((m, idx) => (
+                          <option key={idx} value={idx + 1}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        inputMode="decimal"
+                        placeholder="e.g. 1.5"
+                        value={g.amount}
+                        onChange={(e) =>
+                          updateBonusGroup(i, { amount: e.target.value })
+                        }
+                        className="h-8 w-16 shrink-0 text-xs"
+                        aria-label="Bonus number of months"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeBonusGroup(i)}
+                        aria-label="Remove bonus"
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addRecurringBonus}
+                  className="h-8 w-full text-xs"
+                >
+                  <Plus className="mr-1 h-3 w-3" />
+                  Add recurring bonus
+                </Button>
+              </div>
+
+              {/* One-off bonuses — land once on a specific year+month, entered
+                  as a direct dollar amount. */}
+              <div className="space-y-2 rounded-md border border-border/60 p-2.5">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-brand-terracotta">
+                  One-off · specific date
+                </p>
+                {bonusGroups.some((g) => g.kind === "one-off") && (
+                  <div className="flex gap-1.5 px-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="flex-1">Month / year</span>
+                    <span className="w-20 shrink-0">$ Amount</span>
+                    <span className="w-5 shrink-0" />
+                  </div>
+                )}
+                {bonusGroups.map((g, i) =>
+                  g.kind !== "one-off" ? null : (
+                    <OneOffBonusRow
+                      key={i}
+                      date={g.date}
+                      amount={g.amount}
+                      onDateChange={(date) => updateBonusGroup(i, { date })}
+                      onAmountChange={(amount) =>
+                        updateBonusGroup(i, { amount })
+                      }
+                      onRemove={() => removeBonusGroup(i)}
+                    />
+                  )
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addOneOffBonus}
+                  className="h-8 w-full text-xs"
+                >
+                  <Plus className="mr-1 h-3 w-3" />
+                  Add one-off bonus
+                </Button>
+              </div>
+
               {cleanedBonus.length > 0 && (
                 <div className="space-y-1 rounded-md bg-muted/60 px-2.5 py-2">
                   <DetailRow
@@ -956,11 +1243,16 @@ export function IncomeBarPopup({
     segmentKind,
     segmentPeriod,
     onEditPeriod,
+    readOnly,
   ]);
 
   // Tabs are the primary nav now, so we render only the active page (the popup
   // sizes to its content instead of being padded to the tallest page).
   const activeIdx = Math.min(pageIdx, Math.max(0, pages.length - 1));
+  const activeKey = pages[activeIdx]?.key;
+  // The Bonus tab focuses solely on bonuses — the monthly-amount editor stays on
+  // Overview + CPF only.
+  const isBonusTab = activeKey === "bonus" || activeKey === "bonus-edit";
 
   const amountDirty = value !== initialAmount;
   // A stream must have a positive amount — block saving $0 / empty / non-numeric.
@@ -1002,6 +1294,16 @@ export function IncomeBarPopup({
       onPointerDown={(e) => e.stopPropagation()}
       className="w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/40 bg-popover text-popover-foreground shadow-xl"
     >
+      {/* VIEW-ONLY indicator — subtle pill so the user understands why nothing
+          on this surface can be changed. */}
+      {readOnly && (
+        <div className="flex justify-center px-2 pt-2">
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+            View only
+          </span>
+        </div>
+      )}
+
       {/* Labelled tabs — make every page (esp. Bonus) discoverable. */}
       {pages.length > 1 && (
         <div
@@ -1038,61 +1340,98 @@ export function IncomeBarPopup({
       </div>
 
       <div className="border-t border-border/40 px-5 pb-4 pt-3">
-        <label
-          htmlFor="bar-amount-input"
-          className="block text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
-        >
-          Monthly amount
-        </label>
-        <div className="mt-1.5 flex items-center justify-center">
-          <span className="font-display text-3xl font-bold tracking-tight text-muted-foreground">
-            $
-          </span>
-          <input
-            id="bar-amount-input"
-            type="text"
-            inputMode="decimal"
-            value={amountStr}
-            onChange={(e) =>
-              setAmountStr(e.target.value.replace(/[^0-9.]/g, ""))
-            }
-            onFocus={(e) => e.currentTarget.select()}
-            placeholder="0"
-            aria-label="Monthly amount"
-            aria-invalid={!amountValid}
-            className="w-40 bg-transparent text-center font-display text-3xl font-bold tracking-tight outline-none placeholder:text-muted-foreground/40"
-          />
-        </div>
-        {!amountValid && (
-          <p className="mt-1 text-center text-xs font-medium text-destructive">
-            Enter an amount greater than $0.
-          </p>
+        {/* The monthly-amount editor lives on Overview + CPF only; the Bonus tab
+            focuses solely on bonuses. */}
+        {!isBonusTab && (
+          <>
+            <label
+              htmlFor="bar-amount-input"
+              className="block text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              Monthly amount
+            </label>
+            {readOnly ? (
+              // VIEW-ONLY: the big figure stays visible but is plain static
+              // text — no editable input, no $0 validation hint.
+              <div className="mt-1.5 flex items-center justify-center">
+                <span className="font-display text-3xl font-bold tracking-tight text-muted-foreground">
+                  $
+                </span>
+                <span className="font-display text-3xl font-bold tracking-tight tabular-nums">
+                  {Math.round(value).toLocaleString()}
+                </span>
+              </div>
+            ) : (
+              <>
+                <div className="mt-1.5 flex items-center justify-center">
+                  <span className="font-display text-3xl font-bold tracking-tight text-muted-foreground">
+                    $
+                  </span>
+                  <input
+                    id="bar-amount-input"
+                    type="text"
+                    inputMode="decimal"
+                    value={amountStr}
+                    onChange={(e) =>
+                      setAmountStr(e.target.value.replace(/[^0-9.]/g, ""))
+                    }
+                    onFocus={(e) => e.currentTarget.select()}
+                    placeholder="0"
+                    aria-label="Monthly amount"
+                    aria-invalid={!amountValid}
+                    className="w-40 bg-transparent text-center font-display text-3xl font-bold tracking-tight outline-none placeholder:text-muted-foreground/40"
+                  />
+                </div>
+                {!amountValid && (
+                  <p className="mt-1 text-center text-xs font-medium text-destructive">
+                    Enter an amount greater than $0.
+                  </p>
+                )}
+              </>
+            )}
+          </>
         )}
 
-        <div className="mt-3 flex gap-2">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-          )}
-          <Button
-            type="button"
-            className={cn(
-              "flex-1 bg-brand-jungle hover:bg-brand-jungle/90 text-white font-semibold",
-              !canConfirm && "opacity-60 cursor-not-allowed"
+        {/* In read-only mode there is nothing to confirm; only a Close/Cancel
+            affordance remains (when provided). */}
+        {(onCancel || !readOnly) && (
+          <div className={cn("flex gap-2", !isBonusTab && "mt-3")}>
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={onCancel}
+              >
+                {readOnly ? "Close" : "Cancel"}
+              </Button>
             )}
-            disabled={!canConfirm}
-            onClick={handleConfirm}
-          >
-            Confirm Changes
-          </Button>
-        </div>
+            {!readOnly && (
+              <Button
+                type="button"
+                className={cn(
+                  "flex-1 bg-brand-jungle hover:bg-brand-jungle/90 text-white font-semibold",
+                  !canConfirm && "opacity-60 cursor-not-allowed"
+                )}
+                disabled={!canConfirm}
+                onClick={handleConfirm}
+              >
+                Confirm Changes
+              </Button>
+            )}
+          </div>
+        )}
 
+        {!readOnly && onDelete && (
+          <button
+            type="button"
+            onClick={() => onDelete()}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete income
+          </button>
+        )}
       </div>
     </div>
   );

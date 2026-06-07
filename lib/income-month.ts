@@ -48,12 +48,21 @@ export function safeParseMilestones(json: string | null | undefined): FutureMile
   }
 }
 
-interface ParsedBonus {
-  month: number; // 1-12
-  multiplier: number; // months-of-salary multiplier
-}
+/**
+ * A parsed bonus entry — discriminated by `kind`:
+ *  - "recurring": repeats every year in calendar `month` (1-12); `multiplier` is
+ *    a months-of-salary multiplier applied to the effective monthly base.
+ *  - "one-off": lands once in `date` ("YYYY-MM"); `dollars` is a direct payout.
+ */
+export type ParsedBonus =
+  | { kind: "recurring"; month: number; multiplier: number }
+  | { kind: "one-off"; date: string; dollars: number };
 
-/** Parse stored bonusGroups JSON ([{ month, amount }]) into typed entries. */
+/**
+ * Parse stored bonusGroups JSON into typed entries. Backward compatible: an
+ * entry with a numeric `month` is recurring (amount = multiplier); an entry with
+ * a string `date` ("YYYY-MM") is a one-off (amount = direct dollars).
+ */
 export function parseBonusGroups(json: string | null | undefined): ParsedBonus[] {
   if (!json) return [];
   try {
@@ -63,13 +72,19 @@ export function parseBonusGroups(json: string | null | undefined): ParsedBonus[]
       .filter(
         (g) =>
           g &&
-          typeof g.month === "number" &&
           g.amount !== undefined &&
           g.amount !== null &&
-          g.amount !== ""
+          g.amount !== "" &&
+          (typeof g.date === "string" || typeof g.month === "number")
       )
-      .map((g) => ({ month: g.month as number, multiplier: Number(g.amount) || 0 }))
-      .filter((g) => g.multiplier > 0);
+      .map((g): ParsedBonus =>
+        typeof g.date === "string"
+          ? { kind: "one-off", date: g.date as string, dollars: Number(g.amount) || 0 }
+          : { kind: "recurring", month: g.month as number, multiplier: Number(g.amount) || 0 }
+      )
+      .filter((g) =>
+        g.kind === "one-off" ? g.dollars > 0 : g.multiplier > 0
+      );
   } catch {
     return [];
   }
@@ -153,13 +168,19 @@ export function bonusForMonth(income: MonthAmountIncome, monthKey: string): numb
   if (groups.length === 0) return 0;
 
   const cellMonthNum = Number(monthKey.slice(5, 7)); // 1-12
-  const match = groups.find((g) => g.month === cellMonthNum);
-  if (!match) return 0;
 
   const baseAmount = Number(income.amount) || 0;
   const milestones = income.accountForFutureChange
     ? safeParseMilestones(income.futureMilestones)
     : [];
   const effectiveMonthly = resolveEffectiveAmount(baseAmount, milestones, monthKey);
-  return effectiveMonthly * match.multiplier;
+
+  // Recurring entries match on the month-of-year (multiplier × monthly base);
+  // one-off entries match on the exact "YYYY-MM" and contribute dollars directly.
+  return groups.reduce((sum, g) => {
+    if (g.kind === "one-off") {
+      return g.date === monthKey ? sum + g.dollars : sum;
+    }
+    return g.month === cellMonthNum ? sum + effectiveMonthly * g.multiplier : sum;
+  }, 0);
 }

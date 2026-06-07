@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUserIncomes, getUserExpenses } from "@/lib/actions/user";
 import { getBudgetSummary } from "@/lib/actions/budget-calculator";
+import { calculateBonusCPF } from "@/lib/cpf-calculator";
 import { IncomeBreakdownModal } from "@/components/income/income-breakdown-modal";
 import { ExpenseBreakdownModal } from "@/components/expenses/expense-breakdown-modal";
 
@@ -34,6 +35,8 @@ interface Income {
   endDate?: string | null;
   pastIncomeHistory?: string | null;
   futureMilestones?: string | null;
+  accountForBonus?: boolean | null;
+  bonusGroups?: string | null;
 }
 
 interface Expense {
@@ -260,6 +263,44 @@ export function DashboardHeader({ totalIncome, totalExpenses, netSavings }: Dash
 
         if (income.subjectToCpf && income.employeeCpfContribution) {
           totalCpfDeduction += parseFloat(income.employeeCpfContribution);
+        }
+      }
+    });
+
+    // Add bonus income — same logic as balance-calculator.ts monthlyBonusIncome
+    const targetMonthKey = `${targetYear}-${String(targetMonthNum).padStart(2, '0')}`;
+    incomes.forEach((income) => {
+      if (!income.isActive) return;
+      if (!income.accountForBonus || !income.bonusGroups) return;
+
+      const startDate = parseLocalDate(income.startDate);
+      const endDate = income.endDate ? parseLocalDate(income.endDate) : null;
+      if (startDate > monthEnd) return;
+      if (endDate && endDate < monthStart) return;
+
+      let bonusGroups: { month?: number; date?: string; amount: string }[];
+      try {
+        bonusGroups = JSON.parse(income.bonusGroups);
+      } catch {
+        return;
+      }
+
+      const grossSalary = parseFloat(income.amount);
+      const matched = bonusGroups.filter((bg) =>
+        typeof bg.date === "string" ? bg.date === targetMonthKey : bg.month === targetMonthNum
+      );
+
+      for (const bonus of matched) {
+        const isOneOff = typeof bonus.date === "string";
+        const grossBonus = isOneOff
+          ? parseFloat(bonus.amount)
+          : grossSalary * parseFloat(bonus.amount);
+        if (!Number.isFinite(grossBonus) || grossBonus <= 0) continue;
+
+        totalMonthlyIncome += grossBonus;
+        if (income.subjectToCpf) {
+          const bonusCpf = calculateBonusCPF(grossSalary, grossBonus, 30);
+          totalCpfDeduction += bonusCpf.bonusEmployeeCpf;
         }
       }
     });

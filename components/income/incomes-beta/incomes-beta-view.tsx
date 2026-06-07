@@ -329,6 +329,21 @@ function ageFromDobIso(dob: string | null | undefined): number | null {
   return age >= 0 && age < 130 ? age : null;
 }
 
+// Age a person of birthdate `dob` would be on the calendar date `at`. Unlike
+// ageFromDobIso (which is always "today"), this is evaluated at an arbitrary
+// point on the timeline — it backs the scroll-driven age indicators: each
+// member's name-box age (#16) and the centred age chip (#17), both read off
+// the month sitting at the centre of the viewport.
+function ageAtDate(dob: string | null | undefined, at: Date | null): number | null {
+  if (!dob || !at) return null;
+  const d = parseISO(dob);
+  if (Number.isNaN(d.getTime())) return null;
+  let age = at.getFullYear() - d.getFullYear();
+  const m = at.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && at.getDate() < d.getDate())) age -= 1;
+  return age >= 0 && age < 130 ? age : null;
+}
+
 // Ratio of take-home (net) to gross for an income — derived from the stored
 // monthly net over the base monthly amount. 1 when CPF doesn't apply or the
 // data is missing. Used by the Gross/Nett bar toggle: net = gross × factor.
@@ -705,6 +720,294 @@ type DraftIncome = {
   archetype: "recurring" | "one-off" | "temporary";
 };
 
+// Two-step dialog for the timeline "Add Income Stream" CTA: first assign the
+// income to a family member (or leave it Unassigned), then fill in the
+// new-income form (with the same Permanent/Temporary choice as a drawn bar).
+function AddIncomeStreamDialog({
+  open,
+  familyMembers,
+  onClose,
+  onCreate,
+}: {
+  open: boolean;
+  familyMembers: { id: string; name: string; relationship?: string | null }[];
+  onClose: () => void;
+  onCreate: (data: {
+    familyMemberId: string | null;
+    name: string;
+    amount: number;
+    startMonth: string; // yyyy-MM
+    endMonth: string | null; // yyyy-MM, null when permanent
+    isPermanent: boolean;
+  }) => Promise<void>;
+}) {
+  const nowMonth = format(startOfMonth(new Date()), "yyyy-MM");
+  const [step, setStep] = useState<"pickUser" | "form">("pickUser");
+  const [member, setMember] = useState<{ id: string | null; name: string }>({
+    id: null,
+    name: "Unassigned",
+  });
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [startMonth, setStartMonth] = useState(nowMonth);
+  const [endMonth, setEndMonth] = useState(nowMonth);
+  const [isPermanent, setIsPermanent] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [startCalOpen, setStartCalOpen] = useState(false);
+  const [endCalOpen, setEndCalOpen] = useState(false);
+
+  // Reset to the picker each time the dialog opens.
+  useEffect(() => {
+    if (open) {
+      setStep("pickUser");
+      setMember({ id: null, name: "Unassigned" });
+      setName("");
+      setAmount("");
+      setStartMonth(nowMonth);
+      setEndMonth(nowMonth);
+      setIsPermanent(true);
+      setSaving(false);
+    }
+  }, [open, nowMonth]);
+
+  const pickMember = (m: { id: string | null; name: string }) => {
+    setMember(m);
+    setName(m.id ? `${m.name}'s income` : "");
+    setStep("form");
+  };
+
+  const startDate = parseISO(`${startMonth}-01`);
+  const endDate = parseISO(`${endMonth}-01`);
+  const canSave =
+    !!name.trim() &&
+    parseFloat(amount) > 0 &&
+    (isPermanent || endMonth >= startMonth);
+
+  const handleSave = async () => {
+    if (!canSave || saving) return;
+    setSaving(true);
+    try {
+      await onCreate({
+        familyMemberId: member.id,
+        name: name.trim(),
+        amount: parseFloat(amount),
+        startMonth,
+        endMonth: isPermanent ? null : endMonth,
+        isPermanent,
+      });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-sm">
+        {step === "pickUser" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Assign income to</DialogTitle>
+              <DialogDescription>
+                Who earns this income? You can leave it unassigned.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-1 space-y-1.5">
+              {familyMembers.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => pickMember({ id: m.id, name: m.name })}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/40 bg-card px-4 py-3 text-left text-sm font-medium text-foreground hover:border-brand-terracotta/50 hover:bg-brand-terracotta/5 transition-colors"
+                >
+                  <span>{m.name}</span>
+                  {m.relationship && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {m.relationship}
+                    </span>
+                  )}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => pickMember({ id: null, name: "Unassigned" })}
+                className="flex w-full items-center rounded-lg border border-dashed border-border/50 px-4 py-3 text-left text-sm font-medium text-muted-foreground hover:border-brand-terracotta/50 hover:text-foreground transition-colors"
+              >
+                Unassigned
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>New income</DialogTitle>
+              <DialogDescription>
+                For{" "}
+                <span className="font-medium text-foreground">
+                  {member.name}
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-1 flex items-center gap-1.5">
+              <Popover open={startCalOpen} onOpenChange={setStartCalOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 justify-start gap-1.5 px-2 font-display text-xs"
+                    aria-label="Start month"
+                  >
+                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                    {format(startDate, "MMM yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(d) => {
+                      if (!d) return;
+                      const m = format(startOfMonth(d), "yyyy-MM");
+                      setStartMonth(m);
+                      if (m > endMonth) setEndMonth(m);
+                      setStartCalOpen(false);
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-muted-foreground" aria-hidden>
+                →
+              </span>
+              {isPermanent ? (
+                <span className="inline-flex h-8 items-center rounded-md border border-border/40 bg-muted/40 px-2 font-display text-xs text-muted-foreground">
+                  Ongoing
+                </span>
+              ) : (
+                <Popover open={endCalOpen} onOpenChange={setEndCalOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 justify-start gap-1.5 px-2 font-display text-xs"
+                      aria-label="End month"
+                    >
+                      <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                      {format(endDate, "MMM yyyy")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(d) => {
+                        if (!d) return;
+                        const m = format(startOfMonth(d), "yyyy-MM");
+                        setEndMonth(m < startMonth ? startMonth : m);
+                        setEndCalOpen(false);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+            <div
+              role="group"
+              aria-label="Income duration"
+              className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-muted/50 p-0.5"
+            >
+              <button
+                type="button"
+                onClick={() => setIsPermanent(true)}
+                aria-pressed={isPermanent}
+                className={cn(
+                  "rounded px-2 py-1 text-[11px] font-semibold transition-colors",
+                  isPermanent
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Permanent
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPermanent(false)}
+                aria-pressed={!isPermanent}
+                className={cn(
+                  "rounded px-2 py-1 text-[11px] font-semibold transition-colors",
+                  !isPermanent
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Temporary
+              </button>
+            </div>
+
+            <label className="mt-3 block text-xs font-semibold text-foreground">
+              Name
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Income name"
+                className="mt-1 w-full rounded-md border border-border/40 bg-background px-2 py-1.5 text-sm font-normal text-foreground focus:outline-none focus:ring-2 focus:ring-brand-terracotta/40"
+              />
+            </label>
+            <label className="mt-3 block text-xs font-semibold text-foreground">
+              Amount (monthly)
+              <input
+                type="number"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="mt-1 w-full rounded-md border border-border/40 bg-background px-2 py-1.5 text-sm font-normal text-foreground focus:outline-none focus:ring-2 focus:ring-brand-terracotta/40"
+              />
+            </label>
+
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setStep("pickUser")}
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                ← Back
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!canSave || saving}
+                  className="rounded-md bg-brand-terracotta px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-terracotta/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {saving ? "Saving…" : "Save"}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function IncomesBetaView({
   incomes: rawIncomes,
   familyMembers,
@@ -791,6 +1094,9 @@ export function IncomesBetaView({
   // editMode instead, so this stays null there.
   const [draftIncome, setDraftIncome] = useState<DraftIncome | null>(null);
   const [draftSaving, setDraftSaving] = useState(false);
+  // Timeline "Add Income Stream" flow: pick an assigned member (or Unassigned)
+  // then fill in the new-income form. Self-contained two-step dialog.
+  const [addOpen, setAddOpen] = useState(false);
   const [detailIncomeId, setDetailIncomeId] = useState<string | null>(null);
   const [futureChangeContext, setFutureChangeContext] = useState<{
     incomeId: string;
@@ -1407,6 +1713,7 @@ export function IncomesBetaView({
       name: string;
       amount: number;
       isCurrent: boolean | null;
+      isPermanent: boolean;
     }) => {
       if (!drawCommit) return;
       const { startKey, endKey } = drawCommit;
@@ -1418,9 +1725,13 @@ export function IncomesBetaView({
       } else {
         category = drawCommit.detectedCategory;
       }
-      // Current incomes auto-extend forever (no endDate, like the existing
-      // recurring archetype).
-      const endDate = category === "current" ? null : `${endKey}-01`;
+      // A permanent income runs from its start forever, so if it has already
+      // started it's ongoing/current — it can't be "past" (no end reaches
+      // today). A future start stays future until it arrives.
+      if (data.isPermanent && category === "past") category = "current";
+      // Permanent → no end date, the bar runs into perpetuity. Temporary →
+      // bounded by the drawn end month.
+      const endDate = data.isPermanent ? null : `${endKey}-01`;
       await createIncomeBeta({
         name: data.name,
         category: drawCommit.rowIncome.category,
@@ -1450,7 +1761,7 @@ export function IncomesBetaView({
   // the user can sketch a bar. Either way, no modal.
   const handleOpenAddIncome = useCallback(() => {
     if (effectiveView === "timeline") {
-      setEditMode(true);
+      setAddOpen(true);
     } else {
       setDraftIncome({ name: "", amount: "", archetype: "recurring" });
     }
@@ -1459,6 +1770,47 @@ export function IncomesBetaView({
   const handleCancelDraft = useCallback(() => {
     setDraftIncome(null);
   }, []);
+
+  // "Add Income Stream" dialog → create. Mirrors the draw-save category rules:
+  // permanent → no end (current/future by start); temporary → bounded, category
+  // derived from where the [start,end] window sits relative to today.
+  const handleCreateAddIncome = useCallback(
+    async (data: {
+      familyMemberId: string | null;
+      name: string;
+      amount: number;
+      startMonth: string; // yyyy-MM
+      endMonth: string | null; // yyyy-MM, null when permanent
+      isPermanent: boolean;
+    }) => {
+      const nowMonth = format(startOfMonth(new Date()), "yyyy-MM");
+      let category: "past" | "current" | "future";
+      if (data.isPermanent) {
+        category = data.startMonth > nowMonth ? "future" : "current";
+      } else {
+        const end = data.endMonth ?? data.startMonth;
+        category =
+          end < nowMonth
+            ? "past"
+            : data.startMonth > nowMonth
+            ? "future"
+            : "current";
+      }
+      await createIncomeBeta({
+        name: data.name,
+        category: "salary",
+        incomeCategory: category,
+        amount: data.amount,
+        subjectToCpf: false,
+        accountForBonus: false,
+        startDate: `${data.startMonth}-01`,
+        endDate:
+          data.isPermanent || !data.endMonth ? undefined : `${data.endMonth}-01`,
+        familyMemberId: data.familyMemberId ?? undefined,
+      });
+    },
+    []
+  );
 
   const handleSaveDraft = useCallback(async () => {
     if (!draftIncome) return;
@@ -1649,7 +2001,7 @@ export function IncomesBetaView({
           onSegmentAmountChange={handleSegmentAmountChange}
           onEditSegmentPeriod={handleEditSegmentPeriod}
           onRequestDelete={setDeleteContext}
-          onOpenCreator={() => setEditMode(true)}
+          onOpenCreator={() => setAddOpen(true)}
           onOpenDetail={setDetailIncomeId}
           onDragPreview={setDragPreview}
           dragHighlight={dragHighlight}
@@ -1766,6 +2118,17 @@ export function IncomesBetaView({
           </div>
         </DialogContent>
       </Dialog>
+
+      <AddIncomeStreamDialog
+        open={addOpen}
+        familyMembers={familyMembers.map((m) => ({
+          id: m.id,
+          name: m.name,
+          relationship: m.relationship,
+        }))}
+        onClose={() => setAddOpen(false)}
+        onCreate={handleCreateAddIncome}
+      />
 
       <FutureChangeDialog
         open={futureChangeContext !== null}
@@ -2214,6 +2577,7 @@ function TimelineStudio({
     name: string;
     amount: number;
     isCurrent: boolean | null;
+    isPermanent: boolean;
   }) => void;
   onDrawDiscard?: () => void;
   onDraftReshape?: (newAnchorKey: string, newEndKey: string) => void;
@@ -2234,6 +2598,13 @@ function TimelineStudio({
   const nowKey = format(startOfMonth(new Date()), "yyyy-MM");
   const nowIndex = cells.findIndex((c) => c.key === nowKey);
   const nowLeftPct = nowIndex >= 0 ? (nowIndex + 0.5) / cells.length : null;
+  // The river chart plots months as POINTS (cell i at i/(N-1)), not slots, so
+  // its "now" column sits at a different fraction than the slot-based lanes.
+  // Use the point fraction for the river overlay so the line meets the curve.
+  const riverNowPct =
+    nowIndex >= 0 && cells.length > 1
+      ? nowIndex / (cells.length - 1)
+      : nowLeftPct;
 
   // Fraction of the visible window that is in the PAST (left of "now"), used to
   // shade the past so it reads differently from the future. Handles the cases
@@ -2300,6 +2671,52 @@ function TimelineStudio({
     return rows;
   }, [incomes, familyMembers]);
 
+  // Focal month — the calendar month sitting at the horizontal centre of the
+  // viewport. `cells` and `subMonthFraction` both change as the window scrolls,
+  // so this (and every age derived from it) updates live. Backs the centred age
+  // chip (#17) and each member's name-box age (#16).
+  const focalIndex =
+    cells.length === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(
+            cells.length - 1,
+            Math.round((cells.length - 1) / 2 + subMonthFraction)
+          )
+        );
+  const focalDate = cells.length > 0 ? cells[focalIndex].date : null;
+  // Total monthly income at the focal month — the live figure for the river's
+  // centred callout (#D). Reads the same gross monthly totals the river curve
+  // is plotted from, so the number matches the curve height under it.
+  const focalTotal =
+    cells.length > 0 && (monthlyTotals as Array<{ total: number }>)[focalIndex]
+      ? (monthlyTotals as Array<{ total: number }>)[focalIndex].total
+      : null;
+
+  // Centred age readout (#17): "<year> · Alex 47 · Jamie 42 · …" for every
+  // contributing member who has a birthdate, evaluated at the focal month.
+  const focalAgeChip = useMemo(() => {
+    if (!focalDate) return null;
+    const parts: string[] = [];
+    for (const fm of familyMembers ?? []) {
+      if (fm.isContributing === false) continue;
+      const a = ageAtDate(fm.dateOfBirth, focalDate);
+      if (a == null) continue;
+      parts.push(`${fm.name.split(" ")[0]} ${a}`);
+    }
+    if (parts.length === 0) return null;
+    return `${focalDate.getFullYear()} · ${parts.join(" · ")}`;
+  }, [familyMembers, focalDate]);
+
+  // Range label + "at today" flag for the in-card title bar (the standalone
+  // header row was folded into the card — #N).
+  const rangeLabel =
+    cells.length > 0
+      ? `${format(cells[0].date, "MMM yy")} – ${format(cells[cells.length - 1].date, "MMM yy")}`
+      : "";
+  const atToday = windowOffsetMonths === 0;
+
   // Gross vs net (take-home) display for the bars.
   const [amountMode, setAmountMode] = useState<"gross" | "nett">("gross");
 
@@ -2331,78 +2748,130 @@ function TimelineStudio({
 
   return (
     <div className="space-y-4">
-      <TimelineHeader
-        cells={cells}
-        windowOffsetMonths={windowOffsetMonths}
-        onScrollPrev={onScrollPrev}
-        onScrollNext={onScrollNext}
-        onScrollToToday={onScrollToToday}
-        editMode={editMode}
-        onToggleEditMode={onToggleEditMode}
-      />
-
+      {/* The standalone "Projected Income River" header row was folded into the
+          card's top bar (#N), so the card sits flush under the page tabs. */}
       <div className="relative">
       <div
         ref={dawRef}
+        data-timeline-studio="true"
         style={tsStyle}
         className={cn(
           // bg-card stays opaque in BOTH states — the card must never go
           // translucent (the app-shell wallpaper would show through). The
-          // edit-mode difference is expressed only via the ring/border/shadow.
+          // edit-mode difference is expressed only via the border/shadow + the
+          // pulsing ring overlay below.
           // touch-pan-y lets vertical page scroll pass through while the
           // timeline owns horizontal panning.
           "relative touch-pan-y rounded-2xl border bg-card overflow-hidden overscroll-x-contain transition-[box-shadow,border-color] duration-200",
           editMode
-            ? "border-brand-terracotta ring-2 ring-brand-terracotta/50 shadow-lg shadow-brand-terracotta/10"
+            ? "border-brand-terracotta shadow-lg shadow-brand-terracotta/10"
             : "border-border/30 shadow-sm"
         )}
       >
-        {/* Top-right controls: a Gross/Nett toggle and the
-            time-range scale slider. Sit above the chart via z-10. */}
-        <div className="absolute right-2 top-2 z-10 flex flex-wrap items-center justify-end gap-1.5 sm:right-4 sm:top-3 sm:gap-2">
-          {/* Gross / Nett — Nett shows take-home (after employee CPF) on
-              CPF-applicable income bars. */}
-          <div className="flex items-center rounded-full border border-border/40 bg-card/90 p-0.5 shadow-sm backdrop-blur-sm">
-            {(["gross", "nett"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setAmountMode(m)}
-                aria-pressed={amountMode === m}
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors sm:px-2.5 sm:py-1",
-                  amountMode === m
-                    ? "bg-brand-jungle text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {m === "gross" ? "Gross" : "Nett"}
-              </button>
-            ))}
+        {/* Edit-mode pulsing ring — a dedicated inset-ring overlay so only the
+            border glows in and out (the card's content opacity is untouched).
+            Signals at a glance that edit mode is active (#F). */}
+        {editMode && (
+          <div className="pointer-events-none absolute inset-0 z-30 rounded-2xl ring-2 ring-inset ring-brand-terracotta animate-pulse" />
+        )}
+
+        {/* In-card title bar — the "Projected Income River" heading lives in the
+            top-left corner here (#N), with the display/scale/scroll controls on
+            the right. Folding the old standalone header row in here lets the
+            card sit flush under the page tabs. */}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-3 pb-1 sm:px-6 sm:pt-4">
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="h-4 w-4 shrink-0 text-brand-jungle sm:h-5 sm:w-5" />
+            <h2 className="font-display text-sm font-semibold tracking-tight text-foreground sm:text-base">
+              Projected Income River
+            </h2>
           </div>
-          {onWindowYearsChange && windowYears !== undefined && (
-            <div className="flex items-center gap-1.5 rounded-full border border-border/40 bg-card/90 px-2.5 py-1 shadow-sm backdrop-blur-sm sm:gap-2 sm:px-3">
-              <span className="hidden text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground sm:inline">
-                Scale
-              </span>
-              <Slider
-                value={[windowYears]}
-                onValueChange={(v) => onWindowYearsChange(v[0])}
-                min={2}
-                max={10}
-                step={1}
-                className="w-16 sm:w-24"
-                aria-label="Timeline range in years"
-              />
-              <span className="min-w-[2rem] text-right font-display text-[11px] font-semibold tabular-nums text-foreground sm:min-w-[2.5rem]">
-                {windowYears}y
-              </span>
+          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+            <span className="hidden text-right font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground lg:inline-block">
+              {rangeLabel}
+            </span>
+            {/* Gross / Nett — Nett shows take-home (after employee CPF) on
+                CPF-applicable income bars. */}
+            <div
+              data-tour="income-display-toggle"
+              className="flex items-center rounded-full border border-border/40 bg-card/90 p-0.5 shadow-sm backdrop-blur-sm"
+            >
+              {(["gross", "nett"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setAmountMode(m)}
+                  aria-pressed={amountMode === m}
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors sm:px-2.5 sm:py-1",
+                    amountMode === m
+                      ? "bg-brand-jungle text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {m === "gross" ? "Gross" : "Nett"}
+                </button>
+              ))}
             </div>
-          )}
+            {onWindowYearsChange && windowYears !== undefined && (
+              <div className="flex items-center gap-1.5 rounded-full border border-border/40 bg-card/90 px-2.5 py-1 shadow-sm backdrop-blur-sm sm:gap-2 sm:px-3">
+                <span className="hidden text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground sm:inline">
+                  Scale
+                </span>
+                <Slider
+                  value={[windowYears]}
+                  onValueChange={(v) => onWindowYearsChange(v[0])}
+                  min={2}
+                  max={10}
+                  step={1}
+                  className="w-16 sm:w-24"
+                  aria-label="Timeline range in years"
+                />
+                <span className="min-w-[2rem] text-right font-display text-[11px] font-semibold tabular-nums text-foreground sm:min-w-[2.5rem]">
+                  {windowYears}y
+                </span>
+              </div>
+            )}
+            {/* Scroll nav (prev / today / next) */}
+            <div className="inline-flex items-center rounded-full border border-border/40 bg-card p-0.5 shadow-sm">
+              <button
+                type="button"
+                onClick={onScrollPrev}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Scroll timeline 6 months earlier"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onScrollToToday}
+                disabled={atToday}
+                className={cn(
+                  "inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                  atToday
+                    ? "cursor-not-allowed text-muted-foreground/50"
+                    : "text-brand-terracotta hover:bg-brand-terracotta/10"
+                )}
+                aria-label="Reset timeline to today"
+              >
+                <LocateFixed className="h-3.5 w-3.5" />
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={onScrollNext}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Scroll timeline 6 months later"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
         {/* Master river chart */}
         <div
-          className="px-3 pt-4 pb-2 grid gap-0 sm:px-6 sm:pt-6"
+          data-tour="income-river-chart"
+          className="px-3 pt-1 pb-2 grid gap-0 sm:px-6 sm:pt-2"
           style={gridColsStyle}
         >
           <div className="flex items-end pb-1">
@@ -2410,9 +2879,26 @@ function TimelineStudio({
               Master
             </span>
           </div>
-          <div className="overflow-hidden" style={EDGE_FADE_STYLE}>
+          <div className="relative overflow-hidden" style={EDGE_FADE_STYLE}>
+            {/* Focal total callout (#D): a static, centred pill showing the
+                total monthly income at the month in the middle of the view. The
+                figure updates as the timeline scrolls; the pill itself does not
+                translate, so it stays parked dead-centre over the curve. */}
+            {focalTotal !== null && (
+              <div className="pointer-events-none absolute left-1/2 top-0 z-10 flex -translate-x-1/2 items-baseline gap-1 rounded-full border border-border/40 bg-card/90 px-2.5 py-0.5 shadow-sm backdrop-blur-sm">
+                <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                  Total
+                </span>
+                <span className="font-display text-[11px] font-semibold tabular-nums text-foreground">
+                  {formatCurrency(focalTotal)}
+                </span>
+                <span className="text-[9px] font-medium text-muted-foreground">
+                  /mo
+                </span>
+              </div>
+            )}
             <div
-              className="will-change-transform"
+              className="relative will-change-transform"
               style={{ transform: "translateX(var(--ts-x, 0))" }}
             >
               <RiverChart
@@ -2423,12 +2909,31 @@ function TimelineStudio({
                 incomes={incomes}
                 isMobile={tlConfig.isMobile}
               />
+              {/* "Now" line through the river — past sits to its left, present
+                  to its right. Uses the river's point-based x so it meets the
+                  curve at the current month. */}
+              {riverNowPct !== null && (
+                <div
+                  className="pointer-events-none absolute top-0 bottom-0 w-[3px] -translate-x-1/2 animate-pulse rounded-full bg-brand-terracotta/70 [animation-duration:1s]"
+                  style={{
+                    left: `${riverNowPct * 100}%`,
+                    // Thicker line whose top + bottom ends fade out gradually
+                    // rather than stopping with a hard cap, and a gentle pulse
+                    // so the "now" marker subtly breathes (#C).
+                    maskImage:
+                      "linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent)",
+                    WebkitMaskImage:
+                      "linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent)",
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
 
         {/* Month axis — aligned with the timeline grid below */}
         <div
+          data-tour="income-month-axis"
           className="grid gap-0 border-b border-border/30"
           style={gridColsStyle}
         >
@@ -2449,7 +2954,7 @@ function TimelineStudio({
         </div>
 
         {/* Track lanes — DAW-style stacked tracks sharing one continuous timeline */}
-        <div className="relative">
+        <div data-tour="income-member-lane" className="relative">
           {/* Overlay viewport — clips translated content and applies edge fade */}
           <div
             className="pointer-events-none absolute inset-y-0 right-0 overflow-hidden"
@@ -2472,12 +2977,21 @@ function TimelineStudio({
                 className="absolute inset-0 grid"
                 style={cellGridStyle}
               >
-                {cells.map((cell) => (
-                  <div
-                    key={cell.key}
-                    className="border-l border-border/15 first:border-l-0"
-                  />
-                ))}
+                {cells.map((cell) => {
+                  // Subtle alternating per-year shading so each calendar year
+                  // reads as its own block: even years a touch darker, odd years
+                  // the base card (lighter). Sits behind the gridlines + bars.
+                  const evenYear = cell.date.getFullYear() % 2 === 0;
+                  return (
+                    <div
+                      key={cell.key}
+                      className={cn(
+                        "border-l border-border/15 first:border-l-0",
+                        evenYear && "bg-foreground/[0.035]"
+                      )}
+                    />
+                  );
+                })}
               </div>
               {/* Drag-target column highlight — vertical strip across every
                   lane covering the months the dragged bar will snap to.
@@ -2528,6 +3042,21 @@ function TimelineStudio({
             </div>
           )}
 
+          {/* Centred age readout (#17). Static in position — it sits at the
+              horizontal centre of the lanes and does NOT translate with the
+              scroll — while the figure is dynamic: it shows everyone's age at
+              the month currently centred in the viewport. */}
+          {focalAgeChip && (
+            <div
+              className="pointer-events-none absolute z-20 flex justify-center"
+              style={{ left: `${tlConfig.headerPx}px`, right: 0, top: "-11px" }}
+            >
+              <span className="max-w-full truncate rounded-full border border-border/40 bg-card/95 px-2.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground shadow-sm backdrop-blur-sm">
+                {focalAgeChip}
+              </span>
+            </div>
+          )}
+
           {(() => {
             // Render one family-member group at a time. Each group's first
             // row shows the family member name in the header column; the
@@ -2554,8 +3083,9 @@ function TimelineStudio({
                   ? {
                       name: group.familyMember.name,
                       relationship: group.familyMember.relationship,
+                      age: ageAtDate(group.familyMember.dateOfBirth, focalDate),
                     }
-                  : { name: "Unassigned", relationship: null };
+                  : { name: "Unassigned", relationship: null, age: null };
                 return [
                   <IncomeStreamRow
                     key={ghost.id}
@@ -2596,8 +3126,9 @@ function TimelineStudio({
                 ? {
                     name: group.familyMember.name,
                     relationship: group.familyMember.relationship,
+                    age: ageAtDate(group.familyMember.dateOfBirth, focalDate),
                   }
-                : { name: "Unassigned", relationship: null };
+                : { name: "Unassigned", relationship: null, age: null };
               // One row per packed track (non-overlapping incomes share a
               // lane). The track's first income drives the React key + the
               // draw context (via the row's `primary` lookup).
@@ -2651,6 +3182,7 @@ function TimelineStudio({
         {/* Add track row — bottom of the rack */}
         <button
           type="button"
+          data-tour="add-income-stream-btn"
           onClick={onOpenCreator}
           className="flex w-full items-center justify-center gap-2 border-t border-border/30 bg-muted/30 py-3 text-sm font-medium text-muted-foreground hover:bg-brand-terracotta/5 hover:text-brand-terracotta transition-colors"
         >
@@ -2687,14 +3219,23 @@ function TimelineStudio({
       </div>
       {/* Pencil-tool commit popup — fixed-position, lives outside the DAW so
           it can extend beyond the rack edge without being clipped. */}
-      {drawCommit && onDrawSave && onDrawDiscard && (() => {
-        // Derive current cell indices for the popup's bar-anchor math from
-        // the stable date keys + the current cells window. As the timeline
-        // scrolls horizontally, indices shift but the keys (and hence the
-        // bar's actual date) stay constant.
-        const sIdx = cells.findIndex((c) => c.key === drawCommit.startKey);
-        const eIdx = cells.findIndex((c) => c.key === drawCommit.endKey);
-        if (sIdx === -1 || eIdx === -1) return null;
+      {drawCommit && onDrawSave && onDrawDiscard && cells.length > 0 && (() => {
+        // Cell offsets for the popup, measured in months from the first visible
+        // cell. These feed the popup's rAF position loop ONLY as effect deps so
+        // it re-runs as the window scrolls — the actual anchor comes from the
+        // draft bar's live DOM rect. We compute them from the date keys (not
+        // findIndex) so they stay defined even when the drawn bar scrolls
+        // outside the visible window; the popup then clamps itself to the
+        // viewport edge instead of unmounting and vanishing (#18).
+        const cell0 = cells[0].date;
+        const sIdx = differenceInCalendarMonths(
+          parseISO(`${drawCommit.startKey}-01`),
+          cell0
+        );
+        const eIdx = differenceInCalendarMonths(
+          parseISO(`${drawCommit.endKey}-01`),
+          cell0
+        );
         return (
           <DrawCommitCard
             rowIncome={drawCommit.rowIncome}
@@ -3177,12 +3718,21 @@ function DrawCommitCard({
   // changing a month picker moves the bar before save (same path the bar's
   // drag-resize handles use).
   onReshape?: (startKey: string, endKey: string) => void;
-  onSave: (data: { name: string; amount: number; isCurrent: boolean | null }) => void;
+  onSave: (data: {
+    name: string;
+    amount: number;
+    isCurrent: boolean | null;
+    isPermanent: boolean;
+  }) => void;
   onDiscard: () => void;
 }) {
   const [name, setName] = useState(rowIncome.name);
   const [amount, setAmount] = useState<string>(rowIncome.amount ?? "");
   const [isCurrent, setIsCurrent] = useState(false);
+  // Permanent → no end date (the bar runs into perpetuity). Temporary → keep
+  // the drawn start/end. Default mirrors the prior behaviour: an ongoing
+  // ("current") draw was already end-less, everything else was bounded.
+  const [isPermanent, setIsPermanent] = useState(detectedCategory === "current");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [startCalOpen, setStartCalOpen] = useState(false);
   const [endCalOpen, setEndCalOpen] = useState(false);
@@ -3234,11 +3784,29 @@ function DrawCommitCard({
             ? aboveTop
             : Math.min(winH - cardH - SAFE_PAD, barBottomY + TAIL_H);
           const idealLeft = barCenterX - cardW / 2;
-          const left = Math.max(
-            SAFE_PAD,
-            Math.min(winW - cardW - SAFE_PAD, idealLeft)
+          // Keep the card horizontally within the timeline studio card, not the
+          // whole viewport — so it can never slide left over the app's left
+          // navigation (#B). Fall back to the viewport if the studio is somehow
+          // narrower than the card (e.g. very small screens).
+          const studio = document.querySelector(
+            '[data-timeline-studio="true"]'
+          ) as HTMLElement | null;
+          const sr = studio?.getBoundingClientRect();
+          let minLeft = SAFE_PAD;
+          let maxLeft = winW - cardW - SAFE_PAD;
+          if (sr && sr.right - sr.left - 2 * SAFE_PAD >= cardW) {
+            minLeft = sr.left + SAFE_PAD;
+            maxLeft = sr.right - cardW - SAFE_PAD;
+          }
+          const left = Math.max(minLeft, Math.min(maxLeft, idealLeft));
+          // Clamp the tail well inside the card's flat edge — past the rounded
+          // corners (radius ~16px + the tail's 10px half-width) — so it always
+          // reads as attached to the body instead of floating off a corner (#A).
+          const TAIL_INSET = 26;
+          const tailX = Math.max(
+            TAIL_INSET,
+            Math.min(cardW - TAIL_INSET, barCenterX - left)
           );
-          const tailX = Math.max(12, Math.min(cardW - 12, barCenterX - left));
 
           // Card placement.
           card.style.left = `${left}px`;
@@ -3302,6 +3870,7 @@ function DrawCommitCard({
       name: name.trim(),
       amount: parsedAmount,
       isCurrent: detectedCategory === "unknown" ? isCurrent : null,
+      isPermanent,
     });
   };
 
@@ -3374,6 +3943,7 @@ function DrawCommitCard({
           New income
         </p>
         {onReshape ? (
+          <>
           <div className="mt-2 flex items-center gap-1.5">
             <Popover open={startCalOpen} onOpenChange={setStartCalOpen}>
               <PopoverTrigger asChild>
@@ -3400,29 +3970,69 @@ function DrawCommitCard({
             <span className="text-muted-foreground" aria-hidden>
               →
             </span>
-            <Popover open={endCalOpen} onOpenChange={setEndCalOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 justify-start gap-1.5 px-2 font-display text-xs"
-                  aria-label="End month"
-                >
-                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                  {format(endDate, "MMM yyyy")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={handleEndPick}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            {isPermanent ? (
+              <span className="inline-flex h-8 items-center rounded-md border border-border/40 bg-muted/40 px-2 font-display text-xs text-muted-foreground">
+                Ongoing
+              </span>
+            ) : (
+              <Popover open={endCalOpen} onOpenChange={setEndCalOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 justify-start gap-1.5 px-2 font-display text-xs"
+                    aria-label="End month"
+                  >
+                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                    {format(endDate, "MMM yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={handleEndPick}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
+          {/* Permanent (no end, runs forever) vs Temporary (bounded by end). */}
+          <div
+            role="group"
+            aria-label="Income duration"
+            className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-muted/50 p-0.5"
+          >
+            <button
+              type="button"
+              onClick={() => setIsPermanent(true)}
+              aria-pressed={isPermanent}
+              className={cn(
+                "rounded px-2 py-1 text-[11px] font-semibold transition-colors",
+                isPermanent
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Permanent
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPermanent(false)}
+              aria-pressed={!isPermanent}
+              className={cn(
+                "rounded px-2 py-1 text-[11px] font-semibold transition-colors",
+                !isPermanent
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Temporary
+            </button>
+          </div>
+          </>
         ) : null}
         <label className="mt-3 block text-xs font-semibold text-foreground">
           Name
@@ -3458,7 +4068,12 @@ function DrawCommitCard({
         )}
         {detectedCategory !== "unknown" && (
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Will save as <em className="not-italic font-semibold capitalize">{detectedCategory}</em>{" "}
+            Will save as{" "}
+            <em className="not-italic font-semibold capitalize">
+              {isPermanent && detectedCategory === "past"
+                ? "current"
+                : detectedCategory}
+            </em>{" "}
             income.
           </p>
         )}
@@ -3533,7 +4148,13 @@ interface IncomeStreamRowProps {
   isFirstInGroup?: boolean;
   // Header content for the left column. Null on subsequent rows in a
   // family-member group (the first row already drew the header above).
-  familyMemberHeader?: { name: string; relationship: string | null } | null;
+  familyMemberHeader?: {
+    name: string;
+    relationship: string | null;
+    // Age at the focal (centre-of-viewport) month; null when unknown or for
+    // the Unassigned row. Recomputed by the parent as the timeline scrolls.
+    age?: number | null;
+  } | null;
   // Family member this row belongs to (null = "Unassigned"). Used as the
   // draw context for the pencil tool and for popup name pre-fill.
   rowFamilyMemberId?: string | null;
@@ -3708,6 +4329,20 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
       return lo <= eKey && hi >= sKey;
     });
   })();
+
+  // Vertical placement inside an expanded (h-20) lane, which has two sub-lines
+  // (~25% upper, ~75% lower). Three layouts:
+  //   - mid-draft over an existing bar: existing bar upper, draft bar lower.
+  //   - has bonuses (not drafting): bonus pills sit ABOVE the parent bar (#J) —
+  //     pills upper, parent bar + its label lower.
+  //   - neither: everything centered.
+  const bonusAbove = rowHasBonus && !draftStacked;
+  const barTopClass = draftStacked
+    ? "top-[25%]"
+    : bonusAbove
+      ? "top-[75%]"
+      : "top-1/2";
+  const bonusTopClass = bonusAbove ? "top-[25%]" : "top-[75%]";
 
   // Lateral drag of the dashed draft bar. The user can grab the body
   // (move) or either edge (resize-left / resize-right). All three call
@@ -4001,16 +4636,29 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
           actions, so duplicating them in the header would be noise. */}
       <div className="flex flex-col justify-center gap-0.5 border-r border-border/30 px-2 py-1 min-w-0 sm:px-4 sm:py-1.5">
         {familyMemberHeader && (
-          <p className="font-display text-sm font-semibold text-foreground truncate">
-            {familyMemberHeader.name}
-            {familyMemberHeader.relationship && (
-              <span className="ml-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                · {familyMemberHeader.relationship}
-              </span>
+          <>
+            <p className="font-display text-sm font-semibold text-foreground truncate">
+              {familyMemberHeader.name}
+              {familyMemberHeader.relationship && (
+                <span className="ml-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  · {familyMemberHeader.relationship}
+                </span>
+              )}
+            </p>
+            {/* Age at the focal (centre-of-viewport) month — its own short line
+                so it never clips the name/relationship line (#16). */}
+            {typeof familyMemberHeader.age === "number" && (
+              <p className="font-display text-[10px] font-medium leading-none text-muted-foreground/75 tabular-nums">
+                Age {familyMemberHeader.age}
+              </p>
             )}
-          </p>
+          </>
         )}
-        {incomes.length === 1 && (() => {
+        {/* Skip the archetype label + edit/delete shortcuts on ghost rows
+            (empty member lanes that only exist so you can draw a first income).
+            They have no real income, so a "TEMPORARY" tag and a delete button
+            there are misleading (#H/#L). */}
+        {incomes.length === 1 && incomes[0].userId !== "_ghost" && (() => {
           const income = incomes[0];
           const archetype = getArchetype(income);
           const meta = ARCHETYPE_META[archetype];
@@ -4156,25 +4804,23 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
               Pointer-events-none so it doesn't swallow the pointermove/up
               events fired against the lane wrapper. */}
           {drawState && (() => {
-            const anchorIdx = cells.findIndex(
-              (c) => c.key === drawState.anchorKey
+            // True (possibly out-of-window) cell offsets for each edge,
+            // measured in months from the first visible cell. We deliberately
+            // do NOT clamp to [0, cells.length-1]: letting these run negative
+            // or past the end keeps the bar's geometry continuous as the window
+            // scrolls. The lane's overflow-hidden + edge-fade mask then clips
+            // whatever spills past either edge, so BOTH ends melt into the edge
+            // — the old clamp pinned the right edge to the last cell, which made
+            // it snap shorter on scroll instead of fading away like the left (#18).
+            const cell0 = cells[0].date;
+            const a = differenceInCalendarMonths(
+              parseISO(`${drawState.anchorKey}-01`),
+              cell0
             );
-            const endIdx = cells.findIndex(
-              (c) => c.key === drawState.endKey
+            const b = differenceInCalendarMonths(
+              parseISO(`${drawState.endKey}-01`),
+              cell0
             );
-            // Either edge can scroll out of the visible window; clamp the
-            // visible portion so the bar still renders for the part that's
-            // on-screen rather than disappearing entirely.
-            const a = anchorIdx === -1
-              ? drawState.anchorKey < cells[0].key
-                ? 0
-                : cells.length - 1
-              : anchorIdx;
-            const b = endIdx === -1
-              ? drawState.endKey < cells[0].key
-                ? 0
-                : cells.length - 1
-              : endIdx;
             const startIdx = Math.min(a, b);
             const endIdxLocal = Math.max(a, b);
             const leftPct = (startIdx / cells.length) * 100;
@@ -4264,10 +4910,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
               const showRightHandle =
                 editMode && isLastSegment && !isOngoingTail && endInWindow;
               return (
-                <Popover
-                  key={`${income.id}-${i}`}
-                  {...(editMode ? {} : { open: false })}
-                >
+                <Popover key={`${income.id}-${i}`}>
+                  {/* Opens in BOTH modes now: edit mode = editable, view mode =
+                      read-only details (Overview / CPF / Bonus). */}
                   <PopoverTrigger asChild>
                     <button
                       type="button"
@@ -4286,7 +4931,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         editMode
                           ? "cursor-grab active:cursor-grabbing"
                           : "cursor-default",
-                        draftStacked || rowHasBonus ? "top-[25%]" : "top-1/2",
+                        barTopClass,
                         isOngoingTail ? "rounded-l-md rounded-r-none" : "rounded-md",
                         segmentBarClass(seg.direction, meta.bar)
                       )}
@@ -4392,7 +5037,8 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                     <IncomeBarPopup
                       income={income}
                       initialAmount={seg.amount}
-                      canEditBonus={archetype === "recurring"}
+                      readOnly={!editMode}
+                      canEditBonus={editMode && archetype === "recurring"}
                       segmentKind={seg.milestoneId ? "future-change" : "current"}
                       segmentPeriod={segmentPeriodLabel(seg, income)}
                       onEditPeriod={
@@ -4407,6 +5053,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                           onAmountChange(income, next, bonus);
                         }
                       }}
+                      onDelete={() => onRequestDelete(income)}
                     />
                   </PopoverContent>
                 </Popover>
@@ -4446,17 +5093,34 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
               const bonusDisplay = b.amount * bonusNetFactor;
               return (
                 <div key={`${income.id}-bonus-${b.index}`}>
+                  {/* Connector linking the gold bonus pill to its parent income
+                      bar. When bonuses sit ABOVE the parent (#J) the pill is on
+                      the upper line and the bar on the lower line, so the
+                      gradient runs gold (pill, top) → green (bar, bottom); in
+                      the legacy/mid-draft layout the pill is below, so it runs
+                      green (top) → gold (bottom). Either way the colour blend
+                      stays smooth between the two. */}
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute w-1.5 -translate-x-1/2 bg-gradient-to-b from-[#3A6B52] to-[#D4A843]"
-                    style={{ left: `${centerPct}%`, top: "44%", height: "20%" }}
+                    className={cn(
+                      "pointer-events-none absolute w-1.5 -translate-x-1/2",
+                      bonusAbove
+                        ? "bg-gradient-to-b from-[#D4A843] to-[#3A6B52]"
+                        : "bg-gradient-to-b from-[#3A6B52] to-[#D4A843]"
+                    )}
+                    style={
+                      bonusAbove
+                        ? { left: `${centerPct}%`, top: "30%", height: "26%" }
+                        : { left: `${centerPct}%`, top: "44%", height: "20%" }
+                    }
                   />
-                  <Popover {...(editMode ? {} : { open: false })}>
+                  <Popover>
                     <PopoverTrigger asChild>
                       <button
                         type="button"
                         className={cn(
-                          "absolute top-[75%] z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 whitespace-nowrap rounded-md bg-gradient-to-r from-[#D4A843] to-[#E0BD5C] px-2 py-0.5 text-[11px] font-semibold text-[#5A4500] shadow-sm transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                          "absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 whitespace-nowrap rounded-md bg-gradient-to-r from-[#D4A843] to-[#E0BD5C] px-2 py-0.5 text-[11px] font-semibold text-[#5A4500] shadow-sm transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                          bonusTopClass,
                           editMode ? "cursor-pointer" : "cursor-default"
                         )}
                         style={{ left: `${centerPct}%` }}
@@ -4475,7 +5139,8 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         income={income}
                         initialAmount={parentMonthly}
                         openToBonus
-                        canEditBonus={canEditBonus}
+                        readOnly={!editMode}
+                        canEditBonus={editMode && canEditBonus}
                         onConfirm={(next, bonus) =>
                           onAmountChange(income, next, bonus)
                         }
@@ -4525,21 +5190,37 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                   key={`${income.id}-${i}-label`}
                   aria-hidden
                   className={cn(
-                    "absolute flex h-8 -translate-y-1/2 items-center justify-center px-2",
-                    draftStacked || rowHasBonus ? "top-[25%]" : "top-1/2"
+                    "absolute flex h-8 -translate-y-1/2 items-center justify-center overflow-hidden px-2",
+                    barTopClass
                   )}
                   style={{
                     left: `${visLeft * 100}%`,
                     width: `${(visRight - visLeft) * 100}%`,
                   }}
                 >
-                  <span className="truncate text-xs font-semibold text-white">
+                  {/* min-w-0 + truncate clips the label to the bar's VISIBLE
+                      slice: a wide bar shows the full label, but a bar scrolled
+                      down to a sliver truncates with an ellipsis instead of
+                      spilling its text out past the bar edge (#M). */}
+                  <span className="min-w-0 truncate text-xs font-semibold text-white">
                     {isFirstSegment && (
                       <span className="font-medium opacity-90">
                         {income.name} ·{" "}
                       </span>
                     )}
-                    {formatCurrency(displayAmount)}
+                    {amountMode === "nett" && rowNetFactor < 1 ? (
+                      // CPF-applicable income in Nett mode: show the gross → net
+                      // split so the take-home is read against the gross.
+                      <>
+                        <span className="opacity-70">
+                          {formatCurrency(seg.amount)}
+                        </span>
+                        <span className="opacity-90"> → </span>
+                        {formatCurrency(seg.amount * rowNetFactor)}
+                      </>
+                    ) : (
+                      formatCurrency(displayAmount)
+                    )}
                     {archetype === "recurring" && (
                       <em className="ml-1 font-normal italic opacity-80">
                         (Current)

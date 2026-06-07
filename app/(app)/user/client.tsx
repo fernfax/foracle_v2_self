@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ComponentProps } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
@@ -13,9 +13,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Users, Building2, Briefcase, Sparkles } from "lucide-react";
+import { DollarSign, Users, Building2, Briefcase, Sparkles, Receipt } from "lucide-react";
 import { IncomeList } from "@/components/income/income-list";
 import { IncomesBetaView } from "@/components/income/incomes-beta/incomes-beta-view";
+import { ExpensesClient } from "@/app/(app)/expenses/client";
 import { FamilyMemberList } from "@/components/family-members/family-member-list";
 import { CpfList } from "@/components/cpf/cpf-list";
 import { CpfProjectionGraph } from "@/components/cpf/cpf-projection-graph";
@@ -112,9 +113,13 @@ interface UserHomepageClientProps {
   initialCurrentHoldings: CurrentHolding[];
   initialPolicies: Policy[];
   initialPropertyAssets: PropertyAssetForCpf[];
+  // Borrow the exact prop shapes ExpensesClient expects so the embedded
+  // Expenses tab type-checks without re-declaring the Expense/Investment types.
+  initialExpenses: ComponentProps<typeof ExpensesClient>["initialExpenses"];
+  initialInvestments: ComponentProps<typeof ExpensesClient>["initialInvestments"];
 }
 
-export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets }: UserHomepageClientProps) {
+export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets, initialExpenses, initialInvestments }: UserHomepageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -160,37 +165,38 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
     <div className="space-y-4">
       <PageHeader
         title="User Homepage"
-        actions={
-          activeTab === "incomes" ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleToggleIncomeView}
-              className={cn(
-                "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm",
-                incomeView === "legacy"
-                  ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90 hover:border-brand-terracotta"
-                  : "border-brand-terracotta/40 bg-brand-terracotta/10 text-brand-terracotta hover:bg-brand-terracotta/15 hover:border-brand-terracotta/60"
-              )}
-            >
-              <Sparkles className="h-4 w-4 mr-1" />
-              {incomeView === "legacy" ? "Standard View" : "Legacy"}
-            </Button>
-          ) : null
-        }
         tabs={
           mounted ? (
-            <SlidingTabs
-              tabs={[
-                { value: "family", label: "Family", icon: Users },
-                { value: "incomes", label: "Incomes", icon: DollarSign },
-                { value: "cpf", label: "CPF", icon: Building2 },
-                { value: "current", label: "Holdings", icon: Briefcase },
-              ]}
-              value={activeTab}
-              onValueChange={handleTabChange}
-            />
+            <div className="flex items-center justify-between gap-4">
+              <SlidingTabs
+                tabs={[
+                  { value: "family", label: "Family", icon: Users },
+                  { value: "incomes", label: "Incomes", icon: DollarSign },
+                  { value: "expenses", label: "Expenses", icon: Receipt },
+                  { value: "cpf", label: "CPF", icon: Building2 },
+                  { value: "current", label: "Holdings", icon: Briefcase },
+                ]}
+                value={activeTab}
+                onValueChange={handleTabChange}
+              />
+              {activeTab === "incomes" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleToggleIncomeView}
+                  className={cn(
+                    "shrink-0 h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm",
+                    incomeView === "legacy"
+                      ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90 hover:border-brand-terracotta"
+                      : "border-brand-terracotta/40 bg-brand-terracotta/10 text-brand-terracotta hover:bg-brand-terracotta/15 hover:border-brand-terracotta/60"
+                  )}
+                >
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  {incomeView === "legacy" ? "Standard View" : "Legacy"}
+                </Button>
+              ) : null}
+            </div>
           ) : null
         }
       />
@@ -218,6 +224,16 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
           ) : (
             <IncomeList initialIncomes={initialIncomes} />
           )}
+        </TabsContent>
+
+        <TabsContent value="expenses" className="mt-4">
+          <ExpensesClient
+            embedded
+            initialExpenses={initialExpenses}
+            initialIncomes={initialIncomesBeta}
+            initialHoldings={initialCurrentHoldings}
+            initialInvestments={initialInvestments}
+          />
         </TabsContent>
 
         <TabsContent value="cpf" className="mt-4">

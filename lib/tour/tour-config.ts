@@ -136,56 +136,76 @@ const dashboardSteps: DriveStep[] = [
   },
 ];
 
-// Incomes Tour
+// Incomes Tour — the redesigned "Projected Income River" timeline studio
 const incomesSteps: DriveStep[] = [
   {
-    element: '[data-tour="add-income-btn"]',
+    element: '[data-tour="income-river-chart"]',
     popover: {
-      title: "Add New Income",
+      title: "Projected Income River",
       description:
-        "Click here to add a new income source. You can track salary, freelance work, investments, and more.",
+        "This is your income over time. The curve rises and falls as streams start, change, and end — so you can see your earning shape at a glance.",
       side: "bottom",
-      align: "end",
+      align: "center",
     },
   },
   {
-    element: '[data-tour="income-frequency-filter"]',
+    element: '[data-tour="income-display-toggle"]',
     popover: {
-      title: "Filter by Frequency",
+      title: "Gross or Take-Home",
       description:
-        "Quickly filter your incomes by how often they occur - monthly, yearly, or custom schedules.",
-      side: "bottom",
+        "Switch between Gross (before CPF) and Nett (your actual take-home) to see whichever number matters to you right now.",
+      side: "left",
       align: "start",
     },
   },
   {
-    element: '[data-tour="income-summary-card"]',
+    element: '[aria-label="Timeline range in years"]',
     popover: {
-      title: "Annual Income Summary",
+      title: "Zoom the Timeline",
       description:
-        "See your total annual income at a glance. Click to view detailed breakdowns by category and source.",
+        "Drag the Scale slider to widen the window from 2 up to 10 years — handy for planning raises, career breaks, or retirement.",
+      side: "left",
+      align: "start",
+    },
+  },
+  {
+    element: '[data-tour="income-member-lane"]',
+    popover: {
+      title: "Streams by Family Member",
+      description:
+        "Each person has their own lane, with their name and age at the month in view. Their income bars stack neatly beneath the river.",
       side: "right",
       align: "start",
     },
   },
   {
-    element: '[data-tour="cpf-summary-card"]',
+    element: '[data-tour="income-month-axis"]',
     popover: {
-      title: "CPF Contributions",
+      title: "The Now Line",
       description:
-        "Track your monthly CPF contributions. This shows both employee and employer portions.",
-      side: "left",
-      align: "start",
+        "Everything left of the Now line is past, everything right is projected. Scroll sideways to travel through time — the centred chip shows everyone's age at that month.",
+      side: "bottom",
+      align: "center",
     },
   },
   {
-    element: '[data-tour="income-table"]',
+    element: '[data-tour="add-income-stream-btn"]',
     popover: {
-      title: "Income List",
+      title: "Add an Income Stream",
       description:
-        "Your full list of incomes. Click the arrow to expand and see CPF breakdowns, timelines, and future milestones.",
+        "Add a new salary, side gig, rental, or bonus here. Assign it to a family member and set whether it's permanent or temporary.",
+      side: "top",
+      align: "center",
+    },
+  },
+  {
+    element: '[aria-label="Enter edit mode"]',
+    popover: {
+      title: "Edit Mode",
+      description:
+        "Tap Edit to reshape your income river directly — draw new bars on a lane, drag them to new months, or resize them to change start and end dates.",
       side: "left",
-      align: "start",
+      align: "end",
     },
   },
 ];

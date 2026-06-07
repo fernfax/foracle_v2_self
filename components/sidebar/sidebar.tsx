@@ -8,7 +8,6 @@ import { ClerkUserButton } from "@/components/clerk-user-button";
 import {
   Home,
   User,
-  Wallet,
   TrendingUp,
   Shield,
   Target,
@@ -17,7 +16,6 @@ import {
   Building2,
   Briefcase,
   Receipt,
-  PieChart,
   Home as PropertyIcon,
   Car,
   Package,
@@ -41,18 +39,9 @@ const mainNavItems = [
     subItems: [
       { href: "/user?tab=family", label: "Family", icon: Users },
       { href: "/user?tab=incomes", label: "Incomes", icon: DollarSign },
+      { href: "/expenses?tab=expenses", label: "Expenses", icon: Receipt },
       { href: "/user?tab=cpf", label: "CPF", icon: Building2 },
       { href: "/user?tab=current", label: "Holdings", icon: Briefcase },
-    ],
-  },
-  {
-    href: "/expenses",
-    label: "Expenses",
-    icon: Wallet,
-    subItems: [
-      { href: "/expenses?tab=expenses", label: "Expenses", icon: Receipt },
-      { href: "/expenses?tab=graph", label: "Graph", icon: TrendingUp },
-      { href: "/expenses?tab=reports", label: "Reports", icon: PieChart },
     ],
   },
   {

@@ -385,47 +385,29 @@
     }
   }
 
-  /* === Life-stages marquee (components/landing/life-stages.tsx) ===
-     Auto-scrolling horizontal timeline. The track holds the milestone list
-     twice; translating it -50% loops seamlessly. Edge mask fades cards in/out
-     at the sides; hover pauses so it stays readable. */
-  @keyframes lsScroll {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
+  /* Life-stages focused node — gentle breathing ring (no scale, so it never clips). */
+  @keyframes lsPulse {
+    0%, 100% { opacity: 0.12; }
+    50% { opacity: 0.4; }
   }
-  .ls-marquee {
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(
-      90deg,
-      transparent 0,
-      #000 7%,
-      #000 93%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      90deg,
-      transparent 0,
-      #000 7%,
-      #000 93%,
-      transparent 100%
-    );
+  .ls-pulse {
+    animation: lsPulse 2.6s ease-in-out infinite;
   }
-  .ls-track {
-    display: flex;
-    width: max-content;
-    animation: lsScroll 48s linear infinite;
+  /* Focused icon breathes — gently pulses in size and brightness. */
+  @keyframes lsIconPulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.07); filter: brightness(1.14); }
   }
-  .ls-marquee:hover .ls-track {
-    animation-play-state: paused;
+  .ls-icon-pulse {
+    animation: lsIconPulse 2.4s ease-in-out infinite;
   }
   @media (prefers-reduced-motion: reduce) {
-    .ls-track {
+    .ls-pulse {
       animation: none;
+      opacity: 0;
     }
-    .ls-marquee {
-      overflow-x: auto;
-      -webkit-mask-image: none;
-      mask-image: none;
+    .ls-icon-pulse {
+      animation: none;
     }
   }
 }

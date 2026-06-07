@@ -2,13 +2,14 @@ import { auth } from "@clerk/nextjs/server";
 
 export const dynamic = 'force-dynamic';
 
-import { getIncomes } from "@/lib/actions/income";
 import { getIncomesBeta } from "@/lib/actions/incomes-beta";
 import { getFamilyMembers } from "@/lib/actions/family-members";
 import { getCpfByFamilyMember } from "@/lib/actions/cpf";
 import { getCurrentHoldings } from "@/lib/actions/current-holdings";
 import { getUserPolicies } from "@/lib/actions/policies";
 import { getPropertyAssets } from "@/lib/actions/property-assets";
+import { getExpenses } from "@/lib/actions/expenses";
+import { getInvestments } from "@/lib/actions/investments";
 import { UserHomepageClient } from "./client";
 
 export default async function UserHomepage() {
@@ -18,14 +19,15 @@ export default async function UserHomepage() {
     return null;
   }
 
-  const [incomes, incomesBeta, familyMembers, cpfData, currentHoldings, policies, propertyAssets] = await Promise.all([
-    getIncomes(),
+  const [incomesBeta, familyMembers, cpfData, currentHoldings, policies, propertyAssets, expenses, investments] = await Promise.all([
     getIncomesBeta(),
     getFamilyMembers(),
     getCpfByFamilyMember(),
     getCurrentHoldings(),
     getUserPolicies(),
     getPropertyAssets(),
+    getExpenses(),
+    getInvestments(),
   ]);
 
   // Pending and revoked invitations belong only in the Clerk Manage Account >
@@ -36,13 +38,15 @@ export default async function UserHomepage() {
 
   return (
     <UserHomepageClient
-      initialIncomes={incomes}
+      initialIncomes={incomesBeta}
       initialIncomesBeta={incomesBeta}
       initialFamilyMembers={visibleFamilyMembers}
       initialCpfData={cpfData}
       initialCurrentHoldings={currentHoldings}
       initialPolicies={policies}
       initialPropertyAssets={propertyAssets}
+      initialExpenses={expenses}
+      initialInvestments={investments}
     />
   );
 }

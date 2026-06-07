@@ -1,5 +1,5 @@
 import { getExpenses } from "@/lib/actions/expenses";
-import { getIncomes } from "@/lib/actions/income";
+import { getIncomesBeta } from "@/lib/actions/incomes-beta";
 import { getCurrentHoldings } from "@/lib/actions/current-holdings";
 import { getInvestments } from "@/lib/actions/investments";
 import { ExpensesClient } from "./client";
@@ -14,7 +14,7 @@ export const metadata = {
 export default async function ExpensesPage() {
   const [expenses, incomes, holdings, investments] = await Promise.all([
     getExpenses(),
-    getIncomes(),
+    getIncomesBeta(),
     getCurrentHoldings(),
     getInvestments(),
   ]);
