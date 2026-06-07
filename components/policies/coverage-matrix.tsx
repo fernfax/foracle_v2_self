@@ -28,6 +28,7 @@ interface Policy {
   familyMemberId: string | null;
   linkedExpenseId: string | null;
   provider: string;
+  planName: string | null;
   policyNumber: string | null;
   policyType: string;
   status: string | null;
@@ -35,10 +36,13 @@ interface Policy {
   maturityDate: string | null;
   coverageUntilAge: number | null;
   premiumAmount: string;
+  premiumAmountCPF: string | null;
   premiumFrequency: string;
   customMonths: string | null;
   totalPremiumDuration: number | null;
   coverageOptions: string | null;
+  cashValue: string | null;
+  cashValueDate: string | null;
   isActive: boolean | null;
   description: string | null;
   createdAt: Date;

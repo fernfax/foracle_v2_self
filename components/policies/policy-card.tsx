@@ -35,6 +35,10 @@ interface PolicyCardProps {
     coverageOptions: string | null;
     description: string | null;
     isActive: boolean | null;
+    planName: string | null;
+    premiumAmountCPF: string | null;
+    cashValue: string | null;
+    cashValueDate: string | null;
     linkedExpenseId: string | null;
   };
   familyMemberName?: string;

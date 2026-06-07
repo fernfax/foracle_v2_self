@@ -115,6 +115,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
 
   // Policy Information
   const [provider, setProvider] = useState("");
+  const [planName, setPlanName] = useState("");
   const [policyNumber, setPolicyNumber] = useState("");
   const [policyType, setPolicyType] = useState("");
   const [status, setStatus] = useState("Active");
@@ -128,6 +129,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
 
   // Premium Details
   const [premiumAmount, setPremiumAmount] = useState("");
+  const [premiumAmountCPF, setPremiumAmountCPF] = useState("");
   const [premiumFrequency, setPremiumFrequency] = useState("");
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [totalPremiumDuration, setTotalPremiumDuration] = useState("");
@@ -138,6 +140,10 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
   const [criticalIllness, setCriticalIllness] = useState({ enabled: false, amount: "" });
   const [earlyCriticalIllness, setEarlyCriticalIllness] = useState({ enabled: false, amount: "" });
   const [hospitalisationPlan, setHospitalisationPlan] = useState({ enabled: false, amount: "" });
+
+  // Cash value (whole life / endowment)
+  const [cashValue, setCashValue] = useState("");
+  const [cashValueDate, setCashValueDate] = useState("");
 
   // Add to Expenditures
   const [addToExpenditures, setAddToExpenditures] = useState(false);
@@ -263,6 +269,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
       const newPolicy = await createPolicy({
         familyMemberId: selectedFamilyMember || undefined,
         provider,
+        planName: planName || undefined,
         policyNumber: policyNumber || undefined,
         policyType,
         status,
@@ -270,10 +277,13 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
         maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
         coverageUntilAge: coverageUntilAge ? parseInt(coverageUntilAge) : undefined,
         premiumAmount,
+        premiumAmountCPF: premiumAmountCPF || undefined,
         premiumFrequency,
         customMonths: customMonthsJson,
         totalPremiumDuration: totalPremiumDuration ? parseInt(totalPremiumDuration) : undefined,
         coverageOptions: JSON.stringify(coverageOptions),
+        cashValue: cashValue || undefined,
+        cashValueDate: cashValueDate || undefined,
       });
 
       console.log("Policy created:", newPolicy?.id);
@@ -322,6 +332,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
   const resetForm = () => {
     setSelectedFamilyMember("");
     setProvider("");
+    setPlanName("");
     setPolicyNumber("");
     setPolicyType("");
     setStatus("Active");
@@ -329,6 +340,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
     setCoverageUntilAge("");
     setMaturityDate(undefined);
     setPremiumAmount("");
+    setPremiumAmountCPF("");
     setPremiumFrequency("");
     setSelectedMonths([]);
     setTotalPremiumDuration("");
@@ -337,6 +349,8 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
     setCriticalIllness({ enabled: false, amount: "" });
     setEarlyCriticalIllness({ enabled: false, amount: "" });
     setHospitalisationPlan({ enabled: false, amount: "" });
+    setCashValue("");
+    setCashValueDate("");
     setAddToExpenditures(false);
     setValidationError("");
   };
@@ -405,6 +419,16 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                   </SelectContent>
                 </Select>
                 <ProviderManagerPopover providers={providers} onProvidersChanged={loadProviders} />
+              </div>
+
+              <div>
+                <Label htmlFor="planName">Plan Name (Optional)</Label>
+                <Input
+                  id="planName"
+                  placeholder="e.g., Supreme Early Multiplier 20"
+                  value={planName}
+                  onChange={(e) => setPlanName(e.target.value)}
+                />
               </div>
 
               <div>
@@ -565,6 +589,23 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                     value={premiumAmount}
                     onChange={(e) => setPremiumAmount(e.target.value)}
                     required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="premiumAmountCPF">CPF Premium (Optional)</Label>
+                <p className="text-xs text-muted-foreground mb-1">CPF-funded portion of the premium (same frequency as above)</p>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                  <Input
+                    id="premiumAmountCPF"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="pl-7"
+                    value={premiumAmountCPF}
+                    onChange={(e) => setPremiumAmountCPF(e.target.value)}
                   />
                 </div>
               </div>
@@ -841,6 +882,40 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                   </div>
                 </div>
               </div>
+          </div>
+
+          {/* Cash Value */}
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Cash / Surrender Value (Optional)</p>
+              <p className="text-xs text-muted-foreground mt-1">For whole life or endowment policies with a surrender value</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="cashValue">Cash Value ($)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                  <Input
+                    id="cashValue"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="pl-7"
+                    value={cashValue}
+                    onChange={(e) => setCashValue(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="cashValueDate">As of Date</Label>
+                <Input
+                  id="cashValueDate"
+                  type="date"
+                  value={cashValueDate}
+                  onChange={(e) => setCashValueDate(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Add to Expenses Toggle */}

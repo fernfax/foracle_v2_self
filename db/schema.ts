@@ -259,6 +259,7 @@ export const policies = pgTable("policies", {
 
   // Policy Information
   provider: varchar("provider", { length: 255 }).notNull(), // Insurance provider
+  planName: varchar("plan_name", { length: 255 }), // Specific plan name e.g. "Supreme Early Multiplier 20"
   policyNumber: varchar("policy_number", { length: 255 }), // Optional policy number
   policyType: varchar("policy_type", { length: 100 }).notNull(), // life, health, auto, home, etc.
   status: varchar("status", { length: 50 }).default("active"), // active, lapsed, cancelled, matured
@@ -270,12 +271,17 @@ export const policies = pgTable("policies", {
 
   // Premium Details
   premiumAmount: decimal("premium_amount", { precision: 12, scale: 2 }).notNull(),
+  premiumAmountCPF: decimal("premium_amount_cpf", { precision: 12, scale: 2 }), // CPF-funded portion of premium (SG-specific)
   premiumFrequency: varchar("premium_frequency", { length: 50 }).notNull(), // monthly, custom
   customMonths: text("custom_months"), // JSON array of month numbers for custom frequency (e.g., "[1,3,6,12]" for Jan, Mar, Jun, Dec)
   totalPremiumDuration: integer("total_premium_duration"), // Total number of years to pay premiums
 
   // Coverage & Benefits (stored as JSON)
   coverageOptions: text("coverage_options"), // JSON: { death: amount, tpd: amount, criticalIllness: amount, earlyCriticalIllness: amount, hospitalisationPlan: amount }
+
+  // Cash / surrender value (whole life, endowment)
+  cashValue: decimal("cash_value", { precision: 12, scale: 2 }),
+  cashValueDate: date("cash_value_date"),
 
   description: text("description"),
   isActive: boolean("is_active").default(true),
