@@ -8,7 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { LayoutDashboard, Target, Users, Waves } from "lucide-react";
+import Link from "next/link";
+import { DollarSign, LayoutDashboard, Target, Users, Waves, Building2, Briefcase, Receipt } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { TotalAssetsCard } from "@/components/dashboard/total-assets-card";
 import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
@@ -215,6 +216,27 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
       </div>
       </>
       )}
+
+      {/* Navigation bridge — quick access to User Homepage tabs */}
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <span className="text-[11px] text-muted-foreground/60 mr-1">Go to:</span>
+        {[
+          { tab: "family", label: "Family", icon: Users },
+          { tab: "incomes", label: "Incomes", icon: DollarSign },
+          { tab: "expenses", label: "Expenses", icon: Receipt },
+          { tab: "cpf", label: "CPF", icon: Building2 },
+          { tab: "holdings", label: "Holdings", icon: Briefcase },
+        ].map(({ tab, label, icon: Icon }) => (
+          <Link
+            key={tab}
+            href={`/user?tab=${tab}`}
+            className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-transparent px-3 py-1 text-[11px] text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+          >
+            <Icon className="h-3 w-3" />
+            {label}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
