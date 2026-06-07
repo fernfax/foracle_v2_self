@@ -254,9 +254,14 @@ export function CoverageMatrix({
                                 className="flex flex-col gap-0.5 px-2.5 py-2 rounded-lg border border-border bg-white hover:shadow-sm hover:border-border/60 ring-1 ring-transparent hover:ring-border/30 transition-all text-left w-full cursor-pointer"
                                 style={{ borderLeftWidth: 3, borderLeftColor: typeColor }}
                               >
-                                <span className="text-xs font-medium text-foreground leading-tight">
+                                <span className="text-xs font-medium text-foreground leading-tight truncate">
                                   {policy.provider}
                                 </span>
+                                {policy.planName && (
+                                  <span className="text-[10px] text-muted-foreground leading-tight truncate">
+                                    {policy.planName}
+                                  </span>
+                                )}
                                 <span className="text-xs text-[#007A68] font-medium">
                                   {formatPremium(policy)}
                                 </span>
