@@ -3087,6 +3087,7 @@ function TimelineStudio({
                       name: group.familyMember.name,
                       relationship: group.familyMember.relationship,
                       age: ageAtDate(group.familyMember.dateOfBirth, focalDate),
+                      focalMonthLabel: focalDate ? format(focalDate, "MMM yyyy") : null,
                     }
                   : { name: "Unassigned", relationship: null, age: null };
                 return [
@@ -3130,8 +3131,9 @@ function TimelineStudio({
                     name: group.familyMember.name,
                     relationship: group.familyMember.relationship,
                     age: ageAtDate(group.familyMember.dateOfBirth, focalDate),
+                    focalMonthLabel: focalDate ? format(focalDate, "MMM yyyy") : null,
                   }
-                : { name: "Unassigned", relationship: null, age: null };
+                : { name: "Unassigned", relationship: null, age: null, focalMonthLabel: null };
               // One row per packed track (non-overlapping incomes share a
               // lane). The track's first income drives the React key + the
               // draw context (via the row's `primary` lookup).
@@ -4153,6 +4155,9 @@ interface IncomeStreamRowProps {
     // Age at the focal (centre-of-viewport) month; null when unknown or for
     // the Unassigned row. Recomputed by the parent as the timeline scrolls.
     age?: number | null;
+    // Human-readable label for the focal month, e.g. "Dec 2026". Used as
+    // a native tooltip on the age line so users know it's timeline-relative.
+    focalMonthLabel?: string | null;
   } | null;
   // Family member this row belongs to (null = "Unassigned"). Used as the
   // draw context for the pencil tool and for popup name pre-fill.
@@ -4647,7 +4652,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
             {/* Age at the focal (centre-of-viewport) month — its own short line
                 so it never clips the name/relationship line (#16). */}
             {typeof familyMemberHeader.age === "number" && (
-              <p className="font-display text-[10px] font-medium leading-none text-muted-foreground/75 tabular-nums">
+              <p
+                className="font-display text-[10px] font-medium leading-none text-muted-foreground/75 tabular-nums"
+                title={familyMemberHeader.focalMonthLabel ? `Age as of ${familyMemberHeader.focalMonthLabel}` : undefined}
+              >
                 Age {familyMemberHeader.age}
               </p>
             )}
