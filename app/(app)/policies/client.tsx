@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Shield, Plus, User, Users, Baby, Heart, UserCircle, LayoutGrid, Table2 } from "lucide-react";
+import { Shield, Plus, User, Users, Baby, Heart, UserCircle, LayoutGrid, Table2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
@@ -10,6 +10,7 @@ import { AddPolicyDialog } from "@/components/policies/add-policy-dialog";
 import { EditPolicyDialog } from "@/components/policies/edit-policy-dialog";
 import { PolicyCard } from "@/components/policies/policy-card";
 import { CoverageMatrix } from "@/components/policies/coverage-matrix";
+import { BenefitMatrix } from "@/components/policies/benefit-matrix";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,7 +64,7 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
   const router = useRouter();
   const searchParams = useSearchParams();
   const [policies, setPolicies] = useState<Policy[]>(initialPolicies);
-  const [view, setView] = useState<"cards" | "matrix">("cards");
+  const [view, setView] = useState<"cards" | "matrix" | "benefit">("cards");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -331,6 +332,14 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
             >
               <Table2 className="h-4 w-4" />
             </Button>
+            <Button
+              variant={view === "benefit" ? "secondary" : "ghost"}
+              size="icon-sm"
+              onClick={() => setView("benefit")}
+              title="Benefit coverage"
+            >
+              <ShieldCheck className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       )}
@@ -348,6 +357,11 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
             Add Your First Policy
           </Button>
         </div>
+      ) : view === "benefit" ? (
+        <BenefitMatrix
+          familyMembers={sortedFamilyMembers}
+          policies={filteredPolicies}
+        />
       ) : view === "matrix" ? (
         <CoverageMatrix
           familyMembers={sortedFamilyMembers}
