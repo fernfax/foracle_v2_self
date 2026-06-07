@@ -286,7 +286,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                           className="h-full rounded-full transition-all duration-500 ease-out"
                           style={{
                             width: `${progress}%`,
-                            background: `linear-gradient(90deg, #D4845A 0%, #c084fc 100%)`,
+                            background: `linear-gradient(90deg, #00C4AA 0%, #5A9470 100%)`,
                           }}
                         />
                       </div>
