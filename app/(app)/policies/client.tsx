@@ -366,17 +366,14 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-lg bg-muted">
-                  <Shield className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-foreground mb-3">No policies for {member.name}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                <div className="flex items-center gap-2 py-2">
+                  <p className="text-sm text-muted-foreground">No policies yet.</p>
+                  <button
                     onClick={() => handleAddPolicy(member.id)}
+                    className="text-sm text-primary hover:underline underline-offset-2 cursor-pointer"
                   >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Policy
-                  </Button>
+                    Add one
+                  </button>
                 </div>
               )}
               </div>
