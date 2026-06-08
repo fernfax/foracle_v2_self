@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
 import { Shield, Plus, User, Users, Baby, Heart, UserCircle, LayoutGrid, Table2, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -236,29 +236,33 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
   };
 
   const totalMonthlyPremium = useMemo(() => {
-    return policies.reduce((sum, p) => {
-      const amount = parseFloat(p.premiumAmount);
-      switch (p.premiumFrequency.toLowerCase()) {
-        case "monthly": return sum + amount;
-        case "quarterly": return sum + amount / 3;
-        case "annual": case "yearly": return sum + amount / 12;
-        default: return sum + amount;
-      }
-    }, 0);
+    return policies
+      .filter(p => p.isActive && (p.status ?? "active").toLowerCase() === "active")
+      .reduce((sum, p) => {
+        const amount = parseFloat(p.premiumAmount);
+        switch (p.premiumFrequency.toLowerCase()) {
+          case "monthly": return sum + amount;
+          case "quarterly": return sum + amount / 3;
+          case "annual": case "yearly": return sum + amount / 12;
+          default: return sum + amount;
+        }
+      }, 0);
   }, [policies]);
 
   const totalMonthlyCPF = useMemo(() => {
-    return policies.reduce((sum, p) => {
-      if (!p.premiumAmountCPF) return sum;
-      const amount = parseFloat(p.premiumAmountCPF);
-      if (!amount) return sum;
-      switch (p.premiumFrequency.toLowerCase()) {
-        case "monthly": return sum + amount;
-        case "quarterly": return sum + amount / 3;
-        case "annual": case "yearly": return sum + amount / 12;
-        default: return sum + amount;
-      }
-    }, 0);
+    return policies
+      .filter(p => p.isActive && (p.status ?? "active").toLowerCase() === "active")
+      .reduce((sum, p) => {
+        if (!p.premiumAmountCPF) return sum;
+        const amount = parseFloat(p.premiumAmountCPF);
+        if (!amount) return sum;
+        switch (p.premiumFrequency.toLowerCase()) {
+          case "monthly": return sum + amount;
+          case "quarterly": return sum + amount / 3;
+          case "annual": case "yearly": return sum + amount / 12;
+          default: return sum + amount;
+        }
+      }, 0);
   }, [policies]);
 
   const coveredMemberCount = useMemo(() => {
@@ -271,7 +275,7 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
       if (!p.maturityDate) return false;
       const st = (p.status ?? "active").toLowerCase();
       if (st !== "active") return false;
-      const days = differenceInDays(new Date(p.maturityDate), new Date());
+      const days = differenceInDays(parseISO(p.maturityDate), new Date());
       return days >= 0 && days <= 365;
     }).length;
   }, [policies]);

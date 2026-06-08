@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Plus, AlertTriangle, User, Users, Baby, Heart, UserCircle, Pencil, Trash2 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -103,7 +103,7 @@ function getChipExpiryLevel(policy: Policy): "warning" | "critical" | null {
   if (!policy.maturityDate) return null;
   const st = (policy.status ?? "active").toLowerCase();
   if (st !== "active") return null;
-  const days = differenceInDays(new Date(policy.maturityDate), new Date());
+  const days = differenceInDays(parseISO(policy.maturityDate), new Date());
   if (days < 0 || days > 365) return null;
   return days < 90 ? "critical" : "warning";
 }
