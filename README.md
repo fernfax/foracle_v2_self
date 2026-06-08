@@ -1,6 +1,6 @@
 # Foracle - Personal Finance Management App
 
-A comprehensive personal finance management application built with Next.js 14, Clerk authentication, and PostgreSQL.
+A comprehensive personal finance management application built with Next.js 16, Clerk authentication, and PostgreSQL.
 
 ## Features
 
@@ -9,14 +9,14 @@ A comprehensive personal finance management application built with Next.js 14, C
 - **Income Tracking**: Monitor multiple income sources
 - **Expense Management**: Track and categorize expenses
 - **Asset Management**: Keep track of all your assets
-- **Policy Management**: Manage insurance policies and subscriptions
+- **Policy Management**: Rich insurance dashboard — policy cards with annual premium, payable term, and expiry alerts; coverage matrix (family × policy type); benefit matrix (Death/TPD/CI/H&S by member); plan name, CPF premium, and cash value fields
 - **Goal Setting**: Set and track financial goals
 - **Family Planning**: Add family members and plan for their future
 - **Data Isolation**: Each user can only access their own data
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Styling**: Tailwind CSS + Shadcn/ui
 - **Authentication**: Clerk
 - **Database**: PostgreSQL with Drizzle ORM
@@ -121,18 +121,25 @@ foracle_v2/
 ├── app/                      # Next.js App Router
 │   ├── api/                 # API routes
 │   │   └── webhooks/        # Clerk webhooks
-│   ├── dashboard/           # Protected dashboard pages
+│   ├── (app)/               # Protected app pages (Clerk-gated)
+│   │   ├── overview/        # Financial overview dashboard
+│   │   ├── policies/        # Insurance policy management
+│   │   ├── user/            # User profile & household
+│   │   └── layout.tsx       # Auth guard layout
 │   ├── sign-in/            # Sign in page
 │   ├── sign-up/            # Sign up page
 │   ├── layout.tsx          # Root layout with Clerk
 │   └── page.tsx            # Landing page
 ├── components/              # React components
-│   └── ui/                 # Shadcn/ui components
+│   ├── policies/           # Policy cards, coverage matrix, benefit matrix
+│   └── ui/                 # Shadcn-style primitives + household-context-strip
 ├── db/                      # Database
 │   ├── schema.ts           # Drizzle schema
 │   └── index.ts            # Database connection
 ├── lib/                     # Utilities
 │   ├── actions/            # Server actions
+│   ├── services/           # Data-access layer
+│   ├── household-summary.ts # Household-level aggregation helpers
 │   └── utils.ts            # Helper functions
 ├── middleware.ts            # Clerk middleware
 └── drizzle.config.ts       # Drizzle configuration
@@ -147,7 +154,7 @@ The application includes the following tables:
 - **incomes**: Income sources
 - **expenses**: Expense tracking
 - **assets**: Asset management
-- **policies**: Insurance and subscription policies
+- **policies**: Insurance policies — including plan name, CPF-funded premium, cash value, coverage options (JSON), and renewal/maturity dates
 - **goals**: Financial goals
 
 All tables enforce user-level data isolation through foreign key relationships.
