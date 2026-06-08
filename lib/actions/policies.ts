@@ -94,13 +94,13 @@ export async function updatePolicy(
     maturityDate: string;
     coverageUntilAge: number;
     premiumAmount: string;
-    premiumAmountCPF: string;
+    premiumAmountCPF: string | null;
     premiumFrequency: string;
     customMonths: string;
     totalPremiumDuration: number;
     coverageOptions: string;
-    cashValue: string;
-    cashValueDate: string;
+    cashValue: string | null;
+    cashValueDate: string | null;
     description: string;
     isActive: boolean;
   }>

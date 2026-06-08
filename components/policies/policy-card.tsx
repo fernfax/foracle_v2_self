@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, X, Pencil, Trash2, ChevronRight, AlertTriangle } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,7 +27,7 @@ function getExpiryAlert(maturityDate: string | null, status: string | null): {
   if (!maturityDate) return null;
   const st = (status ?? "active").toLowerCase();
   if (st !== "active") return null;
-  const days = differenceInDays(new Date(maturityDate), new Date());
+  const days = differenceInDays(parseISO(maturityDate), new Date());
   if (days < 0 || days > 365) return null;
   const months = Math.ceil(days / 30);
   return {
@@ -113,7 +113,7 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
     : policy.totalPremiumDuration
     ? `${policy.totalPremiumDuration} yr premium`
     : policy.maturityDate
-    ? `Until ${format(new Date(policy.maturityDate), "yyyy")}`
+    ? `Until ${format(parseISO(policy.maturityDate), "yyyy")}`
     : null;
 
   return (
@@ -286,12 +286,12 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
                 </div>
                 <div>
                   <p className="text-sm text-foreground">Start Date</p>
-                  <p className="font-medium">{format(new Date(policy.startDate), "MMMM d, yyyy")}</p>
+                  <p className="font-medium">{format(parseISO(policy.startDate), "MMMM d, yyyy")}</p>
                 </div>
                 {policy.maturityDate && (
                   <div>
                     <p className="text-sm text-foreground">End Date</p>
-                    <p className="font-medium">{format(new Date(policy.maturityDate), "MMMM d, yyyy")}</p>
+                    <p className="font-medium">{format(parseISO(policy.maturityDate), "MMMM d, yyyy")}</p>
                   </div>
                 )}
                 <div>
@@ -354,7 +354,7 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
                   {policy.cashValueDate && (
                     <div>
                       <p className="text-sm text-foreground">As At</p>
-                      <p className="font-medium">{format(new Date(policy.cashValueDate), "MMMM d, yyyy")}</p>
+                      <p className="font-medium">{format(parseISO(policy.cashValueDate), "MMMM d, yyyy")}</p>
                     </div>
                   )}
                 </div>

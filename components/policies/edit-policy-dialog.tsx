@@ -36,7 +36,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { cn, policyFrequencyToExpenseFrequency } from "@/lib/utils";
 import { updatePolicy } from "@/lib/actions/policies";
 import { getUserFamilyMembers } from "@/lib/actions/user";
@@ -197,15 +197,15 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         setPolicyNumber(policy.policyNumber || "");
         setPolicyType(policy.policyType);
         setStatus(policy.status || "Active");
-        setStartDate(new Date(policy.startDate));
+        setStartDate(parseISO(policy.startDate));
         setCoverageUntilAge(policy.coverageUntilAge?.toString() || "");
-        setMaturityDate(policy.maturityDate ? new Date(policy.maturityDate) : undefined);
+        setMaturityDate(policy.maturityDate ? parseISO(policy.maturityDate) : undefined);
         setPremiumAmount(policy.premiumAmount);
         setPremiumAmountCPF(policy.premiumAmountCPF || "");
         setPremiumFrequency(policy.premiumFrequency);
         setTotalPremiumDuration(policy.totalPremiumDuration?.toString() || "");
         setCashValue(policy.cashValue || "");
-        setCashValueDate(policy.cashValueDate ? new Date(policy.cashValueDate) : undefined);
+        setCashValueDate(policy.cashValueDate ? parseISO(policy.cashValueDate) : undefined);
 
         // Parse custom months if available
         if (policy.customMonths) {
@@ -333,8 +333,8 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
       policy.premiumAmount !== premiumAmount ||
       policy.premiumFrequency !== premiumFrequency ||
       policyCustomMonths !== currentCustomMonths ||
-      format(new Date(policy.startDate), "yyyy-MM-dd") !== (startDate ? format(startDate, "yyyy-MM-dd") : "") ||
-      (policy.maturityDate ? format(new Date(policy.maturityDate), "yyyy-MM-dd") : null) !== (maturityDate ? format(maturityDate, "yyyy-MM-dd") : null);
+      format(parseISO(policy.startDate), "yyyy-MM-dd") !== (startDate ? format(startDate, "yyyy-MM-dd") : "") ||
+      (policy.maturityDate ? format(parseISO(policy.maturityDate), "yyyy-MM-dd") : null) !== (maturityDate ? format(maturityDate, "yyyy-MM-dd") : null);
 
     setPolicyDataChanged(hasChanged);
   }, [policy, policyType, provider, premiumAmount, premiumFrequency, selectedMonths, startDate, maturityDate, initialAddToExpenditures, addToExpenditures]);
@@ -436,13 +436,13 @@ export function EditPolicyDialog({ open, onOpenChange, policy, userId, onPolicyU
         maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
         coverageUntilAge: coverageUntilAge ? parseInt(coverageUntilAge) : undefined,
         premiumAmount,
-        premiumAmountCPF: premiumAmountCPF || undefined,
+        premiumAmountCPF: premiumAmountCPF || null,
         premiumFrequency,
         customMonths: customMonthsJson,
         totalPremiumDuration: totalPremiumDuration ? parseInt(totalPremiumDuration) : undefined,
         coverageOptions: JSON.stringify(coverageOptions),
-        cashValue: cashValue || undefined,
-        cashValueDate: cashValueDate ? format(cashValueDate, "yyyy-MM-dd") : undefined,
+        cashValue: cashValue || null,
+        cashValueDate: cashValueDate ? format(cashValueDate, "yyyy-MM-dd") : null,
       });
 
       console.log("Policy updated:", policy.id);

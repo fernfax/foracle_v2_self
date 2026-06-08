@@ -1,7 +1,13 @@
 import { z } from "zod";
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const moneyString = z.string().regex(/^-?\d+(\.\d{1,2})?$/);
+const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((v) => !isNaN(new Date(v).getTime()), { message: "Invalid date" });
+const moneyString = z
+  .string()
+  .regex(/^\d+(\.\d{1,2})?$/)
+  .refine((v) => parseFloat(v) <= 9_999_999_999.99, { message: "Amount too large" });
 
 const policyStatusEnum = z.enum(["active", "lapsed", "cancelled", "matured"]);
 
