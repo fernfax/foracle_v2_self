@@ -40,7 +40,7 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 
 ## QA expectations
 
-For any UI/UX change — especially in `components/income/`, `components/expenses/`, or anywhere a live preview gets committed on release (drag-to-commit, debounced inputs, optimistic UI):
+For any UI/UX change — especially in `components/income/`, `components/expenses/`, `components/policies/`, or anywhere a live preview gets committed on release (drag-to-commit, debounced inputs, optimistic UI):
 
 1. Use the gstack `browse` skill to dogfood the actual user gesture against the dev server before reporting the task complete. Type checking and build success do not verify feature correctness.
 2. If preview state can diverge from committed state, screenshot or read DOM/network state **before** and **after** the gesture and verify both agree. The Mar→Feb drag bug shipped because preview math was correct in isolation but the commit pipeline double-applied the delta — only an end-to-end gesture test would have caught it.
