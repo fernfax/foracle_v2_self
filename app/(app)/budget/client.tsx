@@ -18,6 +18,7 @@ import {
 import { DailySpendingChart } from "@/components/budget/daily-spending-chart";
 import { CategoryBudgetBarChart } from "@/components/budget/category-budget-bar-chart";
 import { RecentExpensesList } from "@/components/budget/recent-expenses-list";
+import { BudgetBreakdown } from "@/components/budget/budget-breakdown";
 import { getBudgetVsActual, getBudgetSummary } from "@/lib/actions/budget-calculator";
 import { getDailyExpensesForMonth, getTodaySpending, getDailySpendingByDay, type DailyExpense } from "@/lib/actions/daily-expenses";
 import { isCurrentMonth } from "@/lib/budget-utils";
@@ -169,6 +170,14 @@ export function BudgetClient({
     setAddExpenseOpen(true);
   }, []);
 
+  // "Add category" (breakdown toolbar primary) — reuse the existing add flow,
+  // identical to the floating "+": reset edit/preselect state, open AddExpenseModal.
+  const handleAddCategory = useCallback(() => {
+    setEditingExpense(null);
+    setPreselectedCategoryName(null);
+    setAddExpenseOpen(true);
+  }, []);
+
   // Handle pacing card click - open daily spending graph modal
   const handlePacingClick = useCallback(async () => {
     const data = await getDailySpendingByDay(year, month);
@@ -204,6 +213,17 @@ export function BudgetClient({
         year={year}
         month={month}
         onMonthChange={handleMonthChange}
+      />
+
+      {/* Budget vs actual breakdown (per-category limit = monthlyBudget). Adjust
+          limits opens the existing Manage Categories modal; Add category reuses
+          the existing add-expense flow. */}
+      <BudgetBreakdown
+        budgetData={budgetData}
+        year={year}
+        month={month}
+        onAdjustLimits={() => setManageCategoriesOpen(true)}
+        onAddCategory={handleAddCategory}
       />
 
       {/* Row 1: Spending Overview + Daily Spending Chart (equal height on desktop) */}

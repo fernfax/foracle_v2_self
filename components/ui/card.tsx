@@ -14,22 +14,30 @@ import { cn } from "@/lib/utils";
  * border-as-elevation approach the design guide §11 calls out (shadows
  * read poorly on dark surfaces).
  */
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-3xl border border-[rgba(28,43,42,0.06)] bg-card text-card-foreground",
-      "shadow-[0_2px_4px_rgba(28,43,42,0.08),0_12px_32px_rgba(28,43,42,0.13),0_28px_64px_rgba(28,43,42,0.09)]",
-      "transition-shadow duration-200",
-      "dark:border-[rgba(240,235,224,0.08)] dark:shadow-none",
-      className
-    )}
-    {...props}
-  />
-));
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /**
+   * When true, the card lifts from --shadow-card to --shadow-card-hover on
+   * hover. Use for interactive grid items (stat cards, member cards); leave
+   * off for large static containers so they don't twitch as the cursor moves.
+   */
+  interactive?: boolean;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, interactive = false, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-3xl border border-[rgba(28,43,42,0.06)] bg-card text-card-foreground",
+        "shadow-card transition-shadow duration-200",
+        "dark:border-[rgba(240,235,224,0.08)] dark:shadow-none",
+        interactive && "hover:shadow-card-hover dark:hover:shadow-none",
+        className
+      )}
+      {...props}
+    />
+  )
+);
 Card.displayName = "Card";
 
 const CardHeader = React.forwardRef<

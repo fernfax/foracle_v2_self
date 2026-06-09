@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { MoreHorizontal, Plus, ArrowUpDown, Settings2, TrendingDown, Layers, DollarSign, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Expand, Shield, Home, Car, Target } from "lucide-react";
+import { Plus, ArrowUpDown, Settings2, ChevronRight, ChevronLeft, Shield, Home, Car, Target, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,12 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -36,21 +29,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { RowActions } from "@/components/ui/row-actions";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AddExpenseDialog } from "./add-expense-dialog";
 import { EditExpenseDialog } from "./edit-expense-dialog";
 import { ManageCategoriesDialog } from "./manage-categories-dialog";
 import { ExpenseBreakdownModal } from "./expense-breakdown-modal";
+import { ExpenseStatBand } from "./expense-stat-band";
+import { TopCategoryModal } from "./top-category-modal";
 import { deleteExpense } from "@/lib/actions/expenses";
 import { getExpenseCategories, type ExpenseCategory } from "@/lib/actions/expense-categories";
-import { BarChart, Bar, XAxis, YAxis, Cell, Tooltip, PieChart, Pie, Legend } from "recharts";
-import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { getCategoryColor } from "@/lib/expense-calculator";
 
 interface Expense {
@@ -118,6 +106,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
   const [selectedFrequency, setSelectedFrequency] = useState<string | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
+  const [isTopCategoryModalOpen, setIsTopCategoryModalOpen] = useState(false);
   const [breakdownSortBy, setBreakdownSortBy] = useState<"amount" | "category" | "count">("amount");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
@@ -125,20 +114,13 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Month navigation state (default to current month)
-  const [selectedMonth, setSelectedMonth] = useState(() => {
+  // Current month — the summary + modals are scoped to it. (The old in-card
+  // month navigator was dropped when the bespoke summary cards became the
+  // shared stat band; the breakdown lives in modals now.)
+  const [selectedMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
-
-  // Month navigation handlers
-  const goToPreviousMonth = () => {
-    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
 
   // Format month display
   const formatMonthDisplay = (date: Date) => {
@@ -460,237 +442,12 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {/* Card 1: Expected Expenses */}
-        {expenses.length > 0 ? (
-          <Card className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative" onClick={() => setIsBreakdownModalOpen(true)} data-tour="expected-expenses-card">
-            <Expand className="h-3.5 w-3.5 text-muted-foreground absolute top-3 right-3" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Expected Expenses
-              </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
-                <DollarSign className="h-5 w-5 text-[#007A68]" />
-              </div>
-            </CardHeader>
-            <CardContent className="pb-6">
-              <div className="text-2xl font-semibold">${summaryStats.currentMonthExpenses.toLocaleString()}</div>
-              <div className="flex items-center gap-1 mt-2 mb-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5"
-                  onClick={(e) => { e.stopPropagation(); goToPreviousMonth(); }}
-                >
-                  <ChevronLeft className="h-3 w-3" />
-                </Button>
-                <span className="text-xs text-muted-foreground min-w-[100px] text-center">
-                  {formatMonthDisplay(selectedMonth)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5"
-                  onClick={(e) => { e.stopPropagation(); goToNextMonth(); }}
-                >
-                  <ChevronRight className="h-3 w-3" />
-                </Button>
-              </div>
-
-              {/* Split Layout */}
-              {breakdownDetails.categories.length > 0 && (
-                <div className="pt-3 border-t">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Categories</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Left: Category List */}
-                    <div className="max-h-[200px] overflow-y-auto pr-1 space-y-2">
-                      {breakdownDetails.categories.map((cat) => (
-                        <div key={cat.category} className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div
-                              className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            <span className="text-xs font-medium truncate">{cat.category}</span>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-xs font-semibold">${cat.amount.toLocaleString()}</span>
-                            <span className="text-xs text-muted-foreground">{cat.percentage.toFixed(1)}%</span>
-                            <span className="text-xs text-muted-foreground">({cat.count})</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Right: Pie Chart */}
-                    <div className="flex items-center justify-center">
-                      <ResponsiveChart width="100%" height={200}>
-                        <PieChart>
-                          <Pie
-                            data={breakdownDetails.categories.map((cat) => ({
-                              name: cat.category,
-                              value: cat.amount,
-                              color: cat.color,
-                            }))}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                              if (!percent || percent < 0.08 || midAngle === undefined || innerRadius === undefined || outerRadius === undefined || cx === undefined || cy === undefined) return null;
-                              const RADIAN = Math.PI / 180;
-                              const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                              const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                              const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                              return (
-                                <text
-                                  x={x}
-                                  y={y}
-                                  fill="white"
-                                  textAnchor="middle"
-                                  dominantBaseline="central"
-                                  className="text-xs font-semibold"
-                                >
-                                  {`${(percent * 100).toFixed(0)}%`}
-                                </text>
-                              );
-                            }}
-                            outerRadius={80}
-                            fill="#3A6B52"
-                            dataKey="value"
-                          >
-                            {breakdownDetails.categories.map((cat, index) => (
-                              <Cell key={`cell-${index}`} fill={cat.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            content={({ active, payload }) => {
-                              if (active && payload && payload.length) {
-                                const data = payload[0].payload;
-                                return (
-                                  <div className="bg-white dark:bg-foreground/80 border border-border dark:border-border rounded-lg shadow-lg p-2">
-                                    <p className="text-xs font-semibold text-foreground dark:text-foreground/40">{data.name}</p>
-                                    <p className="text-xs text-foreground dark:text-muted-foreground">
-                                      ${data.value.toLocaleString()}
-                                    </p>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveChart>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="col-span-full sm:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Expected Expenses
-              </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
-                <DollarSign className="h-5 w-5 text-[#007A68]" />
-              </div>
-            </CardHeader>
-            <CardContent className="pb-6">
-              <div className="text-2xl font-semibold text-muted-foreground">$0</div>
-              <p className="text-sm text-muted-foreground mt-3">
-                No expenses added yet. Add your first expense to start tracking your spending and see detailed breakdowns.
-              </p>
-              <Button
-                size="sm"
-                className="mt-4"
-                onClick={() => setAddDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Expense
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Card 2: Top Category */}
-        {expenses.length > 0 ? (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Top Category ({formatMonthDisplay(selectedMonth)})
-              </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(224,85,85,0.12)]">
-                <TrendingDown className="h-5 w-5 text-[#8B0000]" />
-              </div>
-            </CardHeader>
-            <CardContent className="pb-6">
-              {summaryStats.topCategory ? (
-                <>
-                  <div className="text-2xl font-semibold">{summaryStats.topCategory.name}</div>
-                  <p className="text-xs text-muted-foreground mt-1 mb-4">
-                    ${summaryStats.topCategory.amount.toLocaleString()} ({summaryStats.topCategory.percentage.toFixed(1)}%)
-                  </p>
-
-                  {/* Top 5 Categories Mini Breakdown */}
-                  {breakdownDetails.topCategories.length > 1 && (
-                    <div className="pt-3 border-t">
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">Top 5 Categories</p>
-                      <div className="space-y-2">
-                        {breakdownDetails.topCategories.map((cat, idx) => (
-                          <div key={cat.category} className="space-y-1">
-                            <div className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                <div
-                                  className="w-2 h-2 rounded-full flex-shrink-0"
-                                  style={{ backgroundColor: cat.color }}
-                                />
-                                <span className="font-medium truncate">{cat.category}</span>
-                              </div>
-                              <span className="text-muted-foreground ml-2 flex-shrink-0">
-                                ${cat.amount.toLocaleString()}
-                              </span>
-                            </div>
-                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{
-                                  width: `${cat.percentage}%`,
-                                  backgroundColor: cat.color
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-sm text-muted-foreground">No expenses this month</div>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Top Category
-              </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(224,85,85,0.12)]">
-                <TrendingDown className="h-5 w-5 text-[#8B0000]" />
-              </div>
-            </CardHeader>
-            <CardContent className="pb-6">
-              <div className="text-2xl font-semibold text-muted-foreground">—</div>
-              <p className="text-sm text-muted-foreground mt-3">
-                Your top spending category will appear here once you add expenses.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {/* Summary stat band — Expected/Top Category open detail modals on click */}
+      <ExpenseStatBand
+        expenses={expenses}
+        onExpectedClick={() => setIsBreakdownModalOpen(true)}
+        onTopCategoryClick={() => setIsTopCategoryModalOpen(true)}
+      />
 
       {/* Expense List Header */}
       <h2 className="text-2xl font-semibold pt-4">Expense List</h2>
@@ -788,10 +545,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             Manage Categories
           </Button>
           <Button
-            variant="outline"
             size="sm"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
             data-tour="add-expense-btn"
           >
             <Plus className="h-4 w-4 mr-1.5" />
@@ -802,19 +557,12 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
       {/* Expenses Table */}
       {expenses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg">
-          <p className="text-muted-foreground mb-4">
-            No expenses yet. Add your first expense to start tracking your spending.
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Expense
-          </Button>
-        </div>
+        <EmptyState
+          icon={Receipt}
+          title="No expenses yet"
+          description="Add your first expense to start tracking your spending."
+          action={{ label: "Add expense", onClick: () => setAddDialogOpen(true) }}
+        />
       ) : filteredExpenses.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg">
           <p className="text-muted-foreground">No results found for "{search}"</p>
@@ -888,26 +636,12 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                     <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
                     <TableCell className="capitalize">{expense.frequency}</TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(expense)}>
-                            {isLinked ? "View" : "Edit"}
-                          </DropdownMenuItem>
-                          {!isLinked && (
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteClick(expense)}
-                              className="text-[#8B0000]"
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <RowActions
+                        onEdit={() => handleEditClick(expense)}
+                        onDelete={isLinked ? undefined : () => handleDeleteClick(expense)}
+                        editLabel={isLinked ? "View expense" : "Edit expense"}
+                        deleteLabel="Delete expense"
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -1014,13 +748,22 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
         }}
       />
 
-      {/* Expense Breakdown Modal - Using shared component */}
+      {/* Expense Breakdown Modal - opened from the Expected Expenses stat card */}
       <ExpenseBreakdownModal
         open={isBreakdownModalOpen}
         onOpenChange={setIsBreakdownModalOpen}
         expenses={expenses}
         currentMonthTotal={summaryStats.currentMonthExpenses}
         selectedMonth={selectedMonth}
+      />
+
+      {/* Top Category Modal - opened from the Top Category stat card */}
+      <TopCategoryModal
+        open={isTopCategoryModalOpen}
+        onOpenChange={setIsTopCategoryModalOpen}
+        topCategory={summaryStats.topCategory}
+        topCategories={breakdownDetails.topCategories}
+        monthLabel={formatMonthDisplay(selectedMonth)}
       />
     </div>
   );

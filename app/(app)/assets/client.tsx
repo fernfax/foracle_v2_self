@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/ui/sliding-tabs";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { Home, Car, Package, Plus } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Home, Car, Package } from "lucide-react";
 import { PropertyList } from "@/components/assets/property-list";
 import { VehicleList } from "@/components/assets/vehicle-list";
 
@@ -107,19 +107,11 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
           </TabsContent>
 
           <TabsContent value="others" className="mt-4">
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                <Package className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">No other assets yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-sm">
-                Other asset tracking coming soon.
-              </p>
-              <Button disabled>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Asset
-              </Button>
-            </div>
+            <EmptyState
+              icon={Package}
+              title="Other assets — coming soon"
+              description="Track jewellery, collectibles, renovation value and more. Coming soon."
+            />
           </TabsContent>
         </Tabs>
       )}

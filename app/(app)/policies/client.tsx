@@ -1,30 +1,23 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { differenceInDays, parseISO } from "date-fns";
-import { Shield, Plus, User, Users, Baby, Heart, UserCircle, LayoutGrid, Table2, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Shield, Plus, User, Users, Baby, Heart, UserCircle, LayoutGrid, Table2, ShieldCheck, Wallet, BadgeCheck } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatBand } from "@/components/portfolio/stat-band";
+import { Toolbar } from "@/components/ui/toolbar";
+import { ConfirmDialog } from "@/components/portfolio/confirm-dialog";
 import { AddPolicyDialog } from "@/components/policies/add-policy-dialog";
 import { EditPolicyDialog } from "@/components/policies/edit-policy-dialog";
-import { PolicyCard } from "@/components/policies/policy-card";
+import { PolicyCard, monthlyPremium } from "@/components/policies/policy-card";
 import { CoverageMatrix } from "@/components/policies/coverage-matrix";
 import { BenefitMatrix } from "@/components/policies/benefit-matrix";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { deletePolicy } from "@/lib/actions/policies";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { formatBudgetCurrency } from "@/lib/budget-utils";
 
 interface Policy {
   id: string;
@@ -72,11 +65,9 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
   const [view, setView] = useState<"cards" | "matrix" | "benefit">("cards");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedFamilyMemberId, setSelectedFamilyMemberId] = useState<string | undefined>(undefined);
   const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
   const [deletingPolicy, setDeletingPolicy] = useState<Policy | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedPolicyType, setSelectedPolicyType] = useState<string>("All");
 
   // Update policies when initialPolicies changes (after router.refresh())
@@ -204,135 +195,114 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
 
   const handleDeletePolicy = (policy: Policy) => {
     setDeletingPolicy(policy);
-    setDeleteDialogOpen(true);
   };
 
   const confirmDelete = async () => {
     if (!deletingPolicy) return;
 
-    setIsDeleting(true);
+    const target = deletingPolicy;
     try {
-      await deletePolicy(deletingPolicy.id);
+      await deletePolicy(target.id);
       // Remove from local state immediately
-      setPolicies(policies.filter(p => p.id !== deletingPolicy.id));
-      setDeleteDialogOpen(false);
+      setPolicies((prev) => prev.filter((p) => p.id !== target.id));
       setDeletingPolicy(null);
+      toast.success("Policy deleted");
       router.refresh();
     } catch (error) {
       console.error("Failed to delete policy:", error);
-    } finally {
-      setIsDeleting(false);
+      toast.error("Could not delete policy. Please try again.");
     }
   };
 
   const handlePolicyAdded = () => {
+    toast.success("Policy added");
     // Refresh to get the new policy from the server
     router.refresh();
   };
 
   const handlePolicyUpdated = () => {
+    toast.success("Policy updated");
     // Refresh to get the updated policy from the server
     router.refresh();
   };
 
+  // Primary sum assured for a single policy: largest numeric coverage option.
+  // Mirrors PolicyCard's parsing so the StatBand total matches the cards.
+  const primaryCoverageOf = (policy: Policy): number => {
+    if (!policy.coverageOptions) return 0;
+    try {
+      const options = JSON.parse(policy.coverageOptions) as Record<string, unknown>;
+      const amounts = Object.values(options)
+        .map((v) => parseFloat(v as string))
+        .filter((n) => Number.isFinite(n) && n > 0);
+      return amounts.length > 0 ? Math.max(...amounts) : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  // StatBand derivations (handoff §4) — all UI-only, no schema change.
+  // Total coverage: sum of every policy's primary (largest) coverage.
+  const totalCoverage = useMemo(
+    () => policies.reduce((sum, p) => sum + primaryCoverageOf(p), 0),
+    [policies]
+  );
+
+  // Monthly premiums: sum of monthly-normalized premium across active policies.
+  // Reuses the shared monthlyPremium helper; rows we can't confidently normalize
+  // (null) are skipped rather than inflating the total with a wrong figure.
   const totalMonthlyPremium = useMemo(() => {
     return policies
-      .filter(p => p.isActive && (p.status ?? "active").toLowerCase() === "active")
+      .filter((p) => p.isActive && (p.status ?? "active").toLowerCase() === "active")
       .reduce((sum, p) => {
-        const amount = parseFloat(p.premiumAmount);
-        switch (p.premiumFrequency.toLowerCase()) {
-          case "monthly": return sum + amount;
-          case "quarterly": return sum + amount / 3;
-          case "annual": case "yearly": return sum + amount / 12;
-          default: return sum + amount;
-        }
+        const m = monthlyPremium(p.premiumAmount, p.premiumFrequency, p.customMonths);
+        return sum + (m ?? 0);
       }, 0);
   }, [policies]);
 
-  const totalMonthlyCPF = useMemo(() => {
-    return policies
-      .filter(p => p.isActive && (p.status ?? "active").toLowerCase() === "active")
-      .reduce((sum, p) => {
-        if (!p.premiumAmountCPF) return sum;
-        const amount = parseFloat(p.premiumAmountCPF);
-        if (!amount) return sum;
-        switch (p.premiumFrequency.toLowerCase()) {
-          case "monthly": return sum + amount;
-          case "quarterly": return sum + amount / 3;
-          case "annual": case "yearly": return sum + amount / 12;
-          default: return sum + amount;
-        }
-      }, 0);
-  }, [policies]);
-
-  const coveredMemberCount = useMemo(() => {
-    const ids = new Set(policies.map(p => p.familyMemberId).filter(Boolean));
-    return ids.size;
-  }, [policies]);
-
-  const expiringSoonCount = useMemo(() => {
-    return policies.filter(p => {
-      if (!p.maturityDate) return false;
-      const st = (p.status ?? "active").toLowerCase();
-      if (st !== "active") return false;
-      const days = differenceInDays(parseISO(p.maturityDate), new Date());
-      return days >= 0 && days <= 365;
-    }).length;
-  }, [policies]);
+  // Active policies: status active AND isActive flag set.
+  const activePolicyCount = useMemo(
+    () =>
+      policies.filter(
+        (p) => p.isActive && (p.status ?? "active").toLowerCase() === "active"
+      ).length,
+    [policies]
+  );
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Insurance Policies"
-        actions={
-          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" />
-            Add Policy
-          </Button>
-        }
-      />
+      <PageHeader title="Insurance Policies" />
 
-      {/* Summary Bar */}
+      {/* Stat band (3-up) + Toolbar — derived, UI-only */}
       {policies.length > 0 && (
-        <div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-lg bg-muted/50 text-sm">
-          <div>
-            <span className="font-semibold text-foreground">
-              ${totalMonthlyPremium.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-            <span className="text-muted-foreground"> /month cash</span>
-          </div>
-          {totalMonthlyCPF > 0 && (
-            <>
-              <div className="w-px h-4 bg-border" />
-              <div>
-                <span className="font-semibold text-foreground">
-                  ${totalMonthlyCPF.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-muted-foreground"> /month CPF</span>
-              </div>
-            </>
-          )}
-          <div className="w-px h-4 bg-border" />
-          <div>
-            <span className="font-semibold text-foreground">
-              ${((totalMonthlyPremium + totalMonthlyCPF) * 12).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-            <span className="text-muted-foreground"> /year total</span>
-          </div>
-          <div className="w-px h-4 bg-border" />
-          <span className="text-muted-foreground">
-            {policies.length} {policies.length === 1 ? "policy" : "policies"} · {coveredMemberCount} {coveredMemberCount === 1 ? "member" : "members"} covered
-          </span>
-          {expiringSoonCount > 0 && (
-            <>
-              <div className="w-px h-4 bg-border" />
-              <span className="flex items-center gap-1 text-[#7A5C00] font-medium">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                {expiringSoonCount} expiring within 12 months
-              </span>
-            </>
-          )}
-        </div>
+        <>
+          <StatBand
+            items={[
+              {
+                label: "Total coverage",
+                value: formatBudgetCurrency(totalCoverage),
+                icon: Shield,
+                accent: "brand",
+              },
+              {
+                label: "Monthly premiums",
+                value: formatBudgetCurrency(totalMonthlyPremium),
+                icon: Wallet,
+                accent: "jungle",
+              },
+              {
+                label: "Active policies",
+                value: activePolicyCount,
+                icon: BadgeCheck,
+                accent: "teal",
+              },
+            ]}
+          />
+          <Toolbar
+            count={{ value: policies.length, label: policies.length === 1 ? "policy" : "policies" }}
+            primaryAction={{ label: "Add policy", onClick: () => setAddDialogOpen(true) }}
+          />
+        </>
       )}
 
       {/* View toggle + Policy Type Filters */}
@@ -499,26 +469,19 @@ export function PoliciesClient({ initialPolicies, familyMembers, userId }: Polic
       />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Policy</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this policy? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              disabled={isDeleting}
-              className="bg-[#E05555] hover:bg-[#E05555]"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deletingPolicy !== null}
+        onOpenChange={(o) => !o && setDeletingPolicy(null)}
+        title="Delete this policy?"
+        description={
+          <>
+            &ldquo;{deletingPolicy?.planName?.trim() || deletingPolicy?.policyType}&rdquo; will
+            be removed. This can&rsquo;t be undone.
+          </>
+        }
+        confirmLabel="Delete policy"
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

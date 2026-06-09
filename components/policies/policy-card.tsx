@@ -1,16 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X, Pencil, Trash2, ChevronRight, AlertTriangle } from "lucide-react";
+import { Check, X, Pencil, Trash2, Shield } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { RowActions } from "@/components/ui/row-actions";
+import { formatBudgetCurrency } from "@/lib/budget-utils";
 import {
   Dialog,
   DialogContent,
@@ -19,26 +16,136 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-function getExpiryAlert(maturityDate: string | null, status: string | null): {
-  label: string;
-  days: number;
-  level: "warning" | "critical";
-} | null {
-  if (!maturityDate) return null;
+/** ~120 days = "renews soon" window for the status badge (handoff §4). */
+const RENEWS_SOON_DAYS = 120;
+
+/**
+ * Normalize a stored premium to a per-month number when the cadence is one we
+ * can confidently convert. Returns `null` when we can't (e.g. a "Custom" cadence
+ * with no parseable months) — callers must then show the stored amount with its
+ * real cadence label rather than a wrong "/mo" (handoff §4).
+ *
+ * Shared, deterministic logic so PolicyCard and the StatBand agree.
+ */
+export function monthlyPremium(
+  premiumAmount: string,
+  premiumFrequency: string,
+  customMonths: string | null
+): number | null {
+  const amount = parseFloat(premiumAmount);
+  if (!Number.isFinite(amount)) return null;
+  const freq = (premiumFrequency || "").trim().toLowerCase();
+
+  switch (freq) {
+    case "monthly":
+    case "month":
+      return amount;
+    case "quarterly":
+    case "quarter":
+      return (amount * 4) / 12;
+    case "semi-annual":
+    case "semiannual":
+    case "semi-annually":
+    case "half-yearly":
+    case "biannual":
+      return (amount * 2) / 12;
+    case "annual":
+    case "annually":
+    case "yearly":
+    case "year":
+      return amount / 12;
+    case "weekly":
+      return (amount * 52) / 12;
+    case "custom": {
+      // customMonths is a JSON array of month numbers the premium is paid in
+      // (e.g. [1,6] → 2 payments a year). Annualize, then spread over 12.
+      if (!customMonths) return null;
+      try {
+        const months = JSON.parse(customMonths);
+        if (Array.isArray(months) && months.length > 0) {
+          return (amount * months.length) / 12;
+        }
+      } catch {
+        return null;
+      }
+      return null;
+    }
+    default:
+      // Empty frequency is treated as a one-off monthly figure (legacy seed
+      // rows). Anything else we genuinely don't recognize → can't normalize.
+      return freq === "" ? amount : null;
+  }
+}
+
+/** Pretty, sentence-case label for a stored cadence (used as the "/x" suffix). */
+function cadenceLabel(premiumFrequency: string): string {
+  const freq = (premiumFrequency || "").trim().toLowerCase();
+  switch (freq) {
+    case "monthly":
+    case "month":
+      return "/mo";
+    case "quarterly":
+    case "quarter":
+      return "/qtr";
+    case "semi-annual":
+    case "semiannual":
+    case "semi-annually":
+    case "half-yearly":
+    case "biannual":
+      return "/6mo";
+    case "annual":
+    case "annually":
+    case "yearly":
+    case "year":
+      return "/yr";
+    case "weekly":
+      return "/wk";
+    case "custom":
+      return " (custom)";
+    default:
+      return "";
+  }
+}
+
+/** Title-case a raw policyType slug used as the fallback name. */
+function titleCase(s: string): string {
+  return s
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
+ * Status badge resolution (handoff §4):
+ * - active + maturity within ~120 days → "Renews soon" (warning)
+ * - active otherwise → "Active" (success)
+ * - else the REAL status label (lapsed/cancelled/matured → neutral/danger) —
+ *   never fake "Active".
+ */
+function getStatusBadge(
+  status: string | null,
+  maturityDate: string | null
+): { label: string; variant: "success" | "warning" | "neutral" | "danger" } {
   const st = (status ?? "active").toLowerCase();
-  if (st !== "active") return null;
-  const days = differenceInDays(parseISO(maturityDate), new Date());
-  if (days < 0 || days > 365) return null;
-  const months = Math.ceil(days / 30);
-  return {
-    days,
-    level: days < 90 ? "critical" : "warning",
-    label: days < 30
-      ? `Expires in ${days}d`
-      : days < 90
-      ? `Expires in ${months}mo`
-      : `Expires in ${months} months`,
-  };
+
+  if (st === "active") {
+    if (maturityDate) {
+      const days = differenceInDays(parseISO(maturityDate), new Date());
+      if (days >= 0 && days <= RENEWS_SOON_DAYS) {
+        return { label: "Renews soon", variant: "warning" };
+      }
+    }
+    return { label: "Active", variant: "success" };
+  }
+
+  const label = titleCase(status ?? "");
+  // Lapsed / cancelled read as a hard "danger"; everything else neutral.
+  const variant: "neutral" | "danger" =
+    st === "lapsed" || st === "cancelled" || st === "canceled"
+      ? "danger"
+      : "neutral";
+  return { label: label || "Inactive", variant };
 }
 
 interface PolicyCardProps {
@@ -53,6 +160,7 @@ interface PolicyCardProps {
     coverageUntilAge: number | null;
     premiumAmount: string;
     premiumFrequency: string;
+    customMonths?: string | null;
     totalPremiumDuration: number | null;
     coverageOptions: string | null;
     description: string | null;
@@ -76,12 +184,12 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
     try {
       const options = JSON.parse(policy.coverageOptions);
       return Object.entries(options)
-        .filter(([_, value]) => value && parseFloat(value as string) > 0)
+        .filter(([, value]) => value && parseFloat(value as string) > 0)
         .map(([key, value]) => {
           // Convert camelCase to readable format
           const label = key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase())
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase())
             .trim();
           return { label, amount: parseFloat(value as string) };
         });
@@ -92,152 +200,103 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
 
   const coverages = getCoverageOptions();
   const isInExpenses = !!policy.linkedExpenseId;
-  const expiryAlert = getExpiryAlert(policy.maturityDate, policy.status);
 
-  // Primary sum assured: largest of death, CI, TPD
-  const primaryCoverage = coverages.length > 0
-    ? coverages.reduce((max, c) => c.amount > max.amount ? c : max, coverages[0])
-    : null;
+  // Derived display fields (handoff §4) — all UI-only, no schema change.
+  const name = policy.planName?.trim() || titleCase(policy.policyType);
+  const insurer = policy.provider;
+  const holder = familyMemberName || "Joint";
+  const statusBadge = getStatusBadge(policy.status, policy.maturityDate);
 
-  // Annual premium
-  const premiumAmt = parseFloat(policy.premiumAmount);
-  let annualPremium = premiumAmt;
-  switch (policy.premiumFrequency.toLowerCase()) {
-    case "monthly":   annualPremium = premiumAmt * 12; break;
-    case "quarterly": annualPremium = premiumAmt * 4;  break;
-  }
+  // Primary sum assured: largest of death / CI / TPD / … (reuse current logic).
+  const primaryCoverage =
+    coverages.length > 0
+      ? coverages.reduce((max, c) => (c.amount > max.amount ? c : max), coverages[0])
+      : null;
 
-  // Payable term label
-  const payableTerm = policy.coverageUntilAge
-    ? `To age ${policy.coverageUntilAge}`
-    : policy.totalPremiumDuration
-    ? `${policy.totalPremiumDuration} yr premium`
-    : policy.maturityDate
-    ? `Until ${format(parseISO(policy.maturityDate), "yyyy")}`
-    : null;
+  // Premium → per-month when confidently normalizable; otherwise show stored
+  // amount with its real cadence label rather than a wrong "/mo".
+  const premiumPerMonth = monthlyPremium(
+    policy.premiumAmount,
+    policy.premiumFrequency,
+    policy.customMonths ?? null
+  );
+  const premiumDisplay =
+    premiumPerMonth !== null
+      ? { amount: premiumPerMonth, suffix: "/mo" }
+      : { amount: parseFloat(policy.premiumAmount) || 0, suffix: cadenceLabel(policy.premiumFrequency) };
 
   return (
     <>
-      <div
-        className="bg-white rounded-lg border border-border p-4 hover:shadow-md hover:border-border/80 ring-1 ring-transparent hover:ring-border/40 transition-all cursor-pointer flex flex-col gap-3"
+      <Card
+        interactive
+        className="flex cursor-pointer flex-col gap-4 p-5"
         onClick={() => setIsModalOpen(true)}
       >
-        {/* Header: type + status */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-foreground leading-tight">
-              {policy.policyType}
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-              {policy.provider}{policy.planName ? ` · ${policy.planName}` : ""}
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {expiryAlert ? (
-              <Badge
-                variant="outline"
-                className={`text-xs font-medium flex items-center gap-1 ${
-                  expiryAlert.level === "critical"
-                    ? "text-[#8B0000] border-[rgba(139,0,0,0.25)] bg-[rgba(224,85,85,0.08)]"
-                    : "text-[#7A5C00] border-[rgba(212,168,67,0.35)] bg-[rgba(212,168,67,0.10)]"
-                }`}
-              >
-                <AlertTriangle className="h-3 w-3" />
-                {expiryAlert.label}
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="text-xs font-medium uppercase text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
-                {policy.status || "Active"}
-              </Badge>
-            )}
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-          </div>
-        </div>
-
-        {/* Primary sum assured */}
-        {primaryCoverage && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-0.5">{primaryCoverage.label}</p>
-            <p className="text-xl font-bold text-foreground">
-              ${primaryCoverage.amount >= 1000
-                ? `${(primaryCoverage.amount / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}k`
-                : primaryCoverage.amount.toLocaleString()}
-            </p>
-          </div>
-        )}
-
-        {/* Footer: premium + term */}
-        <div className="flex items-end justify-between mt-auto pt-1 border-t border-border/50">
-          <div>
-            <p className="text-xs text-muted-foreground">Premium</p>
-            <p className="text-sm font-medium text-[#007A68]">
-              ${premiumAmt.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-              <span className="text-xs text-muted-foreground font-normal"> /{policy.premiumFrequency.toLowerCase()}</span>
-            </p>
-            <div className="flex items-center gap-1.5">
-              <p className="text-xs text-muted-foreground">
-                ${annualPremium.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} /yr
-              </p>
-              {policy.premiumAmountCPF && parseFloat(policy.premiumAmountCPF) > 0 && (
-                <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                  +${parseFloat(policy.premiumAmountCPF).toLocaleString(undefined, { maximumFractionDigits: 0 })} CPF
-                </span>
-              )}
+        {/* Header: shield tile + name/insurer + status badge */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl"
+              style={{ background: "rgba(184,98,42,0.12)", color: "#B8622A" }}
+            >
+              <Shield className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="truncate font-display text-base font-semibold leading-tight tracking-tight text-foreground">
+                {name}
+              </h3>
+              <p className="mt-0.5 truncate text-sm text-muted-foreground">{insurer}</p>
             </div>
           </div>
-          <div className="text-right">
-            {payableTerm && (
-              <p className="text-xs text-muted-foreground">{payableTerm}</p>
-            )}
-            {policy.cashValue && parseFloat(policy.cashValue) > 0 && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                CV ${parseFloat(policy.cashValue) >= 1000
-                  ? `${(parseFloat(policy.cashValue) / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
-                  : parseFloat(policy.cashValue).toLocaleString()}
-              </p>
-            )}
+          <Badge variant={statusBadge.variant} className="shrink-0">
+            {statusBadge.label}
+          </Badge>
+        </div>
+
+        {/* Two-up: Coverage / Premium */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <p className="text-label-caps uppercase text-muted-foreground">Coverage</p>
+            <p className="mt-1 font-display text-lg font-semibold tabular-nums tracking-tight text-foreground">
+              {primaryCoverage ? formatBudgetCurrency(primaryCoverage.amount) : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-label-caps uppercase text-muted-foreground">Premium</p>
+            <p className="mt-1 font-display text-lg font-semibold tabular-nums tracking-tight text-foreground">
+              {formatBudgetCurrency(premiumDisplay.amount)}
+              {premiumDisplay.suffix && (
+                <span className="ml-0.5 text-xs font-normal text-muted-foreground">
+                  {premiumDisplay.suffix}
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
-        {/* In expenses indicator */}
-        {isInExpenses && (
-          <div className="flex items-center gap-1 text-xs text-[#007A68] -mt-1">
-            <Check className="h-3 w-3" />
-            <span>In Expenses</span>
-          </div>
-        )}
-      </div>
+        {/* Footer: renews + holder · RowActions */}
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/40 pt-3">
+          <p className="min-w-0 truncate text-xs text-muted-foreground">
+            {policy.maturityDate
+              ? `Renews ${format(parseISO(policy.maturityDate), "MMM yyyy")} · ${holder}`
+              : holder}
+          </p>
+          <RowActions className="shrink-0" onEdit={onEdit} onDelete={onDelete} />
+        </div>
+      </Card>
 
-      {/* Details Modal */}
+      {/* Details Modal — preserved from the original card (click body to open). */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">Policy Details</DialogTitle>
             <DialogDescription>
-              {familyMemberName}'s {policy.policyType} Policy
+              {familyMemberName ? `${familyMemberName}'s ` : ""}
+              {titleCase(policy.policyType)} Policy
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Expiry alert banner */}
-            {expiryAlert && (
-              <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm ${
-                expiryAlert.level === "critical"
-                  ? "bg-[rgba(224,85,85,0.08)] border border-[rgba(139,0,0,0.2)] text-[#8B0000]"
-                  : "bg-[rgba(212,168,67,0.10)] border border-[rgba(212,168,67,0.3)] text-[#7A5C00]"
-              }`}>
-                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium">{expiryAlert.label}</p>
-                  <p className="text-xs mt-0.5 opacity-80">
-                    {expiryAlert.level === "critical"
-                      ? "Review your coverage and arrange renewal before the policy lapses."
-                      : "This policy matures within the year — plan ahead for renewal or replacement coverage."}
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Edit Action */}
             <div className="flex gap-2">
               <Button
@@ -248,75 +307,77 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
                   onEdit?.();
                 }}
               >
-                <Pencil className="h-4 w-4 mr-2" />
+                <Pencil className="mr-2 h-4 w-4" />
                 Edit Policy
               </Button>
             </div>
 
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary" className="text-xs font-medium uppercase">
-                {policy.policyType}
-              </Badge>
-              <Badge variant="outline" className="text-xs font-medium text-[#7A3A0A] border-[rgba(184,98,42,0.25)]">
-                {policy.provider}
-              </Badge>
-              <Badge variant="outline" className="text-xs font-medium uppercase text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
-                {policy.status || "Active"}
-              </Badge>
-              <Badge variant="outline" className={`text-xs font-medium ${isInExpenses ? 'text-[#007A68] border-[rgba(0,196,170,0.25)]' : 'text-muted-foreground border-border'}`}>
-                {isInExpenses ? <Check className="h-3 w-3 mr-1" /> : <X className="h-3 w-3 mr-1" />}
-                {isInExpenses ? 'In Expenses' : 'Not in Expenses'}
+              <Badge variant="neutral">{titleCase(policy.policyType)}</Badge>
+              <Badge variant="brand">{policy.provider}</Badge>
+              <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+              <Badge variant={isInExpenses ? "success" : "neutral"}>
+                {isInExpenses ? (
+                  <Check className="mr-1 h-3 w-3" />
+                ) : (
+                  <X className="mr-1 h-3 w-3" />
+                )}
+                {isInExpenses ? "In Expenses" : "Not in Expenses"}
               </Badge>
             </div>
 
             {/* Policy Information */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Policy Information</h3>
+              <h3 className="text-lg font-semibold">Policy Information</h3>
               <div className="grid grid-cols-2 gap-4">
                 {policy.planName && (
                   <div className="col-span-2">
-                    <p className="text-sm text-foreground">Plan Name</p>
+                    <p className="text-sm text-muted-foreground">Plan Name</p>
                     <p className="font-medium">{policy.planName}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-sm text-foreground">Policy Number</p>
+                  <p className="text-sm text-muted-foreground">Policy Number</p>
                   <p className="font-medium">{policy.policyNumber || "TBC"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-foreground">Start Date</p>
+                  <p className="text-sm text-muted-foreground">Start Date</p>
                   <p className="font-medium">{format(parseISO(policy.startDate), "MMMM d, yyyy")}</p>
                 </div>
                 {policy.maturityDate && (
                   <div>
-                    <p className="text-sm text-foreground">End Date</p>
-                    <p className="font-medium">{format(parseISO(policy.maturityDate), "MMMM d, yyyy")}</p>
+                    <p className="text-sm text-muted-foreground">End Date</p>
+                    <p className="font-medium">
+                      {format(parseISO(policy.maturityDate), "MMMM d, yyyy")}
+                    </p>
                   </div>
                 )}
                 <div>
-                  <p className="text-sm text-foreground">Premium (Cash)</p>
-                  <p className="font-medium text-[#007A68]">
-                    ${parseFloat(policy.premiumAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} /{policy.premiumFrequency.toLowerCase()}
+                  <p className="text-sm text-muted-foreground">Premium (Cash)</p>
+                  <p className="font-medium text-[#007A68] dark:text-[#33D4BC]">
+                    {formatBudgetCurrency(parseFloat(policy.premiumAmount))} /
+                    {policy.premiumFrequency.toLowerCase()}
                   </p>
                 </div>
                 {policy.premiumAmountCPF && parseFloat(policy.premiumAmountCPF) > 0 && (
                   <div>
-                    <p className="text-sm text-foreground">Premium (CPF)</p>
+                    <p className="text-sm text-muted-foreground">Premium (CPF)</p>
                     <p className="font-medium">
-                      ${parseFloat(policy.premiumAmountCPF).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} /{policy.premiumFrequency.toLowerCase()}
+                      {formatBudgetCurrency(parseFloat(policy.premiumAmountCPF))} /
+                      {policy.premiumFrequency.toLowerCase()}
                     </p>
                   </div>
                 )}
                 {policy.totalPremiumDuration && (
                   <div>
-                    <p className="text-sm text-foreground">Premium Duration</p>
+                    <p className="text-sm text-muted-foreground">Premium Duration</p>
                     <p className="font-medium">{policy.totalPremiumDuration} years</p>
                   </div>
                 )}
                 {policy.coverageUntilAge && (
                   <div>
-                    <p className="text-sm text-foreground">Coverage Until Age</p>
+                    <p className="text-sm text-muted-foreground">Coverage Until Age</p>
                     <p className="font-medium">{policy.coverageUntilAge}</p>
                   </div>
                 )}
@@ -326,14 +387,12 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
             {/* Coverage Details */}
             {coverages.length > 0 && (
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Coverage</h3>
+                <h3 className="text-lg font-semibold">Coverage</h3>
                 <div className="grid grid-cols-2 gap-4">
                   {coverages.map((coverage, index) => (
                     <div key={index}>
-                      <p className="text-sm text-foreground">{coverage.label}</p>
-                      <p className="font-medium">
-                        ${coverage.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{coverage.label}</p>
+                      <p className="font-medium">{formatBudgetCurrency(coverage.amount)}</p>
                     </div>
                   ))}
                 </div>
@@ -343,18 +402,18 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
             {/* Cash Value */}
             {policy.cashValue && parseFloat(policy.cashValue) > 0 && (
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Cash / Surrender Value</h3>
+                <h3 className="text-lg font-semibold">Cash / Surrender Value</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-foreground">Cash Value</p>
-                    <p className="font-medium">
-                      ${parseFloat(policy.cashValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
+                    <p className="text-sm text-muted-foreground">Cash Value</p>
+                    <p className="font-medium">{formatBudgetCurrency(parseFloat(policy.cashValue))}</p>
                   </div>
                   {policy.cashValueDate && (
                     <div>
-                      <p className="text-sm text-foreground">As At</p>
-                      <p className="font-medium">{format(parseISO(policy.cashValueDate), "MMMM d, yyyy")}</p>
+                      <p className="text-sm text-muted-foreground">As At</p>
+                      <p className="font-medium">
+                        {format(parseISO(policy.cashValueDate), "MMMM d, yyyy")}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -364,13 +423,13 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
             {/* Description */}
             {policy.description && (
               <div className="space-y-2">
-                <h3 className="font-semibold text-lg">Description</h3>
-                <p className="text-sm text-foreground">{policy.description}</p>
+                <h3 className="text-lg font-semibold">Description</h3>
+                <p className="text-sm text-muted-foreground">{policy.description}</p>
               </div>
             )}
 
             {/* Delete Action - at bottom */}
-            <div className="pt-4 border-t">
+            <div className="border-t pt-4">
               <Button
                 variant="outline"
                 size="sm"
@@ -378,9 +437,9 @@ export function PolicyCard({ policy, familyMemberName, onEdit, onDelete }: Polic
                   setIsModalOpen(false);
                   onDelete?.();
                 }}
-                className="text-[#8B0000] hover:text-[#8B0000] w-full"
+                className="w-full text-[#8B0000] hover:text-[#8B0000] dark:text-[#E07070] dark:hover:text-[#E07070]"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete Policy
               </Button>
             </div>

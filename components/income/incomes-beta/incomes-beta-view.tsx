@@ -2768,7 +2768,7 @@ function TimelineStudio({
           "relative touch-pan-y rounded-2xl border bg-card overflow-hidden overscroll-x-contain transition-[box-shadow,border-color] duration-200",
           editMode
             ? "border-brand-terracotta shadow-lg shadow-brand-terracotta/10"
-            : "border-border/30 shadow-sm"
+            : "border-[rgba(28,43,42,0.06)] shadow-card dark:border-[rgba(240,235,224,0.08)] dark:shadow-none"
         )}
       >
         {/* Edit-mode pulsing ring — a dedicated inset-ring overlay so only the
@@ -5357,7 +5357,7 @@ function ActionCardsView({
       <div
         ref={riverRef}
         style={tsStyle}
-        className="relative touch-pan-y rounded-2xl border border-border/30 bg-card p-6 shadow-sm overflow-hidden overscroll-x-contain"
+        className="relative touch-pan-y rounded-2xl border border-[rgba(28,43,42,0.06)] bg-card p-6 shadow-card overflow-hidden overscroll-x-contain dark:border-[rgba(240,235,224,0.08)] dark:shadow-none"
       >
         <div className="overflow-hidden" style={EDGE_FADE_STYLE}>
           <div
@@ -5640,7 +5640,7 @@ function SentenceCard({
   );
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/30 bg-card p-5 shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.06)] bg-card p-5 shadow-card dark:border-[rgba(240,235,224,0.08)] dark:shadow-none">
       <div className={cn("absolute inset-y-0 left-0 w-1", meta.rail)} />
       <div className="flex items-start justify-between gap-3 pl-2">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">

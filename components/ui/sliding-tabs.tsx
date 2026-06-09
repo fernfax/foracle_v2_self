@@ -74,16 +74,14 @@ export function SlidingTabs({
     <div
       ref={containerRef}
       className={cn(
-        // Flat: no outer pill chrome (bg/border/padding dropped) so tabs sit
-        // naked on the page header.
         "relative inline-flex items-center gap-0.5",
         "max-w-full overflow-x-auto scrollbar-hide",
         className
       )}
     >
-      {/* Sliding indicator — flat, no shadow */}
+      {/* Sliding underline indicator */}
       <div
-        className="absolute top-0 bottom-0 rounded-md bg-primary transition-all duration-300 ease-out"
+        className="absolute bottom-0 h-[2px] rounded-full bg-brand-terracotta transition-all duration-300 ease-out"
         style={{
           left: indicatorStyle.left,
           width: indicatorStyle.width,
@@ -102,11 +100,10 @@ export function SlidingTabs({
             onClick={() => onValueChange(tab.value)}
             data-tour={tab.dataTour}
             className={cn(
-              "relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md font-display text-[13px] font-medium transition-colors duration-200",
-              // Slightly larger padding on desktop, no rounded pill
-              "md:gap-2 md:px-4 md:py-1.5",
+              "relative z-10 flex items-center gap-1.5 px-3 pb-2 pt-1 font-display text-[13px] font-medium transition-colors duration-200",
+              "md:gap-2 md:px-4",
               isActive
-                ? "text-primary-foreground"
+                ? "text-brand-terracotta"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -117,7 +114,7 @@ export function SlidingTabs({
                 className={cn(
                   "ml-1 text-xs px-1.5 py-0.5 rounded-full",
                   isActive
-                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    ? "bg-brand-terracotta/15 text-brand-terracotta"
                     : tab.badgeVariant === "success"
                     ? "bg-[rgba(0,196,170,0.15)] text-[#007A68]"
                     : "bg-primary/10 text-primary"
