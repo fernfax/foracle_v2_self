@@ -12,20 +12,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { DollarSign, Users, Building2, Briefcase, Sparkles, Receipt } from "lucide-react";
+import { DollarSign, Users, Building2, Briefcase, Receipt, Waves } from "lucide-react";
+import { CashflowSankey } from "@/components/dashboard/cashflow-sankey";
 import { IncomeList } from "@/components/income/income-list";
 import { IncomesBetaView } from "@/components/income/incomes-beta/incomes-beta-view";
+import { IncomeStatBand } from "@/components/income/income-stat-band";
 import { ExpensesClient } from "@/app/(app)/expenses/client";
-import { FamilyMemberList } from "@/components/family-members/family-member-list";
-import { CpfList } from "@/components/cpf/cpf-list";
+import { FamilyMemberGrid } from "@/components/family-members/family-member-grid";
+import { CpfView } from "@/components/cpf/cpf-view";
 import { CpfProjectionGraph } from "@/components/cpf/cpf-projection-graph";
-import { CurrentHoldingList } from "@/components/current-holdings/current-holding-list";
+import { NetWorthView } from "@/components/net-worth/net-worth-view";
 import { CpfByFamilyMember } from "@/lib/actions/cpf";
 import { CurrentHolding } from "@/lib/actions/current-holdings";
-import { cn } from "@/lib/utils";
-import { HouseholdContextStrip } from "@/components/ui/household-context-strip";
 import type { HouseholdSummary } from "@/lib/household-summary";
+import type { NetWorthSummary } from "@/lib/net-worth";
 
 type Policy = {
   id: string;
@@ -120,14 +120,15 @@ interface UserHomepageClientProps {
   initialExpenses: ComponentProps<typeof ExpensesClient>["initialExpenses"];
   initialInvestments: ComponentProps<typeof ExpensesClient>["initialInvestments"];
   householdSummary: HouseholdSummary;
+  netWorth: NetWorthSummary;
 }
 
-export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPolicies, initialPropertyAssets, initialExpenses, initialInvestments, householdSummary }: UserHomepageClientProps) {
+export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initialFamilyMembers, initialCpfData, initialCurrentHoldings, initialPropertyAssets, initialExpenses, initialInvestments, householdSummary, netWorth }: UserHomepageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
-    const tab = searchParams.get("tab") || "family";
+    const tab = searchParams.get("tab") || "overview";
     return tab === "current" ? "holdings" : tab;
   });
   // "standard" = the Timeline Studio (formerly "beta") — now the default.
@@ -175,36 +176,18 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         title="User Homepage"
         tabs={
           mounted ? (
-            <div className="flex items-center justify-between gap-4">
-              <SlidingTabs
-                tabs={[
-                  { value: "family", label: "Family", icon: Users },
-                  { value: "incomes", label: "Incomes", icon: DollarSign },
-                  { value: "expenses", label: "Expenses", icon: Receipt },
-                  { value: "cpf", label: "CPF", icon: Building2 },
-                  { value: "holdings", label: "Holdings", icon: Briefcase },
-                ]}
-                value={activeTab}
-                onValueChange={handleTabChange}
-              />
-              {activeTab === "incomes" ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleToggleIncomeView}
-                  className={cn(
-                    "shrink-0 h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm",
-                    incomeView === "legacy"
-                      ? "border-brand-terracotta bg-brand-terracotta text-white hover:bg-brand-terracotta/90 hover:border-brand-terracotta"
-                      : "border-brand-terracotta/40 bg-brand-terracotta/10 text-brand-terracotta hover:bg-brand-terracotta/15 hover:border-brand-terracotta/60"
-                  )}
-                >
-                  <Sparkles className="h-4 w-4 mr-1" />
-                  {incomeView === "legacy" ? "Standard View" : "Legacy"}
-                </Button>
-              ) : null}
-            </div>
+            <SlidingTabs
+              tabs={[
+                { value: "overview", label: "Overview", icon: Waves },
+                { value: "family", label: "Family", icon: Users },
+                { value: "incomes", label: "Incomes", icon: DollarSign },
+                { value: "expenses", label: "Expenses", icon: Receipt },
+                { value: "cpf", label: "CPF", icon: Building2 },
+                { value: "holdings", label: "Holdings", icon: Briefcase },
+              ]}
+              value={activeTab}
+              onValueChange={handleTabChange}
+            />
           ) : null
         }
       />
@@ -213,19 +196,25 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsContent value="family" className="mt-4">
-          <HouseholdContextStrip summary={householdSummary} tab="family" />
-          <FamilyMemberList
-            initialMembers={initialFamilyMembers}
+        <TabsContent value="overview" className="mt-4">
+          <CashflowSankey
             incomes={initialIncomesBeta}
-            cpfData={initialCpfData}
+            expenses={initialExpenses}
             holdings={initialCurrentHoldings}
-            policies={initialPolicies}
+            investments={initialInvestments}
           />
         </TabsContent>
 
-        <TabsContent value="incomes" className="mt-4">
-          <HouseholdContextStrip summary={householdSummary} tab="incomes" />
+        <TabsContent value="family" className="mt-4">
+          <FamilyMemberGrid initialMembers={initialFamilyMembers} />
+        </TabsContent>
+
+        <TabsContent value="incomes" className="mt-4 space-y-4">
+          <IncomeStatBand
+            grossIncome={householdSummary.grossIncome}
+            netIncome={householdSummary.netIncome}
+            incomes={initialIncomesBeta}
+          />
           {incomeView === "standard" ? (
             <IncomesBetaView
               incomes={initialIncomesBeta}
@@ -237,7 +226,6 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         </TabsContent>
 
         <TabsContent value="expenses" className="mt-4">
-          <HouseholdContextStrip summary={householdSummary} tab="expenses" />
           <ExpensesClient
             embedded
             initialExpenses={initialExpenses}
@@ -248,16 +236,14 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
         </TabsContent>
 
         <TabsContent value="cpf" className="mt-4">
-          <HouseholdContextStrip summary={householdSummary} tab="cpf" />
-          <CpfList initialCpfData={initialCpfData} />
+          <CpfView cpfData={initialCpfData} incomes={initialIncomesBeta} />
           <div className="mt-6">
             <CpfProjectionGraph cpfData={initialCpfData} incomes={initialIncomesBeta} propertyAssets={initialPropertyAssets} />
           </div>
         </TabsContent>
 
         <TabsContent value="holdings" className="mt-4">
-          <HouseholdContextStrip summary={householdSummary} tab="holdings" />
-          <CurrentHoldingList initialHoldings={initialCurrentHoldings} />
+          <NetWorthView summary={netWorth} initialHoldings={initialCurrentHoldings} />
         </TabsContent>
         </Tabs>
       )}

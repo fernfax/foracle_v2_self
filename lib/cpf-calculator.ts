@@ -166,6 +166,9 @@ export const CPF_LOW_WAGE_NO_CPF = 50; // TW <= $50: no CPF at all
 export const CPF_LOW_WAGE_NO_EMPLOYEE = 500; // TW <= $500: employer-only, employee nil
 export const CPF_LOW_WAGE_PHASE_IN_END = 750; // $500 < TW <= $750: employee phased in
 
+/** CPF Full Retirement Sum for members turning 55 in 2026 (CPF Board). */
+export const FRS_2026 = 205_800;
+
 /**
  * Apply Singapore's low-wage CPF rules to a CPF-applicable wage.
  *

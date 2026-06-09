@@ -8,10 +8,13 @@ import { getCpfByFamilyMember } from "@/lib/actions/cpf";
 import { getCurrentHoldings } from "@/lib/actions/current-holdings";
 import { getUserPolicies } from "@/lib/actions/policies";
 import { getPropertyAssets } from "@/lib/actions/property-assets";
+import { getVehicleAssets } from "@/lib/actions/vehicle-assets";
 import { getExpenses } from "@/lib/actions/expenses";
 import { getInvestments } from "@/lib/actions/investments";
 import { UserHomepageClient } from "./client";
 import { computeHouseholdSummary } from "@/lib/household-summary";
+import { computeNetWorth } from "@/lib/net-worth";
+import { cpfBalanceForMember } from "@/lib/cpf-balances";
 
 export default async function UserHomepage() {
   const { userId } = await auth();
@@ -20,13 +23,14 @@ export default async function UserHomepage() {
     return null;
   }
 
-  const [incomesBeta, familyMembers, cpfData, currentHoldings, policies, propertyAssets, expenses, investments] = await Promise.all([
+  const [incomesBeta, familyMembers, cpfData, currentHoldings, policies, propertyAssets, vehicleAssets, expenses, investments] = await Promise.all([
     getIncomesBeta(),
     getFamilyMembers(),
     getCpfByFamilyMember(),
     getCurrentHoldings(),
     getUserPolicies(),
     getPropertyAssets(),
+    getVehicleAssets(),
     getExpenses(),
     getInvestments(),
   ]);
@@ -44,6 +48,21 @@ export default async function UserHomepage() {
     visibleFamilyMembers,
   );
 
+  // CPF balances reuse the same per-member selection as the CPF tab so the two
+  // surfaces never disagree. Driven by cpfData (the canonical CPF-member list).
+  const netWorth = computeNetWorth({
+    holdings: currentHoldings,
+    properties: propertyAssets,
+    vehicles: vehicleAssets,
+    investments,
+    policies,
+    cpf: cpfData.map((m) => ({
+      id: m.familyMemberId,
+      name: m.familyMemberName,
+      balance: cpfBalanceForMember(m.familyMemberId, incomesBeta).total,
+    })),
+  });
+
   return (
     <UserHomepageClient
       initialIncomes={incomesBeta}
@@ -56,6 +75,7 @@ export default async function UserHomepage() {
       initialExpenses={expenses}
       initialInvestments={investments}
       householdSummary={householdSummary}
+      netWorth={netWorth}
     />
   );
 }

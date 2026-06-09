@@ -1,26 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Home, MoreHorizontal, Pencil, Trash2, Plus, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 import { format } from "date-fns";
+import { Building2, Home } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Toolbar } from "@/components/ui/toolbar";
+import { RowActions } from "@/components/ui/row-actions";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ProgressBar } from "@/components/portfolio/progress";
+import { ConfirmDialog } from "@/components/portfolio/confirm-dialog";
+import { formatBudgetCurrency } from "@/lib/budget-utils";
 import { AddPropertyDialog } from "./add-property-dialog";
 import { PropertyDetailsModal } from "./property-details-modal";
 import { deletePropertyAsset } from "@/lib/actions/property-assets";
@@ -48,31 +38,32 @@ interface PropertyListProps {
   initialProperties: PropertyAsset[];
 }
 
+// Brand tint for the property avatar tile (terracotta).
+const PROPERTY_TINT = "rgba(184,98,42,0.12)";
+const PROPERTY_ICON = "#7A3A0A";
+
 export function PropertyList({ initialProperties }: PropertyListProps) {
   const [properties, setProperties] = useState<PropertyAsset[]>(initialProperties);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyAsset | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<PropertyAsset | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<PropertyAsset | null>(null);
 
   const handleDelete = async () => {
     if (!propertyToDelete) return;
-
-    setIsDeleting(true);
+    const target = propertyToDelete;
+    setPropertyToDelete(null);
     try {
-      await deletePropertyAsset(propertyToDelete.id);
-      setProperties((prev) => prev.filter((p) => p.id !== propertyToDelete.id));
-      setDeleteDialogOpen(false);
-      setPropertyToDelete(null);
+      await deletePropertyAsset(target.id);
+      setProperties((prev) => prev.filter((p) => p.id !== target.id));
+      toast.success("Property deleted");
     } catch (error) {
       console.error("Failed to delete property:", error);
-    } finally {
-      setIsDeleting(false);
+      toast.error("Could not delete property. Please try again.");
     }
   };
 
+  // --- Derivation (reused from the original list) ---
   const calculateProgress = (property: PropertyAsset) => {
     const loanTaken = parseFloat(property.loanAmountTaken || "0");
     const outstanding = parseFloat(property.outstandingLoan);
@@ -93,33 +84,15 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
     return monthly - interest;
   };
 
-  const calculateCpfReturn = (property: PropertyAsset) => {
-    const principal = parseFloat(property.principalCpfWithdrawn || "0");
-    const grant = parseFloat(property.housingGrantTaken || "0");
-    const accrued = parseFloat(property.accruedInterestToDate || "0");
-    return principal + grant + accrued;
-  };
-
   if (properties.length === 0) {
     return (
       <>
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-            <Home className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">No properties yet</h3>
-          <p className="text-muted-foreground mb-6 max-w-sm">
-            Add your first property to start tracking your real estate assets and loan progress.
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Property
-          </Button>
-        </div>
+        <EmptyState
+          icon={Home}
+          title="No properties yet"
+          description="Add your first property to start tracking your real estate assets and loan progress."
+          action={{ label: "Add property", onClick: () => setAddDialogOpen(true) }}
+        />
 
         <AddPropertyDialog
           open={addDialogOpen}
@@ -132,177 +105,154 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <p className="text-sm text-muted-foreground">
-            {properties.length} {properties.length === 1 ? "property" : "properties"}
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => setAddDialogOpen(true)}
-            className="h-8 px-4 text-sm font-medium bg-transparent border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Property
-          </Button>
-        </div>
+      <div className="space-y-5">
+        <Toolbar
+          count={{ value: properties.length, label: properties.length === 1 ? "property" : "properties" }}
+          primaryAction={{ label: "Add property", onClick: () => setAddDialogOpen(true) }}
+        />
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {properties.map((property) => {
+            const loanTaken = parseFloat(property.loanAmountTaken || "0");
+            const hasLoan = loanTaken > 0;
             const progress = calculateProgress(property);
+            const outstanding = parseFloat(property.outstandingLoan);
+            const loanRepaid = loanTaken - outstanding;
             const interestRepayment = calculateInterestRepayment(property);
             const principalRepayment = calculatePrincipalRepayment(property);
-            const cpfReturn = calculateCpfReturn(property);
-            const loanRepaid = parseFloat(property.loanAmountTaken || "0") - parseFloat(property.outstandingLoan);
+            // CPF used (refundable to CPF on sale) — principal CPF + housing grant + accrued interest.
+            const cpfUsed =
+              parseFloat(property.principalCpfWithdrawn || "0") +
+              parseFloat(property.housingGrantTaken || "0") +
+              parseFloat(property.accruedInterestToDate || "0");
+            // Only surface when there's an actual amount — avoids a noisy "CPF used $0.00".
+            const hasCpf = cpfUsed > 0;
 
             return (
               <Card
                 key={property.id}
-                className="relative overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                interactive
+                className="flex cursor-pointer flex-col overflow-hidden"
                 onClick={() => setSelectedProperty(property)}
               >
-                {/* Background house illustration */}
-                <div
-                  className="absolute inset-0 opacity-[0.18] pointer-events-none"
-                  style={{
-                    backgroundImage: "url(/whitescape-property.jpg)",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                />
-                <CardHeader className="pb-3 relative">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
-                        <Home className="h-5 w-5 text-[#7A3A0A]" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">{property.propertyName}</h3>
+                <div className="flex flex-col gap-4 p-5">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className="flex size-11 shrink-0 items-center justify-center rounded-2xl"
+                        style={{ background: PROPERTY_TINT, color: PROPERTY_ICON }}
+                      >
+                        <Building2 className="size-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="truncate font-display text-base font-semibold tracking-tight">
+                          {property.propertyName}
+                        </h3>
                         <p className="text-sm text-muted-foreground">
                           Purchased {format(new Date(property.purchaseDate), "MMM yyyy")}
                         </p>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingProperty(property);
-                          }}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-[#8B0000]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPropertyToDelete(property);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <RowActions
+                      onEdit={() => setEditingProperty(property)}
+                      onDelete={() => setPropertyToDelete(property)}
+                    />
                   </div>
-                </CardHeader>
 
-                <CardContent className="space-y-4 relative">
-                  {/* Key Metrics */}
+                  {/* Purchase price / Outstanding loan */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Purchase Price</p>
-                      <p className="text-2xl font-semibold tabular-nums">
-                        ${parseFloat(property.originalPurchasePrice).toLocaleString()}
+                      <p className="text-sm text-muted-foreground">Purchase price</p>
+                      <p className="font-display text-2xl font-semibold tabular-nums">
+                        {formatBudgetCurrency(parseFloat(property.originalPurchasePrice))}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Outstanding Loan</p>
-                      <p className="text-2xl font-semibold tabular-nums text-[#7A5A00]">
-                        ${parseFloat(property.outstandingLoan).toLocaleString()}
-                      </p>
-                    </div>
+                    {hasLoan ? (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Outstanding loan</p>
+                        <p className="font-display text-2xl font-semibold tabular-nums text-[#7A5A00] dark:text-[#D4A843]">
+                          {formatBudgetCurrency(outstanding)}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col justify-center">
+                        <p className="text-sm text-muted-foreground">Loan</p>
+                        <p className="font-display text-lg font-semibold text-[#007A68] dark:text-[#00C4AA]">
+                          Owned outright
+                        </p>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Progress Bar */}
-                  {property.loanAmountTaken && parseFloat(property.loanAmountTaken) > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Loan Progress</span>
-                        <span className="font-medium text-[#007A68]">{progress.toFixed(1)}% paid</span>
-                      </div>
-                      <div className="h-3 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-500 ease-out"
-                          style={{
-                            width: `${progress}%`,
-                            background: `linear-gradient(90deg, #00C4AA 0%, #5A9470 100%)`,
-                          }}
+                  {hasLoan && (
+                    <>
+                      {/* Loan progress */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Loan progress</span>
+                          <span className="font-medium text-[#007A68] dark:text-[#00C4AA]">
+                            {progress.toFixed(1)}% paid
+                          </span>
+                        </div>
+                        <ProgressBar
+                          value={progress}
+                          color="linear-gradient(90deg, #00C4AA 0%, #5A9470 100%)"
                         />
+                        <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
+                          <span>{formatBudgetCurrency(loanRepaid)} repaid</span>
+                          <span>{formatBudgetCurrency(loanTaken)} total</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>${loanRepaid.toLocaleString()} repaid</span>
-                        <span>${parseFloat(property.loanAmountTaken).toLocaleString()} total</span>
+
+                      {/* Monthly payment / Interest rate */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Monthly payment</p>
+                          <p className="text-lg font-semibold tabular-nums">
+                            {formatBudgetCurrency(parseFloat(property.monthlyLoanPayment))}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Interest rate</p>
+                          <p className="text-lg font-semibold tabular-nums">
+                            {parseFloat(property.interestRate).toFixed(2)}%
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    </>
                   )}
+                </div>
 
-                  {/* Monthly Payment Details */}
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Monthly Payment</p>
-                      <p className="text-lg font-semibold tabular-nums">
-                        ${parseFloat(property.monthlyLoanPayment).toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Interest Rate</p>
-                      <p className="text-lg font-semibold tabular-nums">
-                        {parseFloat(property.interestRate).toFixed(2)}%
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Footer with breakdown */}
-                  <div className="pt-3 border-t bg-muted/50 -mx-6 -mb-6 px-6 py-3 rounded-b-xl">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-4">
+                {/* Footer: principal / interest split (loan) + CPF used (when CPF-funded) */}
+                {(hasLoan || hasCpf) && (
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-border/40 bg-muted/60 px-5 py-3 text-sm dark:bg-[rgba(240,235,224,0.04)]">
+                    {hasLoan && (
+                      <>
                         <div>
-                          <span className="text-muted-foreground">Principal:</span>{" "}
-                          <span className="font-medium text-[#007A68]">
-                            ${principalRepayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          <span className="text-muted-foreground">Principal </span>
+                          <span className="font-medium tabular-nums text-[#007A68] dark:text-[#00C4AA]">
+                            {formatBudgetCurrency(principalRepayment)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Interest:</span>{" "}
-                          <span className="font-medium text-[#7A5A00]">
-                            ${interestRepayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          <span className="text-muted-foreground">Interest </span>
+                          <span className="font-medium tabular-nums text-[#7A5A00] dark:text-[#D4A843]">
+                            {formatBudgetCurrency(interestRepayment)}
                           </span>
                         </div>
+                      </>
+                    )}
+                    {hasCpf && (
+                      <div>
+                        <span className="text-muted-foreground">CPF used </span>
+                        <span className="font-medium tabular-nums">
+                          {formatBudgetCurrency(cpfUsed)}
+                        </span>
                       </div>
-                      {cpfReturn > 0 && (
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3 text-[#7A3A0A]" />
-                          <span className="text-muted-foreground">CPF Return:</span>{" "}
-                          <span className="font-medium text-[#7A3A0A]">
-                            ${cpfReturn.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
-                </CardContent>
+                )}
               </Card>
             );
           })}
@@ -324,33 +274,20 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
         onSuccess={() => window.location.reload()}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Property</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{propertyToDelete?.propertyName}"?
-              {propertyToDelete?.linkedExpenseId && (
-                <span className="block mt-2 text-[#7A5A00]">
-                  This will also remove the linked monthly expense.
-                </span>
-              )}
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-[#E05555] hover:bg-[#E05555]"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={propertyToDelete !== null}
+        onOpenChange={(open) => !open && setPropertyToDelete(null)}
+        title="Delete this property?"
+        description={
+          <>
+            &ldquo;{propertyToDelete?.propertyName}&rdquo; will be removed. This can&rsquo;t be undone.
+            {propertyToDelete?.linkedExpenseId && " The linked monthly expense will also be removed."}
+          </>
+        }
+        confirmLabel="Delete property"
+        onConfirm={handleDelete}
+      />
 
       {/* Property Details Modal */}
       <PropertyDetailsModal

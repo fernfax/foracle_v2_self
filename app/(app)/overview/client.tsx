@@ -9,13 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { DollarSign, LayoutDashboard, Target, Users, Waves, Building2, Briefcase, Receipt } from "lucide-react";
+import { DollarSign, Target, Users, Building2, Briefcase, Receipt } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { TotalAssetsCard } from "@/components/dashboard/total-assets-card";
 import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
 import { BudgetTrackerCard, BudgetCategory } from "@/components/dashboard/budget-tracker-card";
 import { CashflowSankey } from "@/components/dashboard/cashflow-sankey";
-import { SlidingTabs } from "@/components/ui/sliding-tabs";
 import { PageHeader } from "@/components/ui/page-header";
 
 interface DashboardMetrics {
@@ -123,19 +122,28 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Overview"
-        tabs={
-          <SlidingTabs
-            tabs={[
-              { value: "cashflow", label: "Cashflow", icon: Waves },
-              { value: "classic", label: "Classic", icon: LayoutDashboard },
-            ]}
-            value={view}
-            onValueChange={handleViewChange}
-          />
-        }
-      />
+      <PageHeader title="Overview" />
+
+      {/* Navigation bridge — quick access to User Homepage tabs */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] text-muted-foreground/60 mr-1">Go to:</span>
+        {[
+          { tab: "family", label: "Family", icon: Users },
+          { tab: "incomes", label: "Incomes", icon: DollarSign },
+          { tab: "expenses", label: "Expenses", icon: Receipt },
+          { tab: "cpf", label: "CPF", icon: Building2 },
+          { tab: "holdings", label: "Holdings", icon: Briefcase },
+        ].map(({ tab, label, icon: Icon }) => (
+          <Link
+            key={tab}
+            href={`/user?tab=${tab}`}
+            className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-transparent px-3 py-1 text-[11px] text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+          >
+            <Icon className="h-3 w-3" />
+            {label}
+          </Link>
+        ))}
+      </div>
 
       {view === "cashflow" ? (
         <CashflowSankey
@@ -217,26 +225,6 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
       </>
       )}
 
-      {/* Navigation bridge — quick access to User Homepage tabs */}
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <span className="text-[11px] text-muted-foreground/60 mr-1">Go to:</span>
-        {[
-          { tab: "family", label: "Family", icon: Users },
-          { tab: "incomes", label: "Incomes", icon: DollarSign },
-          { tab: "expenses", label: "Expenses", icon: Receipt },
-          { tab: "cpf", label: "CPF", icon: Building2 },
-          { tab: "holdings", label: "Holdings", icon: Briefcase },
-        ].map(({ tab, label, icon: Icon }) => (
-          <Link
-            key={tab}
-            href={`/user?tab=${tab}`}
-            className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-transparent px-3 py-1 text-[11px] text-muted-foreground transition-colors hover:border-border hover:text-foreground"
-          >
-            <Icon className="h-3 w-3" />
-            {label}
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

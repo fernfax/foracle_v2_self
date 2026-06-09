@@ -99,6 +99,13 @@ const config: Config = {
         data: ["26px", { lineHeight: "1.1", letterSpacing: "-0.5px" }],
         "data-lg": ["32px", { lineHeight: "1.1", letterSpacing: "-0.5px" }],
       },
+      boxShadow: {
+        // Elevation scale — driven by the CSS vars in app/globals.css so light
+        // gives layered warm shadows and dark gives border-only lift.
+        card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
+        pop: "var(--shadow-pop)",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

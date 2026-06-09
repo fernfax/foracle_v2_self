@@ -1,14 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { SlidingTabs } from "@/components/ui/sliding-tabs";
 import { PageHeader } from "@/components/ui/page-header";
-import { Receipt, TrendingUp, PieChart } from "lucide-react";
 import { ExpenseList } from "@/components/expenses/expense-list";
-import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph";
-import { ExpenseReports } from "@/components/expenses/expense-reports";
 
 interface Expense {
   id: string;
@@ -80,65 +74,23 @@ interface ExpensesClientProps {
   embedded?: boolean;
 }
 
-export function ExpensesClient({ initialExpenses, initialIncomes, initialHoldings, initialInvestments, embedded = false }: ExpensesClientProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export function ExpensesClient({ initialExpenses, embedded = false }: ExpensesClientProps) {
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState(
-    embedded ? "expenses" : searchParams.get("tab") || "expenses"
-  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Sync activeTab with URL search params when they change — only when this is
-  // the standalone /expenses page. Embedded, the host owns `?tab=`.
-  useEffect(() => {
-    if (embedded) return;
-    const tabFromUrl = searchParams.get("tab") || "expenses";
-    if (tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
-    }
-  }, [searchParams, embedded]);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    if (!embedded) router.push(`/expenses?tab=${value}`, { scroll: false });
-  };
-
-  const subTabs = mounted ? (
-    <SlidingTabs
-      tabs={[
-        { value: "expenses", label: "Expenses", icon: Receipt },
-        { value: "graph", label: "Graph", icon: TrendingUp },
-        { value: "reports", label: "Reports", icon: PieChart },
-      ]}
-      value={activeTab}
-      onValueChange={handleTabChange}
-    />
-  ) : null;
-
+  // Graph + Reports sub-tabs are temporarily removed — the Expenses tab is now
+  // just the stat band + the expense table. (Sub-tabs can come back later.)
   return (
     <div className="space-y-4">
-      {embedded ? subTabs : <PageHeader title="Expenses" tabs={subTabs} />}
+      {!embedded && <PageHeader title="Expenses" />}
 
       {!mounted ? (
         <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
       ) : (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsContent value="expenses" className="mt-4">
-            <ExpenseList initialExpenses={initialExpenses} />
-          </TabsContent>
-
-          <TabsContent value="graph" className="mt-4">
-            <MonthlyBalanceGraph incomes={initialIncomes} expenses={initialExpenses} holdings={initialHoldings} investments={initialInvestments} />
-          </TabsContent>
-
-          <TabsContent value="reports" className="mt-4">
-            <ExpenseReports expenses={initialExpenses} />
-          </TabsContent>
-        </Tabs>
+        <ExpenseList initialExpenses={initialExpenses} />
       )}
     </div>
   );

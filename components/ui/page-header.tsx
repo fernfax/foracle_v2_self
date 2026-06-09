@@ -44,7 +44,7 @@ export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
         ) : null}
       </div>
       {tabs ? (
-        <div className="overflow-x-auto scrollbar-hide -mt-0.5 pb-1">{tabs}</div>
+        <div className="overflow-x-auto scrollbar-hide -mt-0.5">{tabs}</div>
       ) : null}
     </div>
   );

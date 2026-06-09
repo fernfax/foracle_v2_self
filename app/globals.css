@@ -123,6 +123,14 @@
     --bg-surface: #FFFFFF;
     --bg-muted: var(--brand-cream);
     --bg-elevated: #FFFFFF;
+
+    /* Elevation scale — formalizes the hand-baked Card shadow (design guide §11).
+       Layered + warm-tinted toward Deep Forest (#1C2B2A) so shadows never read
+       as cold gray on the warm canvas. --shadow-card is byte-identical to the
+       value Card previously inlined, so adopting the token is a no-op visually. */
+    --shadow-card: 0 2px 4px rgba(28,43,42,0.08), 0 12px 32px rgba(28,43,42,0.13), 0 28px 64px rgba(28,43,42,0.09);
+    --shadow-card-hover: 0 4px 8px rgba(28,43,42,0.10), 0 18px 44px rgba(28,43,42,0.16), 0 36px 80px rgba(28,43,42,0.12);
+    --shadow-pop: 0 8px 16px rgba(28,43,42,0.10), 0 24px 56px rgba(28,43,42,0.18);
   }
 
   .dark {
@@ -172,6 +180,13 @@
     --bg-surface: var(--brand-deep-forest);
     --bg-muted: var(--brand-forest-mid);
     --bg-elevated: var(--brand-dark-surface);
+
+    /* Dark mode leans on borders, not shadows (design guide §11). Near-transparent
+       cream rings give the faintest lift; components still pass dark:shadow-none
+       where they want strictly flat surfaces. */
+    --shadow-card: 0 0 0 1px rgba(240,235,224,0.06);
+    --shadow-card-hover: 0 0 0 1px rgba(240,235,224,0.10);
+    --shadow-pop: 0 0 0 1px rgba(240,235,224,0.12);
   }
 }
 
