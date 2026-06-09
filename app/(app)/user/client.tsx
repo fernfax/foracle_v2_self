@@ -27,28 +27,6 @@ import { CurrentHolding } from "@/lib/actions/current-holdings";
 import type { HouseholdSummary } from "@/lib/household-summary";
 import type { NetWorthSummary } from "@/lib/net-worth";
 
-type Policy = {
-  id: string;
-  userId: string;
-  familyMemberId: string | null;
-  linkedExpenseId: string | null;
-  provider: string;
-  policyNumber: string | null;
-  policyType: string;
-  status: string | null;
-  startDate: string;
-  maturityDate: string | null;
-  coverageUntilAge: number | null;
-  premiumAmount: string;
-  premiumFrequency: string;
-  totalPremiumDuration: number | null;
-  coverageOptions: string | null;
-  description: string | null;
-  isActive: boolean | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
 type Income = {
   id: string;
   userId: string;
@@ -113,7 +91,6 @@ interface UserHomepageClientProps {
   initialFamilyMembers: FamilyMember[];
   initialCpfData: CpfByFamilyMember[];
   initialCurrentHoldings: CurrentHolding[];
-  initialPolicies: Policy[];
   initialPropertyAssets: PropertyAssetForCpf[];
   // Borrow the exact prop shapes ExpensesClient expects so the embedded
   // Expenses tab type-checks without re-declaring the Expense/Investment types.
