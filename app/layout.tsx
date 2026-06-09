@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans, Lora } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
@@ -39,6 +39,22 @@ export const metadata: Metadata = {
       { url: "/logo-144.png", sizes: "144x144", type: "image/png" },
     ],
   },
+  // iOS "Add to Home Screen" launches standalone (full-screen, no Safari chrome).
+  appleWebApp: {
+    capable: true,
+    title: "Foracle",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  // Opt into the safe-area insets the bottom nav already references via
+  // env(safe-area-inset-*); without viewport-fit=cover those resolve to 0 on iOS.
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FBF7F1" },
+    { media: "(prefers-color-scheme: dark)", color: "#1C2B2A" },
+  ],
 };
 
 export default function RootLayout({

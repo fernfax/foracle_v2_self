@@ -73,7 +73,7 @@ export default function MobileGuidePage() {
           </li>
           <li className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-[#007A68]" />
-            Works offline for cached data
+            A dedicated app icon and its own window
           </li>
         </ul>
       </div>
