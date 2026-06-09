@@ -112,4 +112,5 @@ export async function deletePropertyAsset(id: string) {
   await deletePropertyAssetService(ctx, id);
   revalidatePath("/assets");
   revalidatePath("/expenses");
+  revalidatePath("/user");
 }

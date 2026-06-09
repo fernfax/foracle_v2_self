@@ -1,6 +1,16 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
+
+// Investment values feed net worth on /user (Holdings) and the /overview
+// dashboard, so every mutation must revalidate those paths — otherwise the
+// server-rendered net worth / portfolio goes stale until a manual reload.
+function revalidateInvestmentSurfaces() {
+  revalidatePath("/investments");
+  revalidatePath("/user");
+  revalidatePath("/overview");
+}
 import {
   createInvestment as createInvestmentService,
   deleteInvestment as deleteInvestmentService,
@@ -67,6 +77,7 @@ export async function createInvestment(data: {
     contributionFrequency: data.contributionFrequency as "monthly" | "custom",
     customMonths: data.customMonths,
   });
+  revalidateInvestmentSurfaces();
   return result.row;
 }
 
@@ -108,10 +119,13 @@ export async function updateInvestment(
     throw new Error("At least one field must be provided");
   }
 
-  return updateInvestmentService(ctx, id, patch);
+  const row = await updateInvestmentService(ctx, id, patch);
+  revalidateInvestmentSurfaces();
+  return row;
 }
 
 export async function deleteInvestment(id: string) {
   const ctx = await getCurrentUserAndFamily();
   await deleteInvestmentService(ctx, id);
+  revalidateInvestmentSurfaces();
 }

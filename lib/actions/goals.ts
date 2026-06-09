@@ -95,7 +95,10 @@ export async function updateGoal(
     currentAmountSaved: (data.currentAmountSaved ?? 0).toString(),
     monthlyContribution: data.monthlyContribution?.toString() ?? null,
     description: data.description ?? null,
-    isAchieved: data.isAchieved ?? false,
+    // Pass through undefined when the caller (e.g. the edit dialog) doesn't
+    // specify it, so the service preserves the existing isAchieved value
+    // instead of silently un-achieving the goal on every edit.
+    isAchieved: data.isAchieved,
     addToExpenditures: data.addToExpenditures,
     expenseName: data.expenseName,
   });
