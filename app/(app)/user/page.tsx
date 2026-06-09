@@ -70,7 +70,6 @@ export default async function UserHomepage() {
       initialFamilyMembers={visibleFamilyMembers}
       initialCpfData={cpfData}
       initialCurrentHoldings={currentHoldings}
-      initialPolicies={policies}
       initialPropertyAssets={propertyAssets}
       initialExpenses={expenses}
       initialInvestments={investments}
