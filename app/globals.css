@@ -239,6 +239,17 @@
     margin-right: 0 !important;
     padding-right: 0 !important;
   }
+
+  /* iOS Safari zooms the viewport when focusing an input whose computed font is
+     < 16px. Force >= 16px on phone widths so data entry (especially Budget daily
+     logging) never triggers the zoom jump. */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
 }
 
 /* === Brand-guide named utility classes (parity with foracle-brand-guide.html) === */
