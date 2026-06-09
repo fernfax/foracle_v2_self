@@ -43,6 +43,7 @@ export async function createVehicleAsset(data: {
   });
   revalidatePath("/assets");
   revalidatePath("/expenses");
+  revalidatePath("/user");
   return result.row;
 }
 
@@ -91,6 +92,7 @@ export async function updateVehicleAsset(
   });
   revalidatePath("/assets");
   revalidatePath("/expenses");
+  revalidatePath("/user");
   return row;
 }
 
@@ -102,4 +104,5 @@ export async function deleteVehicleAsset(id: string) {
   await deleteVehicleAssetService(ctx, id);
   revalidatePath("/assets");
   revalidatePath("/expenses");
+  revalidatePath("/user");
 }

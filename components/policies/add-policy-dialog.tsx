@@ -43,6 +43,7 @@ import { getUserFamilyMembers } from "@/lib/actions/user";
 import { getInsuranceProviders, type InsuranceProvider } from "@/lib/actions/insurance-providers";
 import { ProviderManagerPopover } from "./provider-manager-popover";
 import { createExpenseFromPolicy } from "@/lib/actions/expenses";
+import { toast } from "sonner";
 
 interface FamilyMember {
   id: string;
@@ -230,28 +231,30 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
   };
 
   const confirmAddToExpenditures = async () => {
-    console.log("=== Confirming Add to Expenditures ===");
-    console.log("Before setAddToExpenditures, current value:", addToExpenditures);
     setAddToExpenditures(true);
     setConfirmationModalOpen(false);
-    console.log("Modal closed, addToExpenditures state update called");
     // Note: The form submission happens when user clicks "Add Policy" button
     // This just confirms they want to add to expenditures
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Required-field validation. Start Date is a Popover (not a native input),
+    // so nothing else gates it — without this guard an empty start_date reaches
+    // the server and trips the NOT NULL column with a silent 500.
+    if (!provider || !policyType || !startDate || !premiumAmount || !premiumFrequency) {
+      toast.error(
+        "Please fill in all required fields: Provider, Policy Type, Start Date, Premium Amount, and Premium Frequency."
+      );
+      return;
+    }
+    if (premiumFrequency === "Custom" && selectedMonths.length === 0) {
+      toast.error("Please select at least one month for the custom premium frequency.");
+      return;
+    }
+
     setIsLoading(true);
-
-    console.log("=== Form Submission Debug ===");
-    console.log("addToExpenditures:", addToExpenditures);
-    console.log("expenseName:", expenseName);
-    console.log("policyType:", policyType);
-    console.log("provider:", provider);
-    console.log("premiumAmount:", premiumAmount);
-    console.log("premiumFrequency:", premiumFrequency);
-    console.log("startDate:", startDate);
-
     try {
       const coverageOptions = {
         death: deathCoverage.enabled ? parseFloat(deathCoverage.amount) || 0 : 0,
@@ -286,14 +289,8 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
         cashValueDate: cashValueDate || undefined,
       });
 
-      console.log("Policy created:", newPolicy?.id);
-
       // If toggle is on, create expense and update policy with linkedExpenseId
       if (addToExpenditures && newPolicy) {
-        console.log("=== Creating Expense ===");
-        console.log("Policy ID:", newPolicy.id);
-        console.log("Expense Name:", expenseName);
-
         const expense = await createExpenseFromPolicy({
           policyId: newPolicy.id,
           name: expenseName,
@@ -306,24 +303,20 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
           maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
         });
 
-        console.log("Expense created:", expense?.id);
-
         // Update the policy with the linkedExpenseId
         await updatePolicy(newPolicy.id, {
           linkedExpenseId: expense.id,
         });
-
-        console.log("Policy updated with linkedExpenseId:", expense.id);
-      } else {
-        console.log("Skipping expense creation - addToExpenditures:", addToExpenditures, "newPolicy:", !!newPolicy);
       }
 
       onOpenChange(false);
       resetForm();
       onPolicyAdded?.();
+      toast.success("Policy added");
       router.refresh();
     } catch (error) {
       console.error("Failed to create policy:", error);
+      toast.error("Could not save the policy. Please try again.");
     } finally {
       setIsLoading(false);
     }
