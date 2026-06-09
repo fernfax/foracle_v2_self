@@ -80,7 +80,7 @@ describe("family members (real DB)", () => {
     expect(result[0].relationship).toBe("Self");
   });
 
-  it("listFamilyMembersOrSelf does NOT add a Self when members already exist", async () => {
+  it("listFamilyMembersOrSelf ensures the caller's own Self even when other members exist", async () => {
     const ctx = await seedUser({
       userId: "user-a",
       familyId: "fam-a",
@@ -88,8 +88,13 @@ describe("family members (real DB)", () => {
     });
     await createFamilyMember(ctx, { name: "Alice", relationship: "Spouse" });
     const result = await listFamilyMembersOrSelf(ctx);
-    expect(result).toHaveLength(1);
-    expect(result[0].relationship).toBe("Spouse");
+    // The function guarantees the caller has a Self row for the household, so a
+    // Self is added alongside the existing Spouse (see family.ts:listFamilyMembersOrSelf).
+    expect(result).toHaveLength(2);
+    expect(result.some((m) => m.relationship === "Self")).toBe(true);
+    expect(
+      result.some((m) => m.relationship === "Spouse" && m.name === "Alice")
+    ).toBe(true);
   });
 
   it("getOrCreateSelfMember idempotent: updates existing Self on second call", async () => {

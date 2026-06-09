@@ -69,6 +69,7 @@ async function seedShift(
   await db.insert(budgetShifts).values({
     id: randomUUID(),
     userId: ctx.userId,
+    familyId: ctx.familyId,
     year: YEAR,
     month: MONTH,
     fromCategoryName: opts.from,
