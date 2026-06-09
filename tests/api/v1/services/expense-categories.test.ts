@@ -128,4 +128,38 @@ describe("expense-categories (real DB)", () => {
       .where(eq(expenseCategories.id, row.id));
     expect(fromDb).toHaveLength(1);
   });
+
+  // --- Reproduction of the prod "duplicate categories" bug ------------------
+  // expense_categories has NO unique constraint on (familyId, name). listExpense-
+  // Categories is a side-effecting read (seeds + backfills) called concurrently
+  // by the web budget page (lib/actions/expense-categories.ts) AND /api/v1/expense
+  // -categories (native app). Two separate processes racing the non-atomic
+  // seed/backfill double-insert the same name — the trigger being asset-linked
+  // categories "Housing" (property-assets.ts:56) and "Vehicle" (vehicle-assets.ts:56)
+  // landing in the backfill path. (In-process Promise.all can't reproduce two
+  // processes, so we assert on the OUTCOME the race produces.)
+  //
+  // Here we seed the duplicate ROWS the prod race created, then assert the picker
+  // (listExpenseCategories) never surfaces a name twice — matching the screenshot
+  // where Housing / Transportation / Vehicle each appear ×2.
+  it("listExpenseCategories never returns a category name twice (repro: prod dup picker)", async () => {
+    const ctx = await seedUser({ userId: "user-a", familyId: "fam-a", isMaster: true });
+    await listExpenseCategories(ctx); // seed the defaults once
+
+    // The concurrent backfill produced a second Housing/Vehicle/Transportation row.
+    for (const name of ["Housing", "Vehicle", "Transportation"]) {
+      await db.insert(expenseCategories).values({
+        id: randomUUID(),
+        userId: ctx.userId,
+        familyId: ctx.familyId,
+        name,
+        isDefault: false,
+        trackedInBudget: true,
+      });
+    }
+
+    const names = (await listExpenseCategories(ctx)).map((c) => c.name);
+    const dups = [...new Set(names.filter((n, i) => names.indexOf(n) !== i))];
+    expect(dups, `category picker shows duplicates: ${dups.join(", ")}`).toEqual([]);
+  });
 });
