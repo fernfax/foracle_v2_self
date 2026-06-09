@@ -29,7 +29,10 @@ describe("ToolRegistry", () => {
       expect(toolNames).toContain("get_expenses_summary");
       expect(toolNames).toContain("get_family_summary");
       expect(toolNames).toContain("get_balance_summary");
-      expect(toolNames).toHaveLength(4);
+      // Registry has grown beyond the original 4 summaries (holdings, assets,
+      // insurance, daily-expense, knowledge search). Pin the full count so an
+      // accidental tool addition/removal is caught in review.
+      expect(toolNames).toHaveLength(11);
     });
 
     it("should return singleton instance via getToolRegistry", () => {
@@ -103,7 +106,7 @@ describe("ToolRegistry", () => {
       const registry = new ToolRegistry();
       const tools = registry.getOpenAITools();
 
-      expect(tools).toHaveLength(4);
+      expect(tools).toHaveLength(11);
 
       const incomeTool = tools.find(
         (t) => t.function.name === "get_income_summary"
