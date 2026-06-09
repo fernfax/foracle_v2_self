@@ -132,7 +132,7 @@ const FAQS = [
 export default async function Home() {
   const { userId } = await auth();
   if (userId) {
-    redirect("/overview");
+    redirect("/user");
   }
 
   return (
@@ -172,7 +172,8 @@ export default async function Home() {
               </Button>
             </Link>
             <Link href="/sign-up">
-              <Button size="sm">Get Started</Button>
+              {/* 44px touch target on phones (WCAG 2.5.5); compact on desktop. */}
+              <Button size="sm" className="h-11 sm:h-8">Get Started</Button>
             </Link>
           </div>
         </div>

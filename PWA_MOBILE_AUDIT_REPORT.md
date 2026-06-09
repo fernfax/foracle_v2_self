@@ -133,11 +133,11 @@ Mid-audit the running dev server (`localhost:3000`) began returning blank pages 
 
 **Fixes applied this session** (code-only, P2/P3): G2 (`viewport-fit=cover`), G-D (header `safe-area-inset-top`), G3 (`theme-color`), G4 (`apple-mobile-web-app-capable` → real iOS standalone), G10 (≥16px inputs), G-B (mobile-guide copy). Files: `app/layout.tsx`, `app/globals.css`, `components/sidebar/dashboard-shell.tsx`, `app/(app)/mobile-guide/page.tsx`.
 
-**New gaps from the live Playwright run** (iPhone 13 + Pixel 5, public pages):
-- **G11 (P3) — landing sign-in CTA is 32px tall** (< 44px WCAG 2.5.5 / Apple HIG), measured on both devices. Fix: bump the landing CTA touch height to ≥44px.
-- **G12 (P2) — landing + sign-in overflow horizontally under iPhone 13 (WebKit) emulation** (Pixel 5 / Chromium passed). Fix: locate the overflowing element on the public pages; verify on a real iPhone (may be a WebKit-emulation artifact).
+**New gaps from the live Playwright run — now FIXED:**
+- **G11 (P3) — landing CTA was 32px tall.** The nav "Get Started" was a `size="sm"` button. Bumped to 44px on phones (`h-11 sm:h-8`, `app/page.tsx`). Verified on iPhone 13 + Pixel 5.
+- **G12 (P2) — reported iPhone-13 overflow was a load-transient, not a real bug.** A WebKit diagnostic showed the page settles to `scrollWidth == clientWidth == 390` on both pages; the `LifeStages` timeline (1790px track) is already clipped by its `overflow-hidden` section. The earlier failure measured at 400ms mid-layout. The responsive test now polls the settled layout (`tests/e2e/mobile.responsive.spec.ts`).
 
-Both are `test.fixme` in `tests/e2e/mobile.responsive.spec.ts` — documented, non-blocking.
+The mobile responsive tests are now **live (un-`fixme`'d) and passing** on both device projects (6/6).
 
 ## Appendix
 
