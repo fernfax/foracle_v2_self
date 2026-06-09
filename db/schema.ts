@@ -391,22 +391,6 @@ export const budgetShifts = pgTable("budget_shifts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Push notification tokens — one row per (userId, token) pair. Mobile clients
-// register their APNs/FCM token after sign-in; revoking sets revokedAt rather
-// than deleting so we keep an audit trail of devices that have been
-// associated with the account.
-export const pushTokens = pgTable("push_tokens", {
-  id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 })
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  familyId: varchar("family_id", { length: 255 }),
-  token: varchar("token", { length: 512 }).notNull(),
-  platform: varchar("platform", { length: 20 }).notNull(), // "ios" | "android"
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  revokedAt: timestamp("revoked_at"),
-});
-
 // =============================================================================
 // Vector Search Tables (pgvector)
 // =============================================================================
