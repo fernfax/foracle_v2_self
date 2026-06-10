@@ -3,6 +3,20 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.0.2.0] - 2026-06-10
+
+### Fixed
+- The CPF tab no longer mis-reads one-off bonuses. A one-off bonus (a fixed dollar payout on a specific month) was being treated as a "months of salary" multiplier, so a $5,000 one-off on a $5,000 salary was computed as a $25,000,000 bonus — showing roughly $8,400 of bonus CPF instead of $1,000. Recurring and one-off bonuses are now told apart correctly everywhere.
+- The CPF projection chart was silently dropping every bonus (it expected a data shape the app never stored). Bonuses now appear: recurring ones repeat each year in their month, one-off ones land once in their exact month.
+- The CPF tab now derives each income's CPF from the same calculation used to save it, so the tab and the income rows agree to the dollar.
+- Bonus year-matching is now pinned to Singapore time, so a one-off bonus dated near 1 January is no longer dropped for an ~8-hour window when the server clock (UTC) and Singapore disagree on the calendar year.
+
+### Changed
+- Inputs use a 16px font on mobile (14px on larger screens) to stop iOS Safari from auto-zooming when you tap a field.
+
+### Removed
+- Deleted three stale internal dev docs (DEV_SERVER_PORT, PWA_MOBILE_AUDIT_REPORT, SETUP_COMPLETE).
+
 ## [1.0.1.0] - 2026-06-10
 
 ### Fixed
