@@ -167,11 +167,13 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       }
 
       // Per-income CPF via calculateCPF — the same function income rows are
-      // persisted with — so this tab matches the stored values exactly. When a
-      // contributing member has no DOB, age 30 lands in the same ≤55 bracket as
-      // the default rates (20/17), so the figure stays consistent; PR 5 makes
-      // DOB mandatory for CPF and removes this fallback.
-      const cpf = calculateCPF(monthlyGross, memberAge ?? 30);
+      // persisted with — so this tab matches the stored values. Member+DOB
+      // policy: with no DOB there is no age, so CPF is off (income is gross) —
+      // no age-30 fallback.
+      const cpf =
+        memberAge !== null
+          ? calculateCPF(monthlyGross, memberAge)
+          : { employeeCpfContribution: 0, employerCpfContribution: 0 };
       const monthlyEmployeeCpf = cpf.employeeCpfContribution;
       const monthlyEmployerCpf = cpf.employerCpfContribution;
 

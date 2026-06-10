@@ -1,11 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { incomesBeta, familyMembers } from "@/db/schema";
+import { incomesBeta } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
-import { calculateCPF } from "@/lib/cpf-calculator";
+import { resolveCpfFields } from "@/lib/services/incomes";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
 import { effectiveIncomeCategory } from "@/lib/income-category";
 
@@ -18,18 +18,6 @@ function toBetaIncomeCategory(
   if (v === "past" || v === "current" || v === "future") return v;
   if (v === "future-recurring") return "future";
   return "current";
-}
-
-function calculateAge(dateOfBirth: Date): number {
-  const today = new Date();
-  let age = today.getFullYear() - dateOfBirth.getFullYear();
-  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
-
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
-    age--;
-  }
-
-  return age;
 }
 
 /**
@@ -59,19 +47,14 @@ export async function createIncome(data: {
 }) {
   const { userId, familyId } = await getCurrentUserAndFamily();
 
-  // Calculate CPF if applicable
-  let employeeCpfContribution: string | null = null;
-  let employerCpfContribution: string | null = null;
-  let netTakeHome: string | null = null;
-
-  if (data.subjectToCpf) {
-    // Use family member's age if provided, otherwise default to 30
-    const userAge = data.familyMemberAge ?? 30;
-    const cpfResult = calculateCPF(data.amount, userAge);
-    employeeCpfContribution = cpfResult.employeeCpfContribution.toString();
-    employerCpfContribution = cpfResult.employerCpfContribution.toString();
-    netTakeHome = cpfResult.netTakeHome.toString();
-  }
+  // CPF via the shared member+DOB resolver (no member / no DOB → CPF off; age
+  // from the member's DOB, never the client). Same path the beta action uses.
+  const cpf = await resolveCpfFields({
+    subjectToCpf: data.subjectToCpf,
+    amount: data.amount,
+    familyId,
+    familyMemberId: data.familyMemberId || null,
+  });
 
   const newIncome = await db.insert(incomesBeta).values({
     id: nanoid(),
@@ -85,9 +68,10 @@ export async function createIncome(data: {
     subjectToCpf: data.subjectToCpf,
     accountForBonus: data.accountForBonus || false,
     bonusGroups: data.bonusGroups || null,
-    employeeCpfContribution,
-    employerCpfContribution,
-    netTakeHome,
+    employeeCpfContribution: cpf.employeeCpfContribution,
+    employerCpfContribution: cpf.employerCpfContribution,
+    netTakeHome: cpf.netTakeHome,
+    cpfRatesVersion: cpf.cpfRatesVersion,
     cpfOrdinaryAccount: data.cpfOrdinaryAccount ? data.cpfOrdinaryAccount.toString() : null,
     cpfSpecialAccount: data.cpfSpecialAccount ? data.cpfSpecialAccount.toString() : null,
     cpfMedisaveAccount: data.cpfMedisaveAccount ? data.cpfMedisaveAccount.toString() : null,
@@ -167,40 +151,25 @@ export async function updateIncome(
   if (data.cpfSpecialAccount !== undefined) updateData.cpfSpecialAccount = data.cpfSpecialAccount.toString();
   if (data.cpfMedisaveAccount !== undefined) updateData.cpfMedisaveAccount = data.cpfMedisaveAccount.toString();
 
-  // Recalculate CPF if subject to CPF or amount changed
+  // Recompute CPF via the shared member+DOB resolver (no member / no DOB → off;
+  // age from the member's DOB only). Recompute on every update so an amount or
+  // member change is always reflected.
   const finalAmount = data.amount !== undefined ? data.amount : parseFloat(existing.amount);
-  const finalSubjectToCpf = data.subjectToCpf !== undefined ? data.subjectToCpf : existing.subjectToCpf;
+  const finalSubjectToCpf =
+    data.subjectToCpf !== undefined ? data.subjectToCpf : existing.subjectToCpf;
+  const effectiveFamilyMemberId =
+    data.familyMemberId !== undefined ? data.familyMemberId : existing.familyMemberId;
 
-  if (finalSubjectToCpf) {
-    // Determine user age for CPF calculation
-    let userAge = data.familyMemberAge ?? 30; // Use provided age or default to 30
-
-    // If age not provided but income is linked to a family member, fetch their age
-    const effectiveFamilyMemberId =
-      data.familyMemberId !== undefined ? data.familyMemberId : existing.familyMemberId;
-    if (!data.familyMemberAge && effectiveFamilyMemberId) {
-      const familyMember = await db.query.familyMembers.findFirst({
-        where: and(
-          eq(familyMembers.id, effectiveFamilyMemberId),
-          eq(familyMembers.familyId, familyId)
-        ),
-      });
-
-      if (familyMember?.dateOfBirth) {
-        userAge = calculateAge(new Date(familyMember.dateOfBirth));
-      }
-    }
-
-    const cpfResult = calculateCPF(finalAmount, userAge);
-    updateData.employeeCpfContribution = cpfResult.employeeCpfContribution.toString();
-    updateData.employerCpfContribution = cpfResult.employerCpfContribution.toString();
-    updateData.netTakeHome = cpfResult.netTakeHome.toString();
-  } else {
-    // Clear CPF fields if not subject to CPF
-    updateData.employeeCpfContribution = null;
-    updateData.employerCpfContribution = null;
-    updateData.netTakeHome = null;
-  }
+  const cpf = await resolveCpfFields({
+    subjectToCpf: !!finalSubjectToCpf,
+    amount: finalAmount,
+    familyId,
+    familyMemberId: effectiveFamilyMemberId ?? null,
+  });
+  updateData.employeeCpfContribution = cpf.employeeCpfContribution;
+  updateData.employerCpfContribution = cpf.employerCpfContribution;
+  updateData.netTakeHome = cpf.netTakeHome;
+  updateData.cpfRatesVersion = cpf.cpfRatesVersion;
 
   const updated = await db
     .update(incomesBeta)
