@@ -26,7 +26,7 @@ import {
   OW_CEILING_AMOUNT,
   OW_CEILING_YEAR,
   calculateCPF,
-  computeBonusCPF,
+  computeAnnualBonusCpf,
   getCPFAllocationBracketIndex,
   getCPFBracketIndex,
 } from "@/lib/cpf-calculator";
@@ -313,7 +313,7 @@ function AWCeilingInfo({
   totalBonusGross: number;
 }) {
   const allocIdx = age !== null ? getCPFAllocationBracketIndex(age) : -1;
-  const bonus = computeBonusCPF(monthlyGross, totalBonusGross, age);
+  const bonus = computeAnnualBonusCpf(monthlyGross, totalBonusGross, age);
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -789,7 +789,7 @@ function buildPages(
       const totalBonusGross = totalBonusMonths * monthlyGross + totalOneOffGross;
       const bonusAge = ageFromDob(income.familyMember?.dateOfBirth);
       const bonusCpf = income.subjectToCpf
-        ? computeBonusCPF(monthlyGross, totalBonusGross, bonusAge)
+        ? computeAnnualBonusCpf(monthlyGross, totalBonusGross, bonusAge)
         : null;
       pages.push({
         key: "bonus",
@@ -1190,7 +1190,7 @@ export function IncomeBarPopup({
                 income.subjectToCpf &&
                 (() => {
                   const age = ageFromDob(income.familyMember?.dateOfBirth);
-                  const b = computeBonusCPF(value, totalBonusGross, age);
+                  const b = computeAnnualBonusCpf(value, totalBonusGross, age);
                   return (
                     <div className="space-y-1 rounded-md bg-muted/60 px-2.5 py-2">
                       <div className="flex items-center justify-between gap-2">

@@ -6,7 +6,7 @@ import { eq, and } from "drizzle-orm";
 import {
   getCPFRatesByAge,
   getCPFAllocationByAge,
-  calculateBonusCPF,
+  computeAnnualBonusCpf,
   calculateCPF,
 } from "@/lib/cpf-calculator";
 import { bonusDollarsForYear } from "@/lib/income-month";
@@ -213,7 +213,19 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
     };
 
     if (totalBonusAmount > 0 && memberAge !== null) {
-      bonusCpfData = calculateBonusCPF(totalGross, totalBonusAmount, memberAge);
+      // Year-level bonus CPF: AW ceiling + $37,740 annual limit + statutory
+      // rounding, all in computeAnnualBonusCpf (this tab is a year snapshot).
+      const step = computeAnnualBonusCpf(totalGross, totalBonusAmount, memberAge);
+      bonusCpfData = {
+        bonusAmount: totalBonusAmount,
+        bonusCpfApplicableAmount: step.cpfApplicableBonus,
+        bonusEmployeeCpf: step.employee,
+        bonusEmployerCpf: step.employer,
+        bonusTotalCpf: step.total,
+        bonusOaAllocation: step.oaAllocation,
+        bonusSaAllocation: step.saAllocation,
+        bonusMaAllocation: step.maAllocation,
+      };
     }
 
     cpfData.push({

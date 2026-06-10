@@ -4,6 +4,8 @@ import {
   computeCpfContributions,
   calculateBonusCPF,
   computeBonusCPF,
+  AnnualBonusCpf,
+  computeAnnualBonusCpf,
   getCPFRatesByAge,
   getCPFAllocationByAge,
   getCPFBracketIndex,
@@ -306,5 +308,73 @@ describe("constants pinned to 2026", () => {
 
   it("FRS for the 55-in-2026 cohort is $220,400", () => {
     expect(FRS_2026).toBe(220_400);
+  });
+});
+
+describe("AnnualBonusCpf — cumulative AW ceiling + $37,740 cap (PR 4)", () => {
+  it("two $6k bonuses in one year SHARE the $6k AW room (the headline fix)", () => {
+    // $8,000/mo OW → annual OW $96,000 → AW room $102,000 − $96,000 = $6,000.
+    const acc = new AnnualBonusCpf(8000, 35);
+    const first = acc.addBonus(6000);
+    expect(first.cpfApplicableBonus).toBe(6000);
+    expect(first.employee).toBe(1200); // 6000 × 0.20
+    expect(first.employer).toBe(1020); // 6000 × 0.17
+    expect(first.total).toBe(2220);
+
+    const second = acc.addBonus(6000);
+    expect(second.cpfApplicableBonus).toBe(0); // room already consumed
+    expect(second.total).toBe(0);
+
+    // Contrast: the legacy per-call helper would tax BOTH (the bug).
+    expect(calculateBonusCPF(8000, 6000, 35).bonusCpfApplicableAmount).toBe(6000);
+    expect(calculateBonusCPF(8000, 6000, 35).bonusCpfApplicableAmount).toBe(6000);
+  });
+
+  it("statutory-rounds each step (employee cents dropped, employer takes remainder)", () => {
+    // $2,000/mo OW → AW room $78,000; a $3,333 bonus is fully applicable.
+    // EE raw 666.60 → floor 666; total raw 1,233.21 → 1,233; ER = 1,233 − 666 = 567.
+    const step = new AnnualBonusCpf(2000, 35).addBonus(3333);
+    expect(step.cpfApplicableBonus).toBe(3333);
+    expect(step.employee).toBe(666);
+    expect(step.employer).toBe(567);
+    expect(step.total).toBe(1233);
+    expect(step.employee + step.employer).toBe(step.total);
+  });
+
+  it("OA/SA/MA allocations match total × the age allocation rates", () => {
+    // (The CPF allocation fractions sum to ~1.0001 by table approximation, so
+    // they don't sum to exactly the total — assert each against its rate.)
+    const step = new AnnualBonusCpf(5000, 35).addBonus(10000);
+    const a = getCPFAllocationByAge(35);
+    expect(step.oaAllocation).toBeCloseTo(step.total * a.oa, 2);
+    expect(step.saAllocation).toBeCloseTo(step.total * a.sa, 2);
+    expect(step.maAllocation).toBeCloseTo(step.total * a.ma, 2);
+  });
+
+  it("never lets cumulative contributions exceed the $37,740 annual limit", () => {
+    // Max possible: annual OW $0 → AW room $102,000; whole bonus at 37% = $37,740.
+    const acc = new AnnualBonusCpf(0, 35);
+    const step = acc.addBonus(102000);
+    expect(step.total).toBe(37740); // exactly the limit
+    expect(step.annualLimitRemaining).toBe(0);
+    // A further bonus attracts nothing (AW room and limit both exhausted).
+    expect(acc.addBonus(50000).total).toBe(0);
+  });
+
+  it("computeAnnualBonusCpf equals a single-step accumulator + exposes rate pcts", () => {
+    const oneShot = computeAnnualBonusCpf(5000, 10000, 35);
+    const step = new AnnualBonusCpf(5000, 35).addBonus(10000);
+    expect(oneShot.employee).toBe(step.employee);
+    expect(oneShot.employer).toBe(step.employer);
+    expect(oneShot.total).toBe(step.total);
+    expect(oneShot.employeeRatePct).toBe(20);
+    expect(oneShot.employerRatePct).toBe(17);
+    expect(oneShot.annualOrdinaryWage).toBe(60000);
+  });
+
+  it("senior rates flow through (age 58 → 18%/16%)", () => {
+    const step = new AnnualBonusCpf(4000, 58).addBonus(8000); // AW room $54k, full
+    expect(step.employee).toBe(1440); // 8000 × 0.18
+    expect(step.employer).toBe(1280); // 8000 × 0.16
   });
 });
