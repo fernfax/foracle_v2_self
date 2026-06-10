@@ -25,8 +25,8 @@ import {
   CPF_RATE_BRACKETS,
   OW_CEILING_AMOUNT,
   OW_CEILING_YEAR,
+  calculateCPF,
   computeBonusCPF,
-  computeCpfContributions,
   getCPFAllocationBracketIndex,
   getCPFBracketIndex,
 } from "@/lib/cpf-calculator";
@@ -242,7 +242,7 @@ function OWCeilingInfo({
         </p>
 
         <p className="mt-3 font-display text-xs font-semibold text-foreground">
-          CPF Contribution Rates (from 1 Jan 2025)
+          CPF Contribution Rates (from 1 Jan 2026)
         </p>
         <p className="text-[10px] text-muted-foreground">
           For monthly wages &gt; $750.
@@ -971,18 +971,15 @@ export function IncomeBarPopup({
   const cpfRateIdx = memberAge !== null ? getCPFBracketIndex(memberAge) : 0;
   const empRatePct = CPF_RATE_BRACKETS[cpfRateIdx].employee;
   const erRatePct = CPF_RATE_BRACKETS[cpfRateIdx].employer;
-  const cappedWage = Math.min(value, OW_CEILING_AMOUNT);
-  // Apply low-wage rules: employee share is nil at/below $500 and phased in
-  // over $500–$750 (employer still contributes). Shared with the rest of the app.
-  const liveCpf = subjectToCpf
-    ? computeCpfContributions(cappedWage, {
-        employee: empRatePct / 100,
-        employer: erRatePct / 100,
-      })
-    : { employee: 0, employer: 0 };
-  const liveEmployeeCpf = liveCpf.employee;
-  const liveEmployerCpf = liveCpf.employer;
-  const liveNetTakeHome = value - liveEmployeeCpf;
+  // Live CPF comes from calculateCPF — the same function the server persists
+  // with on confirm — so the preview always matches the stored statutory
+  // dollars (OW ceiling, low-wage rules, and total/employee rounding inside).
+  // A cent-precise re-derivation here previously disagreed with the committed
+  // row by $1 on most fractional-contribution wages.
+  const liveCpf = subjectToCpf ? calculateCPF(value, memberAge ?? 30) : null;
+  const liveEmployeeCpf = liveCpf?.employeeCpfContribution ?? 0;
+  const liveEmployerCpf = liveCpf?.employerCpfContribution ?? 0;
+  const liveNetTakeHome = liveCpf ? liveCpf.netTakeHome : value;
 
   // Open on the Bonus tab when requested (clicking a bonus pill). Page order is
   // Overview(0), CPF(1), Bonus(2) — CPF is always present now.
