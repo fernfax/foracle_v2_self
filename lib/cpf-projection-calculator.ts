@@ -4,7 +4,8 @@ import {
   calculateBonusCPF,
   computeCpfContributions,
 } from "@/lib/cpf-calculator";
-import { CpfByFamilyMember } from "@/lib/actions/cpf";
+import { parseBonusGroups } from "@/lib/income-month";
+import type { CpfByFamilyMember } from "@/lib/actions/cpf";
 
 const OW_CEILING = 8000;
 
@@ -47,7 +48,10 @@ export interface CpfProjectionInput {
   monthlyGrossIncome: number;
   dateOfBirth: string | null;
   currentAge: number | null;
+  /** Recurring bonuses: months-of-salary multiplier, repeats yearly in `month`. */
   bonusSchedule: { month: number; multiplier: number }[];
+  /** One-off bonuses: direct dollars landing once in `date` ("YYYY-MM"). */
+  oneOffBonuses: { date: string; dollars: number }[];
 }
 
 export interface CpfProjectionDataPoint {
@@ -84,19 +88,23 @@ export function extractCpfProjectionInputs(
         inc.isActive
     );
 
-    // Parse bonus schedule from bonusGroups
-    let bonusSchedule: { month: number; multiplier: number }[] = [];
+    // Parse the bonus schedule from the stored wire shape via the shared
+    // parser — recurring entries are { month, amount } (months-of-salary
+    // multiplier, repeats yearly); one-off entries are { date: "YYYY-MM",
+    // amount } (direct dollars, land once). The previous parser expected a
+    // `multiplier` field the wire format never carried, so every bonus was
+    // silently dropped from the projection.
+    const bonusSchedule: { month: number; multiplier: number }[] = [];
+    const oneOffBonuses: { date: string; dollars: number }[] = [];
     if (matchingIncome?.accountForBonus && matchingIncome?.bonusGroups) {
-      try {
-        const groups = JSON.parse(matchingIncome.bonusGroups) as {
-          month: number;
-          multiplier: number;
-        }[];
-        bonusSchedule = groups.filter(
-          (g) => g.month >= 1 && g.month <= 12 && g.multiplier > 0
-        );
-      } catch {
-        // Invalid JSON, skip bonus
+      for (const g of parseBonusGroups(matchingIncome.bonusGroups)) {
+        if (g.kind === "recurring") {
+          if (g.month >= 1 && g.month <= 12) {
+            bonusSchedule.push({ month: g.month, multiplier: g.multiplier });
+          }
+        } else {
+          oneOffBonuses.push({ date: g.date, dollars: g.dollars });
+        }
       }
     }
 
@@ -107,6 +115,7 @@ export function extractCpfProjectionInputs(
       dateOfBirth: matchingIncome?.familyMember?.dateOfBirth ?? null,
       currentAge: member.age,
       bonusSchedule,
+      oneOffBonuses,
     };
   });
 }
@@ -210,16 +219,25 @@ export function calculateCpfProjection(
         monthlyMa = totalCpf * allocation.ma;
         monthlyTotal = monthlyOa + monthlySa + monthlyMa;
 
-        // Check for bonus in this calendar month
-        const bonusEntry = input.bonusSchedule.find(
-          (b) => b.month === calendarMonth
-        );
-        if (bonusEntry) {
-          const bonusAmount =
-            input.monthlyGrossIncome * bonusEntry.multiplier;
+        // Bonuses landing this month: every recurring entry matching the
+        // calendar month (multiplier × monthly gross) plus any one-off dated
+        // exactly this YYYY-MM.
+        let bonusGross = 0;
+        for (const b of input.bonusSchedule) {
+          if (b.month === calendarMonth) {
+            bonusGross += input.monthlyGrossIncome * b.multiplier;
+          }
+        }
+        const monthKey = `${date.getFullYear()}-${String(calendarMonth).padStart(2, "0")}`;
+        for (const oneOff of input.oneOffBonuses) {
+          if (oneOff.date === monthKey) {
+            bonusGross += oneOff.dollars;
+          }
+        }
+        if (bonusGross > 0) {
           const bonusResult = calculateBonusCPF(
             input.monthlyGrossIncome,
-            bonusAmount,
+            bonusGross,
             age
           );
           monthlyOa += bonusResult.bonusOaAllocation;
