@@ -7,8 +7,9 @@ import {
   getCPFRatesByAge,
   getCPFAllocationByAge,
   calculateBonusCPF,
-  computeCpfContributions,
+  calculateCPF,
 } from "@/lib/cpf-calculator";
+import { parseBonusGroups } from "@/lib/income-month";
 import { effectiveIncomeCategory } from "@/lib/income-category";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
@@ -145,52 +146,29 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       // Beta incomes are monthly by design — use the amount directly.
       const monthlyGross = parseFloat(income.amount);
 
-      // Aggregate bonus amounts from bonusGroups
+      // Aggregate bonus amounts from bonusGroups. Recurring entries are
+      // months-of-salary MULTIPLIERS; one-off entries are direct DOLLAR
+      // payouts and count only when they land in the current calendar year
+      // (this tab is a current-year snapshot). Telling the two wire shapes
+      // apart matters: a $5,000 one-off read as a multiplier would inflate
+      // the bonus to 5,000 months of salary.
       if (income.bonusGroups) {
-        try {
-          let bonusGroups;
-          let validBonusData = true;
-
-          // Handle different formats of bonusGroups
-          if (typeof income.bonusGroups === 'string') {
-            // Skip bonus calculation if it's corrupted data like "[object Object]"
-            if (income.bonusGroups.startsWith('[object')) {
-              console.warn('Skipping corrupted bonusGroups data for income:', income.id);
-              validBonusData = false;
-            } else {
-              bonusGroups = JSON.parse(income.bonusGroups);
-            }
-          } else if (Array.isArray(income.bonusGroups)) {
-            bonusGroups = income.bonusGroups;
-          } else {
-            // Invalid bonus data format
-            validBonusData = false;
+        const currentYear = String(new Date().getFullYear());
+        for (const g of parseBonusGroups(income.bonusGroups)) {
+          if (g.kind === "recurring") {
+            totalBonusAmount += monthlyGross * g.multiplier;
+          } else if (g.date.startsWith(currentYear)) {
+            totalBonusAmount += g.dollars;
           }
-
-          // Only process bonus if we have valid array data
-          if (validBonusData && Array.isArray(bonusGroups)) {
-            // Sum all bonus months from all bonus groups
-            const totalBonusMonths = bonusGroups.reduce((sum: number, group: { month: number; amount: string }) => {
-              return sum + (parseFloat(group.amount) || 0);
-            }, 0);
-
-            // Calculate actual bonus amount
-            const actualBonusAmount = monthlyGross * totalBonusMonths;
-            totalBonusAmount += actualBonusAmount;
-          }
-        } catch (error) {
-          console.error('Error parsing bonusGroups for income', income.id, ':', error);
         }
       }
 
-      // Recalculate CPF contributions using correct age-based rates, applying
-      // the low-wage rules (employee share reduced/nil below $750).
-      const cpfApplicableAmount = Math.min(monthlyGross, 8000);
-      const { employee: monthlyEmployeeCpf, employer: monthlyEmployerCpf } =
-        computeCpfContributions(cpfApplicableAmount, {
-          employee: employeeCpfRate / 100,
-          employer: employerCpfRate / 100,
-        });
+      // Per-income CPF via calculateCPF — the same function income rows are
+      // persisted with — so this tab matches the stored values exactly
+      // (OW ceiling, low-wage rules, and rounding all live inside it).
+      const cpf = calculateCPF(monthlyGross, memberAge ?? 30);
+      const monthlyEmployeeCpf = cpf.employeeCpfContribution;
+      const monthlyEmployerCpf = cpf.employerCpfContribution;
 
       const monthlyOa = parseFloat(income.cpfOrdinaryAccount || "0");
       const monthlySa = parseFloat(income.cpfSpecialAccount || "0");
