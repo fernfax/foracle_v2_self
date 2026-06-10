@@ -25,7 +25,7 @@ import {
   parseISO,
   startOfMonth,
 } from "date-fns";
-import { computeBonusCPF } from "@/lib/cpf-calculator";
+import { computeAnnualBonusCpf } from "@/lib/cpf-calculator";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -5095,7 +5095,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                 ? Math.max(
                     0,
                     1 -
-                      computeBonusCPF(
+                      computeAnnualBonusCpf(
                         parentMonthly,
                         bonusGrossTotal,
                         ageFromDobIso(income.familyMember?.dateOfBirth)

@@ -11,6 +11,7 @@ import {
   CPF_ALLOCATION_BAND_ORDER,
   OW_CEILING,
   ANNUAL_WAGE_CEILING,
+  CPF_ANNUAL_LIMIT,
   CPF_LOW_WAGE_NO_CPF,
   CPF_LOW_WAGE_NO_EMPLOYEE,
   CPF_LOW_WAGE_PHASE_IN_END,
@@ -301,6 +302,121 @@ export function calculateBonusCPF(
     bonusOaAllocation: Math.round(bonusOaAllocation * 100) / 100,
     bonusSaAllocation: Math.round(bonusSaAllocation * 100) / 100,
     bonusMaAllocation: Math.round(bonusMaAllocation * 100) / 100,
+  };
+}
+
+// ===========================================================================
+// Year-level Additional Wage (bonus) CPF — the correct model.
+//
+// The legacy calculateBonusCPF/computeBonusCPF recompute the FULL remaining AW
+// ceiling on every call, so two bonuses in the same year each see the whole
+// room (two $6k bonuses at $8k/mo get taxed on $12k where the law allows $6k).
+// AnnualBonusCpf consumes the AW ceiling AND the $37,740 CPF Annual Limit
+// CUMULATIVELY, and statutory-rounds each step (matching calculateCPF).
+//
+// Construct ONCE per (member, calendar year); call addBonus() for each bonus in
+// chronological order. Reset (new instance) at each calendar-year boundary.
+// ===========================================================================
+export interface BonusCpfStep {
+  cpfApplicableBonus: number; // bonus dollars that attracted CPF this step
+  employee: number; // statutory-rounded
+  employer: number; // statutory-rounded
+  total: number; // statutory-rounded (employer + employee)
+  oaAllocation: number;
+  saAllocation: number;
+  maAllocation: number;
+  awCeilingRemaining: number; // AW room left AFTER this step
+  annualLimitRemaining: number; // $37,740 room left AFTER this step
+}
+
+export class AnnualBonusCpf {
+  private readonly annualOrdinaryWage: number;
+  private readonly rates: { employer: number; employee: number };
+  private readonly allocation: { oa: number; sa: number; ma: number };
+  private awConsumed = 0;
+  private limitConsumed = 0; // rounded total contributions consumed (bonus-only)
+
+  constructor(monthlyOrdinaryWage: number, age: number) {
+    this.annualOrdinaryWage = Math.min(monthlyOrdinaryWage, OW_CEILING) * 12;
+    this.rates = getCPFRatesByAge(age);
+    this.allocation = getCPFAllocationByAge(age);
+  }
+
+  get awCeilingRemaining(): number {
+    return Math.max(0, ANNUAL_WAGE_CEILING - this.annualOrdinaryWage - this.awConsumed);
+  }
+
+  get annualLimitRemaining(): number {
+    return Math.max(0, CPF_ANNUAL_LIMIT - this.limitConsumed);
+  }
+
+  addBonus(grossBonus: number): BonusCpfStep {
+    let applicable = Math.max(0, Math.min(grossBonus, this.awCeilingRemaining));
+    let rawEmployee = applicable * this.rates.employee;
+    let rawEmployer = applicable * this.rates.employer;
+
+    // Clamp so cumulative contributions never exceed the $37,740 annual limit.
+    // (Bonus-only: this accumulator doesn't see the member's salary CPF, so the
+    // cap is a safety rail; full salary+bonus coverage is a follow-up — the AW
+    // ceiling almost always binds first anyway.)
+    const limitRoom = this.annualLimitRemaining;
+    const rawTotal = rawEmployee + rawEmployer;
+    if (rawTotal > limitRoom && rawTotal > 0) {
+      const scale = limitRoom / rawTotal;
+      applicable *= scale;
+      rawEmployee *= scale;
+      rawEmployer *= scale;
+    }
+
+    // Statutory rounding (mirror calculateCPF): total → nearest dollar, employee
+    // cents dropped, employer = total − employee. 1e-9 absorbs float dust.
+    let total = Math.round(rawEmployee + rawEmployer + 1e-9);
+    if (total > limitRoom) total = Math.floor(limitRoom); // never round past the cap
+    const employee = Math.min(Math.floor(rawEmployee + 1e-9), total);
+    const employer = total - employee;
+
+    this.awConsumed += applicable;
+    this.limitConsumed += total;
+
+    return {
+      cpfApplicableBonus: Math.round(applicable * 100) / 100,
+      employee,
+      employer,
+      total,
+      oaAllocation: Math.round(total * this.allocation.oa * 100) / 100,
+      saAllocation: Math.round(total * this.allocation.sa * 100) / 100,
+      maAllocation: Math.round(total * this.allocation.ma * 100) / 100,
+      awCeilingRemaining: this.awCeilingRemaining,
+      annualLimitRemaining: this.annualLimitRemaining,
+    };
+  }
+}
+
+/**
+ * One-shot year snapshot: total bonus CPF for the whole year in a single call.
+ * For the per-month projection use AnnualBonusCpf directly (one per year) so the
+ * cumulative ceiling consumes month by month. Returns the legacy
+ * employeeRatePct/employerRatePct fields too, so the income popup is drop-in.
+ */
+export function computeAnnualBonusCpf(
+  monthlyOrdinaryWage: number,
+  totalBonusGrossForYear: number,
+  age: number | null
+): BonusCpfStep & {
+  annualOrdinaryWage: number;
+  employeeRatePct: number;
+  employerRatePct: number;
+} {
+  const resolvedAge = age ?? 30;
+  const step = new AnnualBonusCpf(monthlyOrdinaryWage, resolvedAge).addBonus(
+    totalBonusGrossForYear
+  );
+  const rates = getCPFRatesByAge(resolvedAge);
+  return {
+    ...step,
+    annualOrdinaryWage: Math.min(monthlyOrdinaryWage, OW_CEILING) * 12,
+    employeeRatePct: rates.employee * 100,
+    employerRatePct: rates.employer * 100,
   };
 }
 

@@ -17,6 +17,7 @@
 import { calculateMonthlyAmount } from "@/lib/expense-calculator";
 import { grossForMonth, bonusForMonth } from "@/lib/income-month";
 import { isSpendingCategory } from "@/lib/expense-classification";
+import { computeAnnualBonusCpf } from "@/lib/cpf-calculator";
 
 /** Minimal shape this transform needs from an income row. */
 export interface CashflowIncomeInput {
@@ -323,7 +324,13 @@ export function buildCashflowModel(
     if (monthKey) {
       const bonus = bonusForMonth({ ...inc, startDate: inc.startDate ?? "" }, monthKey);
       if (bonus > 0) {
-        const bonusCpf = bonus * cpfRatio;
+        // Bonus CPF via the Additional Wage ceiling (default age 30 — the Sankey
+        // has no DOB; PR 5 threads real age). Replaces the old `bonus * cpfRatio`
+        // which applied the salary's net-ratio with NO AW ceiling, over-deducting
+        // when the bonus exceeded the year's remaining ceiling.
+        const bonusCpf = inc.subjectToCpf
+          ? computeAnnualBonusCpf(gross, bonus, 30).employee
+          : 0;
         totalGross += bonus;
         totalCpf += bonusCpf;
         incomeNodes.push({

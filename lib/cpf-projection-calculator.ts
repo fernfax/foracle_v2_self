@@ -1,7 +1,7 @@
 import {
   getCPFRatesByAge,
   getCPFAllocationByAge,
-  calculateBonusCPF,
+  AnnualBonusCpf,
   computeCpfContributions,
 } from "@/lib/cpf-calculator";
 import { parseBonusGroups } from "@/lib/income-month";
@@ -175,6 +175,11 @@ export function calculateCpfProjection(
     cumulative[input.familyMemberId] = { total: 0, oa: 0, sa: 0, ma: 0, loanDeduction: 0 };
   }
 
+  // One bonus accumulator per (member, calendar year) so a year's bonuses share
+  // the Additional Wage ceiling cumulatively instead of each seeing full room.
+  // Keyed by `${memberId}:${year}` and reset implicitly at each year boundary.
+  const bonusAccumulators = new Map<string, AnnualBonusCpf>();
+
   const data: CpfProjectionDataPoint[] = [];
 
   for (let i = 0; i <= totalMonths; i++) {
@@ -242,15 +247,21 @@ export function calculateCpfProjection(
           }
         }
         if (bonusGross > 0) {
-          const bonusResult = calculateBonusCPF(
-            input.monthlyGrossIncome,
-            bonusGross,
-            age
-          );
-          monthlyOa += bonusResult.bonusOaAllocation;
-          monthlySa += bonusResult.bonusSaAllocation;
-          monthlyMa += bonusResult.bonusMaAllocation;
-          monthlyTotal += bonusResult.bonusTotalCpf;
+          // Feed this month's bonus into the member's year accumulator so the
+          // AW ceiling consumes month by month (two bonuses in a year share the
+          // room). Age captured at the year's first bonus — minor birthday-edge
+          // approximation, acceptable for a projection.
+          const accKey = `${id}:${date.getFullYear()}`;
+          let acc = bonusAccumulators.get(accKey);
+          if (!acc) {
+            acc = new AnnualBonusCpf(input.monthlyGrossIncome, age);
+            bonusAccumulators.set(accKey, acc);
+          }
+          const step = acc.addBonus(bonusGross);
+          monthlyOa += step.oaAllocation;
+          monthlySa += step.saAllocation;
+          monthlyMa += step.maAllocation;
+          monthlyTotal += step.total;
         }
       }
 

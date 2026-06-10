@@ -2,9 +2,13 @@
 
 ## CPF / Income Engine
 
-### Shared annual bonus-CPF helper (audit PR 4)
-**Priority:** P1
-One year-level Additional Wage computation: AW ceiling consumed cumulatively across all bonuses in the year (today each bonus gets the full room — two $6k bonuses at $8k/mo each attract CPF where the law allows $6k total), plus the $37,740 CPF Annual Limit cap (currently unenforced anywhere). Adopt in `lib/balance-calculator.ts`, `components/dashboard/dashboard-header.tsx`, `lib/cashflow-sankey.ts` (replace ratio-on-bonus), and the income popup. Align both dashboard cards to include bonuses (decided 2026-06-10). Apply statutory rounding to bonus CPF here too (deliberately left cent-precise in v1.0.1.0).
+### PR 4b — per-month dashboard bonus surfaces (deferred from PR 4)
+**Priority:** P2
+PR 4 routed the dedicated bonus-CPF surfaces (CPF tab, projection, income popup, beta-view, Sankey ratio fix) through the new `AnnualBonusCpf` accumulator. Still on the legacy per-call `calculateBonusCPF(.,.,30)`: `lib/balance-calculator.ts` (~:353) and `components/dashboard/dashboard-header.tsx` (~:302); `components/dashboard/total-income-card.tsx` still has NO bonus block. These are per-MONTH surfaces that need a shared `bonusNetForMonth(income, year, month, age)` helper (replays the year's bonuses ≤ target month so the AW ceiling is cumulative) and move the main dashboard's numbers — kept separate to land the higher-risk dashboard change on its own. Also align both dashboard cards to include bonuses (decided 2026-06-10), and thread real age here once PR 5's resolver lands (these still hardcode 30).
+
+### Salary-inclusive $37,740 annual-limit cap (follow-up)
+**Priority:** P3
+`AnnualBonusCpf`'s $37,740 cap is bonus-only — it doesn't see the member's monthly salary CPF, so the cap is a safety rail that (given the AW ceiling) never actually binds on bonus alone. Full coverage means seeding the accumulator with the year's salary CPF already consumed. Low urgency (the AW ceiling binds first in every realistic case).
 
 ### CPF requires a linked member with DOB (audit PR 5)
 **Priority:** P1
