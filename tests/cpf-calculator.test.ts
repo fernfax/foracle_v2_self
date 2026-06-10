@@ -3,19 +3,26 @@ import {
   calculateCPF,
   computeCpfContributions,
   calculateBonusCPF,
+  computeBonusCPF,
   getCPFRatesByAge,
   getCPFAllocationByAge,
+  getCPFBracketIndex,
+  getCPFAllocationBracketIndex,
+  CPF_RATE_BRACKETS,
+  CPF_ALLOCATION_BRACKETS,
   OW_CEILING_AMOUNT,
   ANNUAL_WAGE_CEILING_AMOUNT,
   CPF_LOW_WAGE_NO_CPF,
   CPF_LOW_WAGE_NO_EMPLOYEE,
   CPF_LOW_WAGE_PHASE_IN_END,
+  FRS_2026,
 } from "@/lib/cpf-calculator";
 
 // Reference values pinned to the 1 Jan 2026 CPF rate/ceiling/allocation tables.
-// Maps to §5C of the Income QA plan (the "Unit" layer in §6). The calc engine
-// returns precise figures; the UI rounds to whole dollars at the display layer,
-// so assertions here use the engine's cent-level values.
+// Maps to §5C of the Income QA plan (the "Unit" layer in §6). calculateCPF
+// applies the statutory CPF rounding rule (total → nearest dollar with 50¢
+// rounding up, employee share's cents dropped, employer = total − employee);
+// the low-wage helper computeCpfContributions stays cent-precise.
 //
 // ≤55 rates: employee 20% / employer 17%. OW ceiling $8,000/mo.
 
@@ -23,9 +30,16 @@ describe("getCPFRatesByAge — age bands", () => {
   it.each([
     [30, 0.2, 0.17],
     [55, 0.2, 0.17],
-    [58, 0.17, 0.155], // above 55–60 (CPF-10, senior band)
-    [62, 0.115, 0.12], // above 60–65
+    [56, 0.18, 0.16], // first age past the 55 boundary
+    [58, 0.18, 0.16], // above 55–60 (CPF-10, senior band, 2026 rates)
+    [60, 0.18, 0.16], // last age in the 55–60 band
+    [61, 0.125, 0.125], // first age in the 60–65 band (9-point total cliff)
+    [62, 0.125, 0.125], // above 60–65 (2026 rates)
+    [65, 0.125, 0.125], // last age in the 60–65 band
+    [66, 0.075, 0.09], // first age in the 65–70 band
     [68, 0.075, 0.09], // above 65–70
+    [70, 0.075, 0.09], // last age in the 65–70 band
+    [71, 0.05, 0.075], // first age above 70
     [72, 0.05, 0.075], // above 70
   ])("age %i → employee %f / employer %f", (age, employee, employer) => {
     expect(getCPFRatesByAge(age)).toEqual({ employee, employer });
@@ -57,11 +71,14 @@ describe("calculateCPF — baseline & ceiling (CPF-01..03)", () => {
     expect(r.netTakeHome).toBe(10400); // 12000 - 1600
   });
 
-  it("CPF-04: $7,999 (just below ceiling) → EE $1,599.80 at the engine level", () => {
+  it("CPF-04: $7,999 (just below ceiling) → statutory rounding: EE $1,599, ER $1,361", () => {
     const r = calculateCPF(7999, 35);
-    // Engine keeps cents; the pad/UI rounds this to $1,600 for display.
-    expect(r.employeeCpfContribution).toBeCloseTo(1599.8, 2);
-    expect(r.employerCpfContribution).toBeCloseTo(1359.83, 2);
+    // Raw: EE 1,599.80 / ER 1,359.83 / total 2,959.63. Statutory: total → $2,960,
+    // employee cents dropped → $1,599, employer = 2,960 − 1,599 = $1,361.
+    expect(r.employeeCpfContribution).toBe(1599);
+    expect(r.employerCpfContribution).toBe(1361);
+    expect(r.totalCpfContribution).toBe(2960);
+    expect(r.netTakeHome).toBe(6400); // 7,999 − 1,599
   });
 });
 
@@ -112,10 +129,10 @@ describe("calculateCPF flows low-wage rules through (CPF-12)", () => {
     expect(r.netTakeHome).toBe(400);
   });
 
-  it("senior worker (age 58, $5,000) → above-55 rates: EE $850 (17%), ER $775 (15.5%)", () => {
+  it("senior worker (age 58, $5,000) → 2026 above-55 rates: EE $900 (18%), ER $800 (16%)", () => {
     const r = calculateCPF(5000, 58);
-    expect(r.employeeCpfContribution).toBe(850);
-    expect(r.employerCpfContribution).toBe(775);
+    expect(r.employeeCpfContribution).toBe(900);
+    expect(r.employerCpfContribution).toBe(800);
   });
 });
 
@@ -165,11 +182,129 @@ describe("Bonus / Additional Wage ceiling (CPF-13/14)", () => {
     expect(r.remainingAnnualCeiling).toBe(6000);
     expect(r.bonusCpfApplicableAmount).toBe(6000);
   });
+
+  it("CPF-15: bonus CPF uses the 2026 senior rates (age 58 → 18%/16%)", () => {
+    // $4,000/mo → annual OW $48,000; AW room $54,000 → whole $8,000 bonus attracts CPF.
+    const r = calculateBonusCPF(4000, 8000, 58);
+    expect(r.bonusCpfApplicableAmount).toBe(8000);
+    expect(r.bonusEmployeeCpf).toBe(1440); // 8,000 × 0.18
+    expect(r.bonusEmployerCpf).toBe(1280); // 8,000 × 0.16
+  });
+
+  it("computeBonusCPF applies the 2026 60–65 rates (age 63 → 12.5%/12.5%)", () => {
+    // $7,000/mo → annual OW $84,000; AW room $18,000 → whole $10,000 bonus attracts CPF.
+    const r = computeBonusCPF(7000, 10000, 63);
+    expect(r.cpfApplicableBonus).toBe(10000);
+    expect(r.employee).toBeCloseTo(1250, 2);
+    expect(r.employer).toBeCloseTo(1250, 2);
+  });
+});
+
+describe("statutory rounding + 2026 senior bands (CPF-05/10)", () => {
+  it("$2,500 @73 → total $312.50 rounds UP to $313; EE $125, ER $188", () => {
+    // The case the official CPF calculator answers $188 for — total to the
+    // nearest dollar, employee cents dropped, employer takes the difference.
+    const r = calculateCPF(2500, 73);
+    expect(r.employeeCpfContribution).toBe(125);
+    expect(r.employerCpfContribution).toBe(188);
+    expect(r.totalCpfContribution).toBe(313);
+    expect(r.netTakeHome).toBe(2375);
+  });
+
+  it("$700 @30 (low-wage phase-in) matches the official figures: EE $120, ER $119, total $239", () => {
+    const r = calculateCPF(700, 30);
+    expect(r.employeeCpfContribution).toBe(120);
+    expect(r.employerCpfContribution).toBe(119);
+    expect(r.totalCpfContribution).toBe(239);
+  });
+
+  it("$4,000 @58 → 2026 senior rates: EE $720 (18%), ER $640 (16%), take-home $3,280", () => {
+    const r = calculateCPF(4000, 58);
+    expect(r.employeeCpfContribution).toBe(720);
+    expect(r.employerCpfContribution).toBe(640);
+    expect(r.netTakeHome).toBe(3280);
+  });
+
+  it("$7,000 @63 → EE $875 / ER $875 (12.5% each, 2026 rates)", () => {
+    const r = calculateCPF(7000, 63);
+    expect(r.employeeCpfContribution).toBe(875);
+    expect(r.employerCpfContribution).toBe(875);
+  });
+
+  it("float-dust guard: $700 @68 phase-in floors to EE $45, not $44", () => {
+    // Raw employee share is 44.99999999999999 (0.075 × 3 × 200 in IEEE 754).
+    // Without the epsilon guard, Math.floor would drop a whole dollar.
+    const r = calculateCPF(700, 68);
+    expect(r.employeeCpfContribution).toBe(45);
+    expect(r.employerCpfContribution).toBe(63);
+    expect(r.totalCpfContribution).toBe(108);
+  });
+
+  it("$5,001 @35 → total $1,850.37 rounds DOWN to $1,850; EE $1,000, ER $850", () => {
+    // Pins the round-down direction so a Math.round→Math.ceil regression can't pass.
+    const r = calculateCPF(5001, 35);
+    expect(r.totalCpfContribution).toBe(1850);
+    expect(r.employeeCpfContribution).toBe(1000);
+    expect(r.employerCpfContribution).toBe(850);
+    expect(r.netTakeHome).toBe(4001);
+  });
+
+  it.each([753, 3333, 5001, 7999, 1234.56])(
+    "wage $%s → all contribution outputs are whole dollars",
+    (wage) => {
+      // The pad's live preview and every display surface round with Math.round;
+      // statutory outputs being integers makes that rounding a no-op, so the
+      // preview can never disagree with the committed row.
+      const r = calculateCPF(wage, 35);
+      expect(Number.isInteger(r.employeeCpfContribution)).toBe(true);
+      expect(Number.isInteger(r.employerCpfContribution)).toBe(true);
+      expect(Number.isInteger(r.totalCpfContribution)).toBe(true);
+      expect(r.employeeCpfContribution + r.employerCpfContribution).toBe(
+        r.totalCpfContribution
+      );
+    }
+  );
+});
+
+describe("CPF_RATE_BRACKETS stay in sync with CPF_RATES", () => {
+  // The quick-adjust pad derives its LIVE preview math from the display
+  // brackets, so bracket drift would make the preview disagree with the
+  // committed engine values.
+  it.each([30, 55, 56, 58, 60, 61, 63, 65, 66, 68, 70, 71, 72])(
+    "age %i: bracket percentages match engine rates",
+    (age) => {
+      const bracket = CPF_RATE_BRACKETS[getCPFBracketIndex(age)];
+      const rates = getCPFRatesByAge(age);
+      expect(bracket.employee).toBeCloseTo(rates.employee * 100, 10);
+      expect(bracket.employer).toBeCloseTo(rates.employer * 100, 10);
+      expect(bracket.total).toBeCloseTo((rates.employee + rates.employer) * 100, 10);
+    }
+  );
+});
+
+describe("CPF_ALLOCATION_BRACKETS stay in sync with CPF_ALLOCATION_RATES", () => {
+  // Same drift hazard as the contribution brackets — both tables are
+  // hand-updated each January and the display brackets feed the pad's
+  // allocation table.
+  it.each([30, 40, 48, 53, 58, 63, 70])(
+    "age %i: allocation bracket matches engine rates",
+    (age) => {
+      const bracket = CPF_ALLOCATION_BRACKETS[getCPFAllocationBracketIndex(age)];
+      const rates = getCPFAllocationByAge(age);
+      expect(bracket.oa).toBeCloseTo(rates.oa, 10);
+      expect(bracket.sa).toBeCloseTo(rates.sa, 10);
+      expect(bracket.ma).toBeCloseTo(rates.ma, 10);
+    }
+  );
 });
 
 describe("constants pinned to 2026", () => {
   it("OW ceiling $8,000, AW ceiling $102,000", () => {
     expect(OW_CEILING_AMOUNT).toBe(8000);
     expect(ANNUAL_WAGE_CEILING_AMOUNT).toBe(102000);
+  });
+
+  it("FRS for the 55-in-2026 cohort is $220,400", () => {
+    expect(FRS_2026).toBe(220_400);
   });
 });
