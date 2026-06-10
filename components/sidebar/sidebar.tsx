@@ -31,15 +31,15 @@ import { SidebarNavItem } from "./sidebar-nav-item";
 import { useSidebar } from "./sidebar-context";
 
 const mainNavItems = [
-  { href: "/overview", label: "Overview", icon: Home },
   {
     href: "/user",
     label: "User Homepage",
     icon: User,
     subItems: [
+      { href: "/user?tab=overview", label: "Overview", icon: Home },
       { href: "/user?tab=family", label: "Family", icon: Users },
       { href: "/user?tab=incomes", label: "Incomes", icon: DollarSign },
-      { href: "/expenses?tab=expenses", label: "Expenses", icon: Receipt },
+      { href: "/user?tab=expenses", label: "Expenses", icon: Receipt },
       { href: "/user?tab=cpf", label: "CPF", icon: Building2 },
       { href: "/user?tab=current", label: "Holdings", icon: Briefcase },
     ],
@@ -91,7 +91,7 @@ export function Sidebar() {
         {/* Logo lockup — both images mounted, swap via opacity to avoid mid-animation Image swap */}
         <div className="h-[70px] flex items-center flex-shrink-0 relative px-3">
           <Link
-            href="/overview"
+            href="/user"
             className="relative flex items-center h-full w-full"
           >
             {/* Compact mark — visible when collapsed, sits at left edge of the 72px column */}

@@ -12,10 +12,12 @@ import { format } from "date-fns";
 interface BudgetShiftHistoryProps {
   shifts: BudgetShift[];
   onShiftDeleted?: () => void;
+  readOnly?: boolean;
+  defaultExpanded?: boolean;
 }
 
-export function BudgetShiftHistory({ shifts, onShiftDeleted }: BudgetShiftHistoryProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function BudgetShiftHistory({ shifts, onShiftDeleted, readOnly = false, defaultExpanded = false }: BudgetShiftHistoryProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   if (shifts.length === 0) {
@@ -88,15 +90,17 @@ export function BudgetShiftHistory({ shifts, onShiftDeleted }: BudgetShiftHistor
                   {format(new Date(shift.createdAt), "d MMM, h:mm a")}
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-[#8B0000]"
-                onClick={() => handleDelete(shift.id)}
-                disabled={deletingId === shift.id}
-              >
-                <Trash2 className={cn("h-4 w-4", deletingId === shift.id && "animate-pulse")} />
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-[#8B0000]"
+                  onClick={() => handleDelete(shift.id)}
+                  disabled={deletingId === shift.id}
+                >
+                  <Trash2 className={cn("h-4 w-4", deletingId === shift.id && "animate-pulse")} />
+                </Button>
+              )}
             </div>
           ))}
         </div>

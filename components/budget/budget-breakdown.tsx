@@ -19,6 +19,8 @@ interface BudgetBreakdownProps {
   onAdjustLimits: () => void;
   /** Opens the existing add flow (primary "Add category"). */
   onAddCategory: () => void;
+  /** Desktop read-only mode: hides the toolbar buttons. */
+  readOnly?: boolean;
 }
 
 /**
@@ -35,24 +37,27 @@ export function BudgetBreakdown({
   month,
   onAdjustLimits,
   onAddCategory,
+  readOnly = false,
 }: BudgetBreakdownProps) {
   // Mirror CategoryGrid: only categories with a plan or actual spend.
   const rows = budgetData.filter((b) => b.monthlyBudget > 0 || b.spent > 0);
 
   return (
     <div className="space-y-3">
-      <Toolbar
-        filters={
-          <span className="text-sm text-muted-foreground">
-            Monthly budget · {getMonthName(month)} {year}
-          </span>
-        }
-        primaryAction={{ label: "Add category", onClick: onAddCategory }}
-      >
-        <Button variant="ghost" size="sm" onClick={onAdjustLimits}>
-          Adjust limits
-        </Button>
-      </Toolbar>
+      {readOnly ? null : (
+        <Toolbar
+          filters={
+            <span className="text-sm text-muted-foreground">
+              Monthly budget · {getMonthName(month)} {year}
+            </span>
+          }
+          primaryAction={{ label: "Add category", onClick: onAddCategory }}
+        >
+          <Button variant="ghost" size="sm" onClick={onAdjustLimits}>
+            Adjust limits
+          </Button>
+        </Toolbar>
+      )}
 
       <SectionCard icon={Wallet} title="Budget vs actual" noBodyPadding>
         {rows.length === 0 ? (
