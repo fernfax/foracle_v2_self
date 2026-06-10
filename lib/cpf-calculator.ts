@@ -1,30 +1,53 @@
-// CPF Contribution Rates based on age group (SC / PR 3rd year onwards,
-// effective 1 Jan 2026 — cpf.gov.sg). 2027 rates are already announced;
-// update here AND in CPF_RATE_BRACKETS below each January.
-const CPF_RATES = {
-  "55_and_below": { employer: 0.17, employee: 0.20 },
-  "above_55_to_60": { employer: 0.16, employee: 0.18 },
-  "above_60_to_65": { employer: 0.125, employee: 0.125 },
-  "above_65_to_70": { employer: 0.09, employee: 0.075 },
-  "above_70": { employer: 0.075, employee: 0.05 },
-};
+// All CPF rates / ceilings / limits live in lib/cpf-constants.ts — the single
+// source of truth shared with the display brackets and the AI knowledge base.
+// This module imports them for the math and re-exports the names existing
+// callers already pull from here, so no import paths change.
+import {
+  CPF_RATES,
+  CPF_RATE_BAND_LABELS,
+  CPF_RATE_BAND_ORDER,
+  CPF_ALLOCATION_RATES,
+  CPF_ALLOCATION_BAND_LABELS,
+  CPF_ALLOCATION_BAND_ORDER,
+  OW_CEILING,
+  ANNUAL_WAGE_CEILING,
+  CPF_LOW_WAGE_NO_CPF,
+  CPF_LOW_WAGE_NO_EMPLOYEE,
+  CPF_LOW_WAGE_PHASE_IN_END,
+} from "@/lib/cpf-constants";
 
-// CPF Ordinary Wage Ceiling
-const OW_CEILING = 8000;
+export {
+  CPF_RATES,
+  CPF_ALLOCATION_RATES,
+  OW_CEILING,
+  OW_CEILING_YEAR,
+  ANNUAL_WAGE_CEILING,
+  CPF_ANNUAL_LIMIT,
+  CPF_RATES_VERSION,
+  CPF_EFFECTIVE_FROM,
+  FRS_2026,
+  CPF_LOW_WAGE_NO_CPF,
+  CPF_LOW_WAGE_NO_EMPLOYEE,
+  CPF_LOW_WAGE_PHASE_IN_END,
+} from "@/lib/cpf-constants";
+export type { CPFAgeGroup } from "@/lib/cpf-constants";
 
-// Exposed for UI (the OW-ceiling explainer tooltip).
+// Legacy aliases the UI imports (the OW/AW explainer tooltips).
 export const OW_CEILING_AMOUNT = OW_CEILING;
-export const OW_CEILING_YEAR = 2026;
+export const ANNUAL_WAGE_CEILING_AMOUNT = ANNUAL_WAGE_CEILING;
 
-// CPF contribution rate brackets (as % of wage) for display, mirroring
-// CPF_RATES. Effective 1 Jan 2026. Keep in sync with CPF_RATES above.
-export const CPF_RATE_BRACKETS = [
-  { label: "55 and below", employer: 17, employee: 20, total: 37 },
-  { label: "Above 55 to 60", employer: 16, employee: 18, total: 34 },
-  { label: "Above 60 to 65", employer: 12.5, employee: 12.5, total: 25 },
-  { label: "Above 65 to 70", employer: 9, employee: 7.5, total: 16.5 },
-  { label: "Above 70", employer: 7.5, employee: 5, total: 12.5 },
-] as const;
+// Display brackets, DERIVED from the rate constants so they can never drift
+// from the engine. *1000/10 kills float dust (0.16*100 === 16.000000000000004).
+export const CPF_RATE_BRACKETS = CPF_RATE_BAND_ORDER.map((k) => {
+  const employer = Math.round(CPF_RATES[k].employer * 1000) / 10;
+  const employee = Math.round(CPF_RATES[k].employee * 1000) / 10;
+  return {
+    label: CPF_RATE_BAND_LABELS[k],
+    employer,
+    employee,
+    total: Math.round((employer + employee) * 10) / 10,
+  };
+});
 
 // Index into CPF_RATE_BRACKETS for a given age.
 export function getCPFBracketIndex(age: number): number {
@@ -35,17 +58,12 @@ export function getCPFBracketIndex(age: number): number {
   return 4;
 }
 
-// CPF allocation (OA/SA/MA) brackets for display, mirroring
-// CPF_ALLOCATION_RATES. Keep in sync.
-export const CPF_ALLOCATION_BRACKETS = [
-  { label: "35 & below", oa: 0.6217, sa: 0.1622, ma: 0.2162 },
-  { label: "Above 35 to 45", oa: 0.5676, sa: 0.2162, ma: 0.2162 },
-  { label: "Above 45 to 50", oa: 0.5135, sa: 0.2703, ma: 0.2162 },
-  { label: "Above 50 to 55", oa: 0.4324, sa: 0.3514, ma: 0.2162 },
-  { label: "Above 55 to 60", oa: 0.4308, sa: 0.2462, ma: 0.3231 },
-  { label: "Above 60 to 65", oa: 0.3404, sa: 0.1489, ma: 0.5106 },
-  { label: "Above 65", oa: 0.3333, sa: 0.0909, ma: 0.5758 },
-] as const;
+// CPF allocation (OA/SA/MA) brackets for display, DERIVED from the allocation
+// rate constants (OA/SA/MA kept as fractions, matching the display consumers).
+export const CPF_ALLOCATION_BRACKETS = CPF_ALLOCATION_BAND_ORDER.map((k) => ({
+  label: CPF_ALLOCATION_BAND_LABELS[k],
+  ...CPF_ALLOCATION_RATES[k],
+}));
 
 // Index into CPF_ALLOCATION_BRACKETS for a given age.
 export function getCPFAllocationBracketIndex(age: number): number {
@@ -96,25 +114,6 @@ export function computeBonusCPF(
   };
 }
 
-// CPF Annual Wage Ceiling
-const ANNUAL_WAGE_CEILING = 102000;
-
-// Annual (Additional Wage) ceiling — exposed for the bonus-tab explainer.
-export const ANNUAL_WAGE_CEILING_AMOUNT = ANNUAL_WAGE_CEILING;
-
-// CPF Allocation Rates (how total CPF is distributed across OA, SA, MA) based on age
-const CPF_ALLOCATION_RATES = {
-  "35_and_below": { oa: 0.6217, sa: 0.1622, ma: 0.2162 },
-  "above_35_to_45": { oa: 0.5676, sa: 0.2162, ma: 0.2162 },
-  "above_45_to_50": { oa: 0.5135, sa: 0.2703, ma: 0.2162 },
-  "above_50_to_55": { oa: 0.4324, sa: 0.3514, ma: 0.2162 },
-  "above_55_to_60": { oa: 0.4308, sa: 0.2462, ma: 0.3231 },
-  "above_60_to_65": { oa: 0.3404, sa: 0.1489, ma: 0.5106 },
-  "above_65": { oa: 0.3333, sa: 0.0909, ma: 0.5758 },
-};
-
-export type CPFAgeGroup = keyof typeof CPF_RATES;
-
 export interface CPFCalculationResult {
   grossAmount: number;
   cpfApplicableAmount: number; // Amount subject to CPF (capped at OW ceiling)
@@ -161,15 +160,6 @@ export function getCPFAllocationByAge(age: number): { oa: number; sa: number; ma
     return CPF_ALLOCATION_RATES["above_65"];
   }
 }
-
-// Low-wage thresholds (Total Wages per month). Below/at these, the employee
-// share is reduced or nil even though the employer still contributes.
-export const CPF_LOW_WAGE_NO_CPF = 50; // TW <= $50: no CPF at all
-export const CPF_LOW_WAGE_NO_EMPLOYEE = 500; // TW <= $500: employer-only, employee nil
-export const CPF_LOW_WAGE_PHASE_IN_END = 750; // $500 < TW <= $750: employee phased in
-
-/** CPF Full Retirement Sum for members turning 55 in 2026 (CPF Board). */
-export const FRS_2026 = 220_400;
 
 /**
  * Apply Singapore's low-wage CPF rules to a CPF-applicable wage.
