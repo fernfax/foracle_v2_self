@@ -507,6 +507,10 @@ export const incomesBeta = pgTable("incomes_beta", {
   employeeCpfContribution: decimal("employee_cpf_contribution", { precision: 12, scale: 2 }),
   employerCpfContribution: decimal("employer_cpf_contribution", { precision: 12, scale: 2 }),
   netTakeHome: decimal("net_take_home", { precision: 12, scale: 2 }),
+  // Rate-set identity used when the stored CPF values above were computed (e.g.
+  // "2026"). Null when the row carries no CPF (no DOB'd member / not subject).
+  // Drives recompute-on-read so an annual rate change can't leave stale values.
+  cpfRatesVersion: varchar("cpf_rates_version", { length: 20 }),
   cpfOrdinaryAccount: decimal("cpf_ordinary_account", { precision: 12, scale: 2 }),
   cpfSpecialAccount: decimal("cpf_special_account", { precision: 12, scale: 2 }),
   cpfMedisaveAccount: decimal("cpf_medisave_account", { precision: 12, scale: 2 }),
