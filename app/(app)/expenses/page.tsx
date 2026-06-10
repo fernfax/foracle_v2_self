@@ -1,30 +1,7 @@
-import { getExpenses } from "@/lib/actions/expenses";
-import { getIncomesBeta } from "@/lib/actions/incomes-beta";
-import { getCurrentHoldings } from "@/lib/actions/current-holdings";
-import { getInvestments } from "@/lib/actions/investments";
-import { ExpensesClient } from "./client";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
-  title: "Expenses | Foracle",
-  description: "Track and manage your expenses",
-};
-
-export default async function ExpensesPage() {
-  const [expenses, incomes, holdings, investments] = await Promise.all([
-    getExpenses(),
-    getIncomesBeta(),
-    getCurrentHoldings(),
-    getInvestments(),
-  ]);
-
-  return (
-    <ExpensesClient
-      initialExpenses={expenses}
-      initialIncomes={incomes}
-      initialHoldings={holdings}
-      initialInvestments={investments}
-    />
-  );
+export default function ExpensesPage() {
+  redirect("/user?tab=expenses");
 }

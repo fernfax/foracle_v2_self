@@ -4311,6 +4311,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   // Set on pointerup if drag occurred — used to suppress the synthetic click
   // event so the QuickAdjustPad popover doesn't open after a drag.
   const justDraggedRef = useRef(false);
+  // Controlled open state for bar-segment and bonus popovers so onConfirm
+  // can close the popup and let the optimistic update render immediately.
+  const [openPopupKey, setOpenPopupKey] = useState<string | null>(null);
 
   // Does the in-progress draft bar's date range intersect ANY income on this
   // track? If yes, we expand the lane and stack the bars vertically (top
@@ -4917,7 +4920,11 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
               const showRightHandle =
                 editMode && isLastSegment && !isOngoingTail && endInWindow;
               return (
-                <Popover key={`${income.id}-${i}`}>
+                <Popover
+                  key={`${income.id}-${i}`}
+                  open={openPopupKey === `${income.id}-${i}`}
+                  onOpenChange={(o) => setOpenPopupKey(o ? `${income.id}-${i}` : null)}
+                >
                   {/* Opens in BOTH modes now: edit mode = editable, view mode =
                       read-only details (Overview / CPF / Bonus). */}
                   <PopoverTrigger asChild>
@@ -5059,6 +5066,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         } else {
                           onAmountChange(income, next, bonus);
                         }
+                        setOpenPopupKey(null);
                       }}
                       onDelete={() => onRequestDelete(income)}
                     />
@@ -5121,7 +5129,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         : { left: `${centerPct}%`, top: "44%", height: "20%" }
                     }
                   />
-                  <Popover>
+                  <Popover
+                    open={openPopupKey === `${income.id}-bonus-${b.index}`}
+                    onOpenChange={(o) => setOpenPopupKey(o ? `${income.id}-bonus-${b.index}` : null)}
+                  >
                     <PopoverTrigger asChild>
                       <button
                         type="button"
@@ -5148,9 +5159,10 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         openToBonus
                         readOnly={!editMode}
                         canEditBonus={editMode && canEditBonus}
-                        onConfirm={(next, bonus) =>
-                          onAmountChange(income, next, bonus)
-                        }
+                        onConfirm={(next, bonus) => {
+                          onAmountChange(income, next, bonus);
+                          setOpenPopupKey(null);
+                        }}
                       />
                     </PopoverContent>
                   </Popover>

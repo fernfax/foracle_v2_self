@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
-import { Plus, Settings2 } from "lucide-react";
+import { Plus, Settings2, Target, Wallet, TrendingUp, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   MonthNavigator,
   BudgetOverview,
@@ -16,12 +17,11 @@ import {
   BudgetShiftHistory,
 } from "@/components/budget";
 import { DailySpendingChart } from "@/components/budget/daily-spending-chart";
-import { CategoryBudgetBarChart } from "@/components/budget/category-budget-bar-chart";
 import { RecentExpensesList } from "@/components/budget/recent-expenses-list";
 import { BudgetBreakdown } from "@/components/budget/budget-breakdown";
 import { getBudgetVsActual, getBudgetSummary } from "@/lib/actions/budget-calculator";
 import { getDailyExpensesForMonth, getTodaySpending, getDailySpendingByDay, type DailyExpense } from "@/lib/actions/daily-expenses";
-import { isCurrentMonth } from "@/lib/budget-utils";
+import { isCurrentMonth, formatBudgetCurrency } from "@/lib/budget-utils";
 import { getExpenseCategories, getAllExpensesGroupedByCategory, type ExpenseCategory, type ExpenseItem } from "@/lib/actions/expense-categories";
 import { getBudgetShiftsForMonth, type BudgetShift } from "@/lib/actions/budget-shifts";
 import type { BudgetVsActual } from "@/lib/actions/budget-calculator";
@@ -59,8 +59,6 @@ export function BudgetClient({
   initialYear,
   initialMonth,
 }: BudgetClientProps) {
-  const router = useRouter();
-
   // State
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
@@ -170,8 +168,6 @@ export function BudgetClient({
     setAddExpenseOpen(true);
   }, []);
 
-  // "Add category" (breakdown toolbar primary) — reuse the existing add flow,
-  // identical to the floating "+": reset edit/preselect state, open AddExpenseModal.
   const handleAddCategory = useCallback(() => {
     setEditingExpense(null);
     setPreselectedCategoryName(null);
@@ -206,58 +202,49 @@ export function BudgetClient({
 
   const isViewingCurrentMonth = isCurrentMonth(year, month);
 
+  const pacingLabel =
+    budgetSummary.pacingStatus === "under"
+      ? "Under"
+      : budgetSummary.pacingStatus === "over"
+      ? "Overspending"
+      : "On track";
+
+  const pacingColor =
+    budgetSummary.pacingStatus === "over"
+      ? "text-[#E05555]"
+      : budgetSummary.pacingStatus === "under"
+      ? "text-[#007A68]"
+      : undefined;
+
   return (
-    <div className="max-w-lg mx-auto pb-24 space-y-4 md:max-w-none md:px-6 lg:px-8 md:pb-8">
-      {/* Month Navigator */}
-      <MonthNavigator
-        year={year}
-        month={month}
-        onMonthChange={handleMonthChange}
-      />
+    <div className="max-w-lg mx-auto pb-24 space-y-4 desktop:max-w-none desktop:px-0 desktop:pb-8 desktop:space-y-0">
 
-      {/* Budget vs actual breakdown (per-category limit = monthlyBudget). Adjust
-          limits opens the existing Manage Categories modal; Add category reuses
-          the existing add-expense flow. */}
-      <BudgetBreakdown
-        budgetData={budgetData}
-        year={year}
-        month={month}
-        onAdjustLimits={() => setManageCategoriesOpen(true)}
-        onAddCategory={handleAddCategory}
-      />
+      {/* ── MOBILE LAYOUT (unchanged) ── */}
+      <div className="desktop:hidden space-y-4">
+        <MonthNavigator year={year} month={month} onMonthChange={handleMonthChange} />
 
-      {/* Row 1: Spending Overview + Daily Spending Chart (equal height on desktop) */}
-      <div className="space-y-4 md:grid md:grid-cols-[1fr_420px] md:gap-6 md:space-y-0">
-        <BudgetOverview
-          totalBudget={budgetSummary.totalBudget}
-          totalSpent={budgetSummary.totalSpent}
-          remaining={budgetSummary.remaining}
-          percentUsed={budgetSummary.percentUsed}
-          dailyBudget={budgetSummary.dailyBudget}
-          todaySpent={isViewingCurrentMonth ? todaySpent : 0}
-          expectedSpent={budgetSummary.expectedSpentByToday}
-          pacingStatus={budgetSummary.pacingStatus}
-          currentDay={budgetSummary.currentDay}
-          month={month}
-          showPacing={isViewingCurrentMonth}
-          onPacingClick={isViewingCurrentMonth ? handlePacingClick : undefined}
-          onHistoryClick={handleHistoryClick}
-        />
+        {/* Budget vs actual card is desktop-only; intentionally omitted on mobile. */}
 
-        <div className="hidden md:block">
-          <DailySpendingChart
-            dailySpendingData={dailySpendingData}
+        {/* Row 1: Spending Overview + Daily Spending Chart */}
+        <div className="space-y-4">
+          <BudgetOverview
+            totalBudget={budgetSummary.totalBudget}
+            totalSpent={budgetSummary.totalSpent}
+            remaining={budgetSummary.remaining}
+            percentUsed={budgetSummary.percentUsed}
             dailyBudget={budgetSummary.dailyBudget}
+            todaySpent={isViewingCurrentMonth ? todaySpent : 0}
+            expectedSpent={budgetSummary.expectedSpentByToday}
+            pacingStatus={budgetSummary.pacingStatus}
+            currentDay={budgetSummary.currentDay}
             month={month}
-            year={year}
-            gradientId="spendingGradient-inline"
+            showPacing={isViewingCurrentMonth}
+            onPacingClick={isViewingCurrentMonth ? handlePacingClick : undefined}
+            onHistoryClick={handleHistoryClick}
           />
         </div>
-      </div>
 
-      {/* Row 2+: Category Grid + Manage Categories | Bar Chart + Recent Expenses */}
-      <div className="space-y-4 md:grid md:grid-cols-[1fr_420px] md:gap-6 md:space-y-0 md:items-start">
-        {/* Left: Category Grid + Manage Categories */}
+        {/* Row 2: Category Grid + Manage Categories + Budget Shift History */}
         <div className="space-y-4">
           <div className="pt-2">
             <CategoryGrid budgetData={budgetData} onCategoryClick={handleCategoryClick} />
@@ -274,51 +261,135 @@ export function BudgetClient({
             </Button>
           </div>
 
-          {/* Budget Shift History */}
           <BudgetShiftHistory
             shifts={budgetShifts}
             onShiftDeleted={() => fetchMonthData(year, month)}
           />
         </div>
 
-        {/* Right: Bar Chart + Recent Expenses (desktop only) */}
-        <div className="hidden md:flex md:flex-col md:gap-4">
-          <CategoryBudgetBarChart budgetData={budgetData} />
+        {/* Floating Add Button — mobile only, portaled to <body> */}
+        {mounted &&
+          createPortal(
+            <div className="fixed bottom-28 left-0 right-0 z-40 pointer-events-none">
+              <div className="max-w-lg mx-auto flex justify-center">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full w-14 h-14 shadow-lg pointer-events-auto bg-background/95 backdrop-blur-sm hover:bg-accent transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-bottom-4"
+                  onClick={() => {
+                    setEditingExpense(null);
+                    setPreselectedCategoryName(null);
+                    setAddExpenseOpen(true);
+                  }}
+                >
+                  <Plus className="h-6 w-6" />
+                </Button>
+              </div>
+            </div>,
+            document.body
+          )}
+      </div>
 
-          <RecentExpensesList
-            expenses={dailyExpenses}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onViewAll={() => setHistoryModalOpen(true)}
-            maxItems={10}
+      {/* ── DESKTOP LAYOUT (read-only, data-rich) ── */}
+      <div className="hidden desktop:block space-y-5">
+        {/* Sticky page header with month navigator in actions */}
+        <PageHeader
+          title="Budget"
+          actions={
+            <MonthNavigator year={year} month={month} onMonthChange={handleMonthChange} />
+          }
+        />
+
+        {/* 4-up stat band */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard
+            label="Spent This Month"
+            value={formatBudgetCurrency(budgetSummary.totalSpent)}
+            icon={Target}
+            accent="brand"
+            delta={`${budgetSummary.percentUsed.toFixed(0)}% of ${formatBudgetCurrency(budgetSummary.totalBudget)} budget`}
+            deltaDirection={
+              budgetSummary.percentUsed > 100
+                ? "down"
+                : budgetSummary.percentUsed > 85
+                ? "flat"
+                : "up"
+            }
           />
+          <StatCard
+            label="Remaining"
+            value={formatBudgetCurrency(Math.max(0, budgetSummary.remaining))}
+            icon={Wallet}
+            accent="teal"
+            delta={`${Math.max(0, 100 - budgetSummary.percentUsed).toFixed(0)}% left · ${budgetSummary.daysInMonth - budgetSummary.currentDay} days to go`}
+            deltaDirection={budgetSummary.remaining >= 0 ? "up" : "down"}
+          />
+          <StatCard
+            label="Daily Pacing"
+            value={<span className={pacingColor}>{pacingLabel}</span>}
+            icon={TrendingUp}
+            accent="jungle"
+            delta={
+              isViewingCurrentMonth
+                ? `${formatBudgetCurrency(budgetSummary.totalSpent)} vs ${formatBudgetCurrency(budgetSummary.expectedSpentByToday)} expected`
+                : undefined
+            }
+            deltaDirection="flat"
+          />
+          <StatCard
+            label="Spent Today"
+            value={formatBudgetCurrency(isViewingCurrentMonth ? todaySpent : 0)}
+            icon={CalendarDays}
+            accent="gold"
+            delta={`of ${formatBudgetCurrency(budgetSummary.dailyBudget)} daily budget`}
+            deltaDirection={
+              isViewingCurrentMonth && todaySpent > budgetSummary.dailyBudget ? "down" : "up"
+            }
+          />
+        </div>
+
+        {/* 2-column main layout */}
+        <div className="grid grid-cols-[1fr_380px] gap-6 items-start">
+
+          {/* Left: Budget vs Actual + Daily Spending Trend */}
+          <div className="space-y-4">
+            <BudgetBreakdown
+              budgetData={budgetData}
+              year={year}
+              month={month}
+              onAdjustLimits={() => setManageCategoriesOpen(true)}
+              onAddCategory={handleAddCategory}
+              readOnly
+            />
+            <DailySpendingChart
+              dailySpendingData={dailySpendingData}
+              dailyBudget={budgetSummary.dailyBudget}
+              month={month}
+              year={year}
+              gradientId="spendingGradient-desktop"
+            />
+          </div>
+
+          {/* Right: Recent Expenses + Budget Adjustments */}
+          <div className="space-y-4">
+            <RecentExpensesList
+              expenses={dailyExpenses}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onViewAll={() => setHistoryModalOpen(true)}
+              maxItems={10}
+              readOnly
+            />
+            <BudgetShiftHistory
+              shifts={budgetShifts}
+              readOnly
+              defaultExpanded
+            />
+          </div>
         </div>
       </div>
 
-      {/* Floating Add Button - portaled to <body> so it stays fixed to the viewport
-          (an ancestor uses `contain: layout paint` which would otherwise scope it). */}
-      {mounted &&
-        createPortal(
-          <div className="fixed bottom-28 md:bottom-8 left-0 md:left-[72px] right-0 z-40 pointer-events-none">
-            <div className="max-w-lg mx-auto flex justify-center md:max-w-none md:px-8 md:justify-start">
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-full w-14 h-14 shadow-lg pointer-events-auto bg-background/95 backdrop-blur-sm hover:bg-accent transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-bottom-4"
-                onClick={() => {
-                  setEditingExpense(null);
-                  setPreselectedCategoryName(null);
-                  setAddExpenseOpen(true);
-                }}
-              >
-                <Plus className="h-6 w-6" />
-              </Button>
-            </div>
-          </div>,
-          document.body
-        )}
-
-      {/* Add Expense Modal - only show categories that are in the budget (have tracked expenses) */}
+      {/* Modals — shared state, triggered from mobile layout */}
       <AddExpenseModal
         open={addExpenseOpen}
         onOpenChange={setAddExpenseOpen}
@@ -334,7 +405,6 @@ export function BudgetClient({
         month={month}
       />
 
-      {/* Daily Spending Graph Modal */}
       <DailySpendingGraphModal
         open={graphModalOpen}
         onOpenChange={setGraphModalOpen}
@@ -344,7 +414,6 @@ export function BudgetClient({
         year={year}
       />
 
-      {/* Expense History Modal */}
       <ExpenseHistoryModal
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
@@ -353,7 +422,6 @@ export function BudgetClient({
         onDelete={handleDelete}
       />
 
-      {/* Manage Categories Modal */}
       <ManageCategoriesModal
         open={manageCategoriesOpen}
         onOpenChange={setManageCategoriesOpen}
