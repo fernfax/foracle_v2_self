@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import { db } from "@/db";
-import { families, users } from "@/db/schema";
+import { families, users, familyMembers } from "@/db/schema";
 import type { AuthContext } from "@/lib/auth-context";
 
 // Safety guard: every destructive helper re-verifies the connection points
@@ -70,4 +71,32 @@ export async function seedUser(opts: {
     familyId: opts.familyId,
     isMaster: !!opts.isMaster,
   };
+}
+
+// Inserts a family member (the CPF member+DOB policy needs a linked member with
+// a date of birth for CPF to compute). Returns the member id. Pass
+// dateOfBirth: null to model a pending/DOB-less member (CPF stays off).
+export async function seedFamilyMember(opts: {
+  id?: string;
+  userId: string;
+  familyId: string;
+  name?: string;
+  dateOfBirth?: string | null;
+  isContributing?: boolean;
+}): Promise<string> {
+  assertTestDb();
+  const id = opts.id ?? nanoid();
+  await db
+    .insert(familyMembers)
+    .values({
+      id,
+      userId: opts.userId,
+      familyId: opts.familyId,
+      name: opts.name ?? "Member",
+      status: "active",
+      dateOfBirth: opts.dateOfBirth ?? null,
+      isContributing: opts.isContributing ?? true,
+    })
+    .onConflictDoNothing();
+  return id;
 }
