@@ -155,9 +155,16 @@ export function calculateCpfProjection(
   totalMonths: number,
   loanDeductions?: CpfLoanDeduction[]
 ): CpfProjectionDataPoint[] {
-  const now = new Date();
-  const startMonth = now.getMonth(); // 0-indexed
-  const startYear = now.getFullYear();
+  // Pin the projection's start month/year to Asia/Singapore so one-off bonus
+  // matching (oneOff.date === monthKey) and the start bucket don't drift on a
+  // UTC server at the year/month boundary. Matches the repo's SGT convention.
+  const sgParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Singapore",
+    year: "numeric",
+    month: "numeric",
+  }).formatToParts(new Date());
+  const startYear = Number(sgParts.find((p) => p.type === "year")?.value);
+  const startMonth = Number(sgParts.find((p) => p.type === "month")?.value) - 1; // 0-indexed
 
   // Track cumulative values per member
   const cumulative: Record<

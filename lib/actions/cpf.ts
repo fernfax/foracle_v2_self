@@ -9,7 +9,7 @@ import {
   calculateBonusCPF,
   calculateCPF,
 } from "@/lib/cpf-calculator";
-import { parseBonusGroups } from "@/lib/income-month";
+import { bonusDollarsForYear } from "@/lib/income-month";
 import { effectiveIncomeCategory } from "@/lib/income-category";
 import { getCurrentUserAndFamily } from "@/lib/auth-context";
 
@@ -142,30 +142,35 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
     let totalMa = 0;
     let totalBonusAmount = 0;
 
+    // Current calendar year pinned to Asia/Singapore. Render runs UTC, and an
+    // unpinned new Date().getFullYear() would drop a year-boundary one-off
+    // bonus for the ~8h window where UTC and SGT disagree on the year (matches
+    // the SGT-pinning convention in budget / daily-expenses / orchestrator).
+    const sgYear = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Singapore",
+        year: "numeric",
+      }).format(new Date())
+    );
+
     for (const income of memberIncomes) {
       // Beta incomes are monthly by design — use the amount directly.
       const monthlyGross = parseFloat(income.amount);
 
-      // Aggregate bonus amounts from bonusGroups. Recurring entries are
-      // months-of-salary MULTIPLIERS; one-off entries are direct DOLLAR
-      // payouts and count only when they land in the current calendar year
-      // (this tab is a current-year snapshot). Telling the two wire shapes
-      // apart matters: a $5,000 one-off read as a multiplier would inflate
-      // the bonus to 5,000 months of salary.
+      // Bonus dollars attracting CPF this year. Recurring entries are
+      // months-of-salary MULTIPLIERS (count every year); one-off entries are
+      // direct DOLLAR payouts counted only in their own year. The shared
+      // helper keeps the recurring/one-off contract in one place — reading a
+      // $5,000 one-off as a multiplier would inflate it to 5,000 months of pay.
       if (income.bonusGroups) {
-        const currentYear = String(new Date().getFullYear());
-        for (const g of parseBonusGroups(income.bonusGroups)) {
-          if (g.kind === "recurring") {
-            totalBonusAmount += monthlyGross * g.multiplier;
-          } else if (g.date.startsWith(currentYear)) {
-            totalBonusAmount += g.dollars;
-          }
-        }
+        totalBonusAmount += bonusDollarsForYear(income.bonusGroups, monthlyGross, sgYear);
       }
 
       // Per-income CPF via calculateCPF — the same function income rows are
-      // persisted with — so this tab matches the stored values exactly
-      // (OW ceiling, low-wage rules, and rounding all live inside it).
+      // persisted with — so this tab matches the stored values exactly. When a
+      // contributing member has no DOB, age 30 lands in the same ≤55 bracket as
+      // the default rates (20/17), so the figure stays consistent; PR 5 makes
+      // DOB mandatory for CPF and removes this fallback.
       const cpf = calculateCPF(monthlyGross, memberAge ?? 30);
       const monthlyEmployeeCpf = cpf.employeeCpfContribution;
       const monthlyEmployerCpf = cpf.employerCpfContribution;

@@ -147,4 +147,23 @@ describe("calculateCpfProjection — bonuses land in the right months", () => {
     // Two 0.5-month bonuses = one month of salary → same ≈$1,850 uplift.
     expect(mar26 - feb26).toBeCloseTo(1850, 0);
   });
+
+  it("two one-off bonuses in the same YYYY-MM both count", () => {
+    const data = calculateCpfProjection(
+      [
+        {
+          ...base,
+          oneOffBonuses: [
+            { date: "2026-06", dollars: 2000 },
+            { date: "2026-06", dollars: 3000 },
+          ],
+        },
+      ],
+      12
+    );
+    const may26 = data[4]["member_m1_monthly_total"] as number;
+    const jun26 = data[5]["member_m1_monthly_total"] as number;
+    // $2,000 + $3,000 = $5,000 combined → ≈$1,850 uplift at 37% total CPF.
+    expect(jun26 - may26).toBeCloseTo(1850, 0);
+  });
 });
