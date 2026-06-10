@@ -184,3 +184,23 @@ export function bonusForMonth(income: MonthAmountIncome, monthKey: string): numb
     return g.month === cellMonthNum ? sum + effectiveMonthly * g.multiplier : sum;
   }, 0);
 }
+
+/**
+ * Total bonus DOLLARS attracting CPF in calendar `year` for a single income.
+ * Recurring bonuses repeat every year, so they always count (multiplier ×
+ * monthly base); one-off bonuses count only when their "YYYY-MM" falls in
+ * `year`. Pure — the caller supplies `year` (pin it to the intended timezone;
+ * an unpinned year drops year-boundary one-offs on a UTC server). Single home
+ * for the recurring-vs-one-off dollar contract, shared by the CPF tab.
+ */
+export function bonusDollarsForYear(
+  bonusGroups: string | null | undefined,
+  monthlyGross: number,
+  year: number
+): number {
+  const yearPrefix = String(year);
+  return parseBonusGroups(bonusGroups).reduce((sum, g) => {
+    if (g.kind === "recurring") return sum + monthlyGross * g.multiplier;
+    return g.date.startsWith(yearPrefix) ? sum + g.dollars : sum;
+  }, 0);
+}

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   grossForMonth,
   bonusForMonth,
+  bonusDollarsForYear,
   isMonthInIncomeWindow,
   type MonthAmountIncome,
 } from "@/lib/income-month";
@@ -153,5 +154,46 @@ describe("Sankey ⇄ Timeline Studio agreement", () => {
     });
     const model = buildCashflowModel([inc], [], { year: 2026, month: 7 });
     expect(model.incomeNodes.some((n) => n.id === "inc1:bonus")).toBe(false);
+  });
+});
+
+describe("bonusDollarsForYear — CPF-tab annual bonus aggregation", () => {
+  const GROSS = 5000;
+
+  it("recurring bonuses count every year (multiplier × monthly gross)", () => {
+    const bg = JSON.stringify([{ month: 12, amount: "1.5" }]);
+    // Recurring repeats yearly, so any year returns the same total.
+    expect(bonusDollarsForYear(bg, GROSS, 2026)).toBe(7500);
+    expect(bonusDollarsForYear(bg, GROSS, 2030)).toBe(7500);
+  });
+
+  it("one-off bonuses count ONLY in their own calendar year (the year-boundary fix)", () => {
+    const bg = JSON.stringify([
+      { date: "2025-06", amount: "4000" }, // prior year
+      { date: "2026-06", amount: "5000" }, // this year
+      { date: "2027-01", amount: "9000" }, // future year
+    ]);
+    expect(bonusDollarsForYear(bg, GROSS, 2026)).toBe(5000);
+    expect(bonusDollarsForYear(bg, GROSS, 2025)).toBe(4000);
+    expect(bonusDollarsForYear(bg, GROSS, 2027)).toBe(9000);
+    expect(bonusDollarsForYear(bg, GROSS, 2024)).toBe(0);
+  });
+
+  it("mixed recurring + one-off: recurring always, one-off only in-year", () => {
+    const bg = JSON.stringify([
+      { month: 12, amount: "1" }, // recurring → 5000 every year
+      { date: "2026-03", amount: "2000" }, // one-off this year
+    ]);
+    expect(bonusDollarsForYear(bg, GROSS, 2026)).toBe(7000); // 5000 + 2000
+    expect(bonusDollarsForYear(bg, GROSS, 2027)).toBe(5000); // recurring only
+  });
+
+  it("null / empty / corrupted / non-positive bonusGroups → 0", () => {
+    expect(bonusDollarsForYear(null, GROSS, 2026)).toBe(0);
+    expect(bonusDollarsForYear("[]", GROSS, 2026)).toBe(0);
+    expect(bonusDollarsForYear("[object Object]", GROSS, 2026)).toBe(0);
+    expect(bonusDollarsForYear("{}", GROSS, 2026)).toBe(0);
+    expect(bonusDollarsForYear(JSON.stringify([{ month: 12, amount: "0" }]), GROSS, 2026)).toBe(0);
+    expect(bonusDollarsForYear(JSON.stringify([{ date: "2026-06", amount: "-500" }]), GROSS, 2026)).toBe(0);
   });
 });
