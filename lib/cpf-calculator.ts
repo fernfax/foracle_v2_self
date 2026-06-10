@@ -1,8 +1,10 @@
-// CPF Contribution Rates based on age group
+// CPF Contribution Rates based on age group (SC / PR 3rd year onwards,
+// effective 1 Jan 2026 — cpf.gov.sg). 2027 rates are already announced;
+// update here AND in CPF_RATE_BRACKETS below each January.
 const CPF_RATES = {
   "55_and_below": { employer: 0.17, employee: 0.20 },
-  "above_55_to_60": { employer: 0.155, employee: 0.17 },
-  "above_60_to_65": { employer: 0.12, employee: 0.115 },
+  "above_55_to_60": { employer: 0.16, employee: 0.18 },
+  "above_60_to_65": { employer: 0.125, employee: 0.125 },
   "above_65_to_70": { employer: 0.09, employee: 0.075 },
   "above_70": { employer: 0.075, employee: 0.05 },
 };
@@ -15,11 +17,11 @@ export const OW_CEILING_AMOUNT = OW_CEILING;
 export const OW_CEILING_YEAR = 2026;
 
 // CPF contribution rate brackets (as % of wage) for display, mirroring
-// CPF_RATES. Effective 1 Jan 2025. Keep in sync with CPF_RATES above.
+// CPF_RATES. Effective 1 Jan 2026. Keep in sync with CPF_RATES above.
 export const CPF_RATE_BRACKETS = [
   { label: "55 and below", employer: 17, employee: 20, total: 37 },
-  { label: "Above 55 to 60", employer: 15.5, employee: 17, total: 32.5 },
-  { label: "Above 60 to 65", employer: 12, employee: 11.5, total: 23.5 },
+  { label: "Above 55 to 60", employer: 16, employee: 18, total: 34 },
+  { label: "Above 60 to 65", employer: 12.5, employee: 12.5, total: 25 },
   { label: "Above 65 to 70", employer: 9, employee: 7.5, total: 16.5 },
   { label: "Above 70", employer: 7.5, employee: 5, total: 12.5 },
 ] as const;
@@ -167,7 +169,7 @@ export const CPF_LOW_WAGE_NO_EMPLOYEE = 500; // TW <= $500: employer-only, emplo
 export const CPF_LOW_WAGE_PHASE_IN_END = 750; // $500 < TW <= $750: employee phased in
 
 /** CPF Full Retirement Sum for members turning 55 in 2026 (CPF Board). */
-export const FRS_2026 = 205_800;
+export const FRS_2026 = 220_400;
 
 /**
  * Apply Singapore's low-wage CPF rules to a CPF-applicable wage.
@@ -208,7 +210,12 @@ export function computeCpfContributions(
 }
 
 /**
- * Calculate CPF contributions for a given gross income
+ * Calculate CPF contributions for a given gross income.
+ *
+ * Applies the statutory CPF rounding rule (CPF Board): the TOTAL contribution
+ * is rounded to the nearest dollar (50 cents rounds up), the employee share
+ * has its cents dropped, and the employer share is total minus employee.
+ *
  * @param grossAmount - Monthly gross income
  * @param age - User's age (defaults to 30 for now)
  * @returns CPF calculation breakdown
@@ -220,9 +227,16 @@ export function calculateCPF(grossAmount: number, age: number = 30): CPFCalculat
   const cpfApplicableAmount = Math.min(grossAmount, OW_CEILING);
 
   // Calculate contributions (low-wage rules adjust the employee share below $750)
-  const { employee: employeeCpfContribution, employer: employerCpfContribution } =
+  const { employee: employeeRaw, employer: employerRaw } =
     computeCpfContributions(cpfApplicableAmount, rates);
-  const totalCpfContribution = employeeCpfContribution + employerCpfContribution;
+
+  // Statutory rounding in a single step. The 1e-9 epsilon absorbs IEEE-754
+  // dust (e.g. a raw employee share of 44.99999999999999 must floor to 45)
+  // without disturbing genuine boundaries — rounding to cents first would
+  // double-round and push totals like $370.4951 the wrong way.
+  const totalCpfContribution = Math.round(employeeRaw + employerRaw + 1e-9);
+  const employeeCpfContribution = Math.floor(employeeRaw + 1e-9);
+  const employerCpfContribution = totalCpfContribution - employeeCpfContribution;
 
   // Net take home = Gross - Employee CPF Contribution
   const netTakeHome = grossAmount - employeeCpfContribution;
@@ -230,9 +244,9 @@ export function calculateCPF(grossAmount: number, age: number = 30): CPFCalculat
   return {
     grossAmount,
     cpfApplicableAmount,
-    employeeCpfContribution: Math.round(employeeCpfContribution * 100) / 100,
-    employerCpfContribution: Math.round(employerCpfContribution * 100) / 100,
-    totalCpfContribution: Math.round(totalCpfContribution * 100) / 100,
+    employeeCpfContribution,
+    employerCpfContribution,
+    totalCpfContribution,
     netTakeHome: Math.round(netTakeHome * 100) / 100,
   };
 }
