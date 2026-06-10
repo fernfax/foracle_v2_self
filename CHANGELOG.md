@@ -3,6 +3,24 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.1.0.0] - 2026-06-10
+
+CPF audit remediation, phases 4–6 (built test-first; see CPF_AUDIT_REPORT.md).
+
+### Added
+- A single CPF constants module (rates, ceilings, FRS, the $37,740 annual limit) is now the one source of truth shared by the calculation engine, the on-screen rate tables, and the AI assistant's knowledge base — with a test that fails if they ever drift apart (the audit found the engine on 2025 rates while the assistant cited 2026).
+- A `cpf_rates_version` stamp on income rows so a future rate change can detect and refresh stale figures on its own.
+
+### Changed
+- **Bonus CPF is now correct across the whole year.** Multiple bonuses in a calendar year share the annual ceiling cumulatively instead of each being taxed on the full amount, the $37,740 yearly cap is applied, and bonus CPF is rounded the statutory way — consistently on the CPF tab, the projection chart, the income popup, and the cashflow diagram (which previously over-deducted).
+- **CPF now requires a family member with a date of birth.** An income with no linked member (or a member without a DOB) is treated as gross take-home — no more silent assumption of age 30. Age is derived only from the member's DOB, never from the browser, and the lookup is scoped to your own household.
+
+### Fixed
+- Income amounts are validated server-side: $0, negative, and non-numeric amounts are rejected (the rules existed but never actually ran).
+
+### Removed
+- Negative amounts are no longer accepted by the income amount field.
+
 ## [1.0.2.0] - 2026-06-10
 
 ### Fixed
