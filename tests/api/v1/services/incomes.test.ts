@@ -295,3 +295,30 @@ describe("deleteIncome (real DB)", () => {
     expect(await getIncomeById(ctxA, created.id)).not.toBeNull();
   });
 });
+
+describe("createIncome input validation (real DB)", () => {
+  it("rejects $0 / negative / non-numeric amounts (zod enforced)", async () => {
+    const ctx = await seedUser({ userId: "user-a", familyId: "fam-a", isMaster: true });
+    await expect(createIncome(ctx, { ...baseInput, amount: "0" })).rejects.toThrow();
+    await expect(createIncome(ctx, { ...baseInput, amount: "-100" })).rejects.toThrow();
+    await expect(createIncome(ctx, { ...baseInput, amount: "abc" })).rejects.toThrow();
+    await expect(createIncome(ctx, { ...baseInput, amount: "" })).rejects.toThrow();
+  });
+
+  it("accepts a positive amount and a $0 CPF-account balance", async () => {
+    const ctx = await seedUser({ userId: "user-a", familyId: "fam-a", isMaster: true });
+    const row = await createIncome(ctx, {
+      ...baseInput,
+      amount: "5000.50",
+      cpfOrdinaryAccount: "0",
+    });
+    expect(Number(row.amount)).toBe(5000.5);
+  });
+
+  it("updateIncome rejects a non-positive amount", async () => {
+    const ctx = await seedUser({ userId: "user-a", familyId: "fam-a", isMaster: true });
+    const created = await createIncome(ctx, baseInput);
+    await expect(updateIncome(ctx, created.id, { amount: "0" })).rejects.toThrow();
+    await expect(updateIncome(ctx, created.id, { amount: "-1" })).rejects.toThrow();
+  });
+});

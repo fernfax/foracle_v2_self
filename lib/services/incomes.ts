@@ -5,9 +5,11 @@ import { familyMembers, incomesBeta } from "@/db/schema";
 import { calculateCPF, CPF_RATES_VERSION } from "@/lib/cpf-calculator";
 import { resolveCpfAge } from "@/lib/cpf-age";
 import type { AuthContext } from "@/lib/auth-context";
-import type {
-  CreateIncomeBody,
-  UpdateIncomeBody,
+import {
+  createIncomeBodySchema,
+  updateIncomeBodySchema,
+  type CreateIncomeBody,
+  type UpdateIncomeBody,
 } from "@/lib/api-schemas/incomes";
 
 export type IncomeRow = typeof incomesBeta.$inferSelect;
@@ -38,7 +40,7 @@ const CPF_OFF: ResolvedCpf = {
 // member or no DOB, CPF is OFF (the amount is take-home/gross). The age comes
 // solely from the member's DOB; any client-supplied age is ignored (closing the
 // tamper hole where a client could send an age to shrink CPF).
-async function resolveCpfFields(opts: {
+export async function resolveCpfFields(opts: {
   subjectToCpf: boolean;
   amount: number;
   familyId: string;
@@ -133,6 +135,10 @@ export async function createIncome(
   ctx: AuthContext,
   body: CreateIncomeBody
 ): Promise<IncomeRow> {
+  // Enforce the wire contract at runtime: positive amount, valid dates/enums,
+  // no negatives/NaN/$0. The schema was previously type-only and never ran.
+  createIncomeBodySchema.parse(body);
+
   const cpf = await resolveCpfFields({
     subjectToCpf: body.subjectToCpf,
     amount: Number(body.amount),
@@ -178,6 +184,8 @@ export async function updateIncome(
   id: string,
   patch: UpdateIncomeBody
 ): Promise<IncomeRow> {
+  updateIncomeBodySchema.parse(patch);
+
   const existing = await getIncomeById(ctx, id);
   if (!existing) throw new IncomeNotFoundError();
 

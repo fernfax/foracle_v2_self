@@ -47,6 +47,12 @@ export async function createIncome(data: {
 }) {
   const { userId, familyId } = await getCurrentUserAndFamily();
 
+  // Reject non-positive / NaN amounts (the legacy modal sends a number, not the
+  // zod schema the beta path enforces).
+  if (!Number.isFinite(data.amount) || data.amount <= 0) {
+    throw new Error("Amount must be greater than 0");
+  }
+
   // CPF via the shared member+DOB resolver (no member / no DOB → CPF off; age
   // from the member's DOB, never the client). Same path the beta action uses.
   const cpf = await resolveCpfFields({
@@ -118,6 +124,14 @@ export async function updateIncome(
   }
 ) {
   const { familyId } = await getCurrentUserAndFamily();
+
+  // Reject a non-positive / NaN amount when one is supplied.
+  if (
+    data.amount !== undefined &&
+    (!Number.isFinite(data.amount) || data.amount <= 0)
+  ) {
+    throw new Error("Amount must be greater than 0");
+  }
 
   // Verify the row belongs to caller's family
   const existing = await db.query.incomesBeta.findFirst({

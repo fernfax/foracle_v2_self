@@ -269,7 +269,7 @@ export function IncomeModal({
 
   const handleSubmit = async () => {
     // Validate required fields
-    if (!name || !category || !amount) {
+    if (!name || !category || !amount || !(parseFloat(amount) > 0)) {
       return;
     }
 
@@ -356,6 +356,7 @@ export function IncomeModal({
   const isFormValid = () => {
     if (!incomeCategory) return false; // Income type is required
     if (!name || !category || !amount) return false;
+    if (!(parseFloat(amount) > 0)) return false; // reject $0 / negative / non-numeric
     if (frequency === "custom" && selectedMonths.length === 0) return false;
     if (incomeCategory !== "current-recurring" && !startDate) return false;
     return true;
