@@ -10,9 +10,17 @@ PR 4 routed the dedicated bonus-CPF surfaces (CPF tab, projection, income popup,
 **Priority:** P3
 `AnnualBonusCpf`'s $37,740 cap is bonus-only — it doesn't see the member's monthly salary CPF, so the cap is a safety rail that (given the AW ceiling) never actually binds on bonus alone. Full coverage means seeding the accumulator with the year's salary CPF already consumed. Low urgency (the AW ceiling binds first in every realistic case).
 
-### CPF requires a linked member with DOB (audit PR 5)
+### PR 5b — input UI + secondary display enforcement (follow-up to PR 5)
 **Priority:** P1
-Policy decided 2026-06-10: an income with no linked family member has CPF disabled (gross = take-home); no member can be created without a DOB (invitees supply DOB on acceptance). Implementation: server-side age resolver from member DOB that ignores client-sent `familyMemberAge` (closes the override hole + the creator drawer's year-diff age bug); disable the Subject-to-CPF toggle without a member (drawer currently defaults it ON); thread real age into `lib/balance-calculator.ts`, dashboard milestone/bonus paths, and `lib/ai/tools/executors.ts` (all currently hardcode age 30); silently migrate orphan CPF rows to gross (pre-count audit first); add a `cpf_rates_version` column with recompute-on-read so the 2027 rate change (already announced) can't reintroduce stale rows.
+PR 5 landed the SERVER-side member+DOB policy (both write paths via the shared `resolveCpfFields`, recompute-on-read, the `cpf_rates_version` column, the CPF-tab no-DOB fix, and the orphan-flip migration). Still to do:
+- **Member-create DOB enforcement:** `lib/services/family.ts` `createFamilyMember` / `updateFamilyMember` should reject a null DOB — but NOT the invite path (`inviteFamilyMember` deliberately inserts pending members with no DOB; they're locked until acceptance). The add dialog already requires DOB; `components/family-members/edit-family-member-dialog.tsx` does not — add the guard there.
+- **Creator drawer:** disable the "Subject to CPF" toggle when no member is linked (it currently defaults ON, `income-creator-drawer.tsx:115`) and stop sending the year-diff `familyMemberAge` (`:127-129`) — the server ignores it now, but drop the dead client computation.
+- **Secondary display age-30 kills:** `lib/ai/tools/executors.ts` (~:794, :1215) and `components/income/income-list.tsx:419` (legacy-modal client preview) still hardcode age 30 — thread the member's DOB age (CPF off when null).
+- **Invite-acceptance DOB capture UI** — the stubbed product decision (minimal DOB-confirm gate vs trimmed invitee wizard). Until built, invitees' linked incomes correctly show gross.
+
+### Prod migration runbook for PR 5 (gated, Render shell)
+**Priority:** P0 (when PR 5 lands)
+1. BEFORE deploying PR 5: `node db/manual-migrations/0013_add_cpf_rates_version.cjs` (adds the column; the app writes it on every income save). 2. Deploy PR 5. 3. `node db/manual-migrations/0013_orphan_cpf_to_gross.cjs` (dry-run — review the orphan list), then `--apply`, then re-run to confirm 0. Flips subject-to-CPF incomes with no DOB'd member to gross.
 
 ### Validation, scoping, and constants module (audit PR 6)
 **Priority:** P2
