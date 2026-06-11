@@ -80,7 +80,7 @@ The reset/seed scripts print row counts at the end — confirm they match before
 | `/assistant` | ○ | — | — | — | — | — | — | — | — | ● |
 | `/mobile-guide` | ○ | — | — | — | — | — | — | — | — | ○ |
 
-Public/onboarding (`/`, `/sign-in`, `/sign-up`, `/onboarding`) are persona-independent (Phase 2). `/developer`, `/developer/diagram`, `/admin` are out of scope (the latter correctly bounces this non-superadmin account).
+Public pages (`/`, `/sign-in`, `/sign-up`) are persona-independent. Onboarding (`/onboarding`) has its own runbook in **Part 6** below. `/developer`, `/developer/diagram`, `/admin` are out of scope (the latter correctly bounces this non-superadmin account).
 
 ---
 
@@ -373,3 +373,59 @@ Seed: persona_NN_<name>.sql · Health: NN/100
 ```
 
 Findings roll up into `QA_BASELINE_SUMMARY.md` (deduped, P0–P3 backlog + Vercel sign-off checklist).
+
+---
+
+## Part 6 — Onboarding QA
+
+Onboarding is once-per-account: `completeOnboarding()` sets `users.onboarding_completed = true`
+(one-way), and `/onboarding` redirects to `/overview` while it's true. You do **not** need to
+delete the Clerk account to re-test — Clerk identity is separate from app data. Two layers cover it:
+
+### 6A — Amounts are correct (automated, the high-value layer)
+
+`tests/onboarding-flow.test.ts` replays the wizard's save services (`createIncome`,
+`createOnboardingExpenses`, `completeOnboarding`) against the `foracle_test` DB and asserts the
+persisted rows produce the right numbers via `computeHouseholdSummary` — the same pure function
+`/user` renders from. This is "user enters X → app shows the expected amounts," proven without a
+browser or Clerk, and runs in CI.
+
+```bash
+npm run test:db-setup            # one-time: creates foracle_test + pgvector
+npm run test -- onboarding-flow  # green = post-onboarding amounts correct
+```
+
+Scenarios: blank slate (zeroed summary), CPF salary + expenses + holdings (the core case —
+gross/net/CPF/expenses/holdings/runway all checked), and a no-DOB member (CPF stays off per the
+member+DOB policy). Add a scenario here whenever onboarding starts collecting a new figure.
+
+### 6B — Re-run the real wizard (manual dogfood, repeatable)
+
+To walk the actual wizard UI again against the dev DB, reset this household and re-run — no account
+deletion:
+
+```bash
+# Wipes this family's data AND flips onboarding_completed back to false:
+/Applications/Postgres.app/Contents/Versions/17/bin/psql \
+  postgresql://evanlee@localhost:5432/foracle_v2_self \
+  -f db/manual-migrations/qa/_reset_onboarding.sql
+
+# Then (authenticated) visit the real route — now reachable again:
+#   http://localhost:3000/onboarding
+# Walk all steps, Complete Setup, and confirm /overview shows what you entered.
+```
+
+`_reset_onboarding.sql` reuses `_reset_family.sql` (preserves the users/families/Self rows), so the
+stable Self id survives and the persona seeds keep working. Re-run as often as needed.
+
+**Expected-amounts checklist after a manual run** (`/user` and `/overview`):
+- Total/gross income == the salary you entered; take-home == gross − CPF (CPF only if the Self
+  member has a DOB).
+- Total expenses == sum of the category amounts entered.
+- Net worth / liquid holdings == sum of the holdings entered.
+- `onboarding_completed` is `true` again and `/onboarding` redirects to `/overview`.
+
+### Deferred — browser E2E
+A Playwright spec that drives the wizard UI (navigation/validation/redirect) is not yet wired; it
+needs `@clerk/testing` + a dedicated `+clerk_test` user and would run `_reset_onboarding` in setup.
+Until then, 6A guards the numbers and 6B covers the UI manually.
