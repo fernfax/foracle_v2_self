@@ -23,7 +23,6 @@ import {
   PanelLeftClose,
   PanelLeft,
   LineChart,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,7 +57,8 @@ const mainNavItems = [
   { href: "/investments", label: "Investments", icon: LineChart },
   { href: "/goals", label: "Goals", icon: Target },
   { href: "/budget", label: "Budget", icon: Calculator },
-  { href: "/assistant", label: "AI Assistant", icon: Sparkles },
+  // Hidden for now — AI Assistant feature paused.
+  // { href: "/assistant", label: "AI Assistant", icon: Sparkles },
 ];
 
 export function Sidebar() {
