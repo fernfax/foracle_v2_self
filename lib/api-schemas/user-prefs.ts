@@ -12,8 +12,21 @@ export const setBackgroundDecorBodySchema = z.object({
 });
 export type SetBackgroundDecorBody = z.infer<typeof setBackgroundDecorBodySchema>;
 
-export const TOUR_NAMES = ["overall", "dashboard", "incomes", "expenses"] as const;
+export const TOUR_NAMES = [
+  "overall",
+  "dashboard",
+  "incomes",
+  "expenses",
+  "cpf",
+  "holdings",
+  "goals",
+  "budget",
+] as const;
 export const tourNameEnum = z.enum(TOUR_NAMES);
 export type TourName = z.infer<typeof tourNameEnum>;
 
 export type TourStatus = Record<TourName, string | null>;
+
+/** Build a fresh, fully-populated TourStatus with every tour uncompleted. */
+export const emptyTourStatus = (): TourStatus =>
+  Object.fromEntries(TOUR_NAMES.map((n) => [n, null])) as TourStatus;

@@ -128,6 +128,7 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
   return (
     <>
       <div className="space-y-4">
+        <div data-tour="goals-toolbar">
         <Toolbar
           count={{
             value: goals.length,
@@ -145,8 +146,9 @@ export function GoalList({ initialGoals, showAddButton, isAchievedView }: GoalLi
               : undefined
           }
         />
+        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div data-tour="goals-list" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => {
             const saved = parseFloat(goal.currentAmountSaved ?? "0");
             const target = parseFloat(goal.targetAmount);

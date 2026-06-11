@@ -823,7 +823,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
             )}
           </div>
 
-          <div className="flex flex-col gap-2 sm:items-end shrink-0">
+          <div data-tour="cashflow-controls" className="flex flex-col gap-2 sm:items-end shrink-0">
             {/* Sankey / Projection view toggle. */}
             <SlidingTabs
               tabs={[
@@ -893,6 +893,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
         ) : (
           <>
             <div
+              data-tour="cashflow-diagram"
               // Mobile keeps a compact fixed height so it sits comfortably with
               // the bottom nav. Desktop fills most of the viewport below the
               // page header + card chrome — calc(90vh - 198px) is "fill" * 0.9

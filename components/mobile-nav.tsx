@@ -64,7 +64,7 @@ export function MobileNav() {
   }, [pathname]);
 
   return (
-    <nav className="bottom-nav fixed bottom-0 left-0 right-0 bg-background/85 backdrop-blur-xl border-t border-border/30 z-50 pb-safe">
+    <nav data-tour="mobile-nav" className="bottom-nav fixed bottom-0 left-0 right-0 bg-background/85 backdrop-blur-xl border-t border-border/30 z-50 pb-safe">
       <div
         ref={scrollRef}
         className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory"

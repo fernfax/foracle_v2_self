@@ -226,7 +226,7 @@ export function BudgetClient({
         {/* Budget vs actual card is desktop-only; intentionally omitted on mobile. */}
 
         {/* Row 1: Spending Overview + Daily Spending Chart */}
-        <div className="space-y-4">
+        <div data-tour="budget-overview" className="space-y-4">
           <BudgetOverview
             totalBudget={budgetSummary.totalBudget}
             totalSpent={budgetSummary.totalSpent}
@@ -246,12 +246,13 @@ export function BudgetClient({
 
         {/* Row 2: Category Grid + Manage Categories + Budget Shift History */}
         <div className="space-y-4">
-          <div className="pt-2">
+          <div data-tour="budget-categories" className="pt-2">
             <CategoryGrid budgetData={budgetData} onCategoryClick={handleCategoryClick} />
           </div>
 
           <div className="pt-4">
             <Button
+              data-tour="budget-manage-categories-btn"
               variant="outline"
               className="w-full gap-2"
               onClick={() => setManageCategoriesOpen(true)}
@@ -301,7 +302,7 @@ export function BudgetClient({
         />
 
         {/* 4-up stat band */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div data-tour="budget-stat-band" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard
             label="Spent This Month"
             value={formatBudgetCurrency(budgetSummary.totalSpent)}
@@ -352,7 +353,7 @@ export function BudgetClient({
         <div className="grid grid-cols-[1fr_380px] gap-6 items-start">
 
           {/* Left: Budget vs Actual + Daily Spending Trend */}
-          <div className="space-y-4">
+          <div data-tour="budget-breakdown" className="space-y-4">
             <BudgetBreakdown
               budgetData={budgetData}
               year={year}
@@ -371,7 +372,7 @@ export function BudgetClient({
           </div>
 
           {/* Right: Recent Expenses + Budget Adjustments */}
-          <div className="space-y-4">
+          <div data-tour="budget-recent" className="space-y-4">
             <RecentExpensesList
               expenses={dailyExpenses}
               onEdit={handleEdit}

@@ -45,7 +45,7 @@ export function IncomeStatBand({ grossIncome, netIncome, incomes }: IncomeStatBa
   }, [incomes]);
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div data-tour="income-stat-band" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <StatCard
         label="Gross income"
         value={`${formatBudgetCurrency(grossIncome)}`}

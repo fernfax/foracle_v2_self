@@ -12,11 +12,43 @@ import { driver, type Driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import "@/app/driver-theme.css";
 import { type TourName, TOUR_CONFIGS } from "@/lib/tour/tour-config";
+import { emptyTourStatus } from "@/lib/api-schemas/user-prefs";
 import {
   getTourStatus,
   markTourCompleted,
   type TourStatus,
 } from "@/lib/actions/tour";
+
+/**
+ * A tour step is only worth showing if its target is actually VISIBLE on the
+ * current viewport — not merely present in the DOM. This is what lets one tour
+ * definition adapt across desktop/mobile and empty states without branching:
+ *   • the desktop sidebar is absent from the DOM on phones,
+ *   • the mobile bottom nav is `display:none` on desktop,
+ *   • the Budget page renders two parallel layouts (one hidden per breakpoint),
+ *   • empty pages drop their data cards entirely.
+ * A plain `querySelector !== null` check keeps hidden/zero-size anchors, and
+ * driver.js then spotlights an invisible box or shows an orphaned popover.
+ */
+function isElementVisible(el: Element): boolean {
+  const htmlEl = el as HTMLElement;
+  if (htmlEl.offsetParent === null) {
+    const style = window.getComputedStyle(htmlEl);
+    // offsetParent is also null for position:fixed, so only bail when the
+    // element is genuinely hidden; otherwise fall through to the size check.
+    if (style.display === "none" || style.visibility === "hidden") return false;
+  }
+  const rect = el.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
+function visibleSteps(tourName: TourName) {
+  return TOUR_CONFIGS[tourName].steps.filter((step) => {
+    if (!step.element) return true; // element-less (modal) steps always count
+    const el = document.querySelector(step.element as string);
+    return el !== null && isElementVisible(el);
+  });
+}
 
 interface TourContextType {
   startTour: (name: TourName) => void;
@@ -34,12 +66,7 @@ interface TourProviderProps {
 }
 
 export function TourProvider({ children, userId }: TourProviderProps) {
-  const [tourStatus, setTourStatus] = useState<TourStatus>({
-    overall: null,
-    dashboard: null,
-    incomes: null,
-    expenses: null,
-  });
+  const [tourStatus, setTourStatus] = useState<TourStatus>(emptyTourStatus());
   const [isRunning, setIsRunning] = useState(false);
   const [currentTour, setCurrentTour] = useState<TourName | null>(null);
   const [driverInstance, setDriverInstance] = useState<Driver | null>(null);
@@ -62,38 +89,21 @@ export function TourProvider({ children, userId }: TourProviderProps) {
     const maxRetries = 15;
     const retryDelay = 400;
 
-    // Check which steps have existing elements (for initial validation only)
-    // We don't filter out steps - some elements may appear dynamically via onHighlightStarted
-    const initialElements = config.steps.filter((step) => {
-      if (!step.element) return true;
-      const element = document.querySelector(step.element as string);
-      return element !== null;
-    });
+    // Only run steps whose target is actually visible on this viewport. This
+    // both adapts the tour to desktop/mobile/empty-state layouts and prevents
+    // orphaned popovers for elements that aren't on the page.
+    const validSteps = visibleSteps(tourName);
 
-    // Use all steps, not just initially visible ones
-    const validSteps = config.steps;
-
-    // Log which elements were found/not found
-    if (retryCount === 0 || initialElements.length === 0) {
-      const allTourElements = document.querySelectorAll('[data-tour]');
-      console.log(`[Tour] Found ${allTourElements.length} data-tour elements on page:`,
-        Array.from(allTourElements).map(el => el.getAttribute('data-tour'))
-      );
-      console.log(`[Tour] Looking for:`, config.steps.map(s => s.element));
-    }
-
-    // Wait for at least one element to exist before starting
-    if (initialElements.length === 0) {
+    // Wait for at least one target to render before starting — pages stream in
+    // async (Suspense, client hydration, chart mounts), so retry a few times.
+    if (validSteps.length === 0) {
       if (retryCount < maxRetries) {
-        console.log(`[Tour] Waiting for elements, retry ${retryCount + 1}/${maxRetries}...`);
         setTimeout(() => startTourWithRetry(tourName, retryCount + 1), retryDelay);
         return;
       }
-      console.warn(`No valid elements found for tour: ${tourName} after ${maxRetries} retries`);
+      console.warn(`No visible elements found for tour: ${tourName} after ${maxRetries} retries`);
       return;
     }
-
-    console.log(`[Tour] Starting ${tourName} with ${validSteps.length} steps (${initialElements.length} initially visible)`);
 
     const instance = driver({
         showProgress: true,

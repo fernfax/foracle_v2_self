@@ -2,14 +2,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import type { AuthContext } from "@/lib/auth-context";
-import { TOUR_NAMES, type TourName, type TourStatus } from "@/lib/api-schemas/user-prefs";
+import { TOUR_NAMES, emptyTourStatus, type TourName, type TourStatus } from "@/lib/api-schemas/user-prefs";
 
-const EMPTY_TOUR_STATUS: TourStatus = {
-  overall: null,
-  dashboard: null,
-  incomes: null,
-  expenses: null,
-};
+const EMPTY_TOUR_STATUS: TourStatus = emptyTourStatus();
 
 export async function getSinglishMode(ctx: AuthContext): Promise<boolean> {
   const user = await db.query.users.findFirst({
@@ -72,12 +67,13 @@ export async function getTourStatus(ctx: AuthContext): Promise<TourStatus> {
   if (!user?.tourCompletedAt) return { ...EMPTY_TOUR_STATUS };
   try {
     const parsed = JSON.parse(user.tourCompletedAt) as Partial<TourStatus>;
-    return {
-      overall: parsed.overall ?? null,
-      dashboard: parsed.dashboard ?? null,
-      incomes: parsed.incomes ?? null,
-      expenses: parsed.expenses ?? null,
-    };
+    // Start from the full set of tour keys so newly-added tours always resolve
+    // to null rather than undefined, then overlay whatever was persisted.
+    const result = { ...EMPTY_TOUR_STATUS };
+    for (const name of TOUR_NAMES) {
+      result[name] = parsed[name] ?? null;
+    }
+    return result;
   } catch {
     return { ...EMPTY_TOUR_STATUS };
   }

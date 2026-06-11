@@ -405,7 +405,7 @@ export function CpfProjectionGraph({
                 : "Monthly CPF contribution breakdown"}
             </CardDescription>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-4">
+          <div data-tour="cpf-projection-controls" className="grid grid-cols-3 gap-2 sm:flex sm:gap-4">
             {/* View Mode */}
             <div className="space-y-1 sm:space-y-2 sm:min-w-[150px]">
               <Label
@@ -520,7 +520,7 @@ export function CpfProjectionGraph({
       </CardHeader>
 
       <CardContent className="pt-2">
-        <div className="w-full h-[350px]">
+        <div data-tour="cpf-projection-chart" className="w-full h-[350px]">
           <ResponsiveChart width="100%" height="100%">
             <ComposedChart
               data={projectionData}
