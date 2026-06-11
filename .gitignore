@@ -57,3 +57,7 @@ mobile/expo-env.d.ts
 
 # Playwright stored auth state (session cookies — never commit)
 tests/e2e/.auth/
+
+# Local Playwright recording artifacts (videos/screenshots) — not committed.
+# Anchored to repo root so it does not also ignore tests/recordings/ (the specs).
+/recordings/

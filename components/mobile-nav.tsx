@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   TrendingUp,
-  Wallet,
   Target,
   User,
   Shield,
@@ -16,7 +15,9 @@ import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
   { href: "/user", label: "User", icon: User },
-  { href: "/expenses", label: "Expenses", icon: Wallet },
+  // Expenses lives as a tab under the User homepage (/user?tab=expenses), so it
+  // is reached via User — not surfaced as its own bottom-nav entry. Only
+  // top-level pages (or single pages with no children) belong here.
   { href: "/assets", label: "Assets", icon: TrendingUp },
   { href: "/policies", label: "Insurance", icon: Shield },
   { href: "/investments", label: "Invest", icon: LineChart },

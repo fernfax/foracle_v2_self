@@ -121,7 +121,9 @@ export function UserHomepageClient({ initialIncomes, initialIncomesBeta, initial
   // Sync activeTab + incomeView with URL search params when they change
   useEffect(() => {
     // "current" was the legacy slug for the Holdings tab — redirect to "holdings".
-    const raw = searchParams.get("tab") || "family";
+    // Bare /user (no ?tab=) always defaults to Overview — keep this fallback in
+    // sync with the initial useState above so the tab can't flip on mount.
+    const raw = searchParams.get("tab") || "overview";
     const tabFromUrl = raw === "current" ? "holdings" : raw;
     if (tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
