@@ -119,13 +119,13 @@ export function NetWorthView({ summary, initialHoldings }: NetWorthViewProps) {
         title="Net Worth"
         subtitle="Everything you own, minus what you owe."
         actions={
-          <Button onClick={openAdd}>
+          <Button data-tour="add-holding-btn" onClick={openAdd}>
             <Plus className="size-4" />
             Add holding
           </Button>
         }
       >
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div data-tour="net-worth-hero" className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="font-display text-data-lg font-semibold tabular-nums tracking-tight">
               {formatBudgetCurrency(summary.netWorth)}
@@ -185,7 +185,7 @@ export function NetWorthView({ summary, initialHoldings }: NetWorthViewProps) {
         <>
           {/* Asset-class chips */}
           {summary.assetClasses.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div data-tour="asset-class-chips" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {summary.assetClasses.map((c) => (
                 <StatCard
                   key={c.key}

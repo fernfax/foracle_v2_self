@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { HelpCircle, Compass, LayoutDashboard, DollarSign, Receipt, GraduationCap, Smartphone } from "lucide-react";
+import { HelpCircle, Compass, LayoutDashboard, DollarSign, Receipt, GraduationCap, Smartphone, Landmark, Wallet, Target, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,7 +34,20 @@ const TOUR_PATHNAMES: Record<TourName, string> = {
   overall: "/overview",
   dashboard: "/overview",
   incomes: "/user",
-  expenses: "/expenses",
+  expenses: "/user",
+  cpf: "/user",
+  holdings: "/user",
+  goals: "/goals",
+  budget: "/budget",
+};
+
+// Tours that live on a specific /user tab. We must also match the `?tab=`
+// param, not just the pathname, before a tour can start.
+const TOUR_TABS: Partial<Record<TourName, string>> = {
+  incomes: "incomes",
+  expenses: "expenses",
+  cpf: "cpf",
+  holdings: "holdings",
 };
 
 // Full URLs including query params for navigation
@@ -42,14 +55,22 @@ const TOUR_ROUTES: Record<TourName, string> = {
   overall: "/overview",
   dashboard: "/overview",
   incomes: "/user?tab=incomes",
-  expenses: "/expenses",
+  expenses: "/user?tab=expenses",
+  cpf: "/user?tab=cpf",
+  holdings: "/user?tab=holdings",
+  goals: "/goals",
+  budget: "/budget",
 };
 
 const TOUR_PAGE_NAMES: Record<TourName, string> = {
-  overall: "Dashboard",
-  dashboard: "Dashboard",
+  overall: "Overview",
+  dashboard: "Overview",
   incomes: "Incomes",
   expenses: "Expenses",
+  cpf: "CPF",
+  holdings: "Holdings",
+  goals: "Goals",
+  budget: "Budget",
 };
 
 export function HelpButton() {
@@ -82,10 +103,12 @@ export function HelpButton() {
     const targetPathname = TOUR_PATHNAMES[tourName];
     if (pathname !== targetPathname) return false;
 
-    // For incomes tour, also check the tab param
-    if (tourName === "incomes") {
-      const currentTab = searchParams.get("tab");
-      return currentTab === "incomes";
+    // Tab-scoped tours (incomes, expenses, cpf, holdings) also need the right
+    // ?tab= param. The /user Overview tab is the default, so tours without an
+    // entry here just need the pathname to match.
+    const requiredTab = TOUR_TABS[tourName];
+    if (requiredTab) {
+      return searchParams.get("tab") === requiredTab;
     }
 
     return true;
@@ -124,12 +147,11 @@ export function HelpButton() {
       const storedTour = sessionStorage.getItem(PENDING_TOUR_KEY) as TourName | null;
       const targetPathname = storedTour ? TOUR_PATHNAMES[storedTour] : null;
       const currentTab = searchParams.get("tab");
-      console.log("[Tour] Checking pending tour:", { storedTour, pathname, targetPathname, currentTab });
 
       if (storedTour && pathname === targetPathname) {
-        // For incomes tour, also verify we're on the incomes tab
-        if (storedTour === "incomes" && currentTab !== "incomes") {
-          console.log("[Tour] On correct path but wrong tab, waiting...");
+        // Tab-scoped tours must also be on the right /user tab before starting.
+        const requiredTab = TOUR_TABS[storedTour];
+        if (requiredTab && currentTab !== requiredTab) {
           return;
         }
 
@@ -245,6 +267,34 @@ export function HelpButton() {
           >
             <Receipt className="mr-2 h-4 w-4" />
             Expenses Tour
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleTourClick("cpf")}
+            className="cursor-pointer transition-colors hover:bg-accent focus:bg-accent"
+          >
+            <Landmark className="mr-2 h-4 w-4" />
+            CPF Tour
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleTourClick("holdings")}
+            className="cursor-pointer transition-colors hover:bg-accent focus:bg-accent"
+          >
+            <Wallet className="mr-2 h-4 w-4" />
+            Net Worth Tour
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleTourClick("goals")}
+            className="cursor-pointer transition-colors hover:bg-accent focus:bg-accent"
+          >
+            <Target className="mr-2 h-4 w-4" />
+            Goals Tour
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleTourClick("budget")}
+            className="cursor-pointer transition-colors hover:bg-accent focus:bg-accent"
+          >
+            <Calculator className="mr-2 h-4 w-4" />
+            Budget Tour
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

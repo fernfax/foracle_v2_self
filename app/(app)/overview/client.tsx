@@ -125,7 +125,7 @@ export function DashboardClient({ metrics, incomes, expenses, holdings, investme
       <PageHeader title="Overview" />
 
       {/* Navigation bridge — quick access to User Homepage tabs */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div data-tour="overview-nav-bridge" className="flex flex-wrap items-center gap-2">
         <span className="text-[11px] text-muted-foreground/60 mr-1">Go to:</span>
         {[
           { tab: "family", label: "Family", icon: Users },

@@ -216,6 +216,22 @@ const TOUR_CONTENT: Record<TourName, { title: string; description: string }> = {
     title: "Expenses Tour",
     description: "Master your expense tracking. We'll show you how to view monthly totals, filter by category, manage custom categories, and add new expenses.",
   },
+  cpf: {
+    title: "CPF Tour",
+    description: "Understand your CPF at a glance — household balances, per-member OA/SA/MA breakdowns, and a projection that adjusts as members age through the contribution brackets.",
+  },
+  holdings: {
+    title: "Net Worth Tour",
+    description: "See everything you own and owe in one place. We'll walk through your net worth, the breakdown by asset class, and how to add a holding.",
+  },
+  goals: {
+    title: "Goals Tour",
+    description: "Set financial goals and watch your progress. We'll show you how to add a goal and track how close you are to reaching each one.",
+  },
+  budget: {
+    title: "Budget Tour",
+    description: "Stay on top of monthly spending. We'll show you your budget overview, spending by category, and how to set the limits that keep you on track.",
+  },
 };
 
 interface WelcomeHeroModalProps {

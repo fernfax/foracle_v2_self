@@ -7,16 +7,11 @@ import {
   markTourCompleted as markTourCompletedService,
   resetTourStatus as resetTourStatusService,
 } from "@/lib/services/user-prefs";
-import type { TourName, TourStatus } from "@/lib/api-schemas/user-prefs";
+import { emptyTourStatus, type TourName, type TourStatus } from "@/lib/api-schemas/user-prefs";
 
 export type { TourName, TourStatus };
 
-const EMPTY: TourStatus = {
-  overall: null,
-  dashboard: null,
-  incomes: null,
-  expenses: null,
-};
+const EMPTY: TourStatus = emptyTourStatus();
 
 /**
  * Get the tour completion status for the current user

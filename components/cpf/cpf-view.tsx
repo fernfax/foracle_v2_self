@@ -96,7 +96,7 @@ export function CpfView({ cpfData, incomes }: CpfViewProps) {
   return (
     <div className="space-y-4">
       {/* Stat band */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div data-tour="cpf-stat-band" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard
           label="Total CPF balance"
           value={formatBudgetCurrency(totalBalance)}
@@ -121,7 +121,7 @@ export function CpfView({ cpfData, incomes }: CpfViewProps) {
       </div>
 
       {/* Per-member cards */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div data-tour="cpf-member-cards" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {cpfData.map((member) => {
           const bal = cpfBalanceForMember(member.familyMemberId, incomes);
           const pctToFrs = FRS_2026 > 0 ? Math.round((bal.total / FRS_2026) * 100) : 0;
