@@ -11,7 +11,6 @@ import {
   Shield,
   Calculator,
   LineChart,
-  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +22,8 @@ const mobileNavItems = [
   { href: "/investments", label: "Invest", icon: LineChart },
   { href: "/goals", label: "Goals", icon: Target },
   { href: "/budget", label: "Budget", icon: Calculator },
-  { href: "/assistant", label: "Assistant", icon: Sparkles },
+  // Hidden for now — AI Assistant feature paused.
+  // { href: "/assistant", label: "Assistant", icon: Sparkles },
 ];
 
 const VISIBLE_ITEMS = 8;
