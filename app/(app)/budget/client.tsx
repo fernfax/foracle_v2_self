@@ -270,7 +270,7 @@ export function BudgetClient({
         {/* Floating Add Button — mobile only, portaled to <body> */}
         {mounted &&
           createPortal(
-            <div className="fixed bottom-28 left-0 right-0 z-40 pointer-events-none">
+            <div className="fixed bottom-[calc(7rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 pointer-events-none">
               <div className="max-w-lg mx-auto flex justify-center">
                 <Button
                   size="lg"

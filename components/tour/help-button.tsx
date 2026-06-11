@@ -208,7 +208,7 @@ export function HelpButton() {
           <Button
             variant="outline"
             size="icon"
-            className="fixed bottom-24 right-6 z-40 rounded-full shadow-lg bg-background/95 backdrop-blur-sm hover:bg-accent md:bottom-6"
+            className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-6 z-40 rounded-full shadow-lg bg-background/95 backdrop-blur-sm hover:bg-accent desktop:bottom-6"
             aria-label="Help & Tours"
             data-tour="help-button"
           >
