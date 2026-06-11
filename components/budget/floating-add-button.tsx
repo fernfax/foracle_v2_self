@@ -28,10 +28,12 @@ export function FloatingAddButton() {
       className={cn(
         // Base styles - match help button styling
         "fixed z-40 rounded-full shadow-lg bg-background/95 backdrop-blur-sm hover:bg-accent",
-        // Hide on desktop
-        "md:hidden",
-        // Mobile positioning - above help button (which is at bottom-24)
-        "bottom-36 right-6"
+        // Hide on desktop (width+height variant — phone-landscape keeps it,
+        // matching the shell's isDesktop check that drives the bottom nav)
+        "desktop:hidden",
+        // Mobile positioning - above help button; both clear the bottom nav's
+        // safe-area growth on notched devices (env() is 0 elsewhere)
+        "bottom-[calc(9rem+env(safe-area-inset-bottom))] right-6"
       )}
       onClick={handleClick}
       aria-label="Add expense"
