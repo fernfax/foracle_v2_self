@@ -26,6 +26,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Info } from "lucide-react";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import { today } from "@/lib/date-helpers";
 import { updateFamilyMember } from "@/lib/actions/family-members";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RELATIONSHIPS } from "@/lib/family-relationships";
@@ -229,6 +230,10 @@ export function EditFamilyMemberDialog({ open, onOpenChange, member, onMemberUpd
                   }}
                   initialFocus
                   fixedWeeks
+                  captionLayout="dropdown"
+                  fromYear={1900}
+                  toYear={new Date().getFullYear()}
+                  disabled={{ after: today() }}
                 />
               </PopoverContent>
             </Popover>

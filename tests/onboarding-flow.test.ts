@@ -43,7 +43,14 @@ async function summaryFor(ctx: AuthContext) {
     db.query.familyMembers.findMany(),
   ]);
 
-  const incomesForSummary = incomes.map((row) => ({ ...row, frequency: "monthly" }));
+  // incomes_beta has neither a frequency nor a custom_months column (beta is
+  // always monthly); supply both so the row matches computeHouseholdSummary's
+  // IncomeRow shape, mirroring how the page treats beta incomes.
+  const incomesForSummary = incomes.map((row) => ({
+    ...row,
+    frequency: "monthly",
+    customMonths: null,
+  }));
   return computeHouseholdSummary(
     incomesForSummary,
     expenseRows,
