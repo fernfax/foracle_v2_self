@@ -91,7 +91,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
         {!isDesktop && (
         <header className="sticky top-0 z-40 border-b border-border/30 bg-background/95 pt-[env(safe-area-inset-top)]">
           <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-[70px] flex items-center">
-            <Link href="/overview" className="flex items-center">
+            <Link href="/user?tab=overview" className="flex items-center">
               <Image
                 src="/wordmark-400.png"
                 alt="Foracle"

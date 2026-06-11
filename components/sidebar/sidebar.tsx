@@ -91,7 +91,7 @@ export function Sidebar() {
         {/* Logo lockup — both images mounted, swap via opacity to avoid mid-animation Image swap */}
         <div className="h-[70px] flex items-center flex-shrink-0 relative px-3">
           <Link
-            href="/user"
+            href="/user?tab=overview"
             className="relative flex items-center h-full w-full"
           >
             {/* Compact mark — visible when collapsed, sits at left edge of the 72px column */}
