@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   TrendingUp,
-  Home,
   Wallet,
   Target,
   User,
@@ -17,7 +16,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
-  { href: "/overview", label: "Overview", icon: Home },
   { href: "/user", label: "User", icon: User },
   { href: "/expenses", label: "Expenses", icon: Wallet },
   { href: "/assets", label: "Assets", icon: TrendingUp },
