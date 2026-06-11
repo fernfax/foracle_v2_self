@@ -278,7 +278,7 @@ export function ExpensesStep({ income, data, onSave, onNext, onBack, onSkip }: E
         </div>
 
         {/* Customize Later Info Box */}
-        <div className="flex gap-3 p-4 rounded-xl bg-[#eaeffc] border border-[rgba(184,98,42,0.25)] dark:border-[rgba(184,98,42,0.25)]/50">
+        <div className="flex gap-3 p-4 rounded-xl bg-[rgba(184,98,42,0.06)] border border-[rgba(184,98,42,0.25)] dark:border-[rgba(184,98,42,0.25)]/50">
           <div className="w-8 h-8 rounded-full bg-[rgba(184,98,42,0.10)] dark:bg-[#B8622A]/40 flex items-center justify-center shrink-0">
             <Lightbulb className="h-4 w-4 text-[#7A5A00]" />
           </div>
