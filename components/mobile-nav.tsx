@@ -29,6 +29,12 @@ const mobileNavItems = [
 const VISIBLE_ITEMS = 8;
 const ITEM_WIDTH_PERCENT = 100 / VISIBLE_ITEMS; // 12.5%
 
+// When every item fits within one screen, spread them evenly across the full
+// width (flex-1) instead of pinning each to a fixed 12.5% slot — otherwise the
+// row packs left and leaves an empty gap on the right. Fixed-width + horizontal
+// scroll only kicks in once there are more items than fit.
+const FITS_WITHOUT_SCROLL = mobileNavItems.length <= VISIBLE_ITEMS;
+
 export function MobileNav() {
   const pathname = usePathname();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -67,7 +73,12 @@ export function MobileNav() {
     <nav data-tour="mobile-nav" className="bottom-nav fixed bottom-0 left-0 right-0 bg-background/85 backdrop-blur-xl border-t border-border/30 z-50 pb-safe">
       <div
         ref={scrollRef}
-        className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+        className={cn(
+          "flex scrollbar-hide font-display",
+          FITS_WITHOUT_SCROLL
+            ? ""
+            : "overflow-x-auto snap-x snap-mandatory"
+        )}
         style={{ scrollBehavior: "smooth" }}
       >
         {mobileNavItems.map((item) => {
@@ -79,10 +90,11 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 transition-colors shrink-0 snap-start font-display",
+                "flex flex-col items-center justify-center gap-1 py-2 px-1 transition-colors font-display",
+                FITS_WITHOUT_SCROLL ? "flex-1" : "shrink-0 snap-start",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
-              style={{ width: `${ITEM_WIDTH_PERCENT}%` }}
+              style={FITS_WITHOUT_SCROLL ? undefined : { width: `${ITEM_WIDTH_PERCENT}%` }}
             >
               <div
                 className={cn(
