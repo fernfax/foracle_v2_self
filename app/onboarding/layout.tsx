@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { checkOnboardingStatus } from "@/lib/actions/onboarding";
-import { FloatingIcons } from "@/components/landing/floating-icons";
-import { HeroBlurMask } from "@/components/landing/hero-blur-mask";
+import { LandingShader } from "@/components/landing/landing-shader";
 
 export default async function OnboardingLayout({
   children,
@@ -23,13 +22,10 @@ export default async function OnboardingLayout({
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-background via-background to-[#F0EBE0]/30">
-      <div className="absolute inset-0 bg-[#F0EBE0]/20" />
-      <FloatingIcons />
-      <HeroBlurMask />
-      <div className="relative z-10">
-        {children}
-      </div>
+    <div className="relative min-h-screen bg-transparent">
+      {/* Same calm mesh-gradient shader as the landing page. */}
+      <LandingShader />
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
