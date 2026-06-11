@@ -9,6 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Lightbulb } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { today } from "@/lib/date-helpers";
 import { WizardNavigation } from "../WizardNavigation";
 import { getOrCreateSelfMember } from "@/lib/actions/family-members";
 import type { FamilyMemberData } from "@/app/onboarding/OnboardingWizard";
@@ -130,6 +131,7 @@ export function UserDetailsStep({ data, onSave, onNext, onBack }: UserDetailsSte
                 captionLayout="dropdown"
                 fromYear={1930}
                 toYear={new Date().getFullYear()}
+                disabled={{ after: today() }}
               />
             </PopoverContent>
           </Popover>

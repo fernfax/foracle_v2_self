@@ -6,6 +6,7 @@ import { familyMembers, incomesBeta, users } from "@/db/schema";
 import type { AuthContext } from "@/lib/auth-context";
 import { assertCallerIsMaster } from "@/lib/auth-context";
 import { RELATIONSHIP_VALUES, type RelationshipValue } from "@/lib/family-relationships";
+import { isFutureIsoDate } from "@/lib/date-helpers";
 import type {
   CreateFamilyMemberBody,
   InviteFamilyMemberBody,
@@ -13,6 +14,22 @@ import type {
 } from "@/lib/api-schemas/family";
 
 export type FamilyMemberRow = typeof familyMembers.$inferSelect;
+
+export class FutureDateOfBirthError extends Error {
+  constructor() {
+    super("Date of birth cannot be in the future");
+    this.name = "FutureDateOfBirthError";
+  }
+}
+
+// Authoritative DOB guard. The api-schemas are type-only here (never .parse()'d
+// on the write path), so this service is the single chokepoint every DOB write
+// passes through — onboarding's getOrCreateSelfMember included.
+function assertDobNotInFuture(dob: string | null | undefined): void {
+  if (dob && isFutureIsoDate(dob)) {
+    throw new FutureDateOfBirthError();
+  }
+}
 
 export class FamilyMemberNotFoundError extends Error {
   constructor() {
@@ -61,6 +78,7 @@ export async function createFamilyMember(
   ctx: AuthContext,
   body: CreateFamilyMemberBody
 ): Promise<FamilyMemberRow> {
+  assertDobNotInFuture(body.dateOfBirth);
   const [row] = await db
     .insert(familyMembers)
     .values({
@@ -84,6 +102,8 @@ export async function updateFamilyMember(
 ): Promise<FamilyMemberRow> {
   const existing = await getFamilyMemberById(ctx, id);
   if (!existing) throw new FamilyMemberNotFoundError();
+
+  assertDobNotInFuture(patch.dateOfBirth);
 
   const update: Partial<typeof familyMembers.$inferInsert> = {
     updatedAt: new Date(),
@@ -180,6 +200,7 @@ export async function getOrCreateSelfMember(
   ctx: AuthContext,
   data: { name: string; dateOfBirth: string }
 ): Promise<FamilyMemberRow> {
+  assertDobNotInFuture(data.dateOfBirth);
   const existing = await findCallerSelfRow(ctx);
 
   if (existing) {

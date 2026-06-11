@@ -15,6 +15,7 @@ import {
   createOnboardingExpenses,
 } from "@/lib/services/onboarding";
 import { expenses } from "@/db/schema";
+import { emptyTourStatus } from "@/lib/api-schemas/user-prefs";
 import { seedUser, truncateAll } from "../../../db-helpers";
 
 beforeEach(async () => {
@@ -67,12 +68,7 @@ describe("tour status (real DB)", () => {
       familyId: "fam-a",
       isMaster: true,
     });
-    expect(await getTourStatus(ctx)).toEqual({
-      overall: null,
-      dashboard: null,
-      incomes: null,
-      expenses: null,
-    });
+    expect(await getTourStatus(ctx)).toEqual(emptyTourStatus());
   });
 
   it("markTourCompleted persists ISO timestamp and preserves the others", async () => {
@@ -115,12 +111,7 @@ describe("tour status (real DB)", () => {
       .set({ tourCompletedAt: "{not valid json" })
       .where(eq(users.id, ctx.userId));
 
-    expect(await getTourStatus(ctx)).toEqual({
-      overall: null,
-      dashboard: null,
-      incomes: null,
-      expenses: null,
-    });
+    expect(await getTourStatus(ctx)).toEqual(emptyTourStatus());
   });
 });
 
