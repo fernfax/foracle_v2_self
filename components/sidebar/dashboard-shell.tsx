@@ -12,7 +12,6 @@ import { MobileNav } from "@/components/mobile-nav";
 // import { HeaderQuickLinks } from "@/components/header/header-quick-links";
 import { HelpButton } from "@/components/tour/help-button";
 import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget";
-import { ClerkUserButton } from "@/components/clerk-user-button";
 import { RadialDecor } from "@/components/ui/radial-decor";
 import { PeranakanTilesDecor } from "@/components/ui/peranakan-tiles-decor";
 import type { BackgroundDecor } from "@/lib/services/user-prefs";
@@ -85,41 +84,43 @@ function DashboardContent({ children }: { children: ReactNode }) {
 
       {/* Main column — the min-w-0 prevents grid items from refusing to shrink below their content size */}
       <div className="min-w-0 flex flex-col">
-        {/* Header — mobile only. Driven by the JS `isDesktop` check rather
-            than `md:hidden` so phone-landscape (width ≥ 768 but height < 600)
-            still gets the mobile header + bottom nav layout. */}
+        {/* Status-bar scrim — mobile only. The old 70px header used to supply
+            env(safe-area-inset-top); without a cover, scrolling content shows
+            under the Dynamic Island. This thin fixed strip keeps the notch area
+            opaque. Driven by the JS `isDesktop` check (not `md:hidden`) so
+            phone-landscape (width ≥ 768 but height < 600) keeps mobile chrome. */}
         {!isDesktop && (
-        <header className="sticky top-0 z-40 border-b border-border/30 bg-background/95 pt-[env(safe-area-inset-top)]">
-          <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 h-[70px] flex items-center">
-            <Link href="/user?tab=overview" className="flex items-center">
-              <Image
-                src="/wordmark-400.png"
-                alt="Foracle"
-                width={112}
-                height={32}
-                className="object-contain"
-                priority
-              />
-            </Link>
-
-            <div className="flex items-center gap-4 ml-auto">
-              <ClerkUserButton
-                afterSignOutUrl="/"
-                appearance={{ elements: { avatarBox: "w-8 h-8" } }}
-              />
-            </div>
-          </div>
-        </header>
+          <div
+            aria-hidden
+            className="fixed top-0 inset-x-0 z-40 h-[env(safe-area-inset-top)] bg-background/95 backdrop-blur-md"
+          />
         )}
 
         {/* Main Content — contain layout so internal reflows don't bubble to the grid wrapper */}
         <div className="flex-1 [contain:layout_paint]">
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Minimal centered wordmark — mobile only, scrolls with content
+                (Whoop-style). Owns the safe-area top inset so content clears the
+                notch on first paint. Desktop uses the sidebar instead. */}
+            {!isDesktop && (
+              <div className="flex justify-center pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-1">
+                <Link href="/user?tab=overview" className="flex items-center">
+                  <Image
+                    src="/wordmark-400.png"
+                    alt="Foracle"
+                    width={160}
+                    height={46}
+                    className="h-[26px] w-auto object-contain opacity-90 dark:brightness-0 dark:invert"
+                    priority
+                  />
+                </Link>
+              </div>
+            )}
             {/* Desktop has no top header anymore — let page headers sit flush
-                against the top edge. Mobile (incl. phone-landscape) keeps the
-                standard top padding because its header is rendered above. The
-                `desktop:` variant requires both width and height, so phone
-                landscape stays in mobile layout — see globals.css. */}
+                against the top edge. Mobile keeps the standard top padding;
+                PageHeader's negative top margin cancels it. The `desktop:`
+                variant requires both width and height, so phone landscape stays
+                in mobile layout — see globals.css. */}
             <main id="main" className="pt-6 sm:pt-8 desktop:pt-0 pb-6 sm:pb-8">{children}</main>
           </div>
         </div>
@@ -128,7 +129,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
       {/* Mobile Bottom Navigation */}
       <MobileNav />
 
-      <div className="bottom-spacer h-16"></div>
+      <div className="bottom-spacer h-24"></div>
 
       <HelpButton />
       <FloatingAddButton />
