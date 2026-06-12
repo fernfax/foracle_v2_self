@@ -10,6 +10,7 @@ import {
   type FamilyAdminData,
 } from "@/lib/actions/family-invitations";
 import { BackgroundDecorPicker } from "@/components/user/background-decor-picker";
+import { ThemePicker } from "@/components/user/theme-picker";
 
 type ClerkUserButtonProps = React.ComponentProps<typeof UserButton>;
 
@@ -90,9 +91,12 @@ export function ClerkUserButton(props: ClerkUserButtonProps) {
         <div className="px-1 py-2">
           <h2 className="text-lg font-semibold mb-1">Display</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Choose the decorative wallpaper behind the app.
+            Set your color theme and the decorative wallpaper behind the app.
           </p>
-          <BackgroundDecorPicker />
+          <div className="space-y-4">
+            <ThemePicker />
+            <BackgroundDecorPicker />
+          </div>
         </div>
       </UserButton.UserProfilePage>
       {IS_DEV && (
