@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -30,47 +31,129 @@ const mobileNavItems = [
 /**
  * Floating bottom navigation (Whoop-style).
  *
- * A frosted, rounded pill that floats above content — detached from the screen
- * edges with side + bottom margins — holding the labeled nav items. The account
- * avatar (Clerk user button: sign-out + Family/Display settings) lives in a
- * separate frosted circle to the pill's right, matching Whoop's standalone
- * profile bubble.
+ * One frameless, frosted pill that floats above content — detached from the
+ * screen edges with side + bottom margins — holding the labeled nav items AND
+ * the account avatar (Clerk user button: sign-out + Family/Display settings) in
+ * the same island.
+ *
+ * The active highlight is a single absolutely-positioned element that slides to
+ * the selected item via a CSS transform transition (measure-and-translate, the
+ * same pattern as components/ui/sliding-tabs.tsx). It updates optimistically on
+ * tap so it moves the instant you click — not after the next route finishes
+ * loading.
  *
  * Mobile-only: hidden on desktop via the `.bottom-nav` utility (globals.css),
- * which swaps in the sidebar at ≥ 768×600. The pill's left/right offsets use
+ * which swaps in the sidebar at ≥ 768×600. The left/right offsets use
  * max(…, env(safe-area-inset-*)) so it clears the home indicator in landscape.
  */
 export function MobileNav() {
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
+
+  // Optimistic active href: updated immediately on tap so the indicator slides
+  // right away, then resynced to the real pathname when navigation commits (and
+  // on back/forward). null = current route isn't a bottom-nav destination.
+  const [activeHref, setActiveHref] = useState<string | null>(null);
+  const [indicator, setIndicator] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    visible: false,
+  });
+  // Transitions are enabled only AFTER the first positioning paints, so the
+  // highlight snaps onto the active tab on mount instead of sliding in from the
+  // corner. Subsequent moves animate.
+  const [animate, setAnimate] = useState(false);
+  const firstPositioned = useRef(false);
+
+  useEffect(() => {
+    const match = mobileNavItems.find((i) => i.href === pathname);
+    setActiveHref(match ? match.href : null);
+  }, [pathname]);
+
+  const updateIndicator = useCallback(() => {
+    const nav = navRef.current;
+    const el = activeHref ? itemRefs.current.get(activeHref) : null;
+    if (!nav || !el) {
+      setIndicator((s) => ({ ...s, visible: false }));
+      return;
+    }
+    const navRect = nav.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    setIndicator({
+      left: r.left - navRect.left,
+      top: r.top - navRect.top,
+      width: r.width,
+      height: r.height,
+      visible: true,
+    });
+    if (!firstPositioned.current) {
+      firstPositioned.current = true;
+      requestAnimationFrame(() => setAnimate(true));
+    }
+  }, [activeHref]);
+
+  useEffect(() => {
+    updateIndicator();
+  }, [activeHref, updateIndicator]);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateIndicator);
+    // Re-measure once after fonts settle so the highlight lines up exactly.
+    const t = setTimeout(updateIndicator, 100);
+    return () => {
+      window.removeEventListener("resize", updateIndicator);
+      clearTimeout(t);
+    };
+  }, [updateIndicator]);
+
+  const setItemRef = (href: string) => (el: HTMLAnchorElement | null) => {
+    if (el) itemRefs.current.set(href, el);
+    else itemRefs.current.delete(href);
+  };
 
   return (
     <div
       data-tour="mobile-nav"
       className="bottom-nav fixed z-50 left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] bottom-[calc(0.5rem+env(safe-area-inset-bottom))]"
     >
-      {/* Flex row lives on an inner wrapper — the `.bottom-nav` utility
-          (globals.css) drives display:block/none for mobile/desktop visibility,
-          so keep the flex layout off that element to avoid a display conflict. */}
-      <div className="flex items-center gap-2">
-      {/* The nav pill — frameless (no border), Whoop-style: just a frosted
-          surface + soft shadow. Fixed h-14 to match the standalone avatar. */}
+      {/* The single nav pill — frameless, frosted, Whoop-style. */}
       <nav
+        ref={navRef}
         aria-label="Primary"
-        className="flex-1 flex h-14 items-center rounded-3xl bg-background/80 backdrop-blur-xl shadow-pop px-1.5 font-display"
+        className="relative flex h-14 items-center rounded-3xl bg-background/80 backdrop-blur-xl shadow-pop px-1.5 font-display"
       >
-        {mobileNavItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
+        {/* Sliding active highlight — measures the active item and moves to it. */}
+        <span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute rounded-2xl bg-foreground/[0.06]",
+            animate && "transition-all duration-300 ease-out",
+            indicator.visible ? "opacity-100" : "opacity-0"
+          )}
+          style={{
+            left: indicator.left,
+            top: indicator.top,
+            width: indicator.width,
+            height: indicator.height,
+          }}
+        />
 
+        {mobileNavItems.map((item) => {
+          const isActive = activeHref === item.href;
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
+              ref={setItemRef(item.href)}
+              onClick={() => setActiveHref(item.href)}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-1 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl py-1.5 px-0 transition-colors",
-                isActive
-                  ? "bg-foreground/[0.06] text-foreground"
-                  : "text-foreground/55"
+                "relative z-10 flex flex-1 min-w-0 flex-col items-center justify-center gap-0.5 py-1.5 px-0 transition-colors",
+                isActive ? "text-foreground" : "text-foreground/55"
               )}
             >
               <Icon
@@ -85,23 +168,20 @@ export function MobileNav() {
             </Link>
           );
         })}
-      </nav>
 
-      {/* Separate account avatar — the Clerk letter-circle itself, sized to the
-          pill height. No frosted bubble; the avatar is the standalone. Clerk's
-          internal CSS ignores Tailwind size classes on avatarBox, so size it
-          with an inline style object (inline wins over Clerk's stylesheet). */}
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center">
-        <ClerkUserButton
-          afterSignOutUrl="/"
-          appearance={{
-            elements: {
-              avatarBox: { width: "3.5rem", height: "3.5rem" },
-            },
-          }}
-        />
-      </div>
-      </div>
+        {/* Account avatar — same island, separated by a hairline divider. */}
+        <div aria-hidden className="mx-1 h-7 w-px shrink-0 bg-border/40" />
+        <div className="relative z-10 flex shrink-0 items-center justify-center pl-0.5 pr-1">
+          <ClerkUserButton
+            afterSignOutUrl="/"
+            appearance={{
+              elements: {
+                avatarBox: { width: "2.25rem", height: "2.25rem" },
+              },
+            }}
+          />
+        </div>
+      </nav>
     </div>
   );
 }
