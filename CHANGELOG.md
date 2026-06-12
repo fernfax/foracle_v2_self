@@ -3,6 +3,17 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.2.0.0] - 2026-06-13
+
+A Whoop-inspired mobile refresh: a lighter top, a floating bottom bar, and a colour-theme switch you can actually reach.
+
+### Added
+- **Light / Dark / System theme toggle.** Account menu → Display now has a colour-theme picker — choose Light, Dark, or System (follow your phone's appearance). Dark mode was already built but could only be triggered by your device setting; now you can pick it directly, and your choice is remembered across visits.
+
+### Changed
+- **The bulky mobile top bar is gone, reclaiming vertical space.** The 70px band (logo on the left, account button on the right) is replaced by a small centred Foracle wordmark that scrolls with the page, so the page title and tabs sit higher and more content is visible. A thin status-bar strip keeps content from sliding under the notch / Dynamic Island, and the wordmark stays legible in dark mode.
+- **The bottom navigation now floats.** It's a frameless, frosted pill detached from the screen edges (Whoop-style), holding the six sections with a clearer "you are here" highlight. Your account avatar moved out of the old top bar into its own circle beside the pill — tap it for sign-out and Family / Display settings.
+
 ## [1.1.0.0] - 2026-06-10
 
 CPF audit remediation, phases 4–6 (built test-first; see CPF_AUDIT_REPORT.md).
