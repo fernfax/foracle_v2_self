@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,6 +10,7 @@ import {
   Calculator,
   LineChart,
 } from "lucide-react";
+import { ClerkUserButton } from "@/components/clerk-user-button";
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
@@ -27,60 +27,36 @@ const mobileNavItems = [
   // { href: "/assistant", label: "Assistant", icon: Sparkles },
 ];
 
-const VISIBLE_ITEMS = 8;
-const ITEM_WIDTH_PERCENT = 100 / VISIBLE_ITEMS; // 12.5%
-
-// When every item fits within one screen, spread them evenly across the full
-// width (flex-1) instead of pinning each to a fixed 12.5% slot — otherwise the
-// row packs left and leaves an empty gap on the right. Fixed-width + horizontal
-// scroll only kicks in once there are more items than fit.
-const FITS_WITHOUT_SCROLL = mobileNavItems.length <= VISIBLE_ITEMS;
-
+/**
+ * Floating bottom navigation (Whoop-style).
+ *
+ * A frosted, rounded pill that floats above content — detached from the screen
+ * edges with side + bottom margins — holding the labeled nav items. The account
+ * avatar (Clerk user button: sign-out + Family/Display settings) lives in a
+ * separate frosted circle to the pill's right, matching Whoop's standalone
+ * profile bubble.
+ *
+ * Mobile-only: hidden on desktop via the `.bottom-nav` utility (globals.css),
+ * which swaps in the sidebar at ≥ 768×600. The pill's left/right offsets use
+ * max(…, env(safe-area-inset-*)) so it clears the home indicator in landscape.
+ */
 export function MobileNav() {
   const pathname = usePathname();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [currentPage, setCurrentPage] = useState(0);
-  const totalPages = Math.ceil(mobileNavItems.length / VISIBLE_ITEMS);
-
-  // Update current page based on scroll position
-  useEffect(() => {
-    const scrollEl = scrollRef.current;
-    if (!scrollEl) return;
-
-    const handleScroll = () => {
-      const scrollLeft = scrollEl.scrollLeft;
-      const scrollWidth = scrollEl.scrollWidth - scrollEl.clientWidth;
-      const page = Math.round((scrollLeft / scrollWidth) * (totalPages - 1));
-      setCurrentPage(page);
-    };
-
-    scrollEl.addEventListener("scroll", handleScroll);
-    return () => scrollEl.removeEventListener("scroll", handleScroll);
-  }, [totalPages]);
-
-  // Scroll to active item on mount
-  useEffect(() => {
-    const scrollEl = scrollRef.current;
-    if (!scrollEl) return;
-
-    const activeIndex = mobileNavItems.findIndex(item => item.href === pathname);
-    if (activeIndex >= VISIBLE_ITEMS) {
-      const itemWidth = scrollEl.scrollWidth / mobileNavItems.length;
-      scrollEl.scrollLeft = (activeIndex - VISIBLE_ITEMS + 1) * itemWidth;
-    }
-  }, [pathname]);
 
   return (
-    <nav data-tour="mobile-nav" className="bottom-nav fixed bottom-0 left-0 right-0 bg-background/85 backdrop-blur-xl border-t border-border/30 z-50 pb-safe">
-      <div
-        ref={scrollRef}
-        className={cn(
-          "flex scrollbar-hide font-display",
-          FITS_WITHOUT_SCROLL
-            ? ""
-            : "overflow-x-auto snap-x snap-mandatory"
-        )}
-        style={{ scrollBehavior: "smooth" }}
+    <div
+      data-tour="mobile-nav"
+      className="bottom-nav fixed z-50 left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] bottom-[calc(0.5rem+env(safe-area-inset-bottom))]"
+    >
+      {/* Flex row lives on an inner wrapper — the `.bottom-nav` utility
+          (globals.css) drives display:block/none for mobile/desktop visibility,
+          so keep the flex layout off that element to avoid a display conflict. */}
+      <div className="flex items-center gap-2">
+      {/* The nav pill — frameless (no border), Whoop-style: just a frosted
+          surface + soft shadow. Fixed h-14 to match the standalone avatar. */}
+      <nav
+        aria-label="Primary"
+        className="flex-1 flex h-14 items-center rounded-3xl bg-background/80 backdrop-blur-xl shadow-pop px-1.5 font-display"
       >
         {mobileNavItems.map((item) => {
           const isActive = pathname === item.href;
@@ -91,43 +67,41 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 transition-colors font-display",
-                FITS_WITHOUT_SCROLL ? "flex-1" : "shrink-0 snap-start",
-                isActive ? "text-primary" : "text-muted-foreground"
+                "flex flex-1 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl py-1.5 px-0 transition-colors",
+                isActive
+                  ? "bg-foreground/[0.06] text-foreground"
+                  : "text-foreground/55"
               )}
-              style={FITS_WITHOUT_SCROLL ? undefined : { width: `${ITEM_WIDTH_PERCENT}%` }}
             >
-              <div
+              <Icon
                 className={cn(
-                  "p-2 rounded-md transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-transparent text-foreground/55"
+                  "h-[18px] w-[18px] shrink-0 transition-colors",
+                  isActive && "text-primary"
                 )}
-              >
-                <Icon className="h-5 w-5 transition-colors" />
-              </div>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              />
+              <span className="w-full truncate text-center text-[9px] font-medium leading-none">
+                {item.label}
+              </span>
             </Link>
           );
         })}
-      </div>
+      </nav>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-1 pb-2">
-          {Array.from({ length: totalPages }).map((_, idx) => (
-            <div
-              key={idx}
-              className={cn(
-                "h-1 rounded-full transition-all",
-                currentPage === idx
-                  ? "w-4 bg-primary/70"
-                  : "w-1 bg-foreground/20"
-              )}
-            />
-          ))}
-        </div>
-      )}
-    </nav>
+      {/* Separate account avatar — the Clerk letter-circle itself, sized to the
+          pill height. No frosted bubble; the avatar is the standalone. Clerk's
+          internal CSS ignores Tailwind size classes on avatarBox, so size it
+          with an inline style object (inline wins over Clerk's stylesheet). */}
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center">
+        <ClerkUserButton
+          afterSignOutUrl="/"
+          appearance={{
+            elements: {
+              avatarBox: { width: "3.5rem", height: "3.5rem" },
+            },
+          }}
+        />
+      </div>
+      </div>
+    </div>
   );
 }
