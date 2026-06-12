@@ -3,6 +3,17 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.2.1.0] - 2026-06-13
+
+Mobile nav polish + a branded loading screen so tab switches feel instant.
+
+### Added
+- **Loading screen on tab switches (desktop + mobile).** Switching sections now shows a branded loader — the Foracle "F" mark inside a spinning ring — in the content area while the next page loads, instead of leaving the previous screen frozen. The shell (sidebar on desktop, floating nav on mobile) stays put, so it reads as instant feedback rather than a lag.
+
+### Changed
+- **The account avatar now lives inside the bottom nav pill.** It moved out of its own separate circle into the same floating island as the six sections (with a hairline divider) — one neat object instead of two.
+- **The active tab highlight slides.** Tapping a section animates the highlight to it (and it moves the instant you tap, before the next page finishes loading), so it's clearer which tab you're on as you move around.
+
 ## [1.2.0.0] - 2026-06-13
 
 A Whoop-inspired mobile refresh: a lighter top, a floating bottom bar, and a colour-theme switch you can actually reach.
