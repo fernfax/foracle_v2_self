@@ -3,6 +3,16 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.2.2.0] - 2026-06-13
+
+An immersive page-load transition and a one-tap dark mode switch.
+
+### Added
+- **One-tap dark / light toggle in the account menu.** Tapping your avatar now shows a "Dark mode" / "Light mode" item right in the menu, so you can switch without digging into Manage account → Display. The swap cross-fades instead of hard-cutting (and respects "reduce motion"). The full Light / Dark / System picker still lives in Display.
+
+### Changed
+- **Switching tabs now blurs the current page with the Foracle mark on top**, instead of a blank loading screen. The previous page frosts over while the next one loads, the bottom nav stays sharp, and a thin progress bar runs along the top. Instant (prefetched) tabs stay crisp — the blur only appears when there's a real wait, and after a few seconds it says "Taking a little longer…" so a slow load reads as intentional.
+
 ## [1.2.1.0] - 2026-06-13
 
 Mobile nav polish + a branded loading screen so tab switches feel instant.
