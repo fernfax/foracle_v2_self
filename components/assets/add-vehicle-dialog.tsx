@@ -314,7 +314,7 @@ export function AddVehicleDialog({
                     placeholder="e.g. Honda Vezel"
                     value={vehicleName}
                     onChange={(e) => setVehicleName(e.target.value)}
-                    className="bg-white"
+                    className="bg-card"
                   />
                 </div>
                 <div className="space-y-2">
@@ -326,7 +326,7 @@ export function AddVehicleDialog({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal bg-white",
+                          "w-full justify-start text-left font-normal bg-card",
                           !purchaseDate && "text-muted-foreground"
                         )}
                       >
@@ -356,7 +356,7 @@ export function AddVehicleDialog({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal bg-white",
+                          "w-full justify-start text-left font-normal bg-card",
                           !coeExpiryDate && "text-muted-foreground"
                         )}
                       >
@@ -405,7 +405,7 @@ export function AddVehicleDialog({
                       onChange={(e) => setOriginalPurchasePrice(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>
@@ -421,7 +421,7 @@ export function AddVehicleDialog({
                       onChange={(e) => setLoanAmountTaken(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                   {masWarning && (
@@ -441,7 +441,7 @@ export function AddVehicleDialog({
                       onChange={(e) => setLoanInterestRate(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pr-8"
+                      className="bg-card pr-8"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
                   </div>
@@ -460,7 +460,7 @@ export function AddVehicleDialog({
                         min="0"
                         max="7"
                         step="1"
-                        className="bg-white pr-10"
+                        className="bg-card pr-10"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">yr</span>
                     </div>
@@ -474,7 +474,7 @@ export function AddVehicleDialog({
                         min="0"
                         max="11"
                         step="1"
-                        className="bg-white pr-10"
+                        className="bg-card pr-10"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">mo</span>
                     </div>
@@ -510,7 +510,7 @@ export function AddVehicleDialog({
                       onChange={(e) => setLoanAmountRepaid(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>
@@ -547,7 +547,7 @@ export function AddVehicleDialog({
                       onChange={(e) => setMonthlyLoanPayment(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                   {suggestedMonthlyPayment !== null && (

@@ -215,7 +215,7 @@ export function FutureMilestonesTab({
                 value={newMilestone.targetMonth}
                 onValueChange={(value) => setNewMilestone({ ...newMilestone, targetMonth: value })}
               >
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className="bg-card">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
@@ -244,7 +244,7 @@ export function FutureMilestonesTab({
                   onChange={(e) => setNewMilestone({ ...newMilestone, amount: parseFloat(e.target.value) || 0 })}
                   min="0"
                   step="0.01"
-                  className="bg-white pl-7"
+                  className="bg-card pl-7"
                 />
               </div>
             </div>
@@ -258,7 +258,7 @@ export function FutureMilestonesTab({
                 value={newMilestone.reason || ""}
                 onValueChange={(value) => setNewMilestone({ ...newMilestone, reason: value })}
               >
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className="bg-card">
                   <SelectValue placeholder="Select reason" />
                 </SelectTrigger>
                 <SelectContent>
@@ -278,7 +278,7 @@ export function FutureMilestonesTab({
                 placeholder="Additional details..."
                 value={newMilestone.notes || ""}
                 onChange={(e) => setNewMilestone({ ...newMilestone, notes: e.target.value })}
-                className="bg-white text-sm"
+                className="bg-card text-sm"
               />
             </div>
           </div>
@@ -329,7 +329,7 @@ export function FutureMilestonesTab({
                     value={milestone.targetMonth}
                     onValueChange={(value) => updateMilestone(milestone.id, "targetMonth", value)}
                   >
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger className="bg-card">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">
@@ -358,7 +358,7 @@ export function FutureMilestonesTab({
                       onChange={(e) => updateMilestone(milestone.id, "amount", e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>
@@ -385,7 +385,7 @@ export function FutureMilestonesTab({
                     value={milestone.reason || ""}
                     onValueChange={(value) => updateMilestone(milestone.id, "reason", value)}
                   >
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger className="bg-card">
                       <SelectValue placeholder="Select reason" />
                     </SelectTrigger>
                     <SelectContent>
@@ -405,7 +405,7 @@ export function FutureMilestonesTab({
                     placeholder="Additional details..."
                     value={milestone.notes || ""}
                     onChange={(e) => updateMilestone(milestone.id, "notes", e.target.value)}
-                    className="bg-white text-sm"
+                    className="bg-card text-sm"
                   />
                 </div>
               </div>

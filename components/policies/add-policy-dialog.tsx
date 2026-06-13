@@ -644,7 +644,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                           "h-10 font-medium",
                           selectedMonths.includes(month.value)
                             ? "bg-black text-white hover:bg-black/90 border-black"
-                            : "bg-white hover:bg-muted"
+                            : "bg-card hover:bg-muted"
                         )}
                       >
                         {month.label}

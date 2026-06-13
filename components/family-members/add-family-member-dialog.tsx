@@ -118,7 +118,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
               placeholder="e.g., John Doe"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-white"
+              className="bg-card"
             />
           </div>
 
@@ -128,7 +128,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
               Relationship <span className="text-[#8B0000]">*</span>
             </Label>
             <Select value={relationship} onValueChange={setRelationship}>
-              <SelectTrigger className="bg-white">
+              <SelectTrigger className="bg-card">
                 <SelectValue placeholder="Select relationship" />
               </SelectTrigger>
               <SelectContent>
@@ -208,7 +208,7 @@ export function AddFamilyMemberDialog({ open, onOpenChange, onMemberAdded, onCon
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="bg-white"
+              className="bg-card"
             />
             <p className="text-xs text-muted-foreground">Add any additional notes about this family member</p>
           </div>

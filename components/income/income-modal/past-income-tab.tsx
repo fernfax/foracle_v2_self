@@ -152,7 +152,7 @@ export function PastIncomeTab({
                 value={newEntry.period}
                 onValueChange={(value) => setNewEntry({ ...newEntry, period: value })}
               >
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className="bg-card">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px] overflow-y-auto">
@@ -181,7 +181,7 @@ export function PastIncomeTab({
                   onChange={(e) => setNewEntry({ ...newEntry, amount: parseFloat(e.target.value) || 0 })}
                   min="0"
                   step="0.01"
-                  className="bg-white pl-7"
+                  className="bg-card pl-7"
                 />
               </div>
             </div>
@@ -194,7 +194,7 @@ export function PastIncomeTab({
               placeholder="e.g., First year at company, included bonus..."
               value={newEntry.notes || ""}
               onChange={(e) => setNewEntry({ ...newEntry, notes: e.target.value })}
-              className="bg-white text-sm"
+              className="bg-card text-sm"
             />
           </div>
 
@@ -248,7 +248,7 @@ export function PastIncomeTab({
                       value={entry.period}
                       onValueChange={(value) => updateEntry(actualIndex, "period", value)}
                     >
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className="bg-card">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px] overflow-y-auto">
@@ -277,7 +277,7 @@ export function PastIncomeTab({
                         onChange={(e) => updateEntry(actualIndex, "amount", e.target.value)}
                         min="0"
                         step="0.01"
-                        className="bg-white pl-7"
+                        className="bg-card pl-7"
                       />
                     </div>
                   </div>
@@ -303,7 +303,7 @@ export function PastIncomeTab({
                     placeholder="e.g., First year at company, included bonus..."
                     value={entry.notes || ""}
                     onChange={(e) => updateEntry(actualIndex, "notes", e.target.value)}
-                    className="bg-white text-sm"
+                    className="bg-card text-sm"
                   />
                 </div>
               </div>

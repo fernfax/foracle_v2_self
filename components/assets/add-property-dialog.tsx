@@ -283,7 +283,7 @@ export function AddPropertyDialog({
                     placeholder="e.g. Fernvale HDB"
                     value={propertyName}
                     onChange={(e) => setPropertyName(e.target.value)}
-                    className="bg-white"
+                    className="bg-card"
                   />
                 </div>
                 <div className="space-y-2">
@@ -295,7 +295,7 @@ export function AddPropertyDialog({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal bg-white",
+                          "w-full justify-start text-left font-normal bg-card",
                           !purchaseDate && "text-muted-foreground"
                         )}
                       >
@@ -341,7 +341,7 @@ export function AddPropertyDialog({
                       onChange={(e) => setOriginalPurchasePrice(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>
@@ -357,7 +357,7 @@ export function AddPropertyDialog({
                       onChange={(e) => setLoanAmountTaken(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>
@@ -386,7 +386,7 @@ export function AddPropertyDialog({
                       onChange={(e) => setOutstandingLoan(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>
@@ -423,13 +423,13 @@ export function AddPropertyDialog({
                       onChange={(e) => setMonthlyLoanPayment(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
                     You pay this amount monthly
                   </p>
-                  <div className="flex items-center justify-between mt-3 p-2.5 bg-white border border-border rounded-lg">
+                  <div className="flex items-center justify-between mt-3 p-2.5 bg-card border border-border rounded-lg">
                     <div className="flex-1">
                       <Label htmlFor="paidByCpf" className="text-xs font-semibold text-foreground">
                         Paid by CPF?
@@ -459,7 +459,7 @@ export function AddPropertyDialog({
                       onChange={(e) => setInterestRate(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -532,7 +532,7 @@ export function AddPropertyDialog({
                       onChange={(e) => setPrincipalCpfWithdrawn(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>
@@ -548,7 +548,7 @@ export function AddPropertyDialog({
                       onChange={(e) => setHousingGrantTaken(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>
@@ -567,7 +567,7 @@ export function AddPropertyDialog({
                       onChange={(e) => setAccruedInterestToDate(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-white pl-7"
+                      className="bg-card pl-7"
                     />
                   </div>
                 </div>

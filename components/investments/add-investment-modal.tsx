@@ -214,7 +214,7 @@ export function AddInvestmentModal({
                       placeholder="e.g., S&P 500 ETF, High Yield Savings"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="bg-white"
+                      className="bg-card"
                     />
                   </div>
                   <div className="space-y-2">
@@ -222,7 +222,7 @@ export function AddInvestmentModal({
                       Type <span className="text-[#8B0000]">*</span>
                     </Label>
                     <Select value={type} onValueChange={setType}>
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className="bg-card">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -264,7 +264,7 @@ export function AddInvestmentModal({
                         onChange={(e) => setCurrentCapital(e.target.value)}
                         min="0"
                         step="0.01"
-                        className="bg-white pl-7"
+                        className="bg-card pl-7"
                       />
                     </div>
                   </div>
@@ -286,7 +286,7 @@ export function AddInvestmentModal({
                           </TooltipTrigger>
                           <TooltipContent
                             side="top"
-                            className="max-w-[320px] text-xs bg-white border shadow-lg p-3"
+                            className="max-w-[320px] text-xs bg-card border shadow-lg p-3"
                           >
                             <p className="font-semibold mb-2">
                               Wealth Projection Formula
@@ -320,7 +320,7 @@ export function AddInvestmentModal({
                         onChange={(e) => setProjectedYield(e.target.value)}
                         min="0"
                         step="0.01"
-                        className="bg-white pr-8"
+                        className="bg-card pr-8"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/400">
                         %
@@ -357,7 +357,7 @@ export function AddInvestmentModal({
                         onChange={(e) => setContributionAmount(e.target.value)}
                         min="0"
                         step="0.01"
-                        className="bg-white pl-7"
+                        className="bg-card pl-7"
                       />
                     </div>
                   </div>
@@ -403,7 +403,7 @@ export function AddInvestmentModal({
                             "px-3 py-2 text-sm rounded-md border transition-colors",
                             selectedMonths.includes(month.value)
                               ? "bg-[#B8622A] text-white border-[rgba(184,98,42,0.25)]"
-                              : "bg-white text-foreground border-border hover:border-border"
+                              : "bg-card text-foreground border-border hover:border-border"
                           )}
                         >
                           {month.label}

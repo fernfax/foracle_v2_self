@@ -157,7 +157,7 @@ export function PresentIncomeTab({
           Income Type <span className="text-[#8B0000]">*</span>
         </Label>
         <Select value={incomeCategory} onValueChange={setIncomeCategory}>
-          <SelectTrigger className="bg-white">
+          <SelectTrigger className="bg-card">
             <SelectValue placeholder="Select income type" />
           </SelectTrigger>
           <SelectContent>
@@ -197,7 +197,7 @@ export function PresentIncomeTab({
               placeholder="e.g., Monthly Salary"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-white"
+              className="bg-card"
             />
           </div>
           <div className="space-y-2">
@@ -205,7 +205,7 @@ export function PresentIncomeTab({
               Income Category <span className="text-[#8B0000]">*</span>
             </Label>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="bg-white">
+              <SelectTrigger className="bg-card">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
@@ -235,7 +235,7 @@ export function PresentIncomeTab({
                 onChange={(e) => setAmount(e.target.value)}
                 min="0"
                 step="0.01"
-                className="bg-white pl-7"
+                className="bg-card pl-7"
               />
             </div>
           </div>
@@ -248,7 +248,7 @@ export function PresentIncomeTab({
               onValueChange={setFrequency}
               disabled={incomeCategory === "one-off"}
             >
-              <SelectTrigger className="bg-white">
+              <SelectTrigger className="bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -287,7 +287,7 @@ export function PresentIncomeTab({
                     "h-10 font-medium",
                     selectedMonths.includes(month.value)
                       ? "bg-black text-white hover:bg-black/90 border-black"
-                      : "bg-white hover:bg-muted"
+                      : "bg-card hover:bg-muted"
                   )}
                 >
                   {month.label.slice(0, 3)}
@@ -432,7 +432,7 @@ export function PresentIncomeTab({
                   value={group.month.toString()}
                   onValueChange={(value) => updateBonusGroup(index, "month", parseInt(value))}
                 >
-                  <SelectTrigger className="bg-white flex-1">
+                  <SelectTrigger className="bg-card flex-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -452,7 +452,7 @@ export function PresentIncomeTab({
                   onChange={(e) => updateBonusGroup(index, "amount", e.target.value)}
                   min="0"
                   step="0.1"
-                  className="bg-white flex-1"
+                  className="bg-card flex-1"
                 />
                 {/* Remove Button */}
                 <Button
@@ -511,7 +511,7 @@ export function PresentIncomeTab({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="bg-white"
+            className="bg-card"
           />
           <p className="text-xs text-muted-foreground">Add any notes about this payment period</p>
         </div>
