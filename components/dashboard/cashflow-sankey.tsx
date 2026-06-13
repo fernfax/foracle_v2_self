@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { getBudgetVsActual } from "@/lib/actions/budget-calculator";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
@@ -163,6 +164,20 @@ interface SankeyInputLink {
 const fmt = (n: number) =>
   `$${Math.round(n).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
+// Darken a #RRGGBB colour toward black by `amount` (0..1) for the budget-fill
+// overlay — keeps the same hue, just deeper. Returns the input unchanged when
+// it isn't a hex string.
+function darken(hex: string, amount: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const f = 1 - Math.min(1, Math.max(0, amount));
+  const r = Math.round(((n >> 16) & 255) * f);
+  const g = Math.round(((n >> 8) & 255) * f);
+  const b = Math.round((n & 255) * f);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 function colorForKind(kind: ModelNode["kind"]): string {
   switch (kind) {
     case "cpf": return "#B8622A"; // brand-terracotta
@@ -243,6 +258,32 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+
+  // Per-category budget utilisation (0..1) for the selected month, keyed by
+  // category name. Drives the deeper "fill" overlay on each expense end-bar.
+  const [budgetFill, setBudgetFill] = useState<Record<string, number>>({});
+  useEffect(() => {
+    let cancelled = false;
+    getBudgetVsActual(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1)
+      .then((rows) => {
+        if (cancelled) return;
+        const map: Record<string, number> = {};
+        for (const r of rows) {
+          // Key on the trimmed name — the Sankey node names are trimmed, so an
+          // untrimmed budget category would otherwise silently miss its fill.
+          map[r.categoryName.trim()] =
+            r.monthlyBudget > 0 ? Math.min(1, r.spent / r.monthlyBudget) : 0;
+        }
+        setBudgetFill(map);
+      })
+      .catch(() => {
+        if (!cancelled) setBudgetFill({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedMonth]);
+
   const model = useMemo(
     () =>
       buildCashflowModel(incomes, expenses, {
@@ -588,6 +629,28 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
               : undefined,
           }}
         />
+
+        {/* Budget-fill overlay — expense category end-bars only. A deeper shade
+            of the bar's own colour rises from the bottom as the month's spending
+            approaches the category budget (capped at 100%). Pointer-events:none
+            and drawn only on the node rect, so the ribbon tails are untouched. */}
+        {isCategory &&
+          (() => {
+            const pct = budgetFill[n.name] ?? 0;
+            if (pct <= 0.001) return null;
+            const fillH = height * pct;
+            return (
+              <rect
+                x={x}
+                y={y + height - fillH}
+                width={width}
+                height={fillH}
+                fill={darken(n.color, 0.42)}
+                pointerEvents="none"
+                style={{ ...transition, opacity: nodeOpacity }}
+              />
+            );
+          })()}
 
         {/* The hub no longer carries a label — the "Total Income" figure now
             lives in the totals strip below the chart, so a hub caption would
@@ -989,7 +1052,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
       {itemHover && typeof document !== "undefined" && createPortal(
         <div
           role="tooltip"
-          className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm pointer-events-none animate-in fade-in"
+          className="bg-card text-card-foreground border border-border rounded-lg shadow-lg p-3 text-sm pointer-events-none animate-in fade-in"
           style={tooltipStyle(itemHover.x, itemHover.y)}
         >
           <div className="font-display text-[13px] font-semibold mb-1">{itemHover.itemName}</div>
@@ -1028,7 +1091,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
       {nodeTip && typeof document !== "undefined" && createPortal(
         <div
           role="tooltip"
-          className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm animate-in fade-in"
+          className="bg-card text-card-foreground border border-border rounded-lg shadow-lg p-3 text-sm animate-in fade-in"
           style={{ ...tooltipStyle(nodeTip.x, nodeTip.y), pointerEvents: "auto" }}
           onMouseEnter={cancelHideTip}
           onMouseLeave={scheduleHideTip}
