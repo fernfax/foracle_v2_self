@@ -372,10 +372,10 @@ export function AddExpenseModal({
                 <div
                   className={`h-full transition-all ${
                     categoryBudget.percentUsed > 90
-                      ? "bg-[#E05555]"
+                      ? "bg-destructive"
                       : categoryBudget.percentUsed > 75
                       ? "bg-[#D4A843]"
-                      : "bg-[#B8622A]"
+                      : "bg-primary"
                   }`}
                   style={{
                     width: `${Math.min(

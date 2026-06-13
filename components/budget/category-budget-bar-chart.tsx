@@ -33,7 +33,7 @@ function CustomTooltip({ active, payload }: any) {
   if (!data) return null;
 
   return (
-    <div className="bg-white border border-border rounded-lg shadow-lg p-3 text-sm">
+    <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-sm">
       <p className="font-semibold mb-1">{data.name}</p>
       <div className="space-y-0.5 text-muted-foreground">
         <p>Budget: <span className="text-foreground font-medium">${data.budget.toLocaleString()}</span></p>
