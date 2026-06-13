@@ -86,8 +86,8 @@ export function BackgroundDecorPicker({
       <CardHeader>
         <CardTitle>Background style</CardTitle>
         <CardDescription>
-          Choose the decorative pattern behind the app. Light mode only —
-          dark mode always uses a plain canvas.
+          Choose the decorative pattern behind the app. Shows in both light and
+          dark mode — faint in either, so it never competes with content.
         </CardDescription>
       </CardHeader>
       <CardContent>

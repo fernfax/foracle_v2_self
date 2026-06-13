@@ -36,7 +36,8 @@ export const users = pgTable("users", {
   tourCompletedAt: text("tour_completed_at"), // JSON: {"dashboard":"2024-01-15T...","incomes":null,"expenses":null}
   singlishMode: boolean("singlish_mode").default(false),
   // App-shell background style. 'radial' (default) | 'peranakan' | 'none'.
-  // Light-mode visual only; dark mode ignores this and shows no decor.
+  // Applies in both light and dark mode — the decor is theme-tuned (strokes
+  // follow --foreground, so it's faint forest on cream / faint cream on night).
   backgroundDecor: text("background_decor").default("radial"),
   // familyId: which Family this user belongs to. NOT NULL — the backfill migration
   // that set this in production has run; every user belongs to exactly one family.

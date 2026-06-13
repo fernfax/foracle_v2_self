@@ -16,14 +16,17 @@
  * The SVG uses `preserveAspectRatio="xMaxYMin slice"` so the circles
  * stay anchored to the top-right regardless of viewport width.
  *
- * Light mode only — dark mode renders nothing because the depth comes
- * from the dark surface stack instead (design guide §11).
+ * Theme-aware: the stroke is `hsl(var(--foreground))`, so the rings render
+ * deep-forest on the light canvas and cream on the dark canvas — both faint.
+ * (Originally dark-hidden per design guide §11; now dark-tuned so the chosen
+ * wallpaper carries through to dark mode at a slightly higher opacity, since
+ * cream-on-nightfall needs a touch more presence than forest-on-cream.)
  */
 export function RadialDecor() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 opacity-[0.10] dark:hidden"
+      className="pointer-events-none fixed inset-0 -z-10 opacity-[0.10] dark:opacity-[0.14]"
     >
       <svg
         width="100%"
@@ -38,7 +41,7 @@ export function RadialDecor() {
             cx={1080}
             cy={140}
             r={r}
-            stroke="#1C2B2A"
+            stroke="hsl(var(--foreground))"
             strokeWidth={1.25}
             fill="none"
           />
