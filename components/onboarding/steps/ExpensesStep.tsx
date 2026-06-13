@@ -267,7 +267,7 @@ export function ExpensesStep({ income, data, onSave, onNext, onBack, onSkip }: E
                         value={categoryAmounts[category.name] || ""}
                         readOnly
                         disabled
-                        className="h-8 pl-6 text-sm text-foreground/400 bg-white cursor-default disabled:opacity-100"
+                        className="h-8 pl-6 text-sm text-foreground/400 bg-background cursor-default disabled:opacity-100"
                       />
                     </div>
                   )}

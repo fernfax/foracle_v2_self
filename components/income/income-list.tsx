@@ -1036,8 +1036,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                       <AreaChart data={mergedChartData} margin={{ top: 20, right: 40, left: 50, bottom: 20 }}>
                                         <defs>
                                           <linearGradient id={`gradient-past-${income.id}`} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="rgba(28,43,42,0.55)" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="rgba(28,43,42,0.55)" stopOpacity={0.05} />
+                                            <stop offset="5%" stopColor="hsl(var(--foreground) / 0.55)" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="hsl(var(--foreground) / 0.55)" stopOpacity={0.05} />
                                           </linearGradient>
                                           <linearGradient id={`gradient-future-${income.id}`} x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#D4845A" stopOpacity={0.25} />
@@ -1050,7 +1050,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                         <Area
                                           type="stepAfter"
                                           dataKey="pastAmount"
-                                          stroke="rgba(28,43,42,0.55)"
+                                          stroke="hsl(var(--foreground) / 0.55)"
                                           strokeWidth={2}
                                           fill={`url(#gradient-past-${income.id})`}
                                           connectNulls={false}
@@ -1059,7 +1059,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                             dataKey="pastLabel"
                                             position="top"
                                             offset={8}
-                                            style={{ fontSize: 11, fontWeight: 500, fill: 'rgba(28,43,42,0.65)' }}
+                                            style={{ fontSize: 11, fontWeight: 500, fill: 'hsl(var(--muted-foreground))' }}
                                           />
                                         </Area>
                                         {/* Future - dashed violet line */}
@@ -1076,7 +1076,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                             dataKey="futureLabel"
                                             position="top"
                                             offset={8}
-                                            style={{ fontSize: 11, fontWeight: 500, fill: 'rgba(28,43,42,0.65)' }}
+                                            style={{ fontSize: 11, fontWeight: 500, fill: 'hsl(var(--muted-foreground))' }}
                                           />
                                         </Area>
                                         {presentTimestamp && presentPoint && (

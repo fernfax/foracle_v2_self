@@ -262,7 +262,7 @@ function CustomTooltip({ active, payload, viewMode }: any) {
       const arrowData = firstPayload.payload as ArrowDataPoint;
       const color = ARROW_COLORS[arrowData.type];
       return (
-        <div className="bg-white border border-border rounded-lg shadow-lg p-3">
+        <div className="bg-card border border-border rounded-lg shadow-lg p-3">
           <p className="font-semibold text-foreground mb-2">{arrowData.month}</p>
           <div className="flex items-center gap-2">
             <div
@@ -293,7 +293,7 @@ function CustomTooltip({ active, payload, viewMode }: any) {
     const hasBonus = data.bonus > 0;
 
     return (
-      <div className="bg-white border border-border rounded-lg shadow-lg p-4">
+      <div className="bg-card border border-border rounded-lg shadow-lg p-4">
         <p className="font-semibold text-foreground mb-2">{data.month}</p>
         <div className="space-y-1 text-sm">
           {viewMode === "cumulative" ? (
@@ -574,7 +574,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                         <Info className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-[300px] text-xs bg-white border shadow-lg">
+                    <TooltipContent side="bottom" className="max-w-[300px] text-xs bg-card border shadow-lg">
                       <p>
                         This projection includes <strong>All Active Income</strong> (including one-time income) and{" "}
                         <strong>All Active Expenses</strong> (including one-time expenses). Future income milestones are only included for incomes with &quot;Account for Future Change&quot; enabled.
@@ -597,7 +597,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   View Mode
                 </Label>
                 <Select value={viewMode} onValueChange={(value: "cumulative" | "non-cumulative") => setViewMode(value)}>
-                  <SelectTrigger id="viewMode" className="bg-white text-xs sm:text-sm h-9 sm:h-10">
+                  <SelectTrigger id="viewMode" className="bg-background text-xs sm:text-sm h-9 sm:h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -611,7 +611,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   Time Range
                 </Label>
                 <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger id="timeRange" className="bg-white text-xs sm:text-sm h-9 sm:h-10">
+                  <SelectTrigger id="timeRange" className="bg-background text-xs sm:text-sm h-9 sm:h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -648,7 +648,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   value={viewMode}
                   onValueChange={(value: "cumulative" | "non-cumulative") => setViewMode(value)}
                 >
-                  <SelectTrigger id="viewModeEmbedded" className="bg-white text-xs sm:text-sm h-7 sm:h-8 w-full">
+                  <SelectTrigger id="viewModeEmbedded" className="bg-background text-xs sm:text-sm h-7 sm:h-8 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -662,7 +662,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   Time Range
                 </Label>
                 <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger id="timeRange" className="bg-white text-xs sm:text-sm h-7 sm:h-8 w-full">
+                  <SelectTrigger id="timeRange" className="bg-background text-xs sm:text-sm h-7 sm:h-8 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -792,10 +792,10 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                   <stop offset="95%" stopColor="#D4845A" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.10)" />
               <XAxis
                 dataKey="month"
-                stroke="rgba(28,43,42,0.55)"
+                stroke="hsl(var(--muted-foreground))"
                 style={{ fontSize: "12px" }}
                 angle={-45}
                 textAnchor="end"
@@ -804,7 +804,7 @@ export function MonthlyBalanceGraph({ incomes, expenses, holdings, investments =
                 interval={xAxisInterval}
               />
               <YAxis
-                stroke="rgba(28,43,42,0.55)"
+                stroke="hsl(var(--muted-foreground))"
                 style={{ fontSize: "12px" }}
                 tickFormatter={(value) => formatCurrency(value)}
                 domain={[yAxisMin, yAxisMax]}

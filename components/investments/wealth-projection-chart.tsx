@@ -76,7 +76,7 @@ function formatCurrencyFull(value: number): string {
 function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-border rounded-lg shadow-lg p-3">
+      <div className="bg-card border border-border rounded-lg shadow-lg p-3">
         <p className="font-semibold text-foreground mb-2">{label}</p>
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
                 </TooltipTrigger>
                 <TooltipContent
                   side="right"
-                  className="max-w-[350px] text-xs bg-white border shadow-lg p-3"
+                  className="max-w-[350px] text-xs bg-card border shadow-lg p-3"
                 >
                   <p className="font-semibold mb-2">How the projection is calculated</p>
                   <p className="mb-2">
@@ -290,7 +290,7 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
                   </TooltipTrigger>
                   <TooltipContent
                     side="right"
-                    className="max-w-[350px] text-xs bg-white border shadow-lg p-3"
+                    className="max-w-[350px] text-xs bg-card border shadow-lg p-3"
                   >
                     <p className="font-semibold mb-2">How the projection is calculated</p>
                     <p className="mb-2">
@@ -336,7 +336,7 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
                   className={cn(
                     "px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                     selectedRange === range.value
-                      ? "bg-white text-foreground shadow-sm"
+                      ? "bg-background text-foreground shadow-sm"
                       : "text-foreground hover:text-foreground"
                   )}
                 >
@@ -371,19 +371,19 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
                   <stop offset="95%" stopColor="#5A9470" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorWithout" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="rgba(28,43,42,0.45)" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="rgba(28,43,42,0.45)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(var(--muted-foreground) / 0.55)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="hsl(var(--muted-foreground) / 0.55)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.10)" />
               <XAxis
                 dataKey="periodLabel"
-                stroke="rgba(28,43,42,0.55)"
+                stroke="hsl(var(--muted-foreground))"
                 style={{ fontSize: "12px" }}
                 tickLine={false}
               />
               <YAxis
-                stroke="rgba(28,43,42,0.55)"
+                stroke="hsl(var(--muted-foreground))"
                 style={{ fontSize: "12px" }}
                 tickFormatter={formatCurrency}
                 tickLine={false}
@@ -409,7 +409,7 @@ export function WealthProjectionChart({ investments }: WealthProjectionChartProp
                 type="monotone"
                 dataKey="withoutContributions"
                 name="Without Contributions"
-                stroke="rgba(28,43,42,0.45)"
+                stroke="hsl(var(--muted-foreground) / 0.55)"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 fillOpacity={1}

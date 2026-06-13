@@ -122,7 +122,7 @@ export function InvestmentCard({
   return (
     <>
       <div
-        className="bg-white rounded-lg border border-border p-4 hover:shadow-md transition-shadow relative cursor-pointer"
+        className="bg-card rounded-lg border border-border p-4 hover:shadow-md transition-shadow relative cursor-pointer"
         onClick={() => setIsModalOpen(true)}
       >
         {/* Expand Icon */}

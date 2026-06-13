@@ -70,7 +70,7 @@ const POLICY_TYPE_COLORS: Record<string, string> = {
   "Disability Insurance": "#3A6B52",
   "Hospitalisation Plan": "#00C4AA",
   "Endowment":            "#5A9470",
-  "Investment-Linked":    "#1C2B2A",
+  "Investment-Linked":    "#6E8BA8",
   "Other":                "#8A8A8A",
 };
 
@@ -260,7 +260,7 @@ export function CoverageMatrix({
                               <button
                                 key={policy.id}
                                 onClick={() => handleChipClick(policy, member.name)}
-                                className="flex flex-col gap-0.5 px-2.5 py-2 rounded-lg border border-border bg-white hover:shadow-sm hover:border-border/60 ring-1 ring-transparent hover:ring-border/30 transition-all text-left w-full cursor-pointer"
+                                className="flex flex-col gap-0.5 px-2.5 py-2 rounded-lg border border-border bg-card hover:shadow-sm hover:border-border/60 ring-1 ring-transparent hover:ring-border/30 transition-all text-left w-full cursor-pointer"
                                 style={{ borderLeftWidth: 3, borderLeftColor: typeColor }}
                               >
                                 <span className="flex items-center gap-1">
