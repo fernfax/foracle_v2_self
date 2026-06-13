@@ -1,8 +1,9 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { Code2, Palette, Users } from "lucide-react";
+import { Code2, Moon, Palette, Sun, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
 import { FamilyAdminPanel } from "@/components/family-members/family-admin-panel";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/lib/actions/family-invitations";
 import { BackgroundDecorPicker } from "@/components/user/background-decor-picker";
 import { ThemePicker } from "@/components/user/theme-picker";
+import { applyThemeWithTransition } from "@/lib/theme-transition";
 
 type ClerkUserButtonProps = React.ComponentProps<typeof UserButton>;
 
@@ -65,6 +67,8 @@ function FamilyProfilePage() {
 export function ClerkUserButton(props: ClerkUserButtonProps) {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
     setMounted(true);
@@ -73,6 +77,9 @@ export function ClerkUserButton(props: ClerkUserButtonProps) {
   if (!mounted) {
     return <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />;
   }
+
+  const toggleTheme = () =>
+    applyThemeWithTransition(() => setTheme(isDark ? "light" : "dark"));
 
   return (
     <UserButton afterSignOutUrl="/" {...props}>
@@ -99,15 +106,25 @@ export function ClerkUserButton(props: ClerkUserButtonProps) {
           </div>
         </div>
       </UserButton.UserProfilePage>
-      {IS_DEV && (
-        <UserButton.MenuItems>
+      <UserButton.MenuItems>
+        {/* Quick theme toggle — surfaced straight in the menu instead of buried
+            under Manage account → Display. The full Light/Dark/System picker
+            still lives in the Display page. */}
+        <UserButton.Action
+          label={isDark ? "Light mode" : "Dark mode"}
+          labelIcon={
+            isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />
+          }
+          onClick={toggleTheme}
+        />
+        {IS_DEV && (
           <UserButton.Action
             label="Developer Mode"
             labelIcon={<Code2 className="h-4 w-4" />}
             onClick={() => router.push("/developer")}
           />
-        </UserButton.MenuItems>
-      )}
+        )}
+      </UserButton.MenuItems>
     </UserButton>
   );
 }
