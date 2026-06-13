@@ -3,6 +3,17 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.3.1.0] - 2026-06-14
+
+A dark-mode contrast sweep across the whole app, dialog colour standardisation, and a mobile income-slider fix.
+
+### Changed
+- **Form controls inside every add/edit dialog now share one background** (`bg-card`), so dialogs like Add Investment match Add Goal, Add Expense, and the rest instead of rendering a shade darker. They all inherit the same surface the input/select primitives use.
+
+### Fixed
+- **Dark-mode contrast, app-wide.** Swept every chart, table, tooltip, and form surface for low-contrast colours: the Sankey's inflow/outflow labels were invisible against the nightfall canvas; chart gridlines, axes, and tick labels used hardcoded near-black that vanished in dark mode; and several tooltips rendered light-on-light. They all resolve through theme tokens now, so they stay legible in both themes.
+- **The income view's time-range slider now works on mobile.** The slider rendered but a short-circuit ignored its value, so dragging it did nothing — mobile now honours the 2–10 year range like desktop.
+
 ## [1.3.0.0] - 2026-06-13
 
 Dark-mode polish across the board, desktop budget fixes, and a budget gauge built into the cashflow Sankey.
