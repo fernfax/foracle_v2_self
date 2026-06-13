@@ -7,8 +7,12 @@
  * diamond cross). Each tile carries a thin terracotta border so the
  * pattern reads as a tiled floor, not a wash.
  *
- * Light mode only — dark mode renders nothing (depth comes from the
- * dark surface stack, per design guide §11).
+ * Dark-tuned: the brand colours (terracotta, sage, cream) read fine on the
+ * nightfall canvas, so the tile keeps its multicolour identity in dark mode;
+ * only the two deep-forest elements (the cell-3 octagon, the cell-4 hub) were
+ * invisible on dark, so they switch to `hsl(var(--foreground))` — forest in
+ * light, cream in dark. (Originally dark-hidden per design guide §11; now
+ * carried through to dark mode.)
  *
  * Sized at 200×200 per tile in a 400×400 repeating block (4 motifs),
  * then scaled to 0.5 via patternTransform so tiles render tighter
@@ -19,7 +23,7 @@ export function PeranakanTilesDecor() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 opacity-[0.22] dark:hidden"
+      className="pointer-events-none fixed inset-0 -z-10 opacity-[0.22] dark:opacity-[0.20]"
     >
       <svg
         width="100%"
@@ -165,7 +169,7 @@ export function PeranakanTilesDecor() {
               <polygon
                 points="100,30 142,46 158,88 158,112 142,154 100,170 58,154 42,112 42,88 58,46"
                 fill="none"
-                stroke="#1C2B2A"
+                stroke="hsl(var(--foreground))"
                 strokeWidth="1.4"
               />
               {/* 8-pointed star (two overlapping squares rotated 45°) */}
@@ -233,7 +237,7 @@ export function PeranakanTilesDecor() {
                     transform={`rotate(${angle})`}
                   />
                 ))}
-                <circle r="10" fill="#1C2B2A" />
+                <circle r="10" fill="hsl(var(--foreground))" />
                 <circle r="4" fill="#F0EBE0" />
               </g>
               {/* Corner triangles */}
