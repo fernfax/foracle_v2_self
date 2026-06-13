@@ -1060,15 +1060,13 @@ export function IncomesBetaView({
   // Responsive timeline window — narrower on mobile so each month is readable.
   const baseTlConfig = useTimelineConfig();
 
-  // User-controlled time-range slider (desktop only). 2 years (24 months)
-  // through 10 years (120 months) in 1-year steps. Mobile keeps the
-  // compact 8-month default — there's no room for a usable slider on a
-  // small screen, and the dense bars would become illegible at 10 years.
-  // Start offset stays at ~25% of the window in the past so "today" sits
-  // about a quarter in from the left, matching the existing 2-year default.
+  // User-controlled time-range slider. 2 years (24 months) through 10 years
+  // (120 months) in 1-year steps, on BOTH mobile and desktop — previously the
+  // slider rendered on mobile but a short-circuit here ignored its value, so it
+  // looked broken. Start offset stays at ~25% of the window in the past so
+  // "today" sits about a quarter in from the left.
   const [windowYears, setWindowYears] = useState(2);
   const tlConfig = useMemo(() => {
-    if (baseTlConfig.isMobile) return baseTlConfig;
     const monthCount = windowYears * 12;
     const startOffset = -Math.floor(monthCount / 4);
     return { ...baseTlConfig, monthCount, startOffset };
@@ -3494,7 +3492,7 @@ const RiverChart = memo(function RiverChart({
             x2={hoverIndex * stepX}
             y1={0}
             y2={height}
-            stroke="rgba(28,43,42,0.20)"
+            stroke="hsl(var(--foreground) / 0.20)"
             strokeWidth={1}
             strokeDasharray="3 3"
           />
