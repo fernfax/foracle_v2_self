@@ -85,7 +85,7 @@ export default function MobileGuidePage() {
         {steps.map((step) => (
           <div
             key={step.number}
-            className="bg-white rounded-xl border border-border/60 overflow-hidden shadow-sm"
+            className="bg-card rounded-xl border border-border/60 overflow-hidden shadow-sm"
           >
             {/* Step Header */}
             <div className="p-4 border-b border-border/60 bg-muted/50">

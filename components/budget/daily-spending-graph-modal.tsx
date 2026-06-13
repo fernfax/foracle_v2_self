@@ -119,30 +119,30 @@ export function DailySpendingGraphModal({
                   <stop offset="95%" stopColor="#3A6B52" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.10)" />
               <XAxis
                 dataKey="day"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 tickLine={false}
-                axisLine={{ stroke: "rgba(28,43,42,0.10)" }}
+                axisLine={{ stroke: "hsl(var(--foreground) / 0.10)" }}
                 label={{
                   value: `${monthName} (Days)`,
                   position: "bottom",
                   offset: 5,
-                  style: { fontSize: 12, fill: "rgba(28,43,42,0.55)" },
+                  style: { fontSize: 12, fill: "hsl(var(--muted-foreground))" },
                 }}
               />
               <YAxis
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 tickLine={false}
-                axisLine={{ stroke: "rgba(28,43,42,0.10)" }}
+                axisLine={{ stroke: "hsl(var(--foreground) / 0.10)" }}
                 tickFormatter={(value) => `$${value}`}
                 domain={[0, maxValue]}
                 label={{
                   value: "Amount Spent",
                   angle: -90,
                   position: "insideLeft",
-                  style: { fontSize: 12, fill: "rgba(28,43,42,0.55)", textAnchor: "middle" },
+                  style: { fontSize: 12, fill: "hsl(var(--muted-foreground))", textAnchor: "middle" },
                 }}
               />
               <Tooltip

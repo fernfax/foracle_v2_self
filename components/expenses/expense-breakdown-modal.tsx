@@ -301,24 +301,24 @@ export function ExpenseBreakdownModal({
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
-                            <div className="bg-white dark:bg-foreground/80 border border-border dark:border-border rounded-lg shadow-lg p-3">
-                              <p className="text-sm font-bold mb-2 text-foreground dark:text-foreground/40">{data.name}</p>
+                            <div className="bg-card border border-border rounded-lg shadow-lg p-3">
+                              <p className="text-sm font-bold mb-2 text-foreground">{data.name}</p>
                               <div className="space-y-1 text-xs">
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-foreground dark:text-muted-foreground">Total:</span>
-                                  <span className="font-semibold text-foreground dark:text-foreground/40">${data.value.toLocaleString()}</span>
+                                  <span className="text-muted-foreground">Total:</span>
+                                  <span className="font-semibold text-foreground">${data.value.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-foreground dark:text-muted-foreground">Percentage:</span>
-                                  <span className="font-semibold text-foreground dark:text-foreground/40">{data.percentage.toFixed(1)}%</span>
+                                  <span className="text-muted-foreground">Percentage:</span>
+                                  <span className="font-semibold text-foreground">{data.percentage.toFixed(1)}%</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-foreground dark:text-muted-foreground">Count:</span>
-                                  <span className="font-semibold text-foreground dark:text-foreground/40">{data.count}</span>
+                                  <span className="text-muted-foreground">Count:</span>
+                                  <span className="font-semibold text-foreground">{data.count}</span>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-foreground dark:text-muted-foreground">Average:</span>
-                                  <span className="font-semibold text-foreground dark:text-foreground/40">${data.avgPerExpense.toLocaleString()}</span>
+                                  <span className="text-muted-foreground">Average:</span>
+                                  <span className="font-semibold text-foreground">${data.avgPerExpense.toLocaleString()}</span>
                                 </div>
                               </div>
                             </div>

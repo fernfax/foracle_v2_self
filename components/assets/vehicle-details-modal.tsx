@@ -150,9 +150,9 @@ export function VehicleDetailsModal({
 
           {/* COE Expiry Section */}
           {vehicle.coeExpiryDate && coeCountdown && (
-            <div className="border border-border rounded-xl p-5" style={{ backgroundColor: '#ffffff' }}>
+            <div className="border border-border rounded-xl p-5" style={{ backgroundColor: 'hsl(var(--card))' }}>
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold flex items-center gap-2" style={{ color: '#111827' }}>
+                <h3 className="font-semibold flex items-center gap-2 text-foreground">
                   <Clock className="h-4 w-4" />
                   COE Expiry
                 </h3>
@@ -181,9 +181,9 @@ export function VehicleDetailsModal({
 
           {/* Progress Section */}
           {loanTaken > 0 && (
-            <div className="border border-border rounded-xl p-5" style={{ backgroundColor: '#ffffff' }}>
+            <div className="border border-border rounded-xl p-5" style={{ backgroundColor: 'hsl(var(--card))' }}>
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold" style={{ color: '#111827' }}>Loan Progress</h3>
+                <h3 className="font-semibold text-foreground">Loan Progress</h3>
                 <Badge variant="secondary" className="bg-[rgba(0,196,170,0.12)] text-[#007A68] dark:bg-[#00C4AA] dark:text-[#00C4AA]">
                   {progress.toFixed(1)}% Complete
                 </Badge>
@@ -218,10 +218,10 @@ export function VehicleDetailsModal({
           {/* Monthly Payment Details */}
           {monthlyPayment > 0 && (
             <div className="space-y-3">
-              <h3 className="font-semibold flex items-center gap-2" style={{ color: '#111827' }}>
+              <h3 className="font-semibold flex items-center gap-2 text-foreground">
                 Monthly Payment
               </h3>
-              <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: '#ffffff' }}>
+              <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: 'hsl(var(--card))' }}>
                 <div className="flex justify-between items-center">
                   <span className="text-foreground font-medium">Monthly Loan Payment</span>
                   <span className="text-xl font-semibold text-foreground">${monthlyPayment.toLocaleString()}</span>

@@ -115,9 +115,9 @@ export function PropertyDetailsModal({
 
           {/* Progress Section */}
           {loanTaken > 0 && (
-            <div className="border border-border rounded-xl p-5" style={{ backgroundColor: '#ffffff' }}>
+            <div className="border border-border rounded-xl p-5" style={{ backgroundColor: 'hsl(var(--card))' }}>
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold" style={{ color: '#111827' }}>Loan Progress</h3>
+                <h3 className="font-semibold text-foreground">Loan Progress</h3>
                 <Badge variant="secondary" className="bg-[rgba(0,196,170,0.12)] text-[#007A68] dark:bg-[#00C4AA] dark:text-[#00C4AA]">
                   {progress.toFixed(1)}% Complete
                 </Badge>
@@ -151,11 +151,11 @@ export function PropertyDetailsModal({
 
           {/* Monthly Payment Breakdown */}
           <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2" style={{ color: '#111827' }}>
+            <h3 className="font-semibold flex items-center gap-2 text-foreground">
               <TrendingUp className="h-4 w-4" />
               Monthly Payment Breakdown
             </h3>
-            <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: '#ffffff' }}>
+            <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: 'hsl(var(--card))' }}>
               <div className="flex justify-between items-center">
                 <span className="text-foreground font-medium">Total Monthly Payment</span>
                 <span className="text-xl font-semibold text-foreground">${parseFloat(property.monthlyLoanPayment).toLocaleString()}</span>
@@ -180,7 +180,7 @@ export function PropertyDetailsModal({
           {(cpfWithdrawn > 0 || housingGrant > 0 || accruedInterest > 0) && (
             <div className="space-y-3">
               <h3 className="font-semibold text-foreground">CPF & Grants</h3>
-              <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: '#ffffff' }}>
+              <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: 'hsl(var(--card))' }}>
                 {cpfWithdrawn > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-foreground">Principal CPF Withdrawn</span>

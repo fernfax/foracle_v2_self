@@ -96,29 +96,29 @@ export function CategoryBudgetBarChart({ budgetData }: CategoryBudgetBarChartPro
               data={chartData}
               margin={{ top: 0, right: 10, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(28,43,42,0.10)" />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--foreground) / 0.10)" />
               <XAxis
                 type="number"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                 tickLine={false}
-                axisLine={{ stroke: "rgba(28,43,42,0.10)" }}
+                axisLine={{ stroke: "hsl(var(--foreground) / 0.10)" }}
                 tickFormatter={(v) => `$${v}`}
               />
               <YAxis
                 type="category"
                 dataKey="name"
                 width={100}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 tickLine={false}
                 axisLine={false}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--foreground) / 0.06)" }} />
               <Bar dataKey="spent" stackId="a" radius={[0, 0, 0, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell key={`spent-${index}`} fill={getBarColor(entry.percent)} />
                 ))}
               </Bar>
-              <Bar dataKey="remaining" stackId="a" fill="rgba(28,43,42,0.10)" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="remaining" stackId="a" fill="hsl(var(--foreground) / 0.10)" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveChart>
         </div>

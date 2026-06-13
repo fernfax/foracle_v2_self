@@ -201,7 +201,7 @@ function CustomTooltip({
   const hasDeductions = householdDeduction > 0;
 
   return (
-    <div className="bg-white border border-border rounded-lg shadow-lg p-4 max-w-xs">
+    <div className="bg-card border border-border rounded-lg shadow-lg p-4 max-w-xs">
       <p className="font-semibold text-foreground mb-2">{data.month}</p>
       <div className="space-y-2 text-sm">
         {(inputs as CpfProjectionInput[]).map(
@@ -387,7 +387,7 @@ export function CpfProjectionGraph({
                   </TooltipTrigger>
                   <TooltipContent
                     side="bottom"
-                    className="max-w-[300px] text-xs bg-white border shadow-lg"
+                    className="max-w-[300px] text-xs bg-card border shadow-lg"
                   >
                     <p>
                       Projects CPF balance growth based on current income,
@@ -422,7 +422,7 @@ export function CpfProjectionGraph({
               >
                 <SelectTrigger
                   id="cpfViewMode"
-                  className="bg-white text-xs sm:text-sm h-9 sm:h-10"
+                  className="bg-background text-xs sm:text-sm h-9 sm:h-10"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -449,7 +449,7 @@ export function CpfProjectionGraph({
               >
                 <SelectTrigger
                   id="cpfBreakdown"
-                  className="bg-white text-xs sm:text-sm h-9 sm:h-10"
+                  className="bg-background text-xs sm:text-sm h-9 sm:h-10"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -471,7 +471,7 @@ export function CpfProjectionGraph({
               <Select value={timeRange} onValueChange={setTimeRange}>
                 <SelectTrigger
                   id="cpfTimeRange"
-                  className="bg-white text-xs sm:text-sm h-9 sm:h-10"
+                  className="bg-background text-xs sm:text-sm h-9 sm:h-10"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -552,10 +552,10 @@ export function CpfProjectionGraph({
                   );
                 })}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,43,42,0.10)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.10)" />
               <XAxis
                 dataKey="month"
-                stroke="rgba(28,43,42,0.55)"
+                stroke="hsl(var(--muted-foreground))"
                 style={{ fontSize: "12px" }}
                 angle={-45}
                 textAnchor="end"
@@ -564,7 +564,7 @@ export function CpfProjectionGraph({
                 interval={xAxisInterval}
               />
               <YAxis
-                stroke="rgba(28,43,42,0.55)"
+                stroke="hsl(var(--muted-foreground))"
                 style={{ fontSize: "12px" }}
                 tickFormatter={(value) => formatCurrency(value)}
                 domain={[yAxisMin, yAxisMax]}

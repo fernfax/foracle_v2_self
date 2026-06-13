@@ -599,7 +599,7 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
             y1={y - (isNarrow ? 5 : 7)}
             x2={x + width + 90}
             y2={y - (isNarrow ? 5 : 7)}
-            stroke="rgba(28, 43, 42, 0.18)"
+            stroke="hsl(var(--foreground) / 0.18)"
             strokeWidth={1}
             strokeDasharray="3 4"
             pointerEvents="none"
@@ -667,14 +667,14 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
                 textAnchor={labelAnchor}
                 fontSize={isNarrow ? 10 : 12}
                 fontFamily='"Space Grotesk", system-ui, sans-serif'
-                fill="#1C2B2A"
+                fill="hsl(var(--foreground))"
                 style={transition}
                 opacity={isDimTarget ? 0.25 : 1}
               >
                 <tspan x={labelX} dy={isNarrow ? -2 : -3} fontWeight={600}>
                   {isNarrow ? truncateLabel(n.name, 12) : n.name}
                 </tspan>
-                <tspan x={labelX} dy={isNarrow ? 11 : 13} fill="rgba(28,43,42,0.6)">
+                <tspan x={labelX} dy={isNarrow ? 11 : 13} fill="hsl(var(--muted-foreground))">
                   {fmt(realValue)} · {fmt(netValue ?? realValue)}{isNarrow ? "" : " take-home"}
                 </tspan>
               </text>
@@ -687,12 +687,12 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
                 textAnchor={labelAnchor}
                 fontSize={10}
                 fontFamily='"Space Grotesk", system-ui, sans-serif'
-                fill="#1C2B2A"
+                fill="hsl(var(--foreground))"
                 style={transition}
                 opacity={isDimTarget ? 0.25 : 1}
               >
                 <tspan x={labelX} dy={-2} fontWeight={600}>{truncateLabel(n.name, 12)}</tspan>
-                <tspan x={labelX} dy={11} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
+                <tspan x={labelX} dy={11} fill="hsl(var(--muted-foreground))">{fmt(realValue)}</tspan>
               </text>
             ) : (
               <text
@@ -702,12 +702,12 @@ export function CashflowSankey({ incomes, expenses, holdings = [], investments =
                 dominantBaseline="middle"
                 fontSize={12}
                 fontFamily='"Space Grotesk", system-ui, sans-serif'
-                fill="#1C2B2A"
+                fill="hsl(var(--foreground))"
                 style={transition}
                 opacity={isDimTarget ? 0.25 : 1}
               >
                 <tspan fontWeight={600}>{n.name}</tspan>
-                <tspan dx={6} fill="rgba(28,43,42,0.6)">{fmt(realValue)}</tspan>
+                <tspan dx={6} fill="hsl(var(--muted-foreground))">{fmt(realValue)}</tspan>
               </text>
             )
           )
