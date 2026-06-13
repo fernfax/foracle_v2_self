@@ -112,13 +112,16 @@ export function NavigationOverlay() {
         <div className="flex flex-col items-center gap-3">
           <div className="relative flex h-16 w-16 items-center justify-center">
             <span className="absolute inset-0 rounded-full border-2 border-primary/15 border-t-primary/70 motion-safe:animate-spin" />
+            {/* Native gunmetal mark reads well on the light frost; in dark mode
+                invert it to cream so it doesn't vanish on the nightfall blur.
+                Mirrors the shell wordmark's dark:brightness-0 dark:invert. */}
             <Image
               src="/logo-144.png"
               alt=""
               width={32}
               height={32}
               priority
-              className="opacity-90"
+              className="opacity-90 dark:brightness-0 dark:invert"
             />
           </div>
           <span className="font-display text-xs tracking-wide text-muted-foreground">
