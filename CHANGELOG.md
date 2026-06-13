@@ -3,6 +3,22 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.3.0.0] - 2026-06-13
+
+Dark-mode polish across the board, desktop budget fixes, and a budget gauge built into the cashflow Sankey.
+
+### Added
+- **The cashflow Sankey's expense end-bars now double as budget gauges.** Each spending category's thick bar fills from the bottom with a deeper shade of its own colour as the month's spending approaches that category's budget (capped at 100% when over). Savings and CPF aren't gauged, and the flowing ribbons are untouched — only the end-bars fill.
+
+### Changed
+- **The Budget month selector is now a compact pill** (month + year, with breathing room around the arrows), matching the Sankey's month switcher — fixed width instead of growing with the date text.
+- **Page headers are a uniform height across every tab**, so e.g. Insurance no longer sits shorter than Budget.
+
+### Fixed
+- **Dark mode contrast, several places:** the add-expense keypad sheet rendered white with washed-out buttons (now a proper dark sheet with legible keys); over-budget / negative red text was too dark to read on the nightfall canvas (now a brighter red); the tour modal's header title was invisible against a hardcoded light gradient; and chart tooltips (Sankey, daily-spending) showed light-on-light.
+- **The Daily Spending Trend chart was blank on desktop** even with data — the chart container had no definite height, so the responsive chart collapsed to zero. It renders now.
+- **The desktop sidebar no longer flashes on mobile while the app loads.** The layout is now CSS-driven, so the first paint is correct on phones instead of briefly showing the desktop sidebar.
+
 ## [1.2.2.0] - 2026-06-13
 
 An immersive page-load transition and a one-tap dark mode switch.
