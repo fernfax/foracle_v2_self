@@ -3,6 +3,11 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.3.2.0] - 2026-06-14
+
+### Fixed
+- **The page-load logo now follows the theme.** The branded loading overlay rendered the gunmetal mark in both themes, leaving it low-contrast on the dark frost. It now inverts to cream in dark mode (and stays gunmetal in light), matching the shell wordmark's treatment.
+
 ## [1.3.1.0] - 2026-06-14
 
 A dark-mode contrast sweep across the whole app, dialog colour standardisation, and a mobile income-slider fix.
