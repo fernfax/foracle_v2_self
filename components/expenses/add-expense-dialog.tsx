@@ -215,7 +215,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
             Expense Type <span className="text-[#8B0000]">*</span>
           </Label>
           <Select value={expenseCategory} onValueChange={setExpenseCategory}>
-            <SelectTrigger className="bg-white">
+            <SelectTrigger className="bg-card">
               <SelectValue placeholder="Select expense type" />
             </SelectTrigger>
             <SelectContent>
@@ -252,7 +252,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                 placeholder="e.g., Rent, Groceries"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-white"
+                className="bg-card"
               />
             </div>
             <div className="space-y-2">
@@ -260,7 +260,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                 Category <span className="text-[#8B0000]">*</span>
               </Label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className="bg-card">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[400px] overflow-y-auto">
@@ -289,7 +289,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                 onChange={(e) => setAmount(e.target.value)}
                 min="0"
                 step="0.01"
-                className="bg-white"
+                className="bg-card"
               />
             </div>
             <div className="space-y-2">
@@ -301,7 +301,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                 onValueChange={setFrequency}
                 disabled={expenseCategory === "one-off"}
               >
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className="bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -336,7 +336,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
                       "h-10 font-medium",
                       selectedMonths.includes(month.value)
                         ? "bg-black text-white hover:bg-black/90 border-black"
-                        : "bg-white hover:bg-muted"
+                        : "bg-card hover:bg-muted"
                     )}
                   >
                     {month.label}
@@ -435,7 +435,7 @@ export function AddExpenseDialog({ open, onOpenChange, onExpenseAdded }: AddExpe
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="bg-white"
+              className="bg-card"
             />
             <p className="text-xs text-muted-foreground">Add any additional details about this expense</p>
           </div>

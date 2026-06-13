@@ -180,7 +180,7 @@ export function AddCpfDetailsDialog({
                 onBlur={() => handleBlur(ordinaryAccount, setOrdinaryAccount)}
                 min="0"
                 step="0.01"
-                className="bg-white pl-7"
+                className="bg-card pl-7"
               />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -202,7 +202,7 @@ export function AddCpfDetailsDialog({
                 onBlur={() => handleBlur(specialAccount, setSpecialAccount)}
                 min="0"
                 step="0.01"
-                className="bg-white pl-7"
+                className="bg-card pl-7"
               />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -224,7 +224,7 @@ export function AddCpfDetailsDialog({
                 onBlur={() => handleBlur(medisaveAccount, setMedisaveAccount)}
                 min="0"
                 step="0.01"
-                className="bg-white pl-7"
+                className="bg-card pl-7"
               />
             </div>
             <p className="text-xs text-muted-foreground">

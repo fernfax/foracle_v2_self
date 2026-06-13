@@ -264,7 +264,7 @@ export function AddGoalDialog({
                       placeholder="e.g. Emergency Fund, Vacation, House Down Payment"
                       value={goalName}
                       onChange={(e) => setGoalName(e.target.value)}
-                      className="bg-white"
+                      className="bg-card"
                     />
                   </div>
                   <div className="space-y-2">
@@ -272,7 +272,7 @@ export function AddGoalDialog({
                       Goal Type <span className="text-[#8B0000]">*</span>
                     </Label>
                     <Select value={goalType} onValueChange={(v) => setGoalType(v as "primary" | "secondary")}>
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className="bg-card">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -300,7 +300,7 @@ export function AddGoalDialog({
                         onChange={(e) => setTargetAmount(e.target.value)}
                         min="0"
                         step="0.01"
-                        className="bg-white pl-7"
+                        className="bg-card pl-7"
                       />
                     </div>
                   </div>
@@ -313,7 +313,7 @@ export function AddGoalDialog({
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal bg-white",
+                            "w-full justify-start text-left font-normal bg-card",
                             !targetDate && "text-muted-foreground"
                           )}
                         >
@@ -351,7 +351,7 @@ export function AddGoalDialog({
                     placeholder="Add any notes or details about this goal..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="bg-white resize-none"
+                    className="bg-card resize-none"
                     rows={2}
                   />
                 </div>
@@ -383,7 +383,7 @@ export function AddGoalDialog({
                         onChange={(e) => setCurrentAmountSaved(e.target.value)}
                         min="0"
                         step="0.01"
-                        className="bg-white pl-7"
+                        className="bg-card pl-7"
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -406,7 +406,7 @@ export function AddGoalDialog({
                         onChange={(e) => setMonthlyContribution(e.target.value)}
                         min="0"
                         step="0.01"
-                        className="bg-white pl-7"
+                        className="bg-card pl-7"
                       />
                     </div>
                     {suggestedMonthlyContribution > 0 && (

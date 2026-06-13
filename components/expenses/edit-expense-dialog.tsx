@@ -381,7 +381,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
             {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
           </Label>
           <Select value={expenseCategory} onValueChange={isLinked ? undefined : setExpenseCategory} disabled={isLinked}>
-            <SelectTrigger className={cn("bg-white", isLinked && "bg-muted cursor-not-allowed")}>
+            <SelectTrigger className={cn("bg-card", isLinked && "bg-muted cursor-not-allowed")}>
               <SelectValue placeholder="Select expense type" />
             </SelectTrigger>
             <SelectContent>
@@ -425,7 +425,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 placeholder="e.g., Rent, Groceries"
                 value={name}
                 onChange={(e) => !isLinked && setName(e.target.value)}
-                className={cn("bg-white", isLinked && "bg-muted cursor-not-allowed")}
+                className={cn("bg-card", isLinked && "bg-muted cursor-not-allowed")}
                 disabled={isLinked}
               />
               {isLinked && (
@@ -438,7 +438,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
               </Label>
               <Select value={category} onValueChange={isLinked ? undefined : setCategory} disabled={isLinked}>
-                <SelectTrigger className={cn("bg-white", isLinked && "bg-muted cursor-not-allowed")}>
+                <SelectTrigger className={cn("bg-card", isLinked && "bg-muted cursor-not-allowed")}>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[400px] overflow-y-auto">
@@ -472,7 +472,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 onChange={(e) => !isLinked && setAmount(e.target.value)}
                 min="0"
                 step="0.01"
-                className={cn("bg-white", isLinked && "bg-muted cursor-not-allowed")}
+                className={cn("bg-card", isLinked && "bg-muted cursor-not-allowed")}
                 disabled={isLinked}
               />
               {isLinked && (
@@ -489,7 +489,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                 onValueChange={isLinked || expenseCategory === "one-off" ? undefined : setFrequency}
                 disabled={isLinked || expenseCategory === "one-off"}
               >
-                <SelectTrigger className={cn("bg-white", (isLinked || expenseCategory === "one-off") && "bg-muted cursor-not-allowed")}>
+                <SelectTrigger className={cn("bg-card", (isLinked || expenseCategory === "one-off") && "bg-muted cursor-not-allowed")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -530,7 +530,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
                       "h-10 font-medium",
                       selectedMonths.includes(month.value)
                         ? "bg-black text-white hover:bg-black/90 border-black"
-                        : "bg-white hover:bg-muted",
+                        : "bg-card hover:bg-muted",
                       isLinked && "cursor-not-allowed opacity-70"
                     )}
                   >
@@ -666,7 +666,7 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="bg-white"
+              className="bg-card"
             />
             <p className="text-xs text-muted-foreground">Add any additional details about this expense</p>
           </div>
