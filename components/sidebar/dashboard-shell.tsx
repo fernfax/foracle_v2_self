@@ -12,6 +12,7 @@ import { MobileNav } from "@/components/mobile-nav";
 // import { HeaderQuickLinks } from "@/components/header/header-quick-links";
 import { HelpButton } from "@/components/tour/help-button";
 import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget";
+import { NavigationOverlay } from "@/components/navigation-overlay";
 import { RadialDecor } from "@/components/ui/radial-decor";
 import { PeranakanTilesDecor } from "@/components/ui/peranakan-tiles-decor";
 import type { BackgroundDecor } from "@/lib/services/user-prefs";
@@ -134,6 +135,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
       <HelpButton />
       <FloatingAddButton />
       <GlobalAddExpenseModal />
+      <NavigationOverlay />
     </div>
   );
 }
