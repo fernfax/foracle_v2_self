@@ -14,6 +14,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
+import { getActionInfo, type ActionCategory } from "@/lib/developer-action-catalog";
 
 const PROJECT_ROOT = process.cwd();
 
@@ -29,6 +30,9 @@ export type DiagramNode = {
   route?: string;
   // For tables: the snake_case DB name.
   dbName?: string;
+  // For actions: curated functional metadata (lib/developer-action-catalog.ts).
+  category?: ActionCategory;
+  description?: string;
 };
 
 export type DiagramEdge = {
@@ -290,11 +294,14 @@ function toTableNode(t: TableMeta): DiagramNode {
 }
 
 function toActionNode(a: ActionMeta): DiagramNode {
+  const info = getActionInfo(a.fileLabel, a.exportName);
   return {
     id: a.nodeId,
     kind: "action",
     label: `${a.fileLabel}.${a.exportName}`,
     filePath: a.filePath,
+    category: info?.category,
+    description: info?.description,
   };
 }
 

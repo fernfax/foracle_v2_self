@@ -13,7 +13,7 @@ export default async function DeveloperDiagramPage() {
   const diagram = await buildDiagram();
 
   return (
-    <div className="mx-auto max-w-[1600px] px-6 py-8">
+    <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8">
       <header className="mb-4">
         <h1 className="font-display text-2xl font-semibold text-foreground">
           Developer Mode
@@ -21,8 +21,8 @@ export default async function DeveloperDiagramPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Infra graph extracted from the codebase. Edges come from import
           statements: pages and api routes point at the server actions they use;
-          server actions point at the database tables they query. Click a node
-          for details.
+          server actions point at the database tables they query. Click a server
+          action to see its functional category and what it does for the user.
         </p>
       </header>
 

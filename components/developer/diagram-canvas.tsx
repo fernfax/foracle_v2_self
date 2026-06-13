@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ReactFlow,
   Background,
@@ -14,6 +15,7 @@ import "@xyflow/react/dist/style.css";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Diagram, DiagramNode, DiagramNodeKind } from "@/lib/developer-diagram";
+import { CATEGORY_COLOR } from "@/lib/developer-action-catalog";
 
 interface DiagramCanvasProps {
   diagram: Diagram;
@@ -45,6 +47,12 @@ const ROW_GAP = 12;
 
 export function DiagramCanvas({ diagram }: DiagramCanvasProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // The mobile sheet is portaled to <body> so it escapes the app shell's
+  // `contain: layout paint` wrapper, which otherwise traps `position: fixed`
+  // and parks the sheet off-screen. Portals need the DOM, so gate on mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const { rfNodes, rfEdges } = useMemo(() => buildLayout(diagram), [diagram]);
 
@@ -152,56 +160,119 @@ export function DiagramCanvas({ diagram }: DiagramCanvasProps) {
         maxZoom={2}
       >
         <Background gap={20} size={1} color="#E9E2D6" />
-        <Controls showInteractive={false} />
-        <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.05)" />
+        {/* Zoom controls + minimap eat scarce space on phones — desktop only.
+            `desktop:` (≥768px AND ≥600px tall) matches the app's mobile/sidebar
+            split so the diagram chrome appears exactly when the sidebar does. */}
+        <Controls showInteractive={false} className="!hidden desktop:!flex" />
+        <MiniMap
+          pannable
+          zoomable
+          maskColor="rgba(0,0,0,0.05)"
+          className="!hidden desktop:!block"
+        />
       </ReactFlow>
 
       <Legend />
 
+      {/* Desktop: in-canvas panel, top-right. Hidden below the `desktop`
+          breakpoint where the bottom sheet (portaled below) takes over. */}
       {selectedNode && (
-        <aside className="absolute right-3 top-3 z-10 w-80 rounded-md border border-border/40 bg-background/95 p-4 shadow-lg backdrop-blur">
-          <div className="mb-3 flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <span
-                className={cn(
-                  "inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
-                )}
-                style={{
-                  background: NODE_COLOR[selectedNode.kind].bg,
-                  color: NODE_COLOR[selectedNode.kind].text,
-                }}
-              >
-                {selectedNode.kind}
-              </span>
-              <p className="mt-1 break-words font-mono text-[13px] font-semibold text-foreground">
-                {selectedNode.label}
-              </p>
-            </div>
-            <button
-              onClick={() => setSelectedId(null)}
-              className="rounded-full p-1 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <dl className="space-y-1.5 text-[11px]">
-            {selectedNode.filePath && (
-              <Row label="File" value={selectedNode.filePath} mono />
-            )}
-            {selectedNode.route && (
-              <Row label="Route" value={selectedNode.route} mono />
-            )}
-            {selectedNode.dbName && (
-              <Row label="DB name" value={selectedNode.dbName} mono />
-            )}
-          </dl>
-
-          <NeighbourList title="Reads / depends on" nodes={incidentEdges.outgoing} />
-          <NeighbourList title="Used by" nodes={incidentEdges.incoming} />
+        <aside className="absolute right-3 top-3 z-10 hidden max-h-[calc(100%-1.5rem)] w-80 overflow-y-auto rounded-md border border-border/40 bg-background/95 p-4 shadow-lg backdrop-blur desktop:block">
+          <NodeDetails
+            node={selectedNode}
+            incoming={incidentEdges.incoming}
+            outgoing={incidentEdges.outgoing}
+            onClose={() => setSelectedId(null)}
+          />
         </aside>
       )}
+
+      {/* Mobile: fixed bottom sheet portaled to <body> so it escapes the app
+          shell's `contain: layout paint` containing block (which traps
+          position:fixed). Sits above the mobile bottom-nav (z-50 pill). */}
+      {selectedNode &&
+        mounted &&
+        createPortal(
+          <aside className="fixed inset-x-2 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-[60] max-h-[55svh] overflow-y-auto rounded-md border border-border/40 bg-background/95 p-4 shadow-lg backdrop-blur desktop:hidden">
+            <NodeDetails
+              node={selectedNode}
+              incoming={incidentEdges.incoming}
+              outgoing={incidentEdges.outgoing}
+              onClose={() => setSelectedId(null)}
+            />
+          </aside>,
+          document.body
+        )}
     </div>
+  );
+}
+
+function NodeDetails({
+  node,
+  incoming,
+  outgoing,
+  onClose,
+}: {
+  node: DiagramNode;
+  incoming: DiagramNode[];
+  outgoing: DiagramNode[];
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span
+              className={cn(
+                "inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+              )}
+              style={{
+                background: NODE_COLOR[node.kind].bg,
+                color: NODE_COLOR[node.kind].text,
+              }}
+            >
+              {node.kind}
+            </span>
+            {node.category && (
+              <span
+                className="inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                style={{
+                  background: CATEGORY_COLOR[node.category].bg,
+                  color: CATEGORY_COLOR[node.category].text,
+                }}
+              >
+                {node.category}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 break-words font-mono text-[13px] font-semibold text-foreground">
+            {node.label}
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-full p-1 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {node.description && (
+        <p className="mb-3 text-[12px] leading-relaxed text-muted-foreground">
+          {node.description}
+        </p>
+      )}
+
+      <dl className="space-y-1.5 text-[11px]">
+        {node.filePath && <Row label="File" value={node.filePath} mono />}
+        {node.route && <Row label="Route" value={node.route} mono />}
+        {node.dbName && <Row label="DB name" value={node.dbName} mono />}
+      </dl>
+
+      <NeighbourList title="Reads / depends on" nodes={outgoing} />
+      <NeighbourList title="Used by" nodes={incoming} />
+    </>
   );
 }
 
