@@ -257,8 +257,10 @@ export function WelcomeHeroModal({
         {/* Animated background section */}
         <div className="relative h-44 bg-gradient-to-br from-muted via-[rgba(184,98,42,0.10)]/50 to-[rgba(184,98,42,0.10)]/30 overflow-hidden">
           <ModalFloatingIcons />
-          {/* Gradient overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/60 to-transparent z-10" />
+          {/* Gradient overlay for better text readability — uses the theme bg
+              (warm-white in light, nightfall in dark) so the title stays legible
+              in both modes instead of fading onto a hardcoded white. */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
         </div>
 
         {/* Content section */}

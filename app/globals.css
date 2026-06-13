@@ -165,6 +165,11 @@
     --destructive: 0 65% 66%;
     --destructive-foreground: 38 36% 91%;
 
+    /* Negative/over-budget text reads far brighter on the near-black nightfall
+       canvas than the light-mode maroon (#8B0000). See the dark-mode red remap
+       at the end of this file for the hardcoded utility overrides. */
+    --text-on-danger: #EE8585;
+
     --border: 38 36% 91%;
     --input: 38 36% 91%;
     --ring: 20 58% 59%;
@@ -444,4 +449,20 @@
     50% { transform: translateX(20%) scaleX(0.6); }
     100% { transform: translateX(100%) scaleX(0.35); }
   }
+}
+
+/*
+ * Dark-mode negative-red contrast remap.
+ *
+ * Many components hardcode the light-mode reds — #8B0000 (maroon) for
+ * over-budget / negative text and #E05555 (alert red) — which are far too dark
+ * to read on the nightfall canvas (#141E1D). Rather than add a `dark:` override
+ * to ~80 individual usages, these UNLAYERED rules brighten those exact utility
+ * classes in dark mode only (unlayered beats Tailwind's `utilities` layer, so
+ * they win without !important). Light mode is untouched. Brightening reds for
+ * negative figures — never greens — keeps the semantic meaning intact.
+ */
+.dark .text-\[\#8B0000\],
+.dark .text-\[\#E05555\] {
+  color: #ee8585;
 }

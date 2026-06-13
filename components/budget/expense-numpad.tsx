@@ -115,7 +115,7 @@ export function ExpenseNumpad({
     ["00", "0", ".", "submit"],
   ];
 
-  const flashOverlayClass = "pointer-events-none absolute inset-0 rounded-md bg-[#B8622A]/35 opacity-0 transition-opacity duration-150 data-[flashing=true]:opacity-100 data-[flashing=true]:duration-0";
+  const flashOverlayClass = "pointer-events-none absolute inset-0 rounded-md bg-primary/35 opacity-0 transition-opacity duration-150 data-[flashing=true]:opacity-100 data-[flashing=true]:duration-0";
 
   return (
     <div className="grid grid-cols-4 gap-2">
@@ -149,7 +149,7 @@ export function ExpenseNumpad({
                 className={cn(
                   "relative h-14 touch-manipulation overflow-hidden active:scale-[0.97] transition-transform",
                   isEnabled
-                    ? "bg-[#B8622A] hover:bg-[#B8622A] text-white border-[rgba(184,98,42,0.25)]"
+                    ? "bg-primary hover:bg-primary text-primary-foreground border-primary/30"
                     : "bg-muted text-muted-foreground border-border"
                 )}
                 onPointerDown={() => isEnabled && flash(btn)}
@@ -171,7 +171,7 @@ export function ExpenseNumpad({
                 </svg>
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 rounded-md bg-white/40 opacity-0 transition-opacity duration-150 data-[flashing=true]:opacity-100 data-[flashing=true]:duration-0"
+                  className="pointer-events-none absolute inset-0 rounded-md bg-primary-foreground/30 opacity-0 transition-opacity duration-150 data-[flashing=true]:opacity-100 data-[flashing=true]:duration-0"
                   data-flashing={flashKey === btn}
                 />
               </Button>
@@ -200,7 +200,7 @@ export function ExpenseNumpad({
             <Button
               key={btn}
               variant="outline"
-              className="relative h-14 text-xl font-medium touch-manipulation overflow-hidden active:scale-[0.97] transition-transform"
+              className="relative h-14 text-xl font-medium bg-muted/50 touch-manipulation overflow-hidden active:scale-[0.97] transition-transform"
               onPointerDown={() => flash(btn)}
               onClick={() => handleNumberPress(btn)}
             >

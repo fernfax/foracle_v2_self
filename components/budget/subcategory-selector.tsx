@@ -48,7 +48,7 @@ export function SubcategorySelector({
             className={cn(
               "rounded-full h-8 px-3 text-xs",
               isSelected
-                ? "bg-[#B8622A] hover:bg-[#B8622A] text-white"
+                ? "bg-primary hover:bg-primary text-primary-foreground"
                 : "bg-muted/50"
             )}
             onClick={() => {
