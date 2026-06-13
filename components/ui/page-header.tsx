@@ -37,7 +37,10 @@ interface PageHeaderProps {
 export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
   return (
     <div className="sticky top-[env(safe-area-inset-top)] desktop:top-0 z-30 bg-background border-b border-border/20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 desktop:mt-0">
-      <div className="flex items-center justify-between gap-4 py-2">
+      {/* min-h keeps the title row a uniform height across all tabs whether or
+          not a page supplies `actions` (e.g. Budget's month pill) — so e.g. the
+          Insurance header isn't shorter than the Budget header. */}
+      <div className="flex min-h-[3.25rem] items-center justify-between gap-4 py-2">
         <h1 className="text-[17px] font-display font-medium tracking-tight text-foreground">
           {title}
         </h1>

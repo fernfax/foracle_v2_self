@@ -76,7 +76,9 @@ export function Sidebar() {
       className={cn(
         // Sticky participates in the parent CSS Grid; the grid column drives the visible width.
         "sticky top-0 h-screen w-full self-start overflow-hidden bg-[#1C2B2A] border-r border-[rgba(240,235,224,0.06)]",
-        "flex flex-col z-50"
+        // Mobile-hidden via CSS (not JS) so SSR/first paint never shows the
+        // desktop sidebar on phones. display:none drops it from the grid flow.
+        "hidden desktop:flex flex-col z-50"
       )}
       onMouseEnter={() => !isPinned && setIsHovered(true)}
       onMouseLeave={() => !isPinned && setIsHovered(false)}
