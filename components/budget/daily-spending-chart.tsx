@@ -101,8 +101,10 @@ export function DailySpendingChart({
               </div>
             </div>
 
-            {/* Chart */}
-            <div className="flex-1 min-h-[200px] w-full">
+            {/* Chart — needs an explicit height (not just min-h) so the inner
+                ResponsiveContainer's height:100% resolves against a definite box
+                instead of collapsing to 0 on the desktop grid. */}
+            <div className="h-[260px] w-full">
               <ResponsiveChart width="100%" height="100%">
                 <AreaChart
                   data={chartData}
@@ -139,11 +141,14 @@ export function DailySpendingChart({
                     formatter={(value: number) => [`$${value.toFixed(2)}`, "Spent"]}
                     labelFormatter={(label) => `Day ${label}`}
                     contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid rgba(28,43,42,0.10)",
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
                       borderRadius: "8px",
                       fontSize: "12px",
+                      color: "hsl(var(--foreground))",
                     }}
+                    itemStyle={{ color: "hsl(var(--foreground))" }}
+                    labelStyle={{ color: "hsl(var(--muted-foreground))" }}
                   />
                   {/* Daily Budget Reference Line */}
                   <ReferenceLine

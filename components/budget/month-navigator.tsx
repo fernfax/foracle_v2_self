@@ -1,9 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  formatDateRange,
+  getMonthName,
   getPreviousMonth,
   getNextMonth,
   isCurrentMonth,
@@ -34,30 +33,35 @@ export function MonthNavigator({
 
   const canGoNext = !isCurrentMonth(year, month);
 
+  // Fixed-width pill mirroring the Sankey month switcher: standardised width
+  // (independent of the label), breathing room on the arrows, calendar icon.
   return (
-    <div className="flex items-center justify-between bg-muted/50 rounded-xl p-4">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
+    <div className="flex items-center justify-between rounded-full bg-muted px-1 py-1 w-[200px]">
+      <button
+        type="button"
         onClick={handlePrevious}
+        aria-label="Previous month"
+        className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-foreground/[0.06]"
       >
-        <ChevronLeft className="h-5 w-5" />
-      </Button>
+        <ChevronLeft className="h-4 w-4" />
+      </button>
 
-      <div className="text-center">
-        <div className="font-medium">{formatDateRange(year, month)}</div>
+      <div className="flex items-center gap-1.5 px-2">
+        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium tabular-nums">
+          {getMonthName(month, "long")} {year}
+        </span>
       </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
+      <button
+        type="button"
         onClick={handleNext}
         disabled={!canGoNext}
+        aria-label="Next month"
+        className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-foreground/[0.06] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
       >
-        <ChevronRight className={`h-5 w-5 ${!canGoNext ? "opacity-30" : ""}`} />
-      </Button>
+        <ChevronRight className="h-4 w-4" />
+      </button>
     </div>
   );
 }

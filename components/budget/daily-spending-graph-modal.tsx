@@ -149,11 +149,14 @@ export function DailySpendingGraphModal({
                 formatter={(value: number) => [`$${value.toFixed(2)}`, "Spent"]}
                 labelFormatter={(label) => `Day ${label}`}
                 contentStyle={{
-                  backgroundColor: "white",
-                  border: "1px solid rgba(28,43,42,0.10)",
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
                   borderRadius: "8px",
                   fontSize: "12px",
+                  color: "hsl(var(--foreground))",
                 }}
+                itemStyle={{ color: "hsl(var(--foreground))" }}
+                labelStyle={{ color: "hsl(var(--muted-foreground))" }}
               />
               {/* Daily Budget Reference Line */}
               <ReferenceLine
