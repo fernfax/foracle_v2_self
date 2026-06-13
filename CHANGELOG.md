@@ -3,6 +3,11 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.3.4.0] - 2026-06-14
+
+### Added
+- **Developer-mode diagram now explains each server action.** Selecting an action node shows a functional category chip and a one-line description of what it does for the user, sourced from a new curated catalog (`lib/developer-action-catalog.ts`). The detail panel is now mobile-friendly too — a bottom sheet on phones (portaled out of the app shell so it isn't clipped), the in-canvas panel on desktop — and the zoom controls / minimap are hidden on small screens.
+
 ## [1.3.3.0] - 2026-06-14
 
 ### Changed
