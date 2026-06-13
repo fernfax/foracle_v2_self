@@ -3,6 +3,11 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.3.3.0] - 2026-06-14
+
+### Changed
+- **The background wallpaper (Radial circles / Peranakan tiles) now shows in dark mode too.** Previously both were `dark:hidden` and the dark canvas was always plain. The patterns are now theme-tuned via `--foreground` — faint deep-forest on the light canvas, faint cream on the nightfall canvas — so whichever wallpaper you pick carries through to dark mode without competing with content. Light mode is visually unchanged. (A deliberate departure from the original design guide §11 "plain dark canvas" rule.)
+
 ## [1.3.2.0] - 2026-06-14
 
 ### Fixed
