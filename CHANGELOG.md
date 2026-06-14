@@ -3,6 +3,15 @@
 All notable changes to Foracle are documented here.
 Entries: `## [MAJOR.MINOR.PATCH.MICRO] - YYYY-MM-DD` with Added / Changed / Fixed / Removed sections.
 
+## [1.3.5.0] - 2026-06-14
+
+### Added
+- **The marketing landing page now moves.** Motion language borrowed from frontier-lab sites and reworked for Foracle's warm brand: buttery momentum scroll (Lenis), sections that fade and rise into view as you reach them, and a custom cursor that trails the pointer. New liquid-glass surfaces — frosted, edge-lit, with an optional Chromium edge-refraction — on the nav bar, hero product card, the How-it-works and Features cards, and the floating insight chip. All motion is disabled under `prefers-reduced-motion` and the cursor is desktop-only.
+- **The "every stage of life" section is now a scroll-pinned story.** The card pins to the viewport while scroll scrubs through all eight milestones (first job → retirement); a generative net-worth curve grows alongside, its live point gliding continuously along the line and bursting as it passes each milestone node. It runs on mobile too (a top progress bar replaces the desktop side rail) and falls back to a static stacked list under reduced-motion.
+
+### Changed
+- **Landing legibility + accessibility pass.** Net-worth and holdings figures now read in the foreground colour (the per-stage hue moved to the chart, icon, and rail accents) so they clear WCAG AA on both the light and dark glass. Also fixed: the dark-mode "Made for Singapore" badge (was near-invisible), the comparison "old way" eyebrow contrast, and footer-link tap targets on mobile.
+
 ## [1.3.4.0] - 2026-06-14
 
 ### Added
