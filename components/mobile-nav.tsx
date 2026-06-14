@@ -12,6 +12,7 @@ import {
   LineChart,
 } from "lucide-react";
 import { ClerkUserButton } from "@/components/clerk-user-button";
+import { useGlassRefraction } from "@/lib/use-glass-refraction";
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
@@ -48,6 +49,8 @@ const mobileNavItems = [
  */
 export function MobileNav() {
   const pathname = usePathname();
+  // Gate the Chromium-only edge refraction; false on WebKit/SSR (baseline glass).
+  const glassRefract = useGlassRefraction();
   const navRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
 
@@ -119,17 +122,55 @@ export function MobileNav() {
       data-tour="mobile-nav"
       className="bottom-nav fixed z-50 left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] bottom-[calc(0.5rem+env(safe-area-inset-bottom))]"
     >
-      {/* The single nav pill — frameless, frosted, Whoop-style. */}
+      {/* Inline SVG displacement filter for the Chromium-only edge refraction.
+          Static, zero-size, aria-hidden — SSR-safe and offline-safe (no external
+          fetch). Referenced by .glass-pill[data-glass-refract] in globals.css. */}
+      <svg
+        aria-hidden
+        focusable={false}
+        width="0"
+        height="0"
+        style={{ position: "absolute", width: 0, height: 0 }}
+      >
+        <filter
+          id="glass-refraction"
+          x="0%"
+          y="0%"
+          width="100%"
+          height="100%"
+          colorInterpolationFilters="sRGB"
+        >
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.012 0.014"
+            numOctaves={2}
+            seed={7}
+            stitchTiles="stitch"
+            result="noise"
+          />
+          <feGaussianBlur in="noise" stdDeviation="1.2" result="softNoise" />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="softNoise"
+            scale={10}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+      </svg>
+
+      {/* The single nav pill — frameless Liquid Glass island, Whoop-style. */}
       <nav
         ref={navRef}
         aria-label="Primary"
-        className="relative flex h-14 items-center rounded-3xl bg-background/80 backdrop-blur-xl shadow-pop px-1.5 font-display"
+        data-glass-refract={glassRefract ? "true" : undefined}
+        className="glass-pill relative isolate flex h-14 items-center rounded-3xl px-1.5 font-display"
       >
         {/* Sliding active highlight — measures the active item and moves to it. */}
         <span
           aria-hidden
           className={cn(
-            "pointer-events-none absolute rounded-2xl bg-foreground/[0.06]",
+            "glass-active pointer-events-none absolute rounded-2xl",
             animate && "transition-all duration-300 ease-out",
             indicator.visible ? "opacity-100" : "opacity-0"
           )}
@@ -152,7 +193,13 @@ export function MobileNav() {
               onClick={() => setActiveHref(item.href)}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "relative z-10 flex flex-1 min-w-0 flex-col items-center justify-center gap-0.5 py-1.5 px-0 transition-colors",
+                "relative z-10 flex flex-1 min-w-0 flex-col items-center justify-center gap-0.5 py-1.5 px-0",
+                // One transition-property covering BOTH color (active fade) and
+                // transform (press) so the two never override each other; the
+                // motion itself is motion-safe-gated below.
+                "transition-[color,transform] duration-150 ease-out",
+                "motion-safe:active:scale-[0.93] motion-safe:hover:-translate-y-px",
+                "select-none touch-manipulation [-webkit-tap-highlight-color:transparent]",
                 isActive ? "text-foreground" : "text-foreground/55"
               )}
             >
