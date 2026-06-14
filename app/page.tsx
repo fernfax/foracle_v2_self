@@ -7,6 +7,10 @@ import { TileMotif } from "@/components/ui/tile-motif";
 import { LandingShader } from "@/components/landing/landing-shader";
 import { HeroPreview } from "@/components/landing/hero-preview";
 import { LifeStages } from "@/components/landing/life-stages";
+import { SmoothScroll } from "@/components/landing/smooth-scroll";
+import { Cursor } from "@/components/landing/cursor";
+import { GlassDefs } from "@/components/landing/glass-defs";
+import { Reveal } from "@/components/landing/reveal";
 import {
   TrendingUp,
   Shield,
@@ -138,9 +142,12 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-transparent">
       <LandingShader />
+      <GlassDefs />
+      <SmoothScroll />
+      <Cursor />
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-border/30 bg-background/80 backdrop-blur-xl">
+      <nav className="glass-bar sticky top-0 z-50">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center">
             <Image
@@ -182,12 +189,12 @@ export default async function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="relative z-10 mx-auto max-w-7xl px-5 pb-24 pt-16 text-center sm:px-6 sm:pt-24 lg:px-8 lg:pb-32 lg:pt-28">
-          <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-[rgba(184,98,42,0.18)] bg-[rgba(184,98,42,0.07)] px-4 py-1.5">
+          <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-[rgba(184,98,42,0.18)] bg-[rgba(184,98,42,0.07)] px-4 py-1.5 dark:border-[rgba(212,132,90,0.3)] dark:bg-[rgba(212,132,90,0.12)]">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C4AA] opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C4AA]" />
             </span>
-            <span className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7A3A0A]">
+            <span className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7A3A0A] dark:text-[#E8A06A]">
               Made for Singapore, by Singaporeans
             </span>
           </div>
@@ -229,16 +236,16 @@ export default async function Home() {
 
       {/* How it works */}
       <section id="how" className="relative z-10 mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
-        <div className="mb-14 max-w-2xl">
+        <Reveal className="mb-14 max-w-2xl">
           <p className="sec-num mb-3">How it works</p>
           <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
             From scattered to settled, in three steps
           </h2>
-        </div>
+        </Reveal>
 
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.08)] bg-[rgba(28,43,42,0.08)] sm:grid-cols-3">
-          {STEPS.map((s) => (
-            <div key={s.n} className="bg-card p-7 sm:p-8">
+        <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
+          {STEPS.map((s, i) => (
+            <Reveal key={s.n} delay={i * 80} className="glass-panel rounded-2xl p-7 sm:p-8">
               <span className="font-display text-4xl font-semibold tracking-tight text-[#B8622A]/85 tabular-nums">
                 {s.n}
               </span>
@@ -248,7 +255,7 @@ export default async function Home() {
               <p className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground">
                 {s.body}
               </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -261,7 +268,7 @@ export default async function Home() {
         id="features"
         className="relative z-10 mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8"
       >
-        <div className="mb-14 max-w-2xl">
+        <Reveal className="mb-14 max-w-2xl">
           <p className="sec-num mb-3">Features</p>
           <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
             Everything you need, nothing you don&apos;t
@@ -269,32 +276,31 @@ export default async function Home() {
           <p className="mt-4 text-base text-muted-foreground sm:text-lg">
             A complete set of calm, considered tools for the whole household.
           </p>
-        </div>
+        </Reveal>
 
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.08)] bg-[rgba(28,43,42,0.08)] sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map(({ n, icon: Icon, title, description, color, tint }) => (
-            <div
-              key={n}
-              className="group relative bg-card p-7 transition-colors hover:bg-muted/30 sm:p-8"
-            >
-              <div className="flex items-center justify-between">
-                <div
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: tint, color }}
-                >
-                  <Icon className="h-5 w-5" />
+        <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          {FEATURES.map(({ n, icon: Icon, title, description, color, tint }, i) => (
+            <Reveal key={n} delay={(i % 3) * 80} className="h-full">
+              <div className="group glass-panel h-full rounded-2xl p-7 transition-transform duration-300 hover:-translate-y-1 sm:p-8">
+                <div className="flex items-center justify-between">
+                  <div
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
+                    style={{ backgroundColor: tint, color }}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="font-display text-[12px] font-semibold tabular-nums tracking-[0.1em] text-muted-foreground/60">
+                    {n}
+                  </span>
                 </div>
-                <span className="font-display text-[12px] font-semibold tabular-nums tracking-[0.1em] text-muted-foreground/60">
-                  {n}
-                </span>
+                <h3 className="mt-5 font-display text-[17px] font-semibold tracking-tight text-foreground">
+                  {title}
+                </h3>
+                <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
+                  {description}
+                </p>
               </div>
-              <h3 className="mt-5 font-display text-[17px] font-semibold tracking-tight text-foreground">
-                {title}
-              </h3>
-              <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
-                {description}
-              </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -302,19 +308,19 @@ export default async function Home() {
       {/* Comparison */}
       <section id="compare" className="relative z-10 scroll-mt-20 bg-[#1C2B2A] py-20 sm:py-28">
         <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
-          <div className="mb-12 max-w-2xl">
+          <Reveal className="mb-12 max-w-2xl">
             <p className="mb-3 font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D4845A]">
               Why Foracle
             </p>
             <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-[#F0EBE0] sm:text-4xl">
               There&apos;s a calmer way to hold your money
             </h2>
-          </div>
+          </Reveal>
 
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
             {/* Old way */}
             <div className="rounded-2xl border border-[rgba(240,235,224,0.10)] bg-[rgba(240,235,224,0.03)] p-6 sm:p-8">
-              <p className="mb-6 font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-[rgba(240,235,224,0.5)]">
+              <p className="mb-6 font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-[rgba(240,235,224,0.72)]">
                 The old way
               </p>
               <ul className="space-y-4">
@@ -355,14 +361,14 @@ export default async function Home() {
 
       {/* FAQ */}
       <section id="faq" className="relative z-10 mx-auto max-w-3xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
-        <div className="mb-12 text-center">
+        <Reveal className="mb-12 text-center">
           <p className="sec-num mb-3">FAQ</p>
           <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
             Questions, answered
           </h2>
-        </div>
+        </Reveal>
 
-        <div className="divide-y divide-[rgba(28,43,42,0.08)] overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.08)] bg-card">
+        <Reveal className="glass-panel divide-y divide-[rgba(28,43,42,0.08)] overflow-hidden rounded-2xl dark:divide-[rgba(240,235,224,0.08)]">
           {FAQS.map((f) => (
             <details key={f.q} className="group">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 sm:p-6 [&::-webkit-details-marker]:hidden">
@@ -376,7 +382,7 @@ export default async function Home() {
               </p>
             </details>
           ))}
-        </div>
+        </Reveal>
       </section>
 
       {/* Final CTA */}
@@ -434,7 +440,7 @@ export default async function Home() {
                 <a
                   key={l.href}
                   href={l.href}
-                  className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                  className="inline-block py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {l.label}
                 </a>

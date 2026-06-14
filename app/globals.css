@@ -285,6 +285,263 @@
     text-transform: uppercase;
     color: var(--brand-terracotta);
   }
+
+  /* ── Liquid Glass — floating mobile nav pill ─────────────────────────────
+     Self-contained: tint + blur + refraction all live here in the component
+     layer, so the surface never fights Tailwind's utility layer (no bg- or
+     backdrop- utilities on the nav, no !important needed). WebKit-primary —
+     the pure-CSS specular treatment is the baseline; the Chromium-only edge
+     refraction is additive via [data-glass-refract] and degrades to it.
+     Token-driven (--background / --foreground / --border / --shadow-pop); the
+     white highlights are the glass glare (mode-independent specular). */
+  .glass-pill {
+    background-color: hsl(var(--background) / 0.5);   /* fallback when no backdrop-filter */
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8),             /* crisp lit top edge */
+      inset 0 7px 14px -8px rgba(255, 255, 255, 0.4),        /* soft inner top glow */
+      inset 0 -1px 0 0 hsla(var(--border) / 0.12),           /* thin bottom edge */
+      inset 0 -12px 18px -12px hsla(var(--border) / 0.18),   /* bottom inner shade = thickness */
+      var(--shadow-pop);
+    border: 1px solid hsla(var(--border) / 0.10);
+  }
+
+  /* Clear, LIT glass — low blur so you see THROUGH it (not frost), with a strong
+     saturation + brightness lift so colours behind read vivid (Apple "vibrancy"). */
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-pill {
+      background-color: hsl(var(--background) / 0.28);
+      -webkit-backdrop-filter: blur(12px) saturate(1.9) brightness(1.06);
+      backdrop-filter: blur(12px) saturate(1.9) brightness(1.06);
+    }
+  }
+
+  /* Chromium-only edge refraction (additive). backdrop-filter is atomic, so the
+     whole chain is restated; the url() ref is ignored by WebKit → baseline glass.
+     Absent on SSR/first paint → no flash; added after mount only where the engine
+     actually paints it (see lib/use-glass-refraction.ts). */
+  .glass-pill[data-glass-refract="true"] {
+    -webkit-backdrop-filter: blur(12px) saturate(1.9) brightness(1.06) url(#glass-refraction);
+    backdrop-filter: blur(12px) saturate(1.9) brightness(1.06) url(#glass-refraction);
+  }
+
+  /* Bright top-edge rim — crisp "wet glass" highlight catching light along the top. */
+  .glass-pill::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.15) 16%,
+      transparent 48%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Diagonal sheen — a soft gleam sweeping from the top-left, so the surface reads
+     as a lit pane of glass rather than a flat frosted panel. */
+  .glass-pill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      125deg,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0.05) 16%,
+      transparent 36%
+    );
+  }
+
+  .dark .glass-pill {
+    background-color: hsl(var(--background) / 0.42);
+    box-shadow:
+      inset 0 1px 0 0 hsla(var(--foreground) / 0.22),        /* cream lit top edge */
+      inset 0 7px 14px -8px hsla(var(--foreground) / 0.10),   /* soft inner top glow */
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.3),                    /* thin bottom edge */
+      inset 0 -12px 18px -12px rgba(0, 0, 0, 0.5),            /* bottom inner shade */
+      var(--shadow-pop);
+    border-color: hsla(var(--foreground) / 0.14);
+  }
+
+  .dark .glass-pill::before {
+    background: linear-gradient(
+      180deg,
+      hsla(var(--foreground) / 0.32) 0%,
+      hsla(var(--foreground) / 0.07) 20%,
+      transparent 48%
+    );
+  }
+
+  .dark .glass-pill::after {
+    background: linear-gradient(
+      125deg,
+      hsla(var(--foreground) / 0.14) 0%,
+      hsla(var(--foreground) / 0.03) 16%,
+      transparent 36%
+    );
+  }
+
+  /* Active item — a brighter glass "lozenge" that catches its own highlight. */
+  .glass-active {
+    background: hsla(var(--foreground) / 0.10);
+    box-shadow:
+      inset 0 1px 0.5px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 1px 0 hsla(var(--border) / 0.08);
+  }
+
+  .dark .glass-active {
+    background: hsla(var(--foreground) / 0.12);
+    box-shadow:
+      inset 0 1px 0.5px 0 hsla(var(--foreground) / 0.25),
+      inset 0 -1px 1px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  /* Reduce Transparency → opaque, maximally legible chrome. The second selector
+     matches [data-glass-refract] specificity so it wins even if that attr is set. */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-pill {
+      background-color: hsl(var(--background));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .glass-pill[data-glass-refract="true"] {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  /* ── Liquid Glass — landing surfaces (panels, cards, chips) ──────────────
+     Extends the .glass-pill language to larger surfaces. Unlike the pill,
+     these carry a base backdrop blur on ALL engines (Safari included) so the
+     mesh-gradient frosts universally; the Chromium-only edge refraction is the
+     same additive [data-glass-refract] enhancement (see lib/use-glass-refraction
+     + the #glass-refraction filter in components/landing/glass-defs.tsx).
+     Backgrounds are token-derived so dark mode adapts automatically. */
+  .glass-panel {
+    position: relative;
+    background-color: hsl(var(--background) / 0.55);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid hsla(var(--border) / 0.10);
+    box-shadow:
+      inset 0 1px 0.5px 0 hsla(var(--foreground) / 0.04),
+      inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -10px 16px -12px hsla(var(--border) / 0.12),
+      var(--shadow-card);
+  }
+  /* Bright top-edge rim — masked 1px gradient border (the "wet" highlight). */
+  .glass-panel::before,
+  .glass-strong::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.06) 20%,
+      transparent 50%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  /* Stronger, more opaque panel — hero card, final CTA. Legible over busy mesh. */
+  .glass-strong {
+    position: relative;
+    background-color: hsl(var(--background) / 0.74);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    backdrop-filter: blur(22px) saturate(1.5);
+    border: 1px solid hsla(var(--border) / 0.10);
+    box-shadow:
+      inset 0 1px 0.5px 0 hsla(var(--foreground) / 0.05),
+      inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.6),
+      var(--shadow-pop);
+  }
+
+  .dark .glass-panel,
+  .dark .glass-strong {
+    border-color: hsla(var(--foreground) / 0.10);
+  }
+  .dark .glass-panel {
+    box-shadow:
+      inset 0 1px 0.5px 0 hsla(var(--foreground) / 0.14),
+      inset 0 1px 1px 0 hsla(var(--foreground) / 0.06),
+      inset 0 -12px 18px -12px rgba(0, 0, 0, 0.45),
+      var(--shadow-card);
+  }
+  .dark .glass-panel::before,
+  .dark .glass-strong::before {
+    background: linear-gradient(
+      180deg,
+      hsla(var(--foreground) / 0.20) 0%,
+      hsla(var(--foreground) / 0.05) 25%,
+      transparent 55%
+    );
+  }
+
+  /* Chromium-only edge refraction (additive). Gated by a single root attribute
+     set after mount by <GlassDefs> (which also renders the #glass-refraction
+     filter); a backdrop-filter value is atomic so the full chain is restated. */
+  :root[data-glass-refract="true"] .glass-panel {
+    -webkit-backdrop-filter: blur(16px) saturate(1.45) url(#glass-refraction);
+    backdrop-filter: blur(16px) saturate(1.45) url(#glass-refraction);
+  }
+  :root[data-glass-refract="true"] .glass-strong {
+    -webkit-backdrop-filter: blur(22px) saturate(1.55) url(#glass-refraction);
+    backdrop-filter: blur(22px) saturate(1.55) url(#glass-refraction);
+  }
+
+  /* Sticky nav bar — frost + a single top specular line, bottom hairline only. */
+  .glass-bar {
+    background-color: hsl(var(--background) / 0.7);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border-bottom: 1px solid hsla(var(--border) / 0.45);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.5),
+      0 1px 12px hsla(var(--foreground) / 0.04);
+    will-change: backdrop-filter;
+  }
+  .dark .glass-bar {
+    border-bottom-color: hsla(var(--foreground) / 0.08);
+    box-shadow:
+      inset 0 1px 0 0 hsla(var(--foreground) / 0.10),
+      0 1px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Reduce Transparency → opaque chrome for the whole landing glass family. */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-panel,
+    .glass-strong,
+    .glass-bar {
+      background-color: hsl(var(--background));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  /* No backdrop-filter at all → fall back to a more opaque solid so text stays legible. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-panel { background-color: hsl(var(--background) / 0.92); }
+    .glass-strong { background-color: hsl(var(--background) / 0.96); }
+    .glass-bar { background-color: hsl(var(--background) / 0.94); }
+  }
 }
 
 /* Responsive navigation helpers (preserve existing behavior) */
@@ -358,6 +615,92 @@
   /* Safe area insets for devices with home indicators (iPhone X+, etc.) */
   .pb-safe {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  /* === Landing scroll-reveal (lib/use-reveal.ts + components/landing/reveal.tsx) ===
+     Fade + rise as elements enter the viewport; same easing as .hp-bar. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
+  /* === Landing custom cursor (components/landing/cursor.tsx) ===
+     Full-replace cursor: dot tracks exactly, ring lerp-trails. Native cursor is
+     hidden only while the custom one is active (desktop + motion-safe). Blend is
+     tuned for the warm light mesh (terracotta + multiply); dark flips to coral. */
+  .cursor-hidden,
+  .cursor-hidden * {
+    cursor: none !important;
+  }
+  .cursor-dot,
+  .cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    pointer-events: none;
+    border-radius: 9999px;
+    transition: opacity 0.2s ease;
+  }
+  .cursor-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--brand-terracotta);
+    mix-blend-mode: multiply;
+  }
+  .cursor-ring {
+    width: 30px;
+    height: 30px;
+    border: 1.5px solid color-mix(in srgb, var(--brand-terracotta) 60%, transparent);
+    mix-blend-mode: multiply;
+    transition:
+      width 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+      height 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.22s ease,
+      border-color 0.22s ease,
+      opacity 0.2s ease;
+  }
+  .cursor-ring-grow {
+    width: 56px;
+    height: 56px;
+    background: color-mix(in srgb, var(--brand-terracotta) 8%, transparent);
+    border-color: color-mix(in srgb, var(--brand-terracotta) 45%, transparent);
+  }
+  .cursor-ring-press {
+    width: 22px;
+    height: 22px;
+  }
+  .dark .cursor-dot {
+    background: var(--brand-coral);
+    mix-blend-mode: screen;
+  }
+  .dark .cursor-ring {
+    border-color: color-mix(in srgb, var(--brand-coral) 60%, transparent);
+    mix-blend-mode: screen;
+  }
+  .dark .cursor-ring-grow {
+    background: color-mix(in srgb, var(--brand-coral) 12%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cursor-dot,
+    .cursor-ring {
+      display: none;
+    }
   }
 
   /* === Landing hero-preview entrance animations (components/landing/hero-preview.tsx) ===

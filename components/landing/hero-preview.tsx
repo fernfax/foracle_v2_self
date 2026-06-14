@@ -41,7 +41,7 @@ export function HeroPreview() {
       />
 
       {/* Main dashboard card */}
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-[rgba(28,43,42,0.08)] bg-card/95 shadow-[0_2px_4px_rgba(28,43,42,0.06),0_24px_60px_rgba(28,43,42,0.16),0_48px_120px_rgba(28,43,42,0.10)] backdrop-blur-sm">
+      <div className="glass-strong relative overflow-hidden rounded-[1.75rem]">
         <TileMotif size="standard" />
 
         <div className="grid gap-0 sm:grid-cols-5">
@@ -168,7 +168,7 @@ export function HeroPreview() {
       </div>
 
       {/* Floating insight chip — overlaps bottom-left */}
-      <div className="absolute -bottom-5 left-4 hidden sm:flex items-center gap-2.5 rounded-2xl border border-[rgba(28,43,42,0.08)] bg-card px-4 py-3 shadow-[0_12px_32px_rgba(28,43,42,0.14)]">
+      <div className="glass-panel absolute -bottom-5 left-4 hidden items-center gap-2.5 rounded-2xl px-4 py-3 sm:flex">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(184,98,42,0.10)]">
           <TrendingUp className="h-4 w-4 text-[#B8622A]" />
         </div>

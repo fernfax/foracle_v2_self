@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import {
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+} from "motion/react";
 import {
   Briefcase,
   KeyRound,
@@ -10,18 +17,20 @@ import {
   TrendingUp,
   GraduationCap,
   Palmtree,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
+import { useMediaQuery } from "@/lib/use-media-query";
+import { Reveal } from "@/components/landing/reveal";
+import { NetWorthCanvas } from "@/components/landing/net-worth-canvas";
 
 /**
- * LifeStages — a user-scrollable horizontal life timeline.
+ * LifeStages — a scroll-pinned life timeline (first job → retirement).
  *
- * Objective start (First job) → end (Retirement), no loop. As the user scrolls
- * (swipe / trackpad / arrows / keyboard), the milestone nearest the centre
- * becomes "focused": its icon enlarges and a detail panel (title, description,
- * age, income, holdings) fades in. Non-focused milestones show only a dimmed
- * icon. CSS scroll-snap centres the focused item so motion settles smoothly.
+ * Desktop + motion-safe: a glass card pins to the viewport while the section
+ * scrolls; scroll progress scrubs through the 8 milestones (~one viewport each)
+ * — the detail panel crossfades, a side rail tracks position, and a net-worth
+ * curve "grows" alongside. Mobile / reduced-motion fall back to a static
+ * stacked list (one glass card per milestone), avoiding sticky/address-bar jank.
+ * Reuses the same milestone data across both paths.
  */
 
 type Stage = {
@@ -31,455 +40,254 @@ type Stage = {
   desc: string;
   income: string;
   holdings: string;
+  holdingsValue: number;
   color: string;
   tint: string;
 };
 
 const STAGES: Stage[] = [
-  {
-    icon: Briefcase,
-    age: "23",
-    title: "First job",
-    desc: "Start tracking income and build the saving habit.",
-    income: "S$3,800/mo",
-    holdings: "S$8K",
-    color: "#B8622A",
-    tint: "rgba(184,98,42,0.10)",
-  },
-  {
-    icon: Heart,
-    age: "28",
-    title: "Getting married",
-    desc: "Merge finances and set shared goals.",
-    income: "S$5,500/mo",
-    holdings: "S$45K",
-    color: "#D4845A",
-    tint: "rgba(212,132,90,0.12)",
-  },
-  {
-    icon: KeyRound,
-    age: "29",
-    title: "First home (BTO)",
-    desc: "Plan the down payment, CPF and renovation.",
-    income: "S$6,200/mo",
-    holdings: "S$72K",
-    color: "#3A6B52",
-    tint: "rgba(58,107,82,0.10)",
-  },
-  {
-    icon: Baby,
-    age: "31",
-    title: "A new baby",
-    desc: "Adjust the budget and open an education fund.",
-    income: "S$7,000/mo",
-    holdings: "S$118K",
-    color: "#D4A843",
-    tint: "rgba(212,168,67,0.12)",
-  },
-  {
-    icon: Car,
-    age: "33",
-    title: "Buying a car",
-    desc: "Weigh the COE, loan and running costs.",
-    income: "S$8,000/mo",
-    holdings: "S$185K",
-    color: "#5A9470",
-    tint: "rgba(90,148,112,0.12)",
-  },
-  {
-    icon: TrendingUp,
-    age: "36",
-    title: "A big promotion",
-    desc: "Rebalance savings as your income grows.",
-    income: "S$11,000/mo",
-    holdings: "S$340K",
-    color: "#B8622A",
-    tint: "rgba(184,98,42,0.10)",
-  },
-  {
-    icon: GraduationCap,
-    age: "46",
-    title: "Kids' education",
-    desc: "Fund university without derailing retirement.",
-    income: "S$14,000/mo",
-    holdings: "S$720K",
-    color: "#3A6B52",
-    tint: "rgba(58,107,82,0.10)",
-  },
-  {
-    icon: Palmtree,
-    age: "63",
-    title: "Retirement",
-    desc: "See if your CPF and nest egg are enough.",
-    income: "S$6,000/mo",
-    holdings: "S$1.45M",
-    color: "#D4A843",
-    tint: "rgba(212,168,67,0.12)",
-  },
+  { icon: Briefcase, age: "23", title: "First job", desc: "Start tracking income and build the saving habit.", income: "S$3,800/mo", holdings: "S$8K", holdingsValue: 8000, color: "#B8622A", tint: "rgba(184,98,42,0.10)" },
+  { icon: Heart, age: "28", title: "Getting married", desc: "Merge finances and set shared goals.", income: "S$5,500/mo", holdings: "S$45K", holdingsValue: 45000, color: "#D4845A", tint: "rgba(212,132,90,0.12)" },
+  { icon: KeyRound, age: "29", title: "First home (BTO)", desc: "Plan the down payment, CPF and renovation.", income: "S$6,200/mo", holdings: "S$72K", holdingsValue: 72000, color: "#3A6B52", tint: "rgba(58,107,82,0.10)" },
+  { icon: Baby, age: "31", title: "A new baby", desc: "Adjust the budget and open an education fund.", income: "S$7,000/mo", holdings: "S$118K", holdingsValue: 118000, color: "#D4A843", tint: "rgba(212,168,67,0.12)" },
+  { icon: Car, age: "33", title: "Buying a car", desc: "Weigh the COE, loan and running costs.", income: "S$8,000/mo", holdings: "S$185K", holdingsValue: 185000, color: "#5A9470", tint: "rgba(90,148,112,0.12)" },
+  { icon: TrendingUp, age: "36", title: "A big promotion", desc: "Rebalance savings as your income grows.", income: "S$11,000/mo", holdings: "S$340K", holdingsValue: 340000, color: "#B8622A", tint: "rgba(184,98,42,0.10)" },
+  { icon: GraduationCap, age: "46", title: "Kids' education", desc: "Fund university without derailing retirement.", income: "S$14,000/mo", holdings: "S$720K", holdingsValue: 720000, color: "#3A6B52", tint: "rgba(58,107,82,0.10)" },
+  { icon: Palmtree, age: "63", title: "Retirement", desc: "See if your CPF and nest egg are enough.", income: "S$6,000/mo", holdings: "S$1.45M", holdingsValue: 1450000, color: "#D4A843", tint: "rgba(212,168,67,0.12)" },
 ];
 
-const ITEM = 200; // px, fixed so the centre-padding calc stays consistent
+const N = STAGES.length;
+const VALUES = STAGES.map((s) => s.holdingsValue);
+const COLORS = STAGES.map((s) => s.color);
 
-export function LifeStages() {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const [focused, setFocused] = useState(0);
-  // Leading/trailing spacer width so the first and last items can reach centre.
-  const [pad, setPad] = useState(0);
-  // Auto-advance bookkeeping (kept in refs so the interval closure stays fresh).
-  const focusedRef = useRef(0);
-  const hoverRef = useRef(false);
-  const idleUntilRef = useRef(0); // pause auto-advance until this timestamp after a user gesture
-
-  const update = useCallback(() => {
-    const sc = scrollerRef.current;
-    if (!sc) return;
-    const rect = sc.getBoundingClientRect();
-    const center = rect.left + rect.width / 2;
-    const items = sc.querySelectorAll<HTMLElement>("[data-stage]");
-    let best = 0;
-    let bestDist = Infinity;
-    items.forEach((el, i) => {
-      const r = el.getBoundingClientRect();
-      const d = Math.abs(r.left + r.width / 2 - center);
-      if (d < bestDist) {
-        bestDist = d;
-        best = i;
-      }
-    });
-    focusedRef.current = best;
-    setFocused(best);
-  }, []);
-
-  useEffect(() => {
-    const sc = scrollerRef.current;
-    if (!sc) return;
-    let raf = 0;
-    const measure = () => setPad(Math.max(0, (sc.clientWidth - ITEM) / 2));
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
-    };
-    const onResize = () => {
-      measure();
-      onScroll();
-    };
-    sc.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    measure();
-    update();
-    return () => {
-      sc.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      cancelAnimationFrame(raf);
-    };
-  }, [update]);
-
-  // Once the spacers lay out (pad applied), recompute which item is centred.
-  useEffect(() => {
-    const raf = requestAnimationFrame(update);
-    return () => cancelAnimationFrame(raf);
-  }, [pad, update]);
-
-  const animRef = useRef(0);
-  const cancelAnim = useCallback(() => {
-    if (animRef.current) {
-      cancelAnimationFrame(animRef.current);
-      animRef.current = 0;
-    }
-  }, []);
-
-  // Distance (in px of scrollLeft) needed to bring item `i` to the centre.
-  // Uses getBoundingClientRect so it's robust to the spacer/wrapper nesting, and
-  // only ever touches the scroller's own scrollLeft — never scrollIntoView — so
-  // the page never jumps vertically while auto-advancing.
-  const targetFor = (i: number) => {
-    const sc = scrollerRef.current;
-    if (!sc) return null;
-    const clamped = Math.max(0, Math.min(STAGES.length - 1, i));
-    const el = sc.querySelectorAll<HTMLElement>("[data-stage]")[clamped];
-    if (!el) return null;
-    const scRect = sc.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    return sc.scrollLeft + (elRect.left + elRect.width / 2) - (scRect.left + scRect.width / 2);
-  };
-
-  const jumpTo = useCallback((i: number) => {
-    const sc = scrollerRef.current;
-    cancelAnim();
-    const target = targetFor(i);
-    if (sc && target != null) sc.scrollLeft = target;
-  }, [cancelAnim]);
-
-  const animateTo = useCallback(
-    (i: number, duration = 700) => {
-      const sc = scrollerRef.current;
-      cancelAnim();
-      const target = targetFor(i);
-      if (!sc || target == null) return;
-      const start = sc.scrollLeft;
-      const dist = target - start;
-      if (Math.abs(dist) < 1) return;
-      const t0 = performance.now();
-      // easeInOutSine — gentle, steady motion so the lateral shift is easy to follow.
-      const ease = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
-      const step = (now: number) => {
-        const p = Math.min(1, (now - t0) / duration);
-        sc.scrollLeft = start + dist * ease(p);
-        animRef.current = p < 1 ? requestAnimationFrame(step) : 0;
-      };
-      animRef.current = requestAnimationFrame(step);
-    },
-    [cancelAnim]
-  );
-
-  const goTo = useCallback((i: number) => animateTo(i, 650), [animateTo]);
-
-  // JS scroll-snap replacement: after the user stops scrolling, gently settle the
-  // nearest milestone to centre. (CSS scroll-snap was hijacking the JS glide and
-  // snapping it to the target almost instantly.)
-  useEffect(() => {
-    const sc = scrollerRef.current;
-    if (!sc) return;
-    let settleTimer = 0;
-    const onScrollSettle = () => {
-      window.clearTimeout(settleTimer);
-      settleTimer = window.setTimeout(() => {
-        if (!animRef.current) animateTo(focusedRef.current, 360);
-      }, 160);
-    };
-    sc.addEventListener("scroll", onScrollSettle, { passive: true });
-    return () => {
-      sc.removeEventListener("scroll", onScrollSettle);
-      window.clearTimeout(settleTimer);
-    };
-  }, [animateTo]);
-
-  // Gentle, forward-only auto-advance. Pauses on hover or recent user gesture;
-  // loops by jumping straight back to the start (never animates backward in time).
-  useEffect(() => {
-    const sc = scrollerRef.current;
-    if (!sc) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const onEnter = () => {
-      hoverRef.current = true;
-    };
-    const onLeave = () => {
-      hoverRef.current = false;
-    };
-    const onUserGesture = () => {
-      idleUntilRef.current = Date.now() + 4500;
-      cancelAnim();
-    };
-    sc.addEventListener("mouseenter", onEnter);
-    sc.addEventListener("mouseleave", onLeave);
-    sc.addEventListener("wheel", onUserGesture, { passive: true });
-    sc.addEventListener("touchstart", onUserGesture, { passive: true });
-    sc.addEventListener("pointerdown", onUserGesture);
-    sc.addEventListener("keydown", onUserGesture);
-
-    const id = window.setInterval(() => {
-      if (hoverRef.current || Date.now() < idleUntilRef.current) return;
-      if (focusedRef.current >= STAGES.length - 1) {
-        jumpTo(0); // loop forward: instant reset, no backward animation
-      } else {
-        goTo(focusedRef.current + 1); // same glide speed as the arrow buttons
-      }
-    }, 5500);
-
-    return () => {
-      window.clearInterval(id);
-      sc.removeEventListener("mouseenter", onEnter);
-      sc.removeEventListener("mouseleave", onLeave);
-      sc.removeEventListener("wheel", onUserGesture);
-      sc.removeEventListener("touchstart", onUserGesture);
-      sc.removeEventListener("pointerdown", onUserGesture);
-      sc.removeEventListener("keydown", onUserGesture);
-    };
-  }, [goTo, jumpTo, cancelAnim]);
-
+function StageDetails({ s }: { s: Stage }) {
+  const Icon = s.icon;
   return (
-    <section className="relative z-10 overflow-hidden border-y border-border/30 bg-muted py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="sec-num mb-3">Every chapter</p>
-          <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
-            A companion for every stage of life
-          </h2>
-          <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-            Life keeps changing — a first job, a new home, a growing family. Scroll through the
-            journey to see how Foracle grows with you, all the way to retirement.
+    <div className="text-left">
+      <div
+        className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl"
+        style={{ backgroundColor: s.tint, color: s.color }}
+      >
+        <Icon className="h-6 w-6" />
+      </div>
+      <p className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        Age {s.age}
+      </p>
+      <h3 className="mt-1.5 font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+        {s.title}
+      </h3>
+      <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
+        {s.desc}
+      </p>
+      <div className="mt-6 flex w-fit items-stretch gap-5 rounded-xl border border-border/40 bg-card/60 px-5 py-3">
+        <div>
+          <p className="font-display text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Income
+          </p>
+          <p className="font-display text-[15px] font-semibold tabular-nums text-foreground">
+            {s.income}
+          </p>
+        </div>
+        <div className="w-px self-stretch bg-border/50" />
+        <div>
+          <p className="font-display text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Holdings
+          </p>
+          <p className="font-display text-[15px] font-semibold tabular-nums text-foreground">
+            {s.holdings}
           </p>
         </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="relative mt-14">
-        {/* Edge fades hint that there's more to scroll */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 bg-gradient-to-r from-muted to-transparent sm:w-28"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 z-20 w-16 bg-gradient-to-l from-muted to-transparent sm:w-28"
-        />
+export function LifeStages() {
+  const reduced = useReducedMotion();
+  // Pinned scrollytelling on any device tall enough (incl. touch / mobile);
+  // only reduced-motion or very short/landscape screens fall back to the list.
+  const tall = useMediaQuery("(min-height: 600px)");
+  const pinned = tall && !reduced;
 
-        {/* Prev / next controls (desktop) */}
-        <button
-          type="button"
-          onClick={() => goTo(focused - 1)}
-          disabled={focused === 0}
-          aria-label="Previous milestone"
-          className="absolute left-3 top-[66px] z-30 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border/40 bg-card p-2 text-foreground/70 shadow-sm transition-all hover:text-foreground disabled:pointer-events-none disabled:opacity-0 sm:flex lg:left-8"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => goTo(focused + 1)}
-          disabled={focused === STAGES.length - 1}
-          aria-label="Next milestone"
-          className="absolute right-3 top-[66px] z-30 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border/40 bg-card p-2 text-foreground/70 shadow-sm transition-all hover:text-foreground disabled:pointer-events-none disabled:opacity-0 sm:flex lg:right-8"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
+  const trackRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: trackRef,
+    offset: ["start start", "end end"],
+  });
+  // Calm-forward smoothing — absorbs Lenis sub-frame lag without feeling springy.
+  const smooth = useSpring(scrollYProgress, { stiffness: 90, damping: 28, mass: 0.4 });
 
-        {/* Scroller */}
-        <div
-          ref={scrollerRef}
-          role="region"
-          aria-label="Life stages timeline"
-          tabIndex={0}
-          className="scrollbar-hide overflow-x-auto py-8 outline-none"
-        >
-          <div className="relative flex w-max">
-            <div aria-hidden className="flex-none" style={{ width: pad }} />
-            {/* Items wrapper holds the connecting rail (first node centre → last node centre) */}
-            <div className="relative flex min-h-[300px]">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute top-[34px] h-px bg-[rgba(28,43,42,0.14)]"
-                style={{ left: ITEM / 2, right: ITEM / 2 }}
-              />
-              {STAGES.map((s, i) => {
-                const Icon = s.icon;
-                const isFocused = i === focused;
-                // Real 3D depth: side milestones rotate away and recede on the Z
-                // axis (coverflow), the focused one pops slightly forward.
-                const sd = i - focused; // signed distance
-                const ad = Math.abs(sd);
-                const rotateY = Math.max(-42, Math.min(42, -sd * 16));
-                const tz = isFocused ? 30 : -ad * 150;
-                const dim = isFocused ? 1 : ad === 1 ? 0.55 : ad === 2 ? 0.38 : 0.24;
-                const blur = isFocused ? 0 : Math.min(ad, 3) * 0.5;
-                return (
-                  <div
-                    key={s.title}
-                    data-stage
-                    className="relative flex-none"
-                    style={{ width: ITEM }}
-                  >
-                    {/* Icon node — card ring masks the rail behind it */}
-                    <button
-                      type="button"
-                      onClick={() => goTo(i)}
-                      aria-label={`${s.title}, age ${s.age}`}
-                      className="group relative z-10 mx-auto block rounded-full outline-none"
-                    >
-                      <div
-                        className="relative rounded-full bg-card p-1.5 transition-[transform,opacity,filter] duration-300 ease-out motion-reduce:transition-none"
-                        style={{
-                          transform: `perspective(800px) translateZ(${tz}px) rotateY(${rotateY}deg)`,
-                          opacity: dim,
-                          filter: blur ? `blur(${blur}px)` : undefined,
-                        }}
-                      >
-                        {isFocused && (
-                          <>
-                            {/* gentle breathing ring */}
-                            <span
-                              aria-hidden
-                              className="ls-pulse pointer-events-none absolute -inset-0.5 rounded-full"
-                              style={{ boxShadow: `0 0 0 1.5px ${s.color}` }}
-                            />
-                            {/* orbiting accent dot */}
-                            <span
-                              aria-hidden
-                              className="pointer-events-none absolute -inset-1 animate-spin [animation-duration:7s] motion-reduce:hidden"
-                            >
-                              <span
-                                className="absolute left-1/2 top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full"
-                                style={{ backgroundColor: s.color }}
-                              />
-                            </span>
-                          </>
-                        )}
-                        <div
-                          className={`relative flex h-14 w-14 items-center justify-center rounded-full transition-shadow duration-300 ${
-                            isFocused ? "ls-icon-pulse" : ""
-                          }`}
-                          style={{
-                            backgroundColor: s.tint,
-                            color: s.color,
-                            boxShadow: isFocused ? `0 10px 28px ${s.color}40` : undefined,
-                          }}
-                        >
-                          <Icon className="h-6 w-6" />
-                        </div>
-                      </div>
-                    </button>
+  const [active, setActive] = useState(0);
+  useMotionValueEvent(smooth, "change", (v) => {
+    const i = Math.min(N - 1, Math.max(0, Math.floor(v * N)));
+    setActive((prev) => (prev === i ? prev : i));
+  });
 
-                    {/* Detail panel — only when focused */}
-                    <div
-                      aria-hidden={!isFocused}
-                      className={`absolute left-1/2 top-[92px] w-[280px] -translate-x-1/2 text-center transition-all duration-300 ease-out motion-reduce:transition-none ${
-                        isFocused
-                          ? "translate-y-0 opacity-100"
-                          : "pointer-events-none translate-y-2 opacity-0"
-                      }`}
-                    >
+  const scrollToStage = (i: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const trackTop = track.getBoundingClientRect().top + window.scrollY;
+    const travel = track.offsetHeight - window.innerHeight;
+    const y = trackTop + ((i + 0.5) / N) * travel;
+    if (typeof window !== "undefined" && window.__lenis) window.__lenis.scrollTo(y);
+    else window.scrollTo({ top: y, behavior: "smooth" });
+  };
+
+  const introInner = (
+    <>
+      <p className="sec-num mb-3">Every chapter</p>
+      <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
+        A companion for every stage of life
+      </h2>
+      <p className="mt-4 text-base text-muted-foreground sm:text-lg">
+        Life keeps changing — a first job, a new home, a growing family.
+        {pinned ? " Keep scrolling to watch Foracle grow with you, all the way to retirement." : " See how Foracle grows with you, all the way to retirement."}
+      </p>
+    </>
+  );
+
+  return (
+    <section
+      aria-label="A companion for every stage of life"
+      className="relative z-10 border-y border-border/30 bg-muted/30"
+    >
+      {/* Intro (standalone only for the stacked fallback; pinned mode pins it with the card) */}
+      {!pinned && (
+        <div className="mx-auto max-w-2xl px-5 pt-20 text-center sm:px-6 sm:pt-28 lg:px-8">
+          {introInner}
+        </div>
+      )}
+
+      {pinned ? (
+        // ── Scroll-pinned scrollytelling: heading + card pin together ──────
+        <div ref={trackRef} style={{ height: `${(N + 1) * 100}svh` }} className="relative">
+          <div className="sticky top-0 flex h-svh flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 sm:gap-7 sm:px-6 sm:py-16 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">{introInner}</div>
+            <div className="mx-auto w-full max-w-5xl">
+              <div className="glass-strong relative overflow-hidden rounded-3xl">
+                {/* Mobile progress bar (the side rail is desktop-only). */}
+                <motion.div
+                  aria-hidden
+                  style={{ scaleX: smooth }}
+                  className="absolute left-0 top-0 z-20 h-0.5 w-full origin-left bg-[#B8622A] lg:hidden"
+                />
+                {/* Soft inset column divider — doesn't touch the rounded corners. */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-10 left-1/2 hidden w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-border/40 to-transparent md:block"
+                />
+                <div className="grid md:grid-cols-2">
+                  {/* Left: net-worth line-art */}
+                  <div className="relative min-h-[200px] border-b border-border/40 md:min-h-[460px] md:border-b-0">
+                    <NetWorthCanvas values={VALUES} colors={COLORS} progress={smooth} />
+                    <div className="absolute left-6 top-6 font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground tabular-nums">
+                      {String(active + 1).padStart(2, "0")} / {String(N).padStart(2, "0")}
+                    </div>
+                    <div className="absolute bottom-6 left-6 right-6">
                       <p className="font-display text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                        Age {s.age}
+                        Net worth
                       </p>
-                      <h3 className="mt-1 font-display text-lg font-semibold tracking-tight text-foreground">
-                        {s.title}
-                      </h3>
-                      <p className="mx-auto mt-1.5 max-w-[240px] text-[13px] leading-relaxed text-muted-foreground">
-                        {s.desc}
+                      <p className="font-display text-2xl font-semibold tabular-nums text-foreground">
+                        {STAGES[active].holdings}
                       </p>
-                      <div className="mx-auto mt-4 flex w-fit items-stretch gap-4 rounded-xl border border-border/40 bg-card/70 px-4 py-2.5">
-                        <div className="text-left">
-                          <p className="font-display text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                            Income
-                          </p>
-                          <p className="font-display text-[13px] font-semibold tabular-nums text-foreground">
-                            {s.income}
-                          </p>
-                        </div>
-                        <div className="w-px self-stretch bg-border/50" />
-                        <div className="text-left">
-                          <p className="font-display text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                            Holdings
-                          </p>
-                          <p
-                            className="font-display text-[13px] font-semibold tabular-nums"
-                            style={{ color: s.color }}
-                          >
-                            {s.holdings}
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   </div>
+
+                  {/* Right: crossfading milestone details */}
+                  <div className="relative min-h-[280px] md:min-h-[460px]">
+                    {STAGES.map((s, i) => {
+                      const isActive = i === active;
+                      const off = i < active ? "-translate-y-3" : "translate-y-3";
+                      return (
+                        <div
+                          key={s.title}
+                          className={`absolute inset-0 flex flex-col justify-center p-6 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-10 ${
+                            isActive ? "translate-y-0 opacity-100" : `pointer-events-none opacity-0 ${off}`
+                          }`}
+                        >
+                          <StageDetails s={s} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress rail — pulled in to sit just outside the card's right edge */}
+            <div className="absolute left-[calc(50%_+_528px)] top-1/2 z-10 hidden h-64 -translate-y-1/2 flex-col items-center justify-between xl:flex">
+              <div aria-hidden className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
+              <motion.div
+                aria-hidden
+                style={{ scaleY: smooth }}
+                className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 origin-top bg-[#B8622A]"
+              />
+              {STAGES.map((s, i) => {
+                const isActive = i === active;
+                return (
+                  <button
+                    key={s.title}
+                    type="button"
+                    onClick={() => scrollToStage(i)}
+                    aria-label={`${s.title}, age ${s.age}`}
+                    aria-current={isActive ? "true" : undefined}
+                    className="relative z-10 flex h-5 w-5 items-center justify-center rounded-full"
+                  >
+                    <span
+                      className="rounded-full transition-all duration-300"
+                      style={
+                        isActive
+                          ? { width: 11, height: 11, backgroundColor: s.color, boxShadow: `0 0 0 4px ${s.tint}` }
+                          : { width: 7, height: 7, backgroundColor: "hsl(var(--muted-foreground) / 0.4)" }
+                      }
+                    />
+                  </button>
                 );
               })}
             </div>
-            <div aria-hidden className="flex-none" style={{ width: pad }} />
           </div>
         </div>
-      </div>
+      ) : (
+        // ── Static stacked fallback (mobile / reduced-motion) ─────────────
+        <div className="mx-auto max-w-2xl space-y-4 px-5 py-14 sm:px-6">
+          {STAGES.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <Reveal key={s.title} delay={(i % 4) * 60} className="glass-panel rounded-2xl p-6">
+                <div className="flex items-start gap-4">
+                  <div
+                    className="flex h-12 w-12 flex-none items-center justify-center rounded-xl"
+                    style={{ backgroundColor: s.tint, color: s.color }}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-display text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      Age {s.age}
+                    </p>
+                    <h3 className="mt-0.5 font-display text-lg font-semibold tracking-tight text-foreground">
+                      {s.title}
+                    </h3>
+                    <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+                      {s.desc}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <span className="font-display text-[13px] tabular-nums text-muted-foreground">
+                        {s.income}
+                      </span>
+                      <span className="font-display text-[13px] font-semibold tabular-nums text-foreground">
+                        {s.holdings}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+      )}
 
-      <p className="mt-10 text-center font-display text-[12px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80">
+      <p className="mx-auto max-w-2xl px-5 pb-20 pt-2 text-center font-display text-[12px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80 sm:pb-28">
         From your first paycheck to your last working day
       </p>
     </section>
