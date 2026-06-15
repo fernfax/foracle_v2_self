@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -72,8 +72,17 @@ export function AddExpenseModal({
   const [exchangeRate, setExchangeRate] = useState<number>(1);
   const [customRate, setCustomRate] = useState<number | undefined>(undefined);
 
-  // Reset form when modal opens/closes or editing expense changes
+  // Initialize the form ONLY on the open transition (false→true). This used to
+  // re-run on every change of its deps — and `categories` arrives as a fresh
+  // `.filter(...)` array on each parent render, so any re-render while the user
+  // was typing re-ran this and reset `amount` back to "0" (the "my number
+  // disappears when I type fast" bug). Gating on the transition makes prop churn
+  // harmless; the values read here are already settled when the drawer opens.
+  const prevOpenRef = useRef(false);
   useEffect(() => {
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+    if (!justOpened) return;
     if (open) {
       if (editingExpense) {
         // If editing, use the original currency if it exists

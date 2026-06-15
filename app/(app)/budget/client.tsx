@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Settings2, Target, Wallet, TrendingUp, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -216,6 +216,14 @@ export function BudgetClient({
       ? "text-[#007A68]"
       : undefined;
 
+  // Memoized so AddExpenseModal receives a STABLE array reference. Passing a
+  // fresh `.filter(...)` each render made the modal's open-init effect re-fire
+  // on every parent re-render, resetting the amount field mid-typing.
+  const modalCategories = useMemo(
+    () => categories.filter((c) => budgetData.some((b) => b.categoryName === c.name)),
+    [categories, budgetData]
+  );
+
   return (
     <div className="max-w-lg mx-auto pb-24 space-y-4 desktop:max-w-none desktop:px-0 desktop:pb-8 desktop:space-y-0">
 
@@ -396,9 +404,7 @@ export function BudgetClient({
       <AddExpenseModal
         open={addExpenseOpen}
         onOpenChange={setAddExpenseOpen}
-        categories={categories.filter(c =>
-          budgetData.some(b => b.categoryName === c.name)
-        )}
+        categories={modalCategories}
         budgetData={budgetData}
         dailyExpenses={dailyExpenses}
         onSuccess={handleExpenseSuccess}
