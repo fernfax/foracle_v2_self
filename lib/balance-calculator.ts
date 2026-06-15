@@ -336,27 +336,43 @@ export function calculateMonthlyBalance(
         return total;
       }
 
-      let monthBonusNet = 0;
-      for (const bonus of matched) {
-        const isOneOff = typeof bonus.date === "string";
-        // Recurring: monthly salary × multiplier. One-off: the dollar amount.
-        const grossBonus = isOneOff
-          ? parseFloat(bonus.amount)
-          : grossSalary * parseFloat(bonus.amount);
-        if (!Number.isFinite(grossBonus) || grossBonus <= 0) continue;
+      // Aggregate this month's bonuses BEFORE applying CPF. calculateBonusCPF
+      // recomputes the full remaining Additional-Wage annual ceiling on every
+      // call, so a per-bonus loop double-counts that ceiling and over-deducts CPF
+      // when more than one bonus lands in the same month (e.g. 13th-month + a
+      // performance bonus). Compute CPF once on the combined bonus, then split the
+      // net proportionally so each entry's tooltip still shows its own figure.
+      // (Cross-month annual-ceiling accumulation still requires the YTD approach in
+      // cpf-projection-calculator.ts — out of scope for this per-month calc.)
+      const monthBonuses = matched
+        .map((bonus) => {
+          const isOneOff = typeof bonus.date === "string";
+          // Recurring: monthly salary × multiplier. One-off: the dollar amount.
+          const grossBonus = isOneOff
+            ? parseFloat(bonus.amount)
+            : grossSalary * parseFloat(bonus.amount);
+          return { bonus, isOneOff, grossBonus };
+        })
+        .filter((b) => Number.isFinite(b.grossBonus) && b.grossBonus > 0);
 
-        // Calculate net bonus after CPF deductions (if subject to CPF). The
-        // gross bonus is passed to calculateBonusCPF whether it came from a
-        // multiplier or a direct dollar amount.
-        let netBonus = grossBonus;
-        if (income.subjectToCpf) {
-          const bonusCpf = calculateBonusCPF(
-            grossSalary,  // Monthly OW for ceiling calc
-            grossBonus,   // Gross bonus
-            30            // Default age
-          );
-          netBonus = grossBonus - bonusCpf.bonusEmployeeCpf;
-        }
+      const totalGrossBonus = monthBonuses.reduce((s, b) => s + b.grossBonus, 0);
+
+      let totalBonusEmployeeCpf = 0;
+      if (income.subjectToCpf && totalGrossBonus > 0) {
+        totalBonusEmployeeCpf = calculateBonusCPF(
+          grossSalary,      // Monthly OW for ceiling calc
+          totalGrossBonus,  // Combined gross bonus for the month
+          30                // Default age (Income carries no DOB here)
+        ).bonusEmployeeCpf;
+      }
+
+      let monthBonusNet = 0;
+      for (const { bonus, isOneOff, grossBonus } of monthBonuses) {
+        const cpfShare =
+          totalGrossBonus > 0
+            ? totalBonusEmployeeCpf * (grossBonus / totalGrossBonus)
+            : 0;
+        const netBonus = grossBonus - cpfShare;
 
         // Track bonus in specialItems for tooltip display
         specialItems.push({

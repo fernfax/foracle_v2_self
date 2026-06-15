@@ -272,7 +272,9 @@ export function BudgetClient({
         {mounted &&
           createPortal(
             <div className="fixed bottom-[calc(7rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 pointer-events-none">
-              <div className="max-w-lg mx-auto flex justify-center">
+              {/* Right-aligned (matches the global FloatingAddButton at right-6) so
+                  it never overlaps the full-width "Manage Categories" button. */}
+              <div className="max-w-lg mx-auto flex justify-end pr-6">
                 <Button
                   size="lg"
                   variant="outline"

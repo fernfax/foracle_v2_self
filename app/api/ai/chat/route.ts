@@ -83,16 +83,35 @@ function formatUserFriendlyError(error: unknown): string {
   return "Something went wrong. Please try again or rephrase your question.";
 }
 
+// The AI assistant is not yet production-ready: threads, conversation history and
+// the daily quota all live in in-memory Maps (lib/ai/threads.ts, orchestrator.ts,
+// rate-limiter.ts), so on an auto-deploy / multi-instance host they reset on every
+// restart and the cost guard is bypassable. The feature is also unlinked from nav.
+// Keep the (paid) endpoint disabled in production until it is backed by a durable
+// store; opt in explicitly with ENABLE_AI_ASSISTANT=true. Dev is always enabled.
+function aiAssistantEnabled(): boolean {
+  return (
+    process.env.ENABLE_AI_ASSISTANT === "true" ||
+    process.env.NODE_ENV === "development"
+  );
+}
+
 // =============================================================================
 // POST Handler
 // =============================================================================
 
 export async function POST(request: NextRequest): Promise<NextResponse<ChatResponse>> {
-  console.log("[AI Chat] POST request received");
   try {
+    if (!aiAssistantEnabled()) {
+      return createErrorResponse(
+        "The assistant is not available yet.",
+        "FEATURE_DISABLED",
+        503
+      );
+    }
+
     // Authenticate user
     const { userId } = await auth();
-    console.log("[AI Chat] User ID:", userId ? userId.slice(0, 8) + "..." : "none");
     if (!userId) {
       return createErrorResponse("Please sign in to use the assistant.", "UNAUTHORIZED", 401);
     }

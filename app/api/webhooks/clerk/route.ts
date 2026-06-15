@@ -2,8 +2,52 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { users, families, familyMembers } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  users,
+  families,
+  familyMembers,
+  expenses,
+  dailyExpenses,
+  expenseCategories,
+  expenseSubcategories,
+  insuranceProviders,
+  assets,
+  propertyAssets,
+  vehicleAssets,
+  policies,
+  goals,
+  currentHoldings,
+  holdingAmountHistory,
+  investmentPolicies,
+  budgetShifts,
+  incomesBeta,
+} from "@/db/schema";
+import { and, eq, ne } from "drizzle-orm";
+
+// Family-shared financial tables whose rows carry the creating user's id with
+// `onDelete: cascade`. When the family master is deleted these would otherwise
+// be wiped out from under the remaining members, so we re-parent them to an heir
+// first. (quick_links and user_chunks are intentionally NOT here — they are the
+// departing user's personal data and should be removed with them.)
+const FAMILY_SHARED_TABLES = [
+  expenses,
+  dailyExpenses,
+  expenseCategories,
+  expenseSubcategories,
+  insuranceProviders,
+  assets,
+  propertyAssets,
+  vehicleAssets,
+  policies,
+  goals,
+  currentHoldings,
+  holdingAmountHistory,
+  investmentPolicies,
+  budgetShifts,
+  incomesBeta,
+  familyMembers,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+] as any[];
 
 export async function POST(req: Request) {
   // Get the Svix headers for verification
@@ -150,11 +194,55 @@ export async function POST(req: Request) {
 
   if (eventType === "user.deleted") {
     const { id } = evt.data;
+    const deletedUserId = id!;
 
     try {
-      await db.delete(users).where(eq(users.id, id!));
+      // If this user is the master of a family that still has other members,
+      // a blind delete would cascade-wipe the household's shared financial data.
+      // Re-parent the family + its shared rows to a surviving member first.
+      const ownedFamily = await db.query.families.findFirst({
+        where: eq(families.masterUserId, deletedUserId),
+      });
 
-      console.log("User deleted from database:", id);
+      let heirId: string | null = null;
+      if (ownedFamily) {
+        const heir = await db.query.users.findFirst({
+          where: and(
+            eq(users.familyId, ownedFamily.id),
+            ne(users.id, deletedUserId)
+          ),
+        });
+        heirId = heir?.id ?? null;
+      }
+
+      if (ownedFamily && heirId) {
+        await db.transaction(async (tx) => {
+          // Re-parent shared data to the heir so the cascade can't reach it.
+          for (const table of FAMILY_SHARED_TABLES) {
+            await tx
+              .update(table)
+              .set({ userId: heirId })
+              .where(eq(table.userId, deletedUserId));
+          }
+          // Hand the family to the heir.
+          await tx
+            .update(families)
+            .set({ masterUserId: heirId, updatedAt: new Date() })
+            .where(eq(families.id, ownedFamily.id));
+          // Now deleting the user only cascades their personal rows
+          // (quick_links, user_chunks).
+          await tx.delete(users).where(eq(users.id, deletedUserId));
+        });
+        console.log("Master user deleted; family re-parented to heir:", {
+          deletedUserId,
+          familyId: ownedFamily.id,
+          heirId,
+        });
+      } else {
+        // Solo user (no surviving heir) — their own data is theirs to lose.
+        await db.delete(users).where(eq(users.id, deletedUserId));
+        console.log("User deleted from database:", deletedUserId);
+      }
     } catch (error) {
       console.error("Error deleting user:", error);
       return new Response("Error deleting user", { status: 500 });

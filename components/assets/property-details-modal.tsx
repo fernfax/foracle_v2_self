@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Home, Calendar, TrendingUp, Building2, Wallet, Check, X } from "lucide-react";
 import { format } from "date-fns";
+import { useTheme } from "next-themes";
 
 interface PropertyAsset {
   id: string;
@@ -38,7 +39,14 @@ export function PropertyDetailsModal({
   onOpenChange,
   property,
 }: PropertyDetailsModalProps) {
+  const { resolvedTheme } = useTheme();
   if (!property) return null;
+
+  // The whitescape backdrop + metric cards were hardcoded light, so in dark mode
+  // the theme-aware `text-foreground` (light) sat on a light surface = invisible.
+  const isDark = resolvedTheme === "dark";
+  const surfaceOverlay = isDark ? "rgba(18,28,27,0.92)" : "rgba(255,255,255,0.82)";
+  const cardBg = isDark ? "hsl(var(--card))" : "#F0EBE0";
 
   const loanTaken = parseFloat(property.loanAmountTaken || "0");
   const outstanding = parseFloat(property.outstandingLoan);
@@ -63,7 +71,7 @@ export function PropertyDetailsModal({
       <DialogContent
         className="max-w-4xl max-h-[80vh] overflow-y-auto"
         style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)), url(/whitescape-property.jpg)",
+          backgroundImage: `linear-gradient(${surfaceOverlay}, ${surfaceOverlay}), url(/whitescape-property.jpg)`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -93,7 +101,7 @@ export function PropertyDetailsModal({
         <div className="space-y-6 py-4">
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="border border-border rounded-lg p-4" style={{ backgroundColor: '#F0EBE0' }}>
+            <div className="border border-border rounded-lg p-4" style={{ backgroundColor: cardBg }}>
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Building2 className="h-4 w-4" />
                 <span className="text-sm">Purchase Price</span>
@@ -102,7 +110,7 @@ export function PropertyDetailsModal({
                 ${parseFloat(property.originalPurchasePrice).toLocaleString()}
               </p>
             </div>
-            <div className="border border-border rounded-lg p-4" style={{ backgroundColor: '#F0EBE0' }}>
+            <div className="border border-border rounded-lg p-4" style={{ backgroundColor: cardBg }}>
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Wallet className="h-4 w-4" />
                 <span className="text-sm">Loan Amount</span>
@@ -118,7 +126,7 @@ export function PropertyDetailsModal({
             <div className="border border-border rounded-xl p-5" style={{ backgroundColor: 'hsl(var(--card))' }}>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-semibold text-foreground">Loan Progress</h3>
-                <Badge variant="secondary" className="bg-[rgba(0,196,170,0.12)] text-[#007A68] dark:bg-[#00C4AA] dark:text-[#00C4AA]">
+                <Badge variant="secondary" className="bg-[rgba(0,196,170,0.12)] text-[#007A68] dark:bg-[rgba(0,196,170,0.18)] dark:text-[#33d4bc]">
                   {progress.toFixed(1)}% Complete
                 </Badge>
               </div>

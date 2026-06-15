@@ -10,12 +10,30 @@ import {
 } from "@/lib/ai/threads";
 import { getUserQuotaInfo } from "@/lib/ai/rate-limiter";
 
+// The assistant is paused/unfinished (in-memory threads + quota; see route note in
+// app/api/ai/chat/route.ts). Disabled in production unless ENABLE_AI_ASSISTANT=true.
+function aiAssistantEnabled(): boolean {
+  return (
+    process.env.ENABLE_AI_ASSISTANT === "true" ||
+    process.env.NODE_ENV === "development"
+  );
+}
+
+function featureDisabledResponse() {
+  return NextResponse.json(
+    { success: false, error: "The assistant is not available yet." },
+    { status: 503 }
+  );
+}
+
 // =============================================================================
 // GET - List user's threads
 // =============================================================================
 
 export async function GET(request: NextRequest) {
   try {
+    if (!aiAssistantEnabled()) return featureDisabledResponse();
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
@@ -79,6 +97,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST() {
   try {
+    if (!aiAssistantEnabled()) return featureDisabledResponse();
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
@@ -112,6 +132,8 @@ export async function POST() {
 
 export async function DELETE(request: NextRequest) {
   try {
+    if (!aiAssistantEnabled()) return featureDisabledResponse();
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
@@ -155,6 +177,8 @@ export async function DELETE(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    if (!aiAssistantEnabled()) return featureDisabledResponse();
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(

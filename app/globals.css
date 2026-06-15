@@ -641,8 +641,12 @@
 
   /* === Landing custom cursor (components/landing/cursor.tsx) ===
      Full-replace cursor: dot tracks exactly, ring lerp-trails. Native cursor is
-     hidden only while the custom one is active (desktop + motion-safe). Blend is
-     tuned for the warm light mesh (terracotta + multiply); dark flips to coral. */
+     hidden only while the custom one is active (desktop + motion-safe).
+     Colour: mix-blend-mode: difference over a warm-cream base, so the cursor
+     INVERTS against whatever is beneath it, per pixel — near-black over the
+     light cream surfaces, warm cream over the dark forest panels (the CTA /
+     comparison cards), and a ring straddling an edge shows each portion in the
+     contrasting tone. Theme-agnostic, so no separate .dark overrides needed. */
   .cursor-hidden,
   .cursor-hidden * {
     cursor: none !important;
@@ -655,19 +659,20 @@
     z-index: 9999;
     pointer-events: none;
     border-radius: 9999px;
+    mix-blend-mode: difference;
     transition: opacity 0.2s ease;
   }
   .cursor-dot {
     width: 6px;
     height: 6px;
-    background: var(--brand-terracotta);
-    mix-blend-mode: multiply;
+    /* Brand cream base. Difference biases dark areas toward a warm cream and
+       light areas toward near-black — visible on both. */
+    background: #f0ebe0;
   }
   .cursor-ring {
     width: 30px;
     height: 30px;
-    border: 1.5px solid color-mix(in srgb, var(--brand-terracotta) 60%, transparent);
-    mix-blend-mode: multiply;
+    border: 1.5px solid #f0ebe0;
     transition:
       width 0.22s cubic-bezier(0.22, 1, 0.36, 1),
       height 0.22s cubic-bezier(0.22, 1, 0.36, 1),
@@ -678,23 +683,12 @@
   .cursor-ring-grow {
     width: 56px;
     height: 56px;
-    background: color-mix(in srgb, var(--brand-terracotta) 8%, transparent);
-    border-color: color-mix(in srgb, var(--brand-terracotta) 45%, transparent);
+    background: rgba(240, 235, 224, 0.12);
+    border-color: rgba(240, 235, 224, 0.85);
   }
   .cursor-ring-press {
     width: 22px;
     height: 22px;
-  }
-  .dark .cursor-dot {
-    background: var(--brand-coral);
-    mix-blend-mode: screen;
-  }
-  .dark .cursor-ring {
-    border-color: color-mix(in srgb, var(--brand-coral) 60%, transparent);
-    mix-blend-mode: screen;
-  }
-  .dark .cursor-ring-grow {
-    background: color-mix(in srgb, var(--brand-coral) 12%, transparent);
   }
   @media (prefers-reduced-motion: reduce) {
     .cursor-dot,
@@ -808,4 +802,33 @@
 .dark .text-\[\#8B0000\],
 .dark .text-\[\#E05555\] {
   color: #ee8585;
+}
+
+/*
+ * Dark-mode brand-color contrast remap (positive greens / warm browns / golds).
+ *
+ * Same rationale as the reds above: these deep brand hexes are hardcoded across
+ * ~200 usages (positive figures, CPF / balance chart labels, relationship icons)
+ * and are unreadable on the nightfall canvas (#141E1D) — e.g. #007A68 measures
+ * 2.13:1, well below WCAG AA's 4.5:1. Brighten them in dark mode only, preserving
+ * hue + semantic meaning (green stays positive, amber stays warning). Light mode
+ * is untouched. Unlayered, so these beat Tailwind's `utilities` layer.
+ */
+.dark .text-\[\#007A68\] {
+  color: #33d4bc; /* success / positive — matches the app's bright teal */
+}
+.dark .text-\[\#3A6B52\],
+.dark .text-\[\#1F4A33\],
+.dark .text-\[\#2E8B57\],
+.dark .text-\[\#5A9470\] {
+  color: #6fce9f; /* secondary greens */
+}
+.dark .text-\[\#7A3A0A\] {
+  color: #e0a878; /* warm brown (relationship icons, brand text) */
+}
+.dark .text-\[\#7A5A00\],
+.dark .text-\[\#7A5C00\],
+.dark .text-\[\#5A4500\],
+.dark .text-\[\#9A6A12\] {
+  color: #e5c158; /* gold / amber warning */
 }

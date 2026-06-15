@@ -36,7 +36,7 @@ const BENEFIT_COLS = [
   { key: "earlyCriticalIllness",    label: "Early CI",         color: "#5A9470" },
   { key: "disabilityIncome",        label: "Disability Income",color: "#3A6B52" },
   { key: "personalAccident",        label: "Personal Accident",color: "#2C3E3D" },
-  { key: "hospitalisationSurgical", label: "H&S",              color: "#00C4AA" },
+  { key: "hospitalisationPlan",     label: "H&S",              color: "#00C4AA" },
 ] as const;
 
 type BenefitKey = typeof BENEFIT_COLS[number]["key"];
@@ -83,7 +83,7 @@ export function BenefitMatrix({ familyMembers, policies }: BenefitMatrixProps) {
   const memberBenefits = useMemo(() => {
     const map = new Map<string, Record<BenefitKey, number>>();
     for (const m of familyMembers) {
-      map.set(m.id, { death: 0, tpd: 0, criticalIllness: 0, earlyCriticalIllness: 0, disabilityIncome: 0, personalAccident: 0, hospitalisationSurgical: 0 });
+      map.set(m.id, { death: 0, tpd: 0, criticalIllness: 0, earlyCriticalIllness: 0, disabilityIncome: 0, personalAccident: 0, hospitalisationPlan: 0 });
     }
     for (const p of policies) {
       if (!p.familyMemberId) continue;
@@ -94,8 +94,8 @@ export function BenefitMatrix({ familyMembers, policies }: BenefitMatrixProps) {
         if (opts[col.key]) row[col.key] += opts[col.key];
       }
       // H&S: any hospitalisation plan type counts as covered even without a dollar amount
-      if (p.policyType.toLowerCase().includes("hospital") && row.hospitalisationSurgical === 0) {
-        row.hospitalisationSurgical = -1; // sentinel: covered but no dollar amount
+      if (p.policyType.toLowerCase().includes("hospital") && row.hospitalisationPlan === 0) {
+        row.hospitalisationPlan = -1; // sentinel: covered but no dollar amount
       }
     }
     return map;
