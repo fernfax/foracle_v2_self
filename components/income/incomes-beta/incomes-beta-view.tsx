@@ -27,6 +27,7 @@ import {
 } from "date-fns";
 import { computeAnnualBonusCpf } from "@/lib/cpf-calculator";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { CHART_PALETTE } from "@/lib/chart-palette";
@@ -3285,9 +3286,12 @@ function FloatingEditButton({
       aria-label={editMode ? "Exit edit mode" : "Enter edit mode"}
       className={cn(
         "fixed right-6 z-40 inline-flex h-12 items-center gap-2 rounded-full px-5 text-xs font-semibold uppercase tracking-wider shadow-lg backdrop-blur-sm transition-colors",
-        // Sit just above the "?" help button: it's bottom-24 on mobile,
-        // md:bottom-6 on desktop. Offset one button-height up at each.
-        "bottom-40 md:bottom-20",
+        // Stack clear of the two buttons below on mobile: the global "?" help
+        // button (bottom-24) AND the global add FAB (bottom-[9rem]+safe-area,
+        // which only renders on mobile). Sit a button-height above the add FAB,
+        // tracking the same safe-area inset so notched phones don't re-collide.
+        // On desktop the add FAB is hidden, so md:bottom-20 (just above "?") holds.
+        "bottom-[calc(12rem+env(safe-area-inset-bottom))] md:bottom-20",
         editMode
           ? "bg-brand-terracotta text-white hover:bg-brand-terracotta/90 ring-2 ring-brand-terracotta/40"
           : "border border-border/40 bg-background/95 text-foreground hover:bg-accent"
@@ -3527,12 +3531,22 @@ const MonthAxis = memo(function MonthAxis({
   const gridCols = {
     gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))`,
   } as React.CSSProperties;
-  // Density throttle: at higher zoom-out the per-cell width shrinks below the
-  // label width, so we drop labels on a stride. Cells still render to keep
-  // the grid + tick alignment intact; only the text is hidden.
-  // Stride is anchored to month-of-year (cell.month % stride === 0) instead
-  // of array index so the visible months don't shift as the user pans.
+  // The timeline only spans ~250-360px on a phone, so each month cell is far
+  // narrower than a "MMM" label and the month row collapses into a smear. Detect
+  // the narrow viewport and drop to a coarser label stride much earlier.
+  const isNarrow = useMediaQuery("(max-width: 640px)");
+  // Density throttle: at higher zoom-out (or any width on mobile) the per-cell
+  // width shrinks below the label width, so we drop labels on a stride. Cells
+  // still render to keep the grid + tick alignment intact; only the text is
+  // hidden. Stride is anchored to month-of-year (cell.month % stride === 0)
+  // instead of array index so the visible months don't shift as the user pans.
   const labelStride = (() => {
+    if (isNarrow) {
+      if (cells.length <= 12) return 1;   // ≤1y: every month still fits
+      if (cells.length <= 30) return 3;   // ≤2.5y: quarterly (Jan/Apr/Jul/Oct)
+      if (cells.length <= 60) return 6;   // ≤5y: half-yearly (Jan/Jul)
+      return 12;                           // year markers only (Jan)
+    }
     if (cells.length <= 30) return 1;   // ≤ ~2.5y: every month
     if (cells.length <= 60) return 3;   // ≤ 5y: quarterly (Jan/Apr/Jul/Oct)
     if (cells.length <= 90) return 6;   // ≤ 7.5y: half-yearly (Jan/Jul)
