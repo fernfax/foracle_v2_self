@@ -29,8 +29,13 @@ const STATIC_CACHE = `foracle-static-${CACHE_VERSION}`;
 const SHELL_CACHE = `foracle-shell-${CACHE_VERSION}`;
 const CURRENT_CACHES = [STATIC_CACHE, SHELL_CACHE];
 
-// Precache the offline fallback + its icon so /offline works with no network.
-const PRECACHE_URLS = ["/offline", "/icons/icon-192.png", "/manifest.json"];
+// Precache the offline fallback + its assets so /offline works with no network.
+const PRECACHE_URLS = [
+  "/offline",
+  "/icons/icon-192.png",
+  "/logo-144.png", // logo shown on the /offline page — must be cached to render offline
+  "/manifest.json",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
