@@ -1,12 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   motion,
-  useMotionValueEvent,
+  useMotionValue,
   useReducedMotion,
-  useScroll,
-  useSpring,
 } from "motion/react";
 import {
   Briefcase,
@@ -112,18 +110,41 @@ export function LifeStages() {
   const pinned = roomy && !reduced;
 
   const trackRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: trackRef,
-    offset: ["start start", "end end"],
-  });
-  // Calm-forward smoothing — absorbs Lenis sub-frame lag without feeling springy.
-  const smooth = useSpring(scrollYProgress, { stiffness: 90, damping: 28, mass: 0.4 });
 
+  // Scroll progress is driven MANUALLY from window.scrollY rather than
+  // framer-motion's useScroll + useSpring. Those stalled on Safari (desktop +
+  // iOS) — the card pinned but the curve/node never advanced — while working in
+  // Chromium. A plain rAF loop reading scrollY behaves identically everywhere.
+  // `smooth` stays a MotionValue so the canvas + the progress bars keep working.
+  const smooth = useMotionValue(0);
   const [active, setActive] = useState(0);
-  useMotionValueEvent(smooth, "change", (v) => {
-    const i = Math.min(N - 1, Math.max(0, Math.floor(v * N)));
-    setActive((prev) => (prev === i ? prev : i));
-  });
+
+  useEffect(() => {
+    if (!pinned) return;
+    let raf = 0;
+    let current = smooth.get();
+    const measure = () => {
+      const track = trackRef.current;
+      if (!track) return current;
+      const trackTop = track.getBoundingClientRect().top + window.scrollY;
+      const range = track.offsetHeight - window.innerHeight;
+      if (range <= 0) return 0;
+      return Math.max(0, Math.min(1, (window.scrollY - trackTop) / range));
+    };
+    const tick = () => {
+      const target = measure();
+      // Calm-forward lerp smoothing — absorbs Lenis sub-frame lag (replaces the
+      // old useSpring) without ever stalling.
+      current += (target - current) * 0.14;
+      if (Math.abs(target - current) < 0.0003) current = target;
+      smooth.set(current);
+      const i = Math.min(N - 1, Math.max(0, Math.floor(current * N)));
+      setActive((prev) => (prev === i ? prev : i));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [pinned, smooth]);
 
   const scrollToStage = (i: number) => {
     const track = trackRef.current;
@@ -137,11 +158,13 @@ export function LifeStages() {
 
   const introInner = (
     <>
-      <p className="sec-num mb-3">Every chapter</p>
-      <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-4xl">
+      <p className="sec-num mb-3 [@media(max-height:600px)]:hidden">Every chapter</p>
+      <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-foreground [@media(max-height:600px)]:text-lg sm:text-4xl">
         A companion for every stage of life
       </h2>
-      <p className="mt-4 text-base text-muted-foreground sm:text-lg">
+      {/* Subtext is hidden on short (landscape-phone) viewports so the pinned
+          card fits without clipping. */}
+      <p className="mt-4 text-base text-muted-foreground [@media(max-height:600px)]:hidden sm:text-lg">
         Life keeps changing — a first job, a new home, a growing family.
         {pinned ? " Keep scrolling to watch Foracle grow with you, all the way to retirement." : " See how Foracle grows with you, all the way to retirement."}
       </p>
@@ -165,7 +188,7 @@ export function LifeStages() {
         // ~0.5 viewport of scroll per milestone (was 1.0) — roughly doubles the
         // scrub speed so it doesn't take so long to walk through all stages.
         <div ref={trackRef} style={{ height: `${(N + 1) * 50}svh` }} className="relative">
-          <div className="sticky top-0 flex h-svh flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 sm:px-6 desktop:gap-7 desktop:py-16 lg:px-8">
+          <div className="sticky top-0 flex h-svh flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 [@media(max-height:600px)]:gap-2 [@media(max-height:600px)]:py-3 sm:px-6 desktop:gap-7 desktop:py-16 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">{introInner}</div>
             <div className="mx-auto w-full max-w-5xl">
               <div className="glass-strong relative overflow-hidden rounded-3xl">
