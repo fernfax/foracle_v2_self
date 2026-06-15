@@ -29,11 +29,21 @@ export async function register() {
   // would only ever fire from a real bug we'd want to see.
   if (process.env.NODE_ENV === "production") return;
 
-  // Attaching ANY 'warning' listener overrides Node's default printer,
-  // so we have to re-print the warnings we *don't* want to suppress.
-  process.on("warning", (warning) => {
-    if (warning.name === "TimeoutNegativeWarning") return;
-    process.stderr.write(`(node:${process.pid}) ${warning.name}: ${warning.message}\n`);
-    if (warning.stack) process.stderr.write(`${warning.stack}\n`);
-  });
+  // NOTE: a `process.on("warning", …)` listener does NOT suppress Node's default
+  // stderr printer — verified on Node 24, both fire — so the older listener
+  // approach silently stopped working. Intercept `process.emitWarning` itself and
+  // drop ONLY this one warning name; every other warning (deprecation,
+  // experimental, genuine bugs) still surfaces through the untouched original.
+  const originalEmitWarning = process.emitWarning.bind(process);
+  process.emitWarning = ((warning: unknown, ...args: unknown[]) => {
+    const opt = args[0];
+    const type =
+      typeof opt === "string" ? opt : (opt as { type?: string } | undefined)?.type;
+    const name =
+      typeof warning === "object" && warning !== null
+        ? (warning as { name?: string }).name
+        : undefined;
+    if (type === "TimeoutNegativeWarning" || name === "TimeoutNegativeWarning") return;
+    return (originalEmitWarning as (...a: unknown[]) => void)(warning, ...args);
+  }) as typeof process.emitWarning;
 }
