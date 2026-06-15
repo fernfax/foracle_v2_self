@@ -3,6 +3,7 @@ import { Space_Grotesk, DM_Sans, Lora } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { RegisterSW } from "@/components/pwa/register-sw";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -30,14 +31,18 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "Foracle - Personal Finance Management",
   description: "Take control of your financial future with Foracle",
+  // Linked via Next's Metadata API (no raw <head> tag). PWA icons live in the
+  // manifest; these <link> icons cover favicons + the iOS apple-touch-icon.
+  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/logo-72.png", sizes: "72x72", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [
-      { url: "/logo-144.png", sizes: "144x144", type: "image/png" },
-    ],
+    // iOS uses apple-touch-icon (opaque, 180x180); it rounds the corners itself.
+    apple: [{ url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" }],
   },
   // iOS "Add to Home Screen" launches standalone (full-screen, no Safari chrome).
   appleWebApp: {
@@ -99,6 +104,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <RegisterSW />
             <Toaster
               position="bottom-right"
               toastOptions={{
