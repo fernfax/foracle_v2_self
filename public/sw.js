@@ -24,7 +24,7 @@
  *     wired up here; noting it for when it's added.)
  */
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const STATIC_CACHE = `foracle-static-${CACHE_VERSION}`;
 const SHELL_CACHE = `foracle-shell-${CACHE_VERSION}`;
 const CURRENT_CACHES = [STATIC_CACHE, SHELL_CACHE];
