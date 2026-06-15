@@ -104,10 +104,12 @@ function StageDetails({ s }: { s: Stage }) {
 
 export function LifeStages() {
   const reduced = useReducedMotion();
-  // Pinned scrollytelling on any device tall enough (incl. touch / mobile);
-  // only reduced-motion or very short/landscape screens fall back to the list.
-  const tall = useMediaQuery("(min-height: 600px)");
-  const pinned = tall && !reduced;
+  // Pinned scrollytelling when there's room: either a tall viewport (portrait
+  // phones, desktop) OR a wide one (landscape phones lay the card out in two
+  // short columns via the `desktop:` height tweaks below). Only reduced-motion
+  // or a genuinely tiny screen (narrow AND short) falls back to the static list.
+  const roomy = useMediaQuery("(min-height: 600px), (min-width: 768px)");
+  const pinned = roomy && !reduced;
 
   const trackRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -160,8 +162,10 @@ export function LifeStages() {
 
       {pinned ? (
         // ── Scroll-pinned scrollytelling: heading + card pin together ──────
-        <div ref={trackRef} style={{ height: `${(N + 1) * 100}svh` }} className="relative">
-          <div className="sticky top-0 flex h-svh flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 sm:gap-7 sm:px-6 sm:py-16 lg:px-8">
+        // ~0.5 viewport of scroll per milestone (was 1.0) — roughly doubles the
+        // scrub speed so it doesn't take so long to walk through all stages.
+        <div ref={trackRef} style={{ height: `${(N + 1) * 50}svh` }} className="relative">
+          <div className="sticky top-0 flex h-svh flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 sm:px-6 desktop:gap-7 desktop:py-16 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">{introInner}</div>
             <div className="mx-auto w-full max-w-5xl">
               <div className="glass-strong relative overflow-hidden rounded-3xl">
@@ -178,11 +182,17 @@ export function LifeStages() {
                 />
                 <div className="grid md:grid-cols-2">
                   {/* Left: net-worth line-art */}
-                  <div className="relative min-h-[200px] border-b border-border/40 md:min-h-[460px] md:border-b-0">
+                  <div className="relative min-h-[200px] border-b border-border/40 md:border-b-0 desktop:min-h-[460px]">
                     <NetWorthCanvas values={VALUES} colors={COLORS} progress={smooth} />
                     <div className="absolute left-6 top-6 font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground tabular-nums">
                       {String(active + 1).padStart(2, "0")} / {String(N).padStart(2, "0")}
                     </div>
+                    {/* Bottom scrim — keeps the "Net worth" readout legible where
+                        the curve and its early (low) nodes sit in the same corner. */}
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-card via-card/75 to-transparent"
+                    />
                     <div className="absolute bottom-6 left-6 right-6">
                       <p className="font-display text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                         Net worth
@@ -194,7 +204,7 @@ export function LifeStages() {
                   </div>
 
                   {/* Right: crossfading milestone details */}
-                  <div className="relative min-h-[280px] md:min-h-[460px]">
+                  <div className="relative min-h-[280px] desktop:min-h-[460px]">
                     {STAGES.map((s, i) => {
                       const isActive = i === active;
                       const off = i < active ? "-translate-y-3" : "translate-y-3";

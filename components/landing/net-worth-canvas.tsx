@@ -261,25 +261,18 @@ export function NetWorthCanvas({
       return () => ro.disconnect();
     }
 
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting && !running) {
-          running = true;
-          raf = requestAnimationFrame(draw);
-        } else if (!e.isIntersecting && running) {
-          running = false;
-          cancelAnimationFrame(raf);
-        }
-      },
-      { threshold: 0 }
-    );
-    io.observe(wrap);
+    // Run the draw loop continuously while mounted. We used to pause it via an
+    // IntersectionObserver when the canvas scrolled offscreen, but on iOS Safari
+    // an IO observing an element inside a `position: sticky` container can fail
+    // to re-fire `isIntersecting` after the section scrolls back into view — the
+    // loop stays paused and the node freezes (the "node doesn't move on
+    // mobile/prod" report, while the React-driven counter still updates). A
+    // single 2D canvas is cheap; the loop stops on unmount (leaving the landing).
     raf = requestAnimationFrame(draw);
 
     return () => {
       running = false;
       cancelAnimationFrame(raf);
-      io.disconnect();
       ro.disconnect();
     };
   }, [values, colors, reduced]);
