@@ -46,15 +46,16 @@ if [ -z "${DATABASE_URL:-}" ]; then
   exit 1
 fi
 
-# Derive the test DB URL by stripping the db-name segment off the end of
-# DATABASE_URL and re-appending "/foracle_test". Bash parameter expansion is
-# portable across mac (BSD) and linux (GNU) without sed regex differences.
-# Any trailing query string is dropped — fine for our use case.
-TEST_DB_URL="${DATABASE_URL%/*}/foracle_test"
+# Prefer an explicit TEST_DATABASE_URL (set in .env.local). This keeps the test
+# DB independent of DATABASE_URL — important now that dev/prod point at a remote
+# Supabase instance that must NEVER be truncated. Fall back to deriving a sibling
+# "foracle_test" from DATABASE_URL for an all-local setup.
+TEST_DB_URL="${TEST_DATABASE_URL:-${DATABASE_URL%/*}/foracle_test}"
 
-if [[ "$TEST_DB_URL" != *foracle_test* ]]; then
-  echo "ERROR: Could not derive a test DB URL from DATABASE_URL." >&2
-  echo "       Expected URL ending with /<dbname>; got: $DATABASE_URL" >&2
+# Safety: the suite TRUNCATEs every table, so the target MUST be a throwaway
+# "test" database — never the app DB.
+if [[ "$TEST_DB_URL" != *test* ]]; then
+  echo "ERROR: test DB URL must contain 'test'; got: $TEST_DB_URL" >&2
   exit 1
 fi
 
@@ -63,17 +64,21 @@ if [ "$TEST_DB_URL" = "$DATABASE_URL" ]; then
   exit 1
 fi
 
-echo "→ Test DB URL: $TEST_DB_URL"
+# DB name = last path segment, minus any trailing query string.
+TEST_DB_NAME="${TEST_DB_URL##*/}"
+TEST_DB_NAME="${TEST_DB_NAME%%\?*}"
 
-echo "→ Creating foracle_test (skip if exists)..."
-if createdb foracle_test 2>/dev/null; then
+echo "→ Test DB: $TEST_DB_NAME"
+
+echo "→ Creating $TEST_DB_NAME (skip if exists)..."
+if createdb "$TEST_DB_NAME" 2>/dev/null; then
   echo "  ✓ Created"
 else
   echo "  • Already exists"
 fi
 
 echo "→ Enabling pgvector extension..."
-psql foracle_test -c "CREATE EXTENSION IF NOT EXISTS vector" >/dev/null
+psql "$TEST_DB_URL" -c "CREATE EXTENSION IF NOT EXISTS vector" >/dev/null
 
 echo "→ Pushing schema (drizzle-kit push --force)..."
 # Override DATABASE_URL just for this command so drizzle.config.ts picks up
