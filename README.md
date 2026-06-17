@@ -116,33 +116,28 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Project Structure
 
+All application code lives under `src/`, with `@/*` aliased to `./src/*`. Always import via `@/` rather than relative paths.
+
 ```
 foracle_v2/
-├── app/                      # Next.js App Router
-│   ├── api/                 # API routes
-│   │   └── webhooks/        # Clerk webhooks
-│   ├── (app)/               # Protected app pages (Clerk-gated)
-│   │   ├── overview/        # Financial overview dashboard
-│   │   ├── policies/        # Insurance policy management
-│   │   ├── user/            # User profile & household
-│   │   └── layout.tsx       # Auth guard layout
-│   ├── sign-in/            # Sign in page
-│   ├── sign-up/            # Sign up page
-│   ├── layout.tsx          # Root layout with Clerk
-│   └── page.tsx            # Landing page
-├── components/              # React components
-│   ├── policies/           # Policy cards, coverage matrix, benefit matrix
-│   └── ui/                 # Shadcn-style primitives + household-context-strip
-├── db/                      # Database
-│   ├── schema.ts           # Drizzle schema
-│   └── index.ts            # Database connection
-├── lib/                     # Utilities
-│   ├── actions/            # Server actions
-│   ├── services/           # Data-access layer
-│   ├── household-summary.ts # Household-level aggregation helpers
-│   └── utils.ts            # Helper functions
-├── middleware.ts            # Clerk middleware
-└── drizzle.config.ts       # Drizzle configuration
+├── src/
+│   ├── app/                  # Next.js App Router
+│   │   ├── api/             # API routes (incl. Clerk webhooks)
+│   │   ├── (app)/           # Protected app pages (Clerk-gated): overview, policies, user, …
+│   │   ├── layout.tsx       # Root layout with Clerk
+│   │   └── page.tsx         # Landing page
+│   ├── components/          # React components (policies/, ui/, …)
+│   ├── actions/             # Server actions
+│   ├── hooks/               # React hooks
+│   ├── configs/             # App config (deployment-env, constants, quick-links)
+│   ├── lib/                 # Utilities, services, domain logic
+│   ├── db/                  # Drizzle schema (schema.ts) + connection (index.ts)
+│   ├── types/               # Shared TypeScript types
+│   ├── proxy.ts             # Clerk middleware (Next 16's middleware file)
+│   └── instrumentation.ts   # Next instrumentation hook
+├── docs/                     # CHANGELOG, policies, QA plan, design_guide/
+├── scripts/  tests/  public/  drizzle/
+└── drizzle.config.ts         # Drizzle configuration
 ```
 
 ## Database Schema
@@ -175,7 +170,7 @@ Now that your app is running, you can:
 2. Explore the dashboard
 3. Start building out the individual feature pages (income, expenses, etc.)
 4. Add your logo and branding assets
-5. Customize the color scheme in `app/globals.css`
+5. Customize the color scheme in `src/app/globals.css`
 
 ## Adding Your Logo
 
@@ -183,8 +178,8 @@ To add your logo:
 
 1. Place your logo file in the `public` folder
 2. Update the navigation components in:
-   - `app/page.tsx` (landing page)
-   - `app/dashboard/layout.tsx` (dashboard)
+   - `src/app/page.tsx` (landing page)
+   - `src/app/dashboard/layout.tsx` (dashboard)
 3. Replace the `TrendingUp` icon with an Image component pointing to your logo
 
 ## Troubleshooting

@@ -32,10 +32,10 @@ URL="postgresql://evanlee@localhost:5432/foracle_v2_self"
 B="$HOME/.claude/skills/gstack/browse/dist/browse"
 
 # 1. Reset (wipes all family data; keeps users/families/Self row)
-"$PSQL" "$URL" -f db/manual-migrations/qa/_reset_family.sql
+"$PSQL" "$URL" -f src/db/manual-migrations/qa/_reset_family.sql
 
 # 2. Seed the persona (renames Self, inserts the dataset)
-"$PSQL" "$URL" -f db/manual-migrations/qa/persona_NN_<name>.sql
+"$PSQL" "$URL" -f src/db/manual-migrations/qa/persona_NN_<name>.sql
 
 # 3. Authenticate the browse session (import Clerk cookies from real Chrome)
 "$B" goto http://localhost:3000                          # land on localhost first
@@ -45,7 +45,7 @@ B="$HOME/.claude/skills/gstack/browse/dist/browse"
 
 The reset/seed scripts print row counts at the end — confirm they match before browsing. The Clerk **display name in the sidebar stays "Evan Lee"** for every persona (it's the Clerk account identity, independent of the seeded household) — this is expected, not a bug; judge each persona by its _data_, not the account name.
 
-**Seed files (D2):** `db/manual-migrations/qa/_reset_family.sql` + `persona_01_blank_slate` · `02_fresh_grad` · `03_dink_couple` · `04_young_family` · `05_sandwich_gen` · `06_pre_retiree` · `07_hnw_investor` · `08_freelancer` · `09_over_budgeter` · `10_power_user`.
+**Seed files (D2):** `src/db/manual-migrations/qa/_reset_family.sql` + `persona_01_blank_slate` · `02_fresh_grad` · `03_dink_couple` · `04_young_family` · `05_sandwich_gen` · `06_pre_retiree` · `07_hnw_investor` · `08_freelancer` · `09_over_budgeter` · `10_power_user`.
 
 ---
 
@@ -223,7 +223,7 @@ Same component/behavior as `/overview`. Default tab when no `?tab`. `?tab=curren
 
 ### 3B — Wealth / Portfolio pages
 
-> **Net-worth wiring (all three):** the net-worth surface is the Holdings view at `/user` (`lib/net-worth.ts`). Property asset = `originalPurchasePrice`, liability = stored `outstandingLoan` (>0 only). Vehicle asset = `originalPurchasePrice`, liability = `max(0, taken − repaid)`. Investment asset = `currentCapital` (active). **Goals do not appear in net worth.** Only `isActive !== false` rows count.
+> **Net-worth wiring (all three):** the net-worth surface is the Holdings view at `/user` (`src/lib/net-worth.ts`). Property asset = `originalPurchasePrice`, liability = stored `outstandingLoan` (>0 only). Vehicle asset = `originalPurchasePrice`, liability = `max(0, taken − repaid)`. Investment asset = `currentCapital` (active). **Goals do not appear in net worth.** Only `isActive !== false` rows count.
 
 #### `/assets` (shell) — tabbed Property / Vehicle / Others
 
@@ -426,7 +426,7 @@ deletion:
 # Wipes this family's data AND flips onboarding_completed back to false:
 /Applications/Postgres.app/Contents/Versions/17/bin/psql \
   postgresql://evanlee@localhost:5432/foracle_v2_self \
-  -f db/manual-migrations/qa/_reset_onboarding.sql
+  -f src/db/manual-migrations/qa/_reset_onboarding.sql
 
 # Then (authenticated) visit the real route — now reachable again:
 #   http://localhost:3000/onboarding

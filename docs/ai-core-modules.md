@@ -14,7 +14,7 @@ This document explains the two core modules that power Foracle's AI Assistant: t
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      ORCHESTRATOR                                │
-│  (lib/ai/orchestrator.ts)                                        │
+│  (src/lib/ai/orchestrator.ts)                                        │
 │                                                                  │
 │  • Manages conversation state                                    │
 │  • Sends messages to OpenAI                                      │
@@ -25,7 +25,7 @@ This document explains the two core modules that power Foracle's AI Assistant: t
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                     TOOL EXECUTORS                               │
-│  (lib/ai/tools/executors.ts)                                     │
+│  (src/lib/ai/tools/executors.ts)                                     │
 │                                                                  │
 │  • get_income_summary          • get_holdings_summary            │
 │  • get_expenses_summary        • get_property_assets_summary     │
@@ -46,7 +46,7 @@ This document explains the two core modules that power Foracle's AI Assistant: t
 
 ---
 
-## 1. Orchestrator (`lib/ai/orchestrator.ts`)
+## 1. Orchestrator (`src/lib/ai/orchestrator.ts`)
 
 ### Purpose
 
@@ -136,7 +136,7 @@ console.log(result.conversationId) // For continuing the conversation
 
 ---
 
-## 2. Tool Executors (`lib/ai/tools/executors.ts`)
+## 2. Tool Executors (`src/lib/ai/tools/executors.ts`)
 
 ### Purpose
 
@@ -564,7 +564,7 @@ interface AuditRecord {
 ## File Locations
 
 ```
-lib/ai/
+src/lib/ai/
 ├── orchestrator.ts       # Conversation controller
 ├── openai-client.ts      # OpenAI API wrapper
 ├── rate-limiter.ts       # Request rate limiting
@@ -574,14 +574,14 @@ lib/ai/
     ├── executors.ts      # Tool implementation logic
     └── index.ts          # Public exports
 
-lib/vectors/
+src/lib/vectors/
 ├── index.ts              # Public exports
 ├── embeddings.ts         # Embedding providers (Voyage AI, OpenAI)
 ├── chunker.ts            # Text chunking utilities
 ├── ingest.ts             # Document ingestion
 └── retrieval.ts          # Semantic search queries
 
-db/schema.ts              # Includes kb_chunks and user_chunks tables
+src/db/schema.ts              # Includes kb_chunks and user_chunks tables
 scripts/
 ├── migrate-vector-tables.sql  # pgvector table creation
 └── seed-kb.ts                 # Knowledge base seeding

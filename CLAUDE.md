@@ -4,8 +4,9 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 
 ## Deployment
 
-- **`main` is the production branch.** It is deployed to Render automatically on every push.
-- **A push to `main` triggers a production deploy.** Always run `npm run build` locally before pushing to `main` so a broken build doesn't take production down. Type checking via `npx tsc --noEmit` alone is not sufficient — Render runs the full Next build.
+- **`main` is the production branch.** A push deploys to **both Render and Vercel** automatically (two production instances).
+- **A push to `main` triggers production deploys.** Always run `npm run build` locally before pushing to `main` so a broken build doesn't take production down. Type checking via `npx tsc --noEmit` alone is not sufficient — the platforms run the full Next build.
+- **Env vars must be set in both dashboards.** `NEXT_PUBLIC_*` vars are inlined at build time, so each instance bakes its own. In particular `NEXT_PUBLIC_APP_URL` must be the per-host origin (Clerk invitation links break otherwise) and `NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT` is set per instance (see `src/configs/deployment-env.ts`).
 - Feature work happens on `feature/*` branches and is merged into `main` when ready to ship.
 - Do not force-push to `main`.
 - **Format and lint before committing.** Run `npm run format` and `npm run lint` (fix what it reports) before every commit. A husky `pre-commit` hook runs `lint-staged` (`eslint --fix` + `prettier --write`) over staged files as a safety net, but don't rely on it — keep the working tree clean so commits aren't polluted by reformatting unrelated lines.
@@ -13,17 +14,24 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 ## Stack
 
 - Next.js 16 (App Router, Turbopack) + React 19 + Tailwind v4
-- Drizzle ORM + Postgres (`drizzle.config.ts`, schemas in `db/`)
-- Clerk auth (provider in `app/layout.tsx`, route protection in `app/(app)/layout.tsx`)
+- Drizzle ORM + Postgres (`drizzle.config.ts`, schema in `src/db/`)
+- Clerk auth (provider in `src/app/layout.tsx`, route protection in `src/app/(app)/layout.tsx`, middleware in `src/proxy.ts`)
 - Recharts for all data viz
-- shadcn-style primitives in `components/ui/`2
+- shadcn-style primitives in `src/components/ui/`
+
+## Project structure
+
+- **All app code lives under `src/`** with `@/*` aliased to `./src/*` (`tsconfig.json`). Top-level folders mirror debt-free-mastermind: `src/app`, `src/components`, `src/actions` (server actions), `src/hooks`, `src/configs`, `src/lib`, `src/db`, `src/types`, plus `src/proxy.ts` and `src/instrumentation.ts`.
+- **Always import via the `@/` alias**, never relative paths (`../`, `./`) — even for same-directory siblings. The one exception is non-JS relative refs that can't use the alias (e.g. the `@config` path in `src/app/globals.css`).
+- `scripts/`, `tests/`, `public/`, `drizzle/` stay at the repo root.
+- Prose docs (CHANGELOG, TODOS, policies, QA plan, `design_guide/`) live in `docs/`; only `README.md` and this file stay at root.
 
 ## Design system
 
-- Brand source of truth: `design_guide/design_guide.md` (and the HTML reference alongside it).
-- Tokens live in `app/globals.css` (`:root` + `.dark`). Brand utilities (`brand-terracotta`, `brand-deep-forest`, etc.) and the `font-display` (Space Grotesk) / `font-editorial` (Lora italic) families are in `tailwind.config.ts`.
-- Chart palette helper: `lib/chart-palette.ts` — use `CHART_PALETTE`, `STATUS_COLORS`, `CHART_AXIS_STYLE` instead of inline hex.
-- Brand divider strip: `components/ui/tile-motif.tsx`.
+- Brand source of truth: `docs/design_guide/design_guide.md` (and the HTML reference alongside it).
+- Tokens live in `src/app/globals.css` (`:root` + `.dark`). Brand utilities (`brand-terracotta`, `brand-deep-forest`, etc.) and the `font-display` (Space Grotesk) / `font-editorial` (Lora italic) families are in `tailwind.config.ts`.
+- Chart palette helper: `src/lib/chart-palette.ts` — use `CHART_PALETTE`, `STATUS_COLORS`, `CHART_AXIS_STYLE` instead of inline hex.
+- Brand divider strip: `src/components/ui/tile-motif.tsx`.
 - Avoid hardcoded Tailwind brand-color utilities (`bg-blue-*`, `text-emerald-*`, etc.). Use semantic tokens (`bg-primary`, `text-muted-foreground`, `border-border`) or the `brand-*` utilities.
 
 ## Commands
@@ -44,7 +52,7 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 
 ## QA expectations
 
-For any UI/UX change — especially in `components/income/`, `components/expenses/`, `components/policies/`, or anywhere a live preview gets committed on release (drag-to-commit, debounced inputs, optimistic UI):
+For any UI/UX change — especially in `src/components/income/`, `src/components/expenses/`, `src/components/policies/`, or anywhere a live preview gets committed on release (drag-to-commit, debounced inputs, optimistic UI):
 
 1. Use the gstack `browse` skill to dogfood the actual user gesture against the dev server before reporting the task complete. Type checking and build success do not verify feature correctness.
 2. If preview state can diverge from committed state, screenshot or read DOM/network state **before** and **after** the gesture and verify both agree. The Mar→Feb drag bug shipped because preview math was correct in isolation but the commit pipeline double-applied the delta — only an end-to-end gesture test would have caught it.
