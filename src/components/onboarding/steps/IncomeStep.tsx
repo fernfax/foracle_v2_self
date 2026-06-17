@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { createIncome, updateIncome } from "@/actions/income"
 import { format } from "date-fns"
-import { Lightbulb, Plus, X } from "lucide-react"
+import { Lightbulb, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"

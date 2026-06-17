@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ComponentProps } from "react"
+import { useSyncExternalStore, type ComponentProps } from "react"
 import { ResponsiveContainer } from "recharts"
 
 /**
@@ -15,11 +15,17 @@ import { ResponsiveContainer } from "recharts"
  *
  * Drop-in replacement: same props as `ResponsiveContainer`.
  */
+// Mount gate: `false` during SSR and first client paint, `true` afterwards.
+const emptySubscribe = () => () => {}
+
 export function ResponsiveChart(
   props: ComponentProps<typeof ResponsiveContainer>
 ) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
 
   if (!mounted) {
     const { width = "100%", height = "100%", className, style } = props

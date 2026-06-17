@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import { Check, Monitor, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
@@ -41,13 +41,19 @@ const OPTIONS: {
   }
 ]
 
+// Mount gate: `false` during SSR and first client paint, `true` afterwards.
+const emptySubscribe = () => () => {}
+
 export function ThemePicker() {
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
 
   // next-themes can't resolve the active theme until the client mounts, so the
   // selected ring is computed only after mount to avoid a hydration mismatch.
-  useEffect(() => setMounted(true), [])
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
 
   return (
     <Card>

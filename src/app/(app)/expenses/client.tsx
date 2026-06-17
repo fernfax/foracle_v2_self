@@ -1,9 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 
 import { PageHeader } from "@/components/ui/page-header"
 import { ExpenseList } from "@/components/expenses/expense-list"
+
+// No-op subscribe for the hydration-flag useSyncExternalStore below.
+const emptySubscribe = () => () => {}
 
 interface Expense {
   id: string
@@ -79,11 +82,14 @@ export function ExpensesClient({
   initialExpenses,
   embedded = false
 }: ExpensesClientProps) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // Hydration flag without a setState-in-effect: server snapshot is `false`,
+  // client snapshot `true`, so we render the skeleton on the server / first
+  // paint, then the list after hydration.
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
 
   // Graph + Reports sub-tabs are temporarily removed — the Expenses tab is now
   // just the stat band + the expense table. (Sub-tabs can come back later.)

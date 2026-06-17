@@ -1,6 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import {
+  createElement,
+  useCallback,
+  useMemo,
+  useState,
+  useSyncExternalStore
+} from "react"
 import type { ExpenseCategory } from "@/actions/expense-categories"
 import { ChevronDown } from "lucide-react"
 import * as LucideIcons from "lucide-react"
@@ -29,18 +35,40 @@ interface CategorySelectorProps {
 const RECENT_CATEGORIES_KEY = "foracle_recent_expense_category_ids"
 const MAX_RECENTS = 3
 
+// Recents are read through a tiny external store so the component can subscribe
+// via useSyncExternalStore — server snapshot is the stable empty array, the
+// client snapshot is the localStorage value — instead of a set-state-in-effect.
+// getSnapshot must return a stable reference between reads, so we cache the
+// parsed array and only rebuild it when the raw string actually changes.
+const EMPTY_RECENTS: string[] = []
+let cachedRaw: string | null = null
+let cachedRecents: string[] = EMPTY_RECENTS
+const recentsListeners = new Set<() => void>()
+
 function readRecents(): string[] {
-  if (typeof window === "undefined") return []
+  if (typeof window === "undefined") return EMPTY_RECENTS
+  let raw: string | null = null
   try {
-    const raw = window.localStorage.getItem(RECENT_CATEGORIES_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed)
-      ? parsed.filter((id) => typeof id === "string")
-      : []
+    raw = window.localStorage.getItem(RECENT_CATEGORIES_KEY)
   } catch {
-    return []
+    return EMPTY_RECENTS
   }
+  if (raw === cachedRaw) return cachedRecents
+  cachedRaw = raw
+  try {
+    const parsed = raw ? JSON.parse(raw) : []
+    cachedRecents = Array.isArray(parsed)
+      ? parsed.filter((id) => typeof id === "string")
+      : EMPTY_RECENTS
+  } catch {
+    cachedRecents = EMPTY_RECENTS
+  }
+  return cachedRecents
+}
+
+function subscribeRecents(listener: () => void) {
+  recentsListeners.add(listener)
+  return () => recentsListeners.delete(listener)
 }
 
 function writeRecents(ids: string[]) {
@@ -50,6 +78,11 @@ function writeRecents(ids: string[]) {
   } catch {
     // localStorage can throw in private mode; recents are best-effort.
   }
+  // Update the cache eagerly and notify subscribers so the UI reflects the new
+  // recents without round-tripping through localStorage.
+  cachedRaw = JSON.stringify(ids)
+  cachedRecents = [...ids]
+  recentsListeners.forEach((l) => l())
 }
 
 // Helper to get Lucide icon component by name
@@ -70,21 +103,36 @@ function getIconComponent(iconName: string | null, categoryName: string) {
   return IconComponent || LucideIcons.CircleDollarSign
 }
 
+// Renders the Lucide icon for a category. Hoisted to module scope (rather than
+// resolving a capitalized component variable inside render) so it's a stable
+// component identity, not one "created during render".
+function CategoryIcon({
+  iconName,
+  categoryName,
+  className
+}: {
+  iconName: string | null
+  categoryName: string
+  className?: string
+}) {
+  // getIconComponent returns an existing Lucide component from a lookup table —
+  // it never creates one. Use createElement so the looked-up component isn't
+  // treated as a component freshly declared during render.
+  return createElement(getIconComponent(iconName, categoryName), { className })
+}
+
 export function CategorySelector({
   categories,
   selectedCategory,
   onSelect
 }: CategorySelectorProps) {
   const [open, setOpen] = useState(false)
-  const [recentIds, setRecentIds] = useState<string[]>([])
+  const recentIds = useSyncExternalStore(
+    subscribeRecents,
+    readRecents,
+    () => EMPTY_RECENTS
+  )
 
-  useEffect(() => {
-    setRecentIds(readRecents())
-  }, [])
-
-  const SelectedIcon = selectedCategory
-    ? getIconComponent(selectedCategory.icon, selectedCategory.name)
-    : null
   const selectedIconColor = selectedCategory
     ? getCategoryIconColor(selectedCategory.name)
     : ""
@@ -100,26 +148,33 @@ export function CategorySelector({
     return { recentCategories: recents, otherCategories: others }
   }, [categories, recentIds])
 
-  const handleSelect = (category: ExpenseCategory) => {
-    onSelect(category)
-    setOpen(false)
-    const next = [
-      category.id,
-      ...recentIds.filter((id) => id !== category.id)
-    ].slice(0, MAX_RECENTS)
-    setRecentIds(next)
-    writeRecents(next)
-  }
+  const handleSelect = useCallback(
+    (category: ExpenseCategory) => {
+      onSelect(category)
+      setOpen(false)
+      const next = [
+        category.id,
+        ...recentIds.filter((id) => id !== category.id)
+      ].slice(0, MAX_RECENTS)
+      // writeRecents updates the store + notifies, which re-renders us with the
+      // fresh recents — no separate setState needed.
+      writeRecents(next)
+    },
+    [onSelect, recentIds]
+  )
 
   const renderItem = (category: ExpenseCategory) => {
-    const Icon = getIconComponent(category.icon, category.name)
     const iconColor = getCategoryIconColor(category.name)
     return (
       <DropdownMenuItem
         key={category.id}
         onClick={() => handleSelect(category)}
         className="flex cursor-pointer items-center gap-2">
-        <Icon className={cn("h-4 w-4 shrink-0", iconColor)} />
+        <CategoryIcon
+          iconName={category.icon}
+          categoryName={category.name}
+          className={cn("h-4 w-4 shrink-0", iconColor)}
+        />
         <span className="truncate">{category.name}</span>
       </DropdownMenuItem>
     )
@@ -133,9 +188,11 @@ export function CategorySelector({
           className="text-muted-foreground hover:text-foreground flex touch-manipulation items-center gap-2">
           {selectedCategory ? (
             <>
-              {SelectedIcon && (
-                <SelectedIcon className={cn("h-4 w-4", selectedIconColor)} />
-              )}
+              <CategoryIcon
+                iconName={selectedCategory.icon}
+                categoryName={selectedCategory.name}
+                className={cn("h-4 w-4", selectedIconColor)}
+              />
               <span>{selectedCategory.name}</span>
             </>
           ) : (

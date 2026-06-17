@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
 import {
   getFamilyAdminData,
@@ -18,24 +18,38 @@ import { ThemePicker } from "@/components/user/theme-picker"
 
 type ClerkUserButtonProps = React.ComponentProps<typeof UserButton>
 
+// Hydration flag without a set-state effect: useSyncExternalStore returns the
+// server snapshot (false) during SSR + the first client render, then the client
+// snapshot (true) once hydrated — React handles the swap, so there's no extra
+// committed render driven from an effect.
+const emptySubscribe = () => () => {}
+function useHydrated() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+}
+
 function FamilyProfilePage() {
   const [data, setData] = useState<FamilyAdminData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const refresh = useCallback(async () => {
-    try {
-      const fresh = await getFamilyAdminData()
-      setData(fresh)
-      setError(null)
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not load family data"
-      )
-    }
+  const refresh = useCallback(() => {
+    return getFamilyAdminData()
+      .then((fresh) => {
+        setData(fresh)
+        setError(null)
+      })
+      .catch((err) => {
+        setError(
+          err instanceof Error ? err.message : "Could not load family data"
+        )
+      })
   }, [])
 
   useEffect(() => {
-    refresh()
+    void refresh()
   }, [refresh])
 
   return (
@@ -65,14 +79,10 @@ function FamilyProfilePage() {
 }
 
 export function ClerkUserButton(props: ClerkUserButtonProps) {
-  const [mounted, setMounted] = useState(false)
+  const mounted = useHydrated()
   const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   if (!mounted) {
     return <div className="bg-muted h-8 w-8 animate-pulse rounded-full" />

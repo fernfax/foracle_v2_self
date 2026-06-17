@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import { MeshGradient } from "@paper-design/shaders-react"
 import { useTheme } from "next-themes"
 
@@ -22,11 +22,16 @@ const DARK_COLORS = [
   "#1C2B2A"
 ]
 
+// Mount gate: `false` during SSR and first client paint, `true` afterwards.
+const emptySubscribe = () => () => {}
+
 export function LandingShader() {
   const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
 
   const isDark = mounted && resolvedTheme === "dark"
   const colors = isDark ? DARK_COLORS : LIGHT_COLORS

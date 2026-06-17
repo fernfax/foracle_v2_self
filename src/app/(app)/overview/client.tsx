@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -22,6 +22,9 @@ import { CashflowSankey } from "@/components/dashboard/cashflow-sankey"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { TotalAssetsCard } from "@/components/dashboard/total-assets-card"
 import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph"
+
+// No-op subscribe for the hydration-flag useSyncExternalStore below.
+const emptySubscribe = () => () => {}
 
 interface DashboardMetrics {
   totalIncome: number
@@ -108,16 +111,19 @@ export function DashboardClient({
   investments,
   budgetData
 }: DashboardClientProps) {
-  const [mounted, setMounted] = useState(false)
+  // Hydration flag without a setState-in-effect: server snapshot is `false`,
+  // client snapshot `true`. Gates the searchParams-dependent render until after
+  // hydration to avoid a server/client mismatch.
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
   const router = useRouter()
   const searchParams = useSearchParams()
   // `?view=` selects the layout. Default = "cashflow" — the sankey is now the
   // primary entry point. Users can flip to ?view=classic via the toggle.
   const view = searchParams.get("view") === "classic" ? "classic" : "cashflow"
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   if (!mounted) {
     return <div className="bg-muted h-[500px] animate-pulse rounded-lg" />

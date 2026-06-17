@@ -31,14 +31,24 @@ export function NavigationOverlay() {
   const pathname = usePathname()
   const [visible, setVisible] = useState(false)
   const [longWait, setLongWait] = useState(false)
+  const [lastPathname, setLastPathname] = useState(pathname)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  // Route committed (pathname changed) — also runs on mount. Clear + hide.
+  // Route committed (pathname changed) — hide the overlay. Done during render
+  // via React's "adjust state when a value changes" pattern so the overlay
+  // vanishes in the same commit the new route mounts, with no extra render pass
+  // and no flash. (https://react.dev/learn/you-might-not-need-an-effect)
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname)
+    setVisible(false)
+    setLongWait(false)
+  }
+
+  // Pending timers belong to the route we just left; clear them once the new
+  // route has committed. (Ref mutation is side-effect work, so it lives here.)
   useEffect(() => {
     timersRef.current.forEach(clearTimeout)
     timersRef.current = []
-    setVisible(false)
-    setLongWait(false)
   }, [pathname])
 
   useEffect(() => {

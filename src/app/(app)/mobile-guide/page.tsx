@@ -126,7 +126,7 @@ export default function MobileGuidePage() {
       <div className="mt-8 rounded-xl border border-[rgba(212,168,67,0.30)] bg-[rgba(212,168,67,0.15)] p-4">
         <p className="text-sm text-[#7A5A00]">
           <strong>Note:</strong> This feature only works in Safari on iOS. If
-          you're using a different browser, please open this page in Safari
+          you&apos;re using a different browser, please open this page in Safari
           first.
         </p>
       </div>

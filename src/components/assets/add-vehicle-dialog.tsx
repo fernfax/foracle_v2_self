@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
   createVehicleAsset,
   updateVehicleAsset
@@ -681,7 +681,7 @@ export function AddVehicleDialog({
                         Add to expenditures
                       </Label>
                       <p className="text-foreground/400 mt-1 text-xs">
-                        Enable this to automatically track this vehicle's
+                        Enable this to automatically track this vehicle&apos;s
                         monthly loan payment as a recurring expenditure
                       </p>
                     </div>

@@ -18,7 +18,6 @@ if (!DATABASE_URL) {
 // no use so dead sockets (e.g. after laptop sleep) get recycled before the
 // next query stumbles on them.
 declare global {
-  // eslint-disable-next-line no-var
   var __postgresClient: ReturnType<typeof postgres> | undefined
 }
 

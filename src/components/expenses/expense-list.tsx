@@ -366,7 +366,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
     )
 
     // Convert category breakdown to sorted array
-    let categoriesArray = Object.entries(categoryBreakdown).map(
+    const categoriesArray = Object.entries(categoryBreakdown).map(
       ([category, data]) => ({
         category,
         amount: data.amount,
@@ -427,13 +427,13 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
 
     // Sort the data
     filtered = [...filtered].sort((a, b) => {
-      let aVal: any = a[sortKey]
-      let bVal: any = b[sortKey]
+      let aVal: string | number = a[sortKey]
+      let bVal: string | number = b[sortKey]
 
       // Convert amount to number for proper sorting
       if (sortKey === "amount") {
-        aVal = parseFloat(aVal)
-        bVal = parseFloat(bVal)
+        aVal = parseFloat(a.amount)
+        bVal = parseFloat(b.amount)
       }
 
       if (aVal === null || aVal === undefined) return 1
@@ -650,7 +650,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       ) : filteredExpenses.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border py-12 text-center">
           <p className="text-muted-foreground">
-            No results found for "{search}"
+            No results found for &quot;{search}&quot;
           </p>
         </div>
       ) : (
@@ -819,8 +819,8 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the expense "{expenseToDelete?.name}
-              ". This action cannot be undone.
+              This will permanently delete the expense &quot;
+              {expenseToDelete?.name}&quot;. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -23,7 +23,7 @@ import {
   Waves
 } from "lucide-react"
 import { createPortal } from "react-dom"
-import { Rectangle, Sankey } from "recharts"
+import { Sankey } from "recharts"
 
 import {
   buildCashflowModel,
@@ -308,7 +308,20 @@ export function CashflowSankey({
       }),
     [incomes, expenses, selectedMonth]
   )
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  // Drilldown state is tagged with the month it was opened for. A category
+  // from May might not exist in April, so its id would be a dangling reference
+  // after a month change. Rather than resetting via an effect (which triggers a
+  // cascading render), we derive the *effective* expandedId during render:
+  // expansion only counts while its monthKey matches the selected month.
+  const monthKey = `${selectedMonth.getFullYear()}-${selectedMonth.getMonth()}`
+  const [expanded, setExpanded] = useState<{
+    id: string
+    monthKey: string
+  } | null>(null)
+  const expandedId =
+    expanded && expanded.monthKey === monthKey ? expanded.id : null
+  const setExpandedId = (id: string | null) =>
+    setExpanded(id === null ? null : { id, monthKey })
   const isNarrow = useIsNarrow()
 
   const isCurrentMonth = (() => {
@@ -328,13 +341,6 @@ export function CashflowSankey({
   }
   const formatMonthDisplay = (date: Date) =>
     date.toLocaleDateString("en-US", { month: "long", year: "numeric" })
-
-  // Drilldown state should reset whenever the chart's data shape changes —
-  // a category from May might not exist in April, so its expandedId would
-  // be a dangling reference. Reset on month change to keep things tidy.
-  useEffect(() => {
-    setExpandedId(null)
-  }, [selectedMonth])
 
   // Recharts' Sankey mutates the nodes you pass in (it overwrites `value`
   // with cumulative throughput, ~2x the real number for the hub). Snapshot

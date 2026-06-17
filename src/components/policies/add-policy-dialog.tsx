@@ -1070,7 +1070,8 @@ export function AddPolicyDialog({
                     Add to Expenses
                   </Label>
                   <p className="text-foreground/400 mt-1 text-xs">
-                    Automatically track this policy's premium in your expenses
+                    Automatically track this policy&apos;s premium in your
+                    expenses
                   </p>
                 </div>
                 <Switch

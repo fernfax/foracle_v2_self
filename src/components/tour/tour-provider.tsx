@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode
 } from "react"
@@ -85,6 +86,12 @@ export function TourProvider({ children, userId }: TourProviderProps) {
     loadStatus()
   }, [userId])
 
+  // Holds the latest `startTourWithRetry` so the retry timeout can recurse
+  // without referencing the callback variable before it's declared.
+  const startTourWithRetryRef = useRef<
+    (tourName: TourName, retryCount?: number) => void
+  >(() => {})
+
   const startTourWithRetry = useCallback(
     (tourName: TourName, retryCount: number = 0) => {
       const config = TOUR_CONFIGS[tourName]
@@ -103,7 +110,7 @@ export function TourProvider({ children, userId }: TourProviderProps) {
       if (validSteps.length === 0) {
         if (retryCount < maxRetries) {
           setTimeout(
-            () => startTourWithRetry(tourName, retryCount + 1),
+            () => startTourWithRetryRef.current(tourName, retryCount + 1),
             retryDelay
           )
           return
@@ -163,6 +170,11 @@ export function TourProvider({ children, userId }: TourProviderProps) {
     },
     []
   )
+
+  // Keep the ref pointing at the current callback for the retry recursion.
+  useEffect(() => {
+    startTourWithRetryRef.current = startTourWithRetry
+  }, [startTourWithRetry])
 
   const startTour = useCallback(
     (tourName: TourName) => {

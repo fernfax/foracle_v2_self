@@ -3,6 +3,7 @@
 import { IS_DEV } from "@/configs/env.config"
 import { db } from "@/db"
 import { eq, sql } from "drizzle-orm"
+import type { PgColumn, PgTable } from "drizzle-orm/pg-core"
 
 import { getCurrentUserAndFamily } from "@/lib/auth-context"
 import type {
@@ -37,7 +38,14 @@ const ROW_LIMIT = 100
 
 type TableEntry = {
   scope: DeveloperTableScope
-  table: any
+  table: PgTable
+}
+
+// The scope columns (id / familyId / userId) are resolved dynamically by name,
+// which the specific PgTable column maps don't expose via index signature.
+// This reads a column by key for use in a `where` clause.
+function column(table: PgTable, key: string): PgColumn {
+  return (table as unknown as Record<string, PgColumn>)[key]
 }
 
 const REGISTRY: Record<string, TableEntry> = {
@@ -85,40 +93,50 @@ export async function getTableRows(
   let totalForScope = 0
 
   if (scope === "self") {
-    rows = (await db.select().from(table).where(eq(table.id, userId))) as any
+    rows = (await db
+      .select()
+      .from(table)
+      .where(eq(column(table, "id"), userId))) as Array<Record<string, unknown>>
     totalForScope = rows.length
   } else if (scope === "primaryFamily") {
-    rows = (await db.select().from(table).where(eq(table.id, familyId))) as any
+    rows = (await db
+      .select()
+      .from(table)
+      .where(eq(column(table, "id"), familyId))) as Array<
+      Record<string, unknown>
+    >
     totalForScope = rows.length
   } else if (scope === "familyId") {
     const countResult = await db
       .select({ n: sql<number>`count(*)::int` })
       .from(table)
-      .where(eq(table.familyId, familyId))
+      .where(eq(column(table, "familyId"), familyId))
     totalForScope = countResult[0]?.n ?? 0
     rows = (await db
       .select()
       .from(table)
-      .where(eq(table.familyId, familyId))
-      .limit(ROW_LIMIT)) as any
+      .where(eq(column(table, "familyId"), familyId))
+      .limit(ROW_LIMIT)) as Array<Record<string, unknown>>
   } else if (scope === "userId") {
     const countResult = await db
       .select({ n: sql<number>`count(*)::int` })
       .from(table)
-      .where(eq(table.userId, userId))
+      .where(eq(column(table, "userId"), userId))
     totalForScope = countResult[0]?.n ?? 0
     rows = (await db
       .select()
       .from(table)
-      .where(eq(table.userId, userId))
-      .limit(ROW_LIMIT)) as any
+      .where(eq(column(table, "userId"), userId))
+      .limit(ROW_LIMIT)) as Array<Record<string, unknown>>
   } else {
     // global
     const countResult = await db
       .select({ n: sql<number>`count(*)::int` })
       .from(table)
     totalForScope = countResult[0]?.n ?? 0
-    rows = (await db.select().from(table).limit(ROW_LIMIT)) as any
+    rows = (await db.select().from(table).limit(ROW_LIMIT)) as Array<
+      Record<string, unknown>
+    >
   }
 
   const columns = rows[0] ? Object.keys(rows[0]) : []

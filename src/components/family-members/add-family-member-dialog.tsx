@@ -216,7 +216,7 @@ export function AddFamilyMemberDialog({
                     Contributing member
                   </Label>
                   <p className="text-muted-foreground text-xs">
-                    Consider this member's income into the total income
+                    Consider this member&apos;s income into the total income
                   </p>
                 </div>
               </div>

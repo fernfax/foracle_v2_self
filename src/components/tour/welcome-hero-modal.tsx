@@ -120,11 +120,12 @@ function generateModalIcons(width: number, height: number): FloatingIcon[] {
 function ModalFloatingIcons() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [icons, setIcons] = useState<FloatingIcon[]>([])
-  const [mounted, setMounted] = useState(false)
   const animationRef = useRef<number | null>(null)
 
+  // Generate icons once the container has a real layout box to measure. Icons
+  // stay empty (nothing rendered) until then, so this doubles as the mount
+  // gate — the server and first client paint render no icons, no mismatch.
   useEffect(() => {
-    setMounted(true)
     if (!containerRef.current) return
 
     const rect = containerRef.current.getBoundingClientRect()
@@ -137,9 +138,13 @@ function ModalFloatingIcons() {
     }
   }, [])
 
+  // Holds the latest `animate` so each frame can schedule the next without
+  // referencing the callback variable before it's declared.
+  const animateRef = useRef<(time: number) => void>(() => {})
+
   const animate = useCallback((time: number) => {
     if (!containerRef.current) {
-      animationRef.current = requestAnimationFrame(animate)
+      animationRef.current = requestAnimationFrame(animateRef.current)
       return
     }
 
@@ -187,8 +192,13 @@ function ModalFloatingIcons() {
       })
     )
 
-    animationRef.current = requestAnimationFrame(animate)
+    animationRef.current = requestAnimationFrame(animateRef.current)
   }, [])
+
+  // Keep the ref pointing at the current callback for the rAF loop.
+  useEffect(() => {
+    animateRef.current = animate
+  }, [animate])
 
   useEffect(() => {
     animationRef.current = requestAnimationFrame(animate)
@@ -204,26 +214,25 @@ function ModalFloatingIcons() {
       ref={containerRef}
       className="absolute inset-0 overflow-hidden rounded-t-lg"
       style={{ zIndex: 1 }}>
-      {mounted &&
-        icons.map((icon) => {
-          const { Icon } = icon.config
-          return (
-            <div
-              key={icon.id}
-              className={`absolute rounded-xl ${icon.config.bgClass} pointer-events-none flex items-center justify-center will-change-transform`}
-              style={{
-                width: icon.size,
-                height: icon.size,
-                transform: `translate(${icon.x - icon.size / 2}px, ${icon.y - icon.size / 2}px)`,
-                opacity: icon.opacity
-              }}>
-              <Icon
-                className={icon.config.textClass}
-                style={{ width: icon.size * 0.5, height: icon.size * 0.5 }}
-              />
-            </div>
-          )
-        })}
+      {icons.map((icon) => {
+        const { Icon } = icon.config
+        return (
+          <div
+            key={icon.id}
+            className={`absolute rounded-xl ${icon.config.bgClass} pointer-events-none flex items-center justify-center will-change-transform`}
+            style={{
+              width: icon.size,
+              height: icon.size,
+              transform: `translate(${icon.x - icon.size / 2}px, ${icon.y - icon.size / 2}px)`,
+              opacity: icon.opacity
+            }}>
+            <Icon
+              className={icon.config.textClass}
+              style={{ width: icon.size * 0.5, height: icon.size * 0.5 }}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }

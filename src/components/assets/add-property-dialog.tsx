@@ -703,8 +703,8 @@ export function AddPropertyDialog({
                         Add to expenditures
                       </Label>
                       <p className="text-foreground/400 mt-1 text-xs">
-                        Automatically track this property's monthly loan payment
-                        as a recurring expenditure
+                        Automatically track this property&apos;s monthly loan
+                        payment as a recurring expenditure
                       </p>
                     </div>
                     <Switch

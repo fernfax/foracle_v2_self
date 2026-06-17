@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   Calculator,
@@ -41,6 +41,9 @@ import { WelcomeHeroModal } from "@/components/tour/welcome-hero-modal"
 
 const PENDING_TOUR_KEY = "foracle_pending_tour"
 const NEW_USER_TOUR_KEY = "foracle_new_user_tour"
+
+// Mount gate: `false` during SSR and first client paint, `true` afterwards.
+const emptySubscribe = () => () => {}
 
 // Map tours to their target pages (pathname only, no query params)
 const TOUR_PATHNAMES: Record<TourName, string> = {
@@ -103,10 +106,11 @@ export function HelpButton() {
   // only produced client-side. Otherwise any upstream SSR/CSR tree difference
   // shifts the React 19 useId counter and the server-rendered id won't match
   // the client-expected id, throwing a hydration warning.
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
 
   // Don't render on assistant page (has its own input interface)
   const isAssistantPage = pathname === "/assistant"

@@ -1,7 +1,6 @@
 import {
   ForacleAIClient,
   getAIClient,
-  type AIResponse,
   type ToolCall
 } from "@/lib/ai/openai-client"
 import {

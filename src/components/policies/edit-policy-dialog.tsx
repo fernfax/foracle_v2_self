@@ -579,8 +579,11 @@ export function EditPolicyDialog({
         console.log("Linked Expense ID:", policy.linkedExpenseId)
         // Delete linked expense
         await deleteLinkedExpense(policy.id)
+        // Clearing the link writes NULL to the nullable linked_expense_id column.
+        // updatePolicy forwards null through to the DB at runtime, but its param
+        // type only models setting a string, so cast the cleared value.
         await updatePolicy(policy.id, {
-          linkedExpenseId: null as any
+          linkedExpenseId: null as unknown as string
         })
         console.log("Expense deleted and policy updated")
       } else if (
@@ -1350,7 +1353,7 @@ export function EditPolicyDialog({
                         Add to Expenses
                       </Label>
                       <p className="text-foreground/400 mt-1 text-xs">
-                        Automatically track this policy's premium in your
+                        Automatically track this policy&apos;s premium in your
                         expenses
                       </p>
                     </div>
@@ -1467,8 +1470,8 @@ export function EditPolicyDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Update Linked Expense</AlertDialogTitle>
             <AlertDialogDescription>
-              You've made changes to the policy details. Do you want to update
-              the linked expense as well?
+              You&apos;ve made changes to the policy details. Do you want to
+              update the linked expense as well?
             </AlertDialogDescription>
           </AlertDialogHeader>
 

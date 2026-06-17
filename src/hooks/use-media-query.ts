@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useSyncExternalStore } from "react"
 
 /**
  * SSR-safe media-query hook. Returns `false` on the server and first client
@@ -9,15 +9,22 @@ import { useEffect, useState } from "react"
  * vs. stacked LifeStages layout without a hydration mismatch.
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false)
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      const mql = window.matchMedia(query)
+      mql.addEventListener("change", onStoreChange)
+      return () => mql.removeEventListener("change", onStoreChange)
+    },
+    [query]
+  )
 
-  useEffect(() => {
-    const mql = window.matchMedia(query)
-    setMatches(mql.matches)
-    const onChange = (e: MediaQueryListEvent) => setMatches(e.matches)
-    mql.addEventListener("change", onChange)
-    return () => mql.removeEventListener("change", onChange)
-  }, [query])
+  const getSnapshot = useCallback(
+    () => window.matchMedia(query).matches,
+    [query]
+  )
 
-  return matches
+  // Server snapshot is always `false` so the SSR/first-paint branch is stable.
+  const getServerSnapshot = () => false
+
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }

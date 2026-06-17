@@ -6,7 +6,7 @@ import {
   toggleIncomeStatus,
   updateIncome
 } from "@/actions/income"
-import { format, subDays } from "date-fns"
+import { format } from "date-fns"
 import {
   ArrowUpDown,
   Briefcase,
@@ -68,7 +68,10 @@ import {
 } from "@/components/ui/table"
 import { AddCpfDetailsDialog } from "@/components/income/add-cpf-details-dialog"
 import { IncomeBreakdownModal } from "@/components/income/income-breakdown-modal"
-import { IncomeModal } from "@/components/income/income-modal"
+import {
+  IncomeModal,
+  type IncomeSubmitData
+} from "@/components/income/income-modal"
 
 type Income = {
   id: string
@@ -107,6 +110,14 @@ type Income = {
   updatedAt: Date
 }
 
+// Income payload enriched with the CPF contribution figures derived in
+// handleCpfDetailsNeeded, before the user finalises the per-account split.
+type EnrichedIncomeData = IncomeSubmitData & {
+  employeeCpfContribution: string
+  employerCpfContribution: string
+  netTakeHome: string
+}
+
 type SortKey =
   | "name"
   | "category"
@@ -138,8 +149,10 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
   // CPF details flow states
   const [isCpfDetailsDialogOpen, setIsCpfDetailsDialogOpen] = useState(false)
-  const [pendingIncomeData, setPendingIncomeData] = useState<any>(null)
-  const [pendingIncomeFormData, setPendingIncomeFormData] = useState<any>(null)
+  const [pendingIncomeData, setPendingIncomeData] =
+    useState<EnrichedIncomeData | null>(null)
+  const [pendingIncomeFormData, setPendingIncomeFormData] =
+    useState<IncomeSubmitData | null>(null)
   const [pendingCpfData, setPendingCpfData] = useState<{
     oa?: number
     sa?: number
@@ -163,7 +176,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
   // Filter and sort incomes
   const filteredAndSortedIncomes = useMemo(() => {
-    let filtered = incomes.filter(
+    const filtered = incomes.filter(
       (income) =>
         (income.name.toLowerCase().includes(search.toLowerCase()) ||
           income.category.toLowerCase().includes(search.toLowerCase())) &&
@@ -462,7 +475,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
   }
 
   // CPF Details Flow Handlers
-  const handleCpfDetailsNeeded = (incomeData: any) => {
+  const handleCpfDetailsNeeded = (incomeData: IncomeSubmitData) => {
     // Store the raw form data for potential back navigation
     setPendingIncomeFormData(incomeData)
 
@@ -1380,7 +1393,10 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                             fill="#00C4AA"
                                             stroke="#00C4AA"
                                             strokeWidth={2}
-                                            shape={(props: any) => (
+                                            shape={(props: {
+                                              cx?: number
+                                              cy?: number
+                                            }) => (
                                               <circle
                                                 cx={props.cx}
                                                 cy={props.cy}

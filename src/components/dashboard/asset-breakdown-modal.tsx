@@ -467,7 +467,8 @@ export function AssetBreakdownModal({
               {pendingNavigation?.type === "property"
                 ? "Properties"
                 : "Vehicles"}{" "}
-              page to view "{pendingNavigation?.name}". Do you want to continue?
+              page to view &quot;{pendingNavigation?.name}&quot;. Do you want to
+              continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

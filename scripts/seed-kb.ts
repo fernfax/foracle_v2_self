@@ -15,9 +15,11 @@
 
 // Load environment variables FIRST (before any other imports)
 // Now import modules that depend on env vars
+import dotenv from "dotenv"
+
 import { ingestToKnowledgeBase, listKnowledgeBaseDocs } from "@/lib/vectors"
 
-require("dotenv").config({ path: ".env.local" })
+dotenv.config({ path: ".env.local" })
 
 // Sample knowledge base documents
 const SAMPLE_DOCUMENTS = [

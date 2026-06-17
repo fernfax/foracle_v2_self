@@ -436,7 +436,7 @@ export function AddGoalDialog({
                     <div className="rounded-lg border border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)] p-3">
                       <p className="text-sm text-[#007A68]">
                         At ${parseFloat(monthlyContribution).toLocaleString()}
-                        /month, you'll reach your goal by{" "}
+                        /month, you&apos;ll reach your goal by{" "}
                         <span className="font-semibold">
                           {format(projectedCompletion, "MMMM yyyy")}
                         </span>

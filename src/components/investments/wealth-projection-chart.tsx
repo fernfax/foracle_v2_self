@@ -80,7 +80,13 @@ function formatCurrencyFull(value: number): string {
   }).format(value)
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: { value?: number }[]
+  label?: string | number
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     return (
       <div className="bg-card border-border rounded-lg border p-3 shadow-lg">

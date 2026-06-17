@@ -10,7 +10,6 @@ import {
   formatBudgetCurrency,
   getDefaultCategoryIcon
 } from "@/lib/budget-utils"
-import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,

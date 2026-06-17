@@ -183,16 +183,24 @@ function getDataKeys(
   return keys
 }
 
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: Array<{ payload: CpfProjectionDataPoint }>
+  inputs: CpfProjectionInput[]
+  viewMode: "cumulative" | "non-cumulative"
+  breakdownMode: "total" | "oa-sa-ma"
+}
+
 function CustomTooltip({
   active,
   payload,
   inputs,
   viewMode,
   breakdownMode
-}: any) {
+}: CustomTooltipProps) {
   if (!active || !payload || !payload.length) return null
 
-  const data = payload[0].payload as CpfProjectionDataPoint
+  const data = payload[0].payload
   const prefix = viewMode === "cumulative" ? "" : "monthly_"
 
   // Check if there are any loan deductions in this data point

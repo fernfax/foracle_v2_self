@@ -45,6 +45,28 @@ import {
   TabValue
 } from "@/components/income/income-modal/types"
 
+// Shape of the income payload built on submit. Also used as the back-navigation
+// snapshot (`pendingFormData`) and as the argument to `onCpfDetailsNeeded`.
+export interface IncomeSubmitData {
+  name: string
+  category: string
+  incomeCategory: string
+  amount: number
+  frequency: string
+  customMonths: string | null
+  subjectToCpf: boolean
+  accountForBonus: boolean
+  bonusGroups?: string
+  startDate: string
+  endDate?: string
+  description?: string
+  familyMemberId?: string
+  familyMemberAge?: number
+  pastIncomeHistory: string | null
+  futureMilestones: string | null
+  accountForFutureChange: boolean
+}
+
 // Safe JSON parse helper that handles corrupted data
 function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
   if (!value) return fallback
@@ -63,9 +85,9 @@ interface IncomeModalProps {
   onIncomeAdded: (income: Income) => void
   familyMember?: FamilyMember
   income?: Income | null
-  pendingFormData?: any
+  pendingFormData?: IncomeSubmitData | null
   onBack?: () => void
-  onCpfDetailsNeeded?: (incomeData: any) => void
+  onCpfDetailsNeeded?: (incomeData: IncomeSubmitData) => void
   mode?: "add" | "edit"
 }
 
@@ -112,7 +134,9 @@ export function IncomeModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [initialValues, setInitialValues] = useState<any>(null)
+  const [initialValues, setInitialValues] = useState<
+    IncomeSubmitData | Income | null
+  >(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Calculate family member's age if provided
@@ -150,7 +174,7 @@ export function IncomeModal({
   // Pre-populate all fields when editing existing income or restoring pending form data
   useEffect(() => {
     if (open) {
-      let values: any
+      let values: IncomeSubmitData | Income | null
 
       // Priority 1: Pending form data (from back navigation)
       if (pendingFormData) {

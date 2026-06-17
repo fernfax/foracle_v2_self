@@ -215,7 +215,7 @@ function EmptyState() {
 function SuggestionCard({ text }: { text: string }) {
   return (
     <div className="bg-muted/30 text-muted-foreground hover:bg-muted/50 cursor-default rounded-lg border px-3 py-2 text-left text-sm">
-      "{text}"
+      &quot;{text}&quot;
     </div>
   )
 }

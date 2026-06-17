@@ -55,7 +55,6 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import {
   Dialog,
   DialogContent,
@@ -2294,7 +2293,9 @@ function useHorizontalWheelScroll(
   monthCount: number = TIMELINE_MONTHS
 ) {
   const onShiftRef = useRef(onShiftMonths)
-  onShiftRef.current = onShiftMonths
+  useEffect(() => {
+    onShiftRef.current = onShiftMonths
+  }, [onShiftMonths])
 
   useEffect(() => {
     const el = ref.current
@@ -2345,7 +2346,9 @@ function useTouchPanScroll(
   enabled: boolean
 ) {
   const onShiftRef = useRef(onShiftMonths)
-  onShiftRef.current = onShiftMonths
+  useEffect(() => {
+    onShiftRef.current = onShiftMonths
+  }, [onShiftMonths])
 
   useEffect(() => {
     const el = ref.current
@@ -5625,6 +5628,78 @@ function DraftSentenceCard({
   )
 }
 
+// Inline editable amount pill used in the SentenceCard's natural-language
+// sentence. Hoisted to module scope so it isn't recreated each render; the
+// owning archetype's pill styling is threaded through `className`.
+function AmountPill({
+  value,
+  onConfirm,
+  className
+}: {
+  value: number
+  onConfirm: (n: number) => void
+  className: string
+}) {
+  return (
+    <EditablePill
+      ariaLabel={`Adjust amount, currently ${formatCurrency(value)}`}
+      className={className}
+      renderEditor={(close) => (
+        <QuickAdjustPad
+          initialAmount={value}
+          onConfirm={(n) => {
+            onConfirm(n)
+            close()
+          }}
+          onCancel={close}
+        />
+      )}>
+      {formatCurrency(value)}
+    </EditablePill>
+  )
+}
+
+// Inline editable date pill used in the SentenceCard's sentence. Hoisted to
+// module scope; pill styling is threaded through `className`.
+function DatePill({
+  value,
+  onPick,
+  onClear,
+  label,
+  className
+}: {
+  value: Date
+  onPick: (d: Date) => void
+  onClear?: () => void
+  label: string
+  className: string
+}) {
+  return (
+    <EditablePill
+      ariaLabel={label}
+      className={className}
+      renderEditor={(close) => (
+        <DatePillEditor
+          initial={value}
+          onCommit={(d) => {
+            onPick(d)
+            close()
+          }}
+          onClear={
+            onClear
+              ? () => {
+                  onClear()
+                  close()
+                }
+              : undefined
+          }
+        />
+      )}>
+      {formatPillDate(value)}
+    </EditablePill>
+  )
+}
+
 interface SentenceCardProps {
   income: Income
   onAmountChange: (
@@ -5672,65 +5747,6 @@ function SentenceCard({
   const firstMilestone = milestones[0]
 
   const pillCls = meta.pill
-
-  const AmountPill = ({
-    value,
-    onConfirm
-  }: {
-    value: number
-    onConfirm: (n: number) => void
-  }) => (
-    <EditablePill
-      ariaLabel={`Adjust amount, currently ${formatCurrency(value)}`}
-      className={pillCls}
-      renderEditor={(close) => (
-        <QuickAdjustPad
-          initialAmount={value}
-          onConfirm={(n) => {
-            onConfirm(n)
-            close()
-          }}
-          onCancel={close}
-        />
-      )}>
-      {formatCurrency(value)}
-    </EditablePill>
-  )
-
-  const DatePill = ({
-    value,
-    onPick,
-    onClear,
-    label
-  }: {
-    value: Date
-    onPick: (d: Date) => void
-    onClear?: () => void
-    label: string
-  }) => (
-    <EditablePill
-      ariaLabel={label}
-      className={pillCls}
-      renderEditor={(close) => (
-        <DatePillEditor
-          initial={value}
-          onCommit={(d) => {
-            onPick(d)
-            close()
-          }}
-          onClear={
-            onClear
-              ? () => {
-                  onClear()
-                  close()
-                }
-              : undefined
-          }
-        />
-      )}>
-      {formatPillDate(value)}
-    </EditablePill>
-  )
 
   return (
     <div className="bg-card shadow-card relative overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.06)] p-5 dark:border-[rgba(240,235,224,0.08)] dark:shadow-none">
@@ -5793,12 +5809,14 @@ function SentenceCard({
             <AmountPill
               value={amount}
               onConfirm={(n) => onAmountChange(income, n)}
+              className={pillCls}
             />{" "}
             once in{" "}
             <DatePill
               value={startDate}
               onPick={(d) => onStartDateChange(income, d)}
               label="Edit payment month"
+              className={pillCls}
             />
             .
           </>
@@ -5808,12 +5826,14 @@ function SentenceCard({
             <AmountPill
               value={amount}
               onConfirm={(n) => onAmountChange(income, n)}
+              className={pillCls}
             />{" "}
             from{" "}
             <DatePill
               value={startDate}
               onPick={(d) => onStartDateChange(income, d)}
               label="Edit start month"
+              className={pillCls}
             />{" "}
             until{" "}
             <DatePill
@@ -5821,6 +5841,7 @@ function SentenceCard({
               onPick={(d) => onEndDateChange(income, d)}
               onClear={() => onEndDateChange(income, null)}
               label="Edit end month"
+              className={pillCls}
             />
             .
           </>
@@ -5830,12 +5851,14 @@ function SentenceCard({
             <AmountPill
               value={amount}
               onConfirm={(n) => onAmountChange(income, n)}
+              className={pillCls}
             />{" "}
             continuously starting from{" "}
             <DatePill
               value={startDate}
               onPick={(d) => onStartDateChange(income, d)}
               label="Edit start month"
+              className={pillCls}
             />
             .
           </>

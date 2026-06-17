@@ -19,6 +19,16 @@ const eslintConfig = defineConfig([
       "unused-imports/no-unused-imports": "error"
     }
   },
+  {
+    // CommonJS scripts (migration runners, build tooling) run directly via
+    // `node`, so `require()`/`module.exports` are correct here, not an error.
+    files: ["**/*.cjs"],
+    languageOptions: { sourceType: "commonjs" },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unused-vars": "off"
+    }
+  },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"])
 ])
 

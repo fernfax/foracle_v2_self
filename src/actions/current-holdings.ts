@@ -132,7 +132,12 @@ export async function updateCurrentHolding(
     throw new Error("Current holding not found")
   }
 
-  const updateData: any = {
+  const updateData: {
+    updatedAt: Date
+    familyMemberId?: string | null
+    bankName?: string
+    holdingAmount?: string
+  } = {
     updatedAt: new Date()
   }
 

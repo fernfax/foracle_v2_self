@@ -1,9 +1,9 @@
 "use client"
 
+import { createElement } from "react"
 import * as LucideIcons from "lucide-react"
 
 import {
-  formatBudgetCurrency,
   getCategoryBgColor,
   getCategoryIconColor,
   getDefaultCategoryIcon
@@ -37,6 +37,22 @@ function getIconComponent(iconName: string | null, categoryName: string) {
   return IconComponent || LucideIcons.CircleDollarSign
 }
 
+// Resolve + render the category's icon in a module-scope component. We resolve
+// the Lucide component (a value, not a freshly-defined component) and render it
+// via createElement, so we never create a component during render
+// (react-hooks/static-components).
+function CategoryIcon({
+  iconName,
+  categoryName,
+  className
+}: {
+  iconName: string | null
+  categoryName: string
+  className?: string
+}) {
+  return createElement(getIconComponent(iconName, categoryName), { className })
+}
+
 export function CategoryBudgetCard({
   categoryName,
   icon,
@@ -44,7 +60,6 @@ export function CategoryBudgetCard({
   budget,
   onClick
 }: CategoryBudgetCardProps) {
-  const Icon = getIconComponent(icon, categoryName)
   const percentUsed = budget > 0 ? (spent / budget) * 100 : 0
   const bgColor = getCategoryBgColor(categoryName)
   const iconColor = getCategoryIconColor(categoryName)
@@ -67,7 +82,11 @@ export function CategoryBudgetCard({
           "mb-3 flex h-12 w-12 items-center justify-center rounded-full",
           bgColor
         )}>
-        <Icon className={cn("h-6 w-6", iconColor)} />
+        <CategoryIcon
+          iconName={icon}
+          categoryName={categoryName}
+          className={cn("h-6 w-6", iconColor)}
+        />
       </div>
 
       {/* Spent / Budget */}

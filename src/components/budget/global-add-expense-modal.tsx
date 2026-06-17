@@ -20,27 +20,23 @@ export function GlobalAddExpenseModal() {
   const { isOpen, closeModal } = useAddExpense()
   const [categories, setCategories] = useState<ExpenseCategory[]>([])
   const [budgetData, setBudgetData] = useState<BudgetVsActual[]>([])
-  const [isLoading, setIsLoading] = useState(false)
 
   // Don't render on budget page - it has its own modal
   const isBudgetPage = pathname === "/budget"
 
-  // Fetch data when modal opens
+  // Fetch data when modal opens. setState only happens inside the async
+  // callbacks (never synchronously in the effect body), so it doesn't trigger
+  // cascading renders.
   useEffect(() => {
     if (isOpen && !isBudgetPage) {
-      setIsLoading(true)
       const now = new Date()
       Promise.all([
         getExpenseCategories(),
         getBudgetVsActual(now.getFullYear(), now.getMonth() + 1)
-      ])
-        .then(([cats, budget]) => {
-          setCategories(cats)
-          setBudgetData(budget)
-        })
-        .finally(() => {
-          setIsLoading(false)
-        })
+      ]).then(([cats, budget]) => {
+        setCategories(cats)
+        setBudgetData(budget)
+      })
     }
   }, [isOpen, isBudgetPage])
 

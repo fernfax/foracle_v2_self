@@ -368,7 +368,8 @@ export function CoverageMatrix({
                 {selectedPolicy.policyType}
               </DialogTitle>
               <DialogDescription>
-                {selectedMemberName}'s policy with {selectedPolicy.provider}
+                {selectedMemberName}&apos;s policy with{" "}
+                {selectedPolicy.provider}
               </DialogDescription>
             </DialogHeader>
 

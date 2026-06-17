@@ -266,7 +266,7 @@ export function GoalDetailsModal({
               <p
                 className={`text-sm ${onTrack ? "text-[#007A68]" : "text-[#7A5A00]"}`}>
                 At your current rate of ${monthlyContribution.toLocaleString()}
-                /month, you'll reach your goal by{" "}
+                /month, you&apos;ll reach your goal by{" "}
                 <span className="font-semibold">
                   {format(projectedCompletion, "MMMM yyyy")}
                 </span>

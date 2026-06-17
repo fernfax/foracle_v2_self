@@ -5,7 +5,7 @@ import {
   addCurrentHolding,
   getCurrentHoldings
 } from "@/actions/current-holdings"
-import { Building2, Lightbulb, Plus, Trash2 } from "lucide-react"
+import { Building2, Lightbulb, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

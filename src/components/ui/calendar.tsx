@@ -209,7 +209,6 @@ function Calendar({
         month={displayDate}
         onMonthChange={setDisplayDate}
         className=""
-        {...(props as any)}
         classNames={{
           months:
             "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",

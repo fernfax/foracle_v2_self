@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState, useSyncExternalStore } from "react"
 import {
   Background,
   Controls,
@@ -26,6 +26,19 @@ import { cn } from "@/lib/utils"
 
 interface DiagramCanvasProps {
   diagram: Diagram
+}
+
+// Hydration flag without a setState-in-effect: the server snapshot is `false`
+// and the client snapshot is `true`, so the component renders as unmounted on
+// the server / first paint, then re-renders mounted after hydration. No-op
+// subscribe — the value never changes after mount.
+const emptySubscribe = () => () => {}
+function useMounted(): boolean {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
 }
 
 const COLUMN_WIDTH = 240 // horizontal stride between columns
@@ -69,8 +82,7 @@ export function DiagramCanvas({ diagram }: DiagramCanvasProps) {
   // The mobile sheet is portaled to <body> so it escapes the app shell's
   // `contain: layout paint` wrapper, which otherwise traps `position: fixed`
   // and parks the sheet off-screen. Portals need the DOM, so gate on mount.
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   const { rfNodes, rfEdges } = useMemo(() => buildLayout(diagram), [diagram])
 

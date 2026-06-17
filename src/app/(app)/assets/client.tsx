@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Car, Home, Package } from "lucide-react"
 
@@ -53,28 +53,35 @@ interface AssetsClientProps {
   initialVehicleAssets: VehicleAsset[]
 }
 
+// Hydration flag without a set-state effect: server + first client render get
+// the server snapshot (false); once hydrated React swaps to the client snapshot
+// (true). No extra committed render driven from an effect.
+const emptySubscribe = () => () => {}
+function useHydrated() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+}
+
 export function AssetsClient({
   initialPropertyAssets,
   initialVehicleAssets
 }: AssetsClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [mounted, setMounted] = useState(false)
-  const [activeTab, setActiveTab] = useState(
-    searchParams.get("tab") || "property"
-  )
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Sync activeTab with URL search params when they change
-  useEffect(() => {
-    const tabFromUrl = searchParams.get("tab") || "property"
-    if (tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl)
-    }
-  }, [searchParams])
+  const mounted = useHydrated()
+  const tabFromUrl = searchParams.get("tab") || "property"
+  // activeTab is optimistic (set on tap so the tab switches instantly), then
+  // resynced to the URL when navigation commits or on back/forward. Syncing
+  // during render via the previous-value pattern avoids a set-state-in-effect.
+  const [activeTab, setActiveTab] = useState(tabFromUrl)
+  const [prevTabFromUrl, setPrevTabFromUrl] = useState(tabFromUrl)
+  if (prevTabFromUrl !== tabFromUrl) {
+    setPrevTabFromUrl(tabFromUrl)
+    setActiveTab(tabFromUrl)
+  }
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)

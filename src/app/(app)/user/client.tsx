@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ComponentProps } from "react"
+import { useState, useSyncExternalStore, type ComponentProps } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { CpfByFamilyMember } from "@/actions/cpf"
 import { CurrentHolding } from "@/actions/current-holdings"
@@ -15,13 +15,6 @@ import {
 
 import type { HouseholdSummary } from "@/lib/household-summary"
 import type { NetWorthSummary } from "@/lib/net-worth"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
 import { PageHeader } from "@/components/ui/page-header"
 import { SlidingTabs } from "@/components/ui/sliding-tabs"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
@@ -91,6 +84,18 @@ type PropertyAssetForCpf = {
   isActive: boolean | null
 }
 
+// Hydration flag without a set-state effect: server + first client render get
+// the server snapshot (false); once hydrated React swaps to the client snapshot
+// (true). No extra committed render driven from an effect.
+const emptySubscribe = () => () => {}
+function useHydrated() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+}
+
 interface UserHomepageClientProps {
   initialIncomes: Income[]
   // The Beta view is wired to its own `incomes_beta` table. Empty until the
@@ -124,37 +129,36 @@ export function UserHomepageClient({
 }: UserHomepageClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [mounted, setMounted] = useState(false)
-  const [activeTab, setActiveTab] = useState(() => {
-    const tab = searchParams.get("tab") || "overview"
-    return tab === "current" ? "holdings" : tab
-  })
+  const mounted = useHydrated()
+
+  // Derive the canonical tab/view from the URL each render. "current" was the
+  // legacy slug for the Holdings tab — redirect to "holdings". Bare /user
+  // (no ?tab=) always defaults to Overview.
+  const rawTab = searchParams.get("tab") || "overview"
+  const tabFromUrl = rawTab === "current" ? "holdings" : rawTab
   // "standard" = the Timeline Studio (formerly "beta") — now the default.
   // "legacy" = the old income table view. Opt into it with ?view=legacy.
-  const [incomeView, setIncomeView] = useState<"legacy" | "standard">(
+  const viewFromUrl: "legacy" | "standard" =
     searchParams.get("view") === "legacy" ? "legacy" : "standard"
+
+  // activeTab/incomeView are optimistic (set on tap so the UI switches
+  // instantly), then resynced to the URL when navigation commits or on
+  // back/forward. Syncing during render via the previous-value pattern avoids a
+  // set-state-in-effect.
+  const [activeTab, setActiveTab] = useState(tabFromUrl)
+  const [incomeView, setIncomeView] = useState<"legacy" | "standard">(
+    viewFromUrl
   )
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Sync activeTab + incomeView with URL search params when they change
-  useEffect(() => {
-    // "current" was the legacy slug for the Holdings tab — redirect to "holdings".
-    // Bare /user (no ?tab=) always defaults to Overview — keep this fallback in
-    // sync with the initial useState above so the tab can't flip on mount.
-    const raw = searchParams.get("tab") || "overview"
-    const tabFromUrl = raw === "current" ? "holdings" : raw
-    if (tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl)
-    }
-    const viewFromUrl =
-      searchParams.get("view") === "legacy" ? "legacy" : "standard"
-    if (viewFromUrl !== incomeView) {
-      setIncomeView(viewFromUrl)
-    }
-  }, [searchParams])
+  const [prevTabFromUrl, setPrevTabFromUrl] = useState(tabFromUrl)
+  const [prevViewFromUrl, setPrevViewFromUrl] = useState(viewFromUrl)
+  if (prevTabFromUrl !== tabFromUrl) {
+    setPrevTabFromUrl(tabFromUrl)
+    setActiveTab(tabFromUrl)
+  }
+  if (prevViewFromUrl !== viewFromUrl) {
+    setPrevViewFromUrl(viewFromUrl)
+    setIncomeView(viewFromUrl)
+  }
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)

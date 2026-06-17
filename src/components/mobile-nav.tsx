@@ -1,6 +1,12 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState
+} from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -54,52 +60,58 @@ export function MobileNav() {
   const glassRefract = useGlassRefraction()
   const navRef = useRef<HTMLElement>(null)
   const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map())
+  const indicatorRef = useRef<HTMLSpanElement>(null)
 
   // Optimistic active href: updated immediately on tap so the indicator slides
   // right away, then resynced to the real pathname when navigation commits (and
   // on back/forward). null = current route isn't a bottom-nav destination.
-  const [activeHref, setActiveHref] = useState<string | null>(null)
-  const [indicator, setIndicator] = useState({
-    left: 0,
-    top: 0,
-    width: 0,
-    height: 0,
-    visible: false
-  })
+  const pathnameMatch =
+    mobileNavItems.find((i) => i.href === pathname)?.href ?? null
+  const [activeHref, setActiveHref] = useState<string | null>(pathnameMatch)
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  // Resync to the real route during render (back/forward, commit) instead of in
+  // an effect — React re-runs this render synchronously before painting, so no
+  // extra committed frame and no set-state-in-effect.
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname)
+    setActiveHref(pathnameMatch)
+  }
   // Transitions are enabled only AFTER the first positioning paints, so the
   // highlight snaps onto the active tab on mount instead of sliding in from the
   // corner. Subsequent moves animate.
   const [animate, setAnimate] = useState(false)
   const firstPositioned = useRef(false)
 
-  useEffect(() => {
-    const match = mobileNavItems.find((i) => i.href === pathname)
-    setActiveHref(match ? match.href : null)
-  }, [pathname])
-
+  // The indicator's geometry is pure layout output (measured from the DOM), not
+  // React state — so we write it straight to the span's style in a layout effect
+  // instead of round-tripping through setState (which would force an extra render
+  // for a value React never needs to reason about).
   const updateIndicator = useCallback(() => {
     const nav = navRef.current
+    const span = indicatorRef.current
+    if (!span) return
     const el = activeHref ? itemRefs.current.get(activeHref) : null
     if (!nav || !el) {
-      setIndicator((s) => ({ ...s, visible: false }))
+      span.style.opacity = "0"
       return
     }
     const navRect = nav.getBoundingClientRect()
     const r = el.getBoundingClientRect()
-    setIndicator({
-      left: r.left - navRect.left,
-      top: r.top - navRect.top,
-      width: r.width,
-      height: r.height,
-      visible: true
-    })
+    span.style.left = `${r.left - navRect.left}px`
+    span.style.top = `${r.top - navRect.top}px`
+    span.style.width = `${r.width}px`
+    span.style.height = `${r.height}px`
+    span.style.opacity = "1"
     if (!firstPositioned.current) {
       firstPositioned.current = true
       requestAnimationFrame(() => setAnimate(true))
     }
   }, [activeHref])
 
-  useEffect(() => {
+  // Measure-and-position must happen after the DOM commits (refs in place) but
+  // before paint, so the highlight never flashes at the wrong spot. This mutates
+  // the DOM directly — no React state is set here.
+  useLayoutEffect(() => {
     updateIndicator()
   }, [activeHref, updateIndicator])
 
@@ -165,18 +177,12 @@ export function MobileNav() {
         className="glass-pill font-display relative isolate flex h-14 items-center rounded-3xl px-1.5">
         {/* Sliding active highlight — measures the active item and moves to it. */}
         <span
+          ref={indicatorRef}
           aria-hidden
           className={cn(
-            "glass-active pointer-events-none absolute rounded-2xl",
-            animate && "transition-all duration-300 ease-out",
-            indicator.visible ? "opacity-100" : "opacity-0"
+            "glass-active pointer-events-none absolute rounded-2xl opacity-0",
+            animate && "transition-all duration-300 ease-out"
           )}
-          style={{
-            left: indicator.left,
-            top: indicator.top,
-            width: indicator.width,
-            height: indicator.height
-          }}
         />
 
         {mobileNavItems.map((item) => {

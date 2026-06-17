@@ -9,7 +9,6 @@ import {
   ChevronRight,
   DollarSign,
   TrendingDown,
-  TrendingUp,
   Wallet
 } from "lucide-react"
 

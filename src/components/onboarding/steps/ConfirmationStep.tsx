@@ -164,8 +164,8 @@ export function ConfirmationStep({
           </div>
           <h2 className="mb-2 text-2xl font-semibold">Great job!</h2>
           <p className="text-muted-foreground">
-            Here's a summary of what you've set up. You can always update these
-            from your dashboard.
+            Here&apos;s a summary of what you&apos;ve set up. You can always
+            update these from your dashboard.
           </p>
         </div>
 
@@ -203,7 +203,7 @@ export function ConfirmationStep({
 
         {/* Next Steps */}
         <div className="border-border/60 bg-muted/30 rounded-xl border p-4">
-          <h3 className="mb-2 font-medium">What's next?</h3>
+          <h3 className="mb-2 font-medium">What&apos;s next?</h3>
           <ul className="text-muted-foreground space-y-1 text-sm">
             <li>• View your financial dashboard with projections</li>
             <li>• Add more income sources and family members</li>

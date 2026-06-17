@@ -256,7 +256,7 @@ export function ExpensesStep({
               </span>
             </p>
             <p className="text-muted-foreground text-xs">
-              We'll use this to estimate your monthly expenses across the
+              We&apos;ll use this to estimate your monthly expenses across the
               selected categories
             </p>
           </div>
@@ -325,8 +325,8 @@ export function ExpensesStep({
               Customize Later
             </p>
             <p className="text-muted-foreground text-sm">
-              Don't worry about getting the amounts perfect right now. You can
-              add, delete, or change expenditure amounts after the initial
+              Don&apos;t worry about getting the amounts perfect right now. You
+              can add, delete, or change expenditure amounts after the initial
               setup.
             </p>
           </div>

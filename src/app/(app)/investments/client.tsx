@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   createInvestment,
@@ -44,11 +44,21 @@ export function InvestmentsClient({
   const [deletingInvestment, setDeletingInvestment] =
     useState<Investment | null>(null)
 
-  // Update state when props change
-  useEffect(() => {
+  // Re-sync local state when fresh server props arrive (e.g. after
+  // router.refresh()). Done during render via the "store previous prop"
+  // pattern rather than an effect, so it doesn't trigger a cascading render.
+  const [prevProps, setPrevProps] = useState({
+    initialInvestments,
+    initialSummary
+  })
+  if (
+    prevProps.initialInvestments !== initialInvestments ||
+    prevProps.initialSummary !== initialSummary
+  ) {
+    setPrevProps({ initialInvestments, initialSummary })
     setInvestments(initialInvestments)
     setSummary(initialSummary)
-  }, [initialInvestments, initialSummary])
+  }
 
   const handleAddInvestment = async (data: {
     name: string

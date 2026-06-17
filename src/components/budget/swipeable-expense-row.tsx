@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -25,12 +25,17 @@ export function SwipeableExpenseRow({
 
   const DELETE_BUTTON_WIDTH = 80
 
-  // Sync with external isOpen state
-  useEffect(() => {
+  // Sync with external isOpen state: when the parent closes this row (because
+  // another row was swiped open), snap it shut. Done during render via the
+  // "store previous prop" pattern rather than an effect, so it doesn't trigger
+  // a cascading render (react-hooks/set-state-in-effect).
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen)
     if (!isOpen && translateX !== 0) {
       setTranslateX(0)
     }
-  }, [isOpen])
+  }
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startXRef.current = e.touches[0].clientX

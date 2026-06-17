@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 
 /**
  * Gate for the Liquid Glass nav's Chromium-only edge refraction.
@@ -20,26 +20,35 @@ import { useEffect, useState } from "react"
  * glass shows immediately with no flash or hydration mismatch; the enhancement
  * is added after mount. Also bails for users with Reduce Transparency on.
  */
+
+// The capability is fixed for the lifetime of the page, so nothing ever calls
+// the change callback — the subscription only exists to satisfy the store API.
+function subscribe(): () => void {
+  return () => {}
+}
+
+function getSnapshot(): boolean {
+  if (typeof window === "undefined" || !window.CSS?.supports) return false
+
+  const hasBackdrop =
+    CSS.supports("backdrop-filter", "blur(1px)") ||
+    CSS.supports("-webkit-backdrop-filter", "blur(1px)")
+  if (!hasBackdrop) return false
+
+  if (window.matchMedia("(prefers-reduced-transparency: reduce)").matches) {
+    return false
+  }
+
+  const ua = navigator.userAgent
+  const isWebKit =
+    /AppleWebKit/.test(ua) && !/Chrome|Chromium|CriOS|Edg/.test(ua)
+  return !isWebKit
+}
+
+function getServerSnapshot(): boolean {
+  return false
+}
+
 export function useGlassRefraction(): boolean {
-  const [enabled, setEnabled] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.CSS?.supports) return
-
-    const hasBackdrop =
-      CSS.supports("backdrop-filter", "blur(1px)") ||
-      CSS.supports("-webkit-backdrop-filter", "blur(1px)")
-    if (!hasBackdrop) return
-
-    if (window.matchMedia("(prefers-reduced-transparency: reduce)").matches) {
-      return
-    }
-
-    const ua = navigator.userAgent
-    const isWebKit =
-      /AppleWebKit/.test(ua) && !/Chrome|Chromium|CriOS|Edg/.test(ua)
-    if (!isWebKit) setEnabled(true)
-  }, [])
-
-  return enabled
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }

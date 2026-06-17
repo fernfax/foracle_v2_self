@@ -6,19 +6,16 @@ import {
   type BalanceSummaryParams,
   type DailyExpenseSummaryParams,
   type FamilySummaryParams,
-  type HoldingsSummaryParams,
   type HypotheticalItem,
   type InsuranceSummaryParams,
   type MonthParams,
   type OtherAssetsSummaryParams,
-  type PropertyAssetsSummaryParams,
   type SearchKnowledgeParams,
-  type ToolName,
-  type VehicleAssetsSummaryParams
+  type ToolName
 } from "@/lib/ai/tools/registry"
 import { getCurrentUserAndFamily } from "@/lib/auth-context"
 import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf-calculator"
-import { searchKnowledgeBase, type SearchResult } from "@/lib/vectors"
+import { searchKnowledgeBase } from "@/lib/vectors"
 import {
   assets,
   currentHoldings,

@@ -133,10 +133,25 @@ const ARROW_COLORS: Record<string, string> = {
   bonus: "#D4845A" // violet-500
 }
 
+// The per-row datum charted by this graph: the base monthly balance plus the
+// optional combined-investment fields added in `balanceData`.
+type ChartDatum = MonthlyBalanceData & {
+  balanceWithInvestments?: number
+  monthlyBalanceWithInvestments?: number
+}
+
+// Props Recharts passes to a custom `dot` element. We only read the
+// coordinates and the row payload, so we type just those.
+interface CustomDotProps {
+  cx?: number
+  cy?: number
+  payload?: ChartDatum
+}
+
 // Custom dot component that renders balance dots and arrow markers for special items
-const CustomBalanceDot = (props: any) => {
+const CustomBalanceDot = (props: CustomDotProps) => {
   const { cx, cy, payload } = props
-  if (cx === undefined || cy === undefined) return null
+  if (cx === undefined || cy === undefined || !payload) return null
 
   const elements: React.ReactNode[] = []
 
@@ -200,9 +215,9 @@ const CustomBalanceDot = (props: any) => {
 }
 
 // Custom dot component for income line - purple on bonus months, green otherwise
-const CustomIncomeDot = (props: any) => {
+const CustomIncomeDot = (props: CustomDotProps) => {
   const { cx, cy, payload } = props
-  if (cx === undefined || cy === undefined) return null
+  if (cx === undefined || cy === undefined || !payload) return null
 
   // Check if this month has a bonus
   const hasBonus = payload.bonus > 0
@@ -220,20 +235,53 @@ const CustomIncomeDot = (props: any) => {
   )
 }
 
+// A single plotted point on a Recharts graphical item: its pixel position plus
+// the source row it was derived from.
+interface GraphicalPoint {
+  x: number
+  y: number
+  payload?: ChartDatum
+}
+
+// The subset of a formatted graphical item (e.g. an <Area>) that we read: its
+// dataKey and the points it plotted.
+interface FormattedGraphicalItem {
+  props?: {
+    dataKey?: string | number
+    points?: GraphicalPoint[]
+  }
+}
+
+// The subset of a Recharts axis object we read for sizing the bonus rects.
+interface ChartAxis {
+  bandSize?: number
+  width: number
+  y: number
+  height: number
+}
+
+// Props the <Customized> wrapper forwards from chart state. Only the few fields
+// used here are typed.
+interface BonusHighlightRectsProps {
+  formattedGraphicalItems?: FormattedGraphicalItem[]
+  xAxisMap?: Record<string, ChartAxis>
+  yAxisMap?: Record<string, ChartAxis>
+}
+
 // Custom component to render purple highlight rectangles for bonus months
-const BonusHighlightRects = (props: any) => {
+const BonusHighlightRects = (props: BonusHighlightRectsProps) => {
   const { formattedGraphicalItems, xAxisMap, yAxisMap } = props
 
   if (!formattedGraphicalItems || !xAxisMap || !yAxisMap) return null
 
-  const xAxis = Object.values(xAxisMap)[0] as any
-  const yAxis = Object.values(yAxisMap)[0] as any
+  const xAxis = Object.values(xAxisMap)[0]
+  const yAxis = Object.values(yAxisMap)[0]
 
   if (!xAxis || !yAxis) return null
 
   // Find the income area's data points
   const incomeArea = formattedGraphicalItems.find(
-    (item: any) => item.props?.dataKey === "income"
+    (item) => item.props?.dataKey === "income"
   )
   if (!incomeArea?.props?.points) return null
 
@@ -242,7 +290,7 @@ const BonusHighlightRects = (props: any) => {
 
   return (
     <g>
-      {points.map((point: any, index: number) => {
+      {points.map((point, index) => {
         if (!point.payload?.bonus || point.payload.bonus <= 0) return null
 
         const x = point.x - bandWidth / 2
@@ -295,14 +343,32 @@ function getSpecialItemLabel(type: SpecialItem["type"]): string {
   }
 }
 
+// A single entry in the Recharts tooltip payload. The `payload` field carries
+// either a regular chart row or an arrow-marker point, so it's widened to the
+// union of both.
+interface TooltipEntry {
+  dataKey?: string | number
+  payload: ChartDatum | ArrowDataPoint
+}
+
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: TooltipEntry[]
+  viewMode?: "cumulative" | "non-cumulative"
+}
+
 /**
  * Custom tooltip component
  */
-function CustomTooltip({ active, payload, viewMode }: any) {
+function CustomTooltip({ active, payload, viewMode }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     // Check if this is a scatter point (arrow marker)
     const firstPayload = payload[0]
-    if (firstPayload.dataKey === "y" && firstPayload.payload.type) {
+    if (
+      firstPayload.dataKey === "y" &&
+      "type" in firstPayload.payload &&
+      firstPayload.payload.type
+    ) {
       // This is an arrow marker tooltip
       const arrowData = firstPayload.payload as ArrowDataPoint
       const color = ARROW_COLORS[arrowData.type]
