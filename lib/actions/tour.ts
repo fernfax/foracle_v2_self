@@ -1,27 +1,31 @@
-"use server";
+"use server"
 
-import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import {
+  emptyTourStatus,
+  type TourName,
+  type TourStatus
+} from "@/lib/api-schemas/user-prefs"
+import { getCurrentUserAndFamily } from "@/lib/auth-context"
 import {
   getTourStatus as getTourStatusService,
   isTourCompleted as isTourCompletedService,
   markTourCompleted as markTourCompletedService,
-  resetTourStatus as resetTourStatusService,
-} from "@/lib/services/user-prefs";
-import { emptyTourStatus, type TourName, type TourStatus } from "@/lib/api-schemas/user-prefs";
+  resetTourStatus as resetTourStatusService
+} from "@/lib/services/user-prefs"
 
-export type { TourName, TourStatus };
+export type { TourName, TourStatus }
 
-const EMPTY: TourStatus = emptyTourStatus();
+const EMPTY: TourStatus = emptyTourStatus()
 
 /**
  * Get the tour completion status for the current user
  */
 export async function getTourStatus(): Promise<TourStatus> {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    return await getTourStatusService(ctx);
+    const ctx = await getCurrentUserAndFamily()
+    return await getTourStatusService(ctx)
   } catch {
-    return { ...EMPTY };
+    return { ...EMPTY }
   }
 }
 
@@ -30,8 +34,8 @@ export async function getTourStatus(): Promise<TourStatus> {
  */
 export async function markTourCompleted(tourName: TourName): Promise<void> {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    await markTourCompletedService(ctx, tourName);
+    const ctx = await getCurrentUserAndFamily()
+    await markTourCompletedService(ctx, tourName)
   } catch {
     // Swallow unauth — preserves original action behavior.
   }
@@ -42,8 +46,8 @@ export async function markTourCompleted(tourName: TourName): Promise<void> {
  */
 export async function resetTourStatus(tourName: TourName): Promise<void> {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    await resetTourStatusService(ctx, tourName);
+    const ctx = await getCurrentUserAndFamily()
+    await resetTourStatusService(ctx, tourName)
   } catch {
     // Swallow unauth.
   }
@@ -54,9 +58,9 @@ export async function resetTourStatus(tourName: TourName): Promise<void> {
  */
 export async function isTourCompleted(tourName: TourName): Promise<boolean> {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    return await isTourCompletedService(ctx, tourName);
+    const ctx = await getCurrentUserAndFamily()
+    return await isTourCompletedService(ctx, tourName)
   } catch {
-    return false;
+    return false
   }
 }

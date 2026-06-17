@@ -1,16 +1,8 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import React, { useState } from "react"
+import { History, Plus, Trash2 } from "lucide-react"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,139 +11,165 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Trash2, Plus, History } from "lucide-react";
-import { PastIncomeEntry, MONTHS } from "./types";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+
+import { MONTHS, PastIncomeEntry } from "./types"
 
 interface PastIncomeTabProps {
-  pastIncomeHistory: PastIncomeEntry[];
-  setPastIncomeHistory: (value: PastIncomeEntry[]) => void;
+  pastIncomeHistory: PastIncomeEntry[]
+  setPastIncomeHistory: (value: PastIncomeEntry[]) => void
 }
 
 export function PastIncomeTab({
   pastIncomeHistory,
-  setPastIncomeHistory,
+  setPastIncomeHistory
 }: PastIncomeTabProps) {
-  const currentYear = new Date().getFullYear();
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
-  const [isAddingNew, setIsAddingNew] = useState(false);
+  const currentYear = new Date().getFullYear()
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
+  const [isAddingNew, setIsAddingNew] = useState(false)
   const [newEntry, setNewEntry] = useState<PastIncomeEntry>({
     period: "",
     granularity: "monthly",
     amount: 0,
-    notes: "",
-  });
+    notes: ""
+  })
 
   // Generate months for the past 5 years (excluding current month)
   const getAvailableMonths = () => {
-    const months: { value: string; label: string }[] = [];
-    const currentMonth = new Date().getMonth() + 1;
+    const months: { value: string; label: string }[] = []
+    const currentMonth = new Date().getMonth() + 1
     for (let year = currentYear; year >= currentYear - 5; year--) {
       for (let month = 12; month >= 1; month--) {
         // Skip current and future months
-        if (year === currentYear && month >= currentMonth) continue;
+        if (year === currentYear && month >= currentMonth) continue
 
-        const period = `${year}-${String(month).padStart(2, "0")}`;
-        const monthName = MONTHS.find(m => m.value === month)?.label || "";
+        const period = `${year}-${String(month).padStart(2, "0")}`
+        const monthName = MONTHS.find((m) => m.value === month)?.label || ""
         months.push({
           value: period,
-          label: `${monthName} ${year}`,
-        });
+          label: `${monthName} ${year}`
+        })
       }
     }
-    return months;
-  };
+    return months
+  }
 
   const startAddEntry = () => {
     setNewEntry({
       period: "",
       granularity: "monthly",
       amount: 0,
-      notes: "",
-    });
-    setIsAddingNew(true);
-  };
+      notes: ""
+    })
+    setIsAddingNew(true)
+  }
 
   const saveNewEntry = () => {
-    if (!newEntry.period) return;
-    setPastIncomeHistory([newEntry, ...pastIncomeHistory]);
-    setIsAddingNew(false);
+    if (!newEntry.period) return
+    setPastIncomeHistory([newEntry, ...pastIncomeHistory])
+    setIsAddingNew(false)
     setNewEntry({
       period: "",
       granularity: "monthly",
       amount: 0,
-      notes: "",
-    });
-  };
+      notes: ""
+    })
+  }
 
   const cancelAddEntry = () => {
-    setIsAddingNew(false);
+    setIsAddingNew(false)
     setNewEntry({
       period: "",
       granularity: "monthly",
       amount: 0,
-      notes: "",
-    });
-  };
+      notes: ""
+    })
+  }
 
   const confirmRemoveEntry = (index: number) => {
-    setDeleteIndex(index);
-  };
+    setDeleteIndex(index)
+  }
 
   const removeEntry = () => {
     if (deleteIndex !== null) {
-      setPastIncomeHistory(pastIncomeHistory.filter((_, i) => i !== deleteIndex));
-      setDeleteIndex(null);
+      setPastIncomeHistory(
+        pastIncomeHistory.filter((_, i) => i !== deleteIndex)
+      )
+      setDeleteIndex(null)
     }
-  };
+  }
 
-  const updateEntry = (index: number, field: keyof PastIncomeEntry, value: string | number) => {
-    const updated = [...pastIncomeHistory];
+  const updateEntry = (
+    index: number,
+    field: keyof PastIncomeEntry,
+    value: string | number
+  ) => {
+    const updated = [...pastIncomeHistory]
     if (field === "amount") {
-      updated[index].amount = parseFloat(value as string) || 0;
+      updated[index].amount = parseFloat(value as string) || 0
     } else if (field === "period") {
-      updated[index].period = value as string;
+      updated[index].period = value as string
     } else if (field === "notes") {
-      updated[index].notes = value as string;
+      updated[index].notes = value as string
     }
-    setPastIncomeHistory(updated);
-  };
-
+    setPastIncomeHistory(updated)
+  }
 
   // Sort entries by period (newest first)
-  const sortedEntries = [...pastIncomeHistory].sort((a, b) => b.period.localeCompare(a.period));
+  const sortedEntries = [...pastIncomeHistory].sort((a, b) =>
+    b.period.localeCompare(a.period)
+  )
 
   // Check if a period is already used
   const isUsedPeriod = (period: string, currentIndex?: number) => {
-    return pastIncomeHistory.some((entry, i) => (currentIndex === undefined || i !== currentIndex) && entry.period === period);
-  };
+    return pastIncomeHistory.some(
+      (entry, i) =>
+        (currentIndex === undefined || i !== currentIndex) &&
+        entry.period === period
+    )
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 pb-4 border-b">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(184,98,42,0.10)]">
+      <div className="flex items-center gap-3 border-b pb-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[rgba(184,98,42,0.10)]">
           <History className="h-5 w-5 text-[#7A3A0A]" />
         </div>
         <div>
-          <h3 className="font-semibold text-foreground">Historical Income</h3>
-          <p className="text-sm text-foreground/400">Track your past income to see trends over time</p>
+          <h3 className="text-foreground font-semibold">Historical Income</h3>
+          <p className="text-foreground/400 text-sm">
+            Track your past income to see trends over time
+          </p>
         </div>
       </div>
 
       {/* New Entry Form */}
       {isAddingNew && (
-        <div className="bg-[rgba(184,98,42,0.10)] border border-[rgba(184,98,42,0.25)] rounded-lg p-4 space-y-3">
-          <div className="text-sm font-medium text-[#7A3A0A] mb-2">New Entry</div>
+        <div className="space-y-3 rounded-lg border border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)] p-4">
+          <div className="mb-2 text-sm font-medium text-[#7A3A0A]">
+            New Entry
+          </div>
           <div className="flex gap-3">
             {/* Period Selector */}
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-foreground/400">Month</Label>
+              <Label className="text-foreground/400 text-xs">Month</Label>
               <Select
                 value={newEntry.period}
-                onValueChange={(value) => setNewEntry({ ...newEntry, period: value })}
-              >
+                onValueChange={(value) =>
+                  setNewEntry({ ...newEntry, period: value })
+                }>
                 <SelectTrigger className="bg-card">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
@@ -160,8 +178,7 @@ export function PastIncomeTab({
                     <SelectItem
                       key={month.value}
                       value={month.value}
-                      disabled={isUsedPeriod(month.value)}
-                    >
+                      disabled={isUsedPeriod(month.value)}>
                       {month.label}
                     </SelectItem>
                   ))}
@@ -171,14 +188,23 @@ export function PastIncomeTab({
 
             {/* Amount Input */}
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-foreground/400">Monthly Amount</Label>
+              <Label className="text-foreground/400 text-xs">
+                Monthly Amount
+              </Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
+                <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                  $
+                </span>
                 <Input
                   type="number"
                   placeholder="0.00"
                   value={newEntry.amount || ""}
-                  onChange={(e) => setNewEntry({ ...newEntry, amount: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setNewEntry({
+                      ...newEntry,
+                      amount: parseFloat(e.target.value) || 0
+                    })
+                  }
                   min="0"
                   step="0.01"
                   className="bg-card pl-7"
@@ -189,11 +215,15 @@ export function PastIncomeTab({
 
           {/* Notes Input */}
           <div className="space-y-1">
-            <Label className="text-xs text-foreground/400">Notes (Optional)</Label>
+            <Label className="text-foreground/400 text-xs">
+              Notes (Optional)
+            </Label>
             <Input
               placeholder="e.g., First year at company, included bonus..."
               value={newEntry.notes || ""}
-              onChange={(e) => setNewEntry({ ...newEntry, notes: e.target.value })}
+              onChange={(e) =>
+                setNewEntry({ ...newEntry, notes: e.target.value })
+              }
               className="bg-card text-sm"
             />
           </div>
@@ -205,8 +235,7 @@ export function PastIncomeTab({
               variant="outline"
               size="sm"
               onClick={cancelAddEntry}
-              className="flex-1"
-            >
+              className="flex-1">
               Cancel
             </Button>
             <Button
@@ -214,8 +243,7 @@ export function PastIncomeTab({
               size="sm"
               onClick={saveNewEntry}
               disabled={!newEntry.period}
-              className="flex-1 bg-[#B8622A] hover:bg-[#B8622A]"
-            >
+              className="flex-1 bg-[#B8622A] hover:bg-[#B8622A]">
               Save Entry
             </Button>
           </div>
@@ -224,8 +252,8 @@ export function PastIncomeTab({
 
       {/* Entries List */}
       {sortedEntries.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground border rounded-lg bg-muted">
-          <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
+        <div className="text-muted-foreground bg-muted rounded-lg border py-8 text-center">
+          <History className="mx-auto mb-2 h-8 w-8 opacity-50" />
           <p>No historical data</p>
           <p className="text-sm">Add entries to track your income history</p>
         </div>
@@ -233,21 +261,21 @@ export function PastIncomeTab({
         <div className="space-y-3">
           {sortedEntries.map((entry, displayIndex) => {
             // Find the actual index in the original array
-            const actualIndex = pastIncomeHistory.findIndex(e => e === entry);
+            const actualIndex = pastIncomeHistory.findIndex((e) => e === entry)
 
             return (
               <div
                 key={`${entry.period}-${actualIndex}`}
-                className="bg-muted rounded-lg p-4 space-y-3"
-              >
+                className="bg-muted space-y-3 rounded-lg p-4">
                 <div className="flex gap-3">
                   {/* Period Selector */}
                   <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-foreground/400">Month</Label>
+                    <Label className="text-foreground/400 text-xs">Month</Label>
                     <Select
                       value={entry.period}
-                      onValueChange={(value) => updateEntry(actualIndex, "period", value)}
-                    >
+                      onValueChange={(value) =>
+                        updateEntry(actualIndex, "period", value)
+                      }>
                       <SelectTrigger className="bg-card">
                         <SelectValue />
                       </SelectTrigger>
@@ -256,8 +284,7 @@ export function PastIncomeTab({
                           <SelectItem
                             key={month.value}
                             value={month.value}
-                            disabled={isUsedPeriod(month.value, actualIndex)}
-                          >
+                            disabled={isUsedPeriod(month.value, actualIndex)}>
                             {month.label}
                           </SelectItem>
                         ))}
@@ -267,14 +294,20 @@ export function PastIncomeTab({
 
                   {/* Amount Input */}
                   <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-foreground/400">Monthly Amount</Label>
+                    <Label className="text-foreground/400 text-xs">
+                      Monthly Amount
+                    </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
+                      <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                        $
+                      </span>
                       <Input
                         type="number"
                         placeholder="0.00"
                         value={entry.amount || ""}
-                        onChange={(e) => updateEntry(actualIndex, "amount", e.target.value)}
+                        onChange={(e) =>
+                          updateEntry(actualIndex, "amount", e.target.value)
+                        }
                         min="0"
                         step="0.01"
                         className="bg-card pl-7"
@@ -289,8 +322,7 @@ export function PastIncomeTab({
                       variant="ghost"
                       size="icon"
                       onClick={() => confirmRemoveEntry(actualIndex)}
-                      className="h-10 w-10 text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
-                    >
+                      className="h-10 w-10 text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] hover:text-[#8B0000]">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -298,16 +330,20 @@ export function PastIncomeTab({
 
                 {/* Notes Input */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-foreground/400">Notes (Optional)</Label>
+                  <Label className="text-foreground/400 text-xs">
+                    Notes (Optional)
+                  </Label>
                   <Input
                     placeholder="e.g., First year at company, included bonus..."
                     value={entry.notes || ""}
-                    onChange={(e) => updateEntry(actualIndex, "notes", e.target.value)}
+                    onChange={(e) =>
+                      updateEntry(actualIndex, "notes", e.target.value)
+                    }
                     className="bg-card text-sm"
                   />
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       )}
@@ -318,17 +354,16 @@ export function PastIncomeTab({
         variant="outline"
         onClick={startAddEntry}
         disabled={isAddingNew}
-        className="w-full"
-      >
-        <Plus className="h-4 w-4 mr-2" />
+        className="w-full">
+        <Plus className="mr-2 h-4 w-4" />
         Add Historical Entry
       </Button>
 
       {/* Summary */}
       {sortedEntries.length > 0 && (
-        <div className="bg-[rgba(184,98,42,0.10)] rounded-lg p-4">
+        <div className="rounded-lg bg-[rgba(184,98,42,0.10)] p-4">
           <div className="text-sm text-[#7A3A0A]">
-            <div className="font-medium mb-1">Summary</div>
+            <div className="mb-1 font-medium">Summary</div>
             <div className="flex justify-between">
               <span>Total Entries:</span>
               <span className="font-semibold">{sortedEntries.length}</span>
@@ -336,7 +371,14 @@ export function PastIncomeTab({
             <div className="flex justify-between">
               <span>Average Monthly Income:</span>
               <span className="font-semibold">
-                ${(sortedEntries.reduce((sum, e) => sum + e.amount, 0) / sortedEntries.length).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                $
+                {(
+                  sortedEntries.reduce((sum, e) => sum + e.amount, 0) /
+                  sortedEntries.length
+                ).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
               </span>
             </div>
           </div>
@@ -344,22 +386,27 @@ export function PastIncomeTab({
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteIndex !== null} onOpenChange={(open) => !open && setDeleteIndex(null)}>
+      <AlertDialog
+        open={deleteIndex !== null}
+        onOpenChange={(open) => !open && setDeleteIndex(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Entry</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this historical income entry? This action cannot be undone.
+              Are you sure you want to delete this historical income entry? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={removeEntry} className="bg-[#E05555] hover:bg-[#E05555]">
+            <AlertDialogAction
+              onClick={removeEntry}
+              className="bg-[#E05555] hover:bg-[#E05555]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }

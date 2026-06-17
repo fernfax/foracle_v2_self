@@ -1,32 +1,33 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
+import { useMemo } from "react"
+import { BarChart3 } from "lucide-react"
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ReferenceLine,
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts"
+
+import { getMonthName } from "@/lib/budget-utils"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-} from "recharts";
-import { ResponsiveChart } from "@/components/ui/responsive-chart";
-import { BarChart3 } from "lucide-react";
-import { getMonthName } from "@/lib/budget-utils";
+  DialogTitle
+} from "@/components/ui/dialog"
+import { ResponsiveChart } from "@/components/ui/responsive-chart"
 
 interface DailySpendingGraphModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  dailySpendingData: { day: number; date: string; amount: number }[];
-  dailyBudget: number;
-  month: number;
-  year: number;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  dailySpendingData: { day: number; date: string; amount: number }[]
+  dailyBudget: number
+  month: number
+  year: number
 }
 
 export function DailySpendingGraphModal({
@@ -35,73 +36,79 @@ export function DailySpendingGraphModal({
   dailySpendingData,
   dailyBudget,
   month,
-  year,
+  year
 }: DailySpendingGraphModalProps) {
   // Calculate days in month and prepare chart data
   const chartData = useMemo(() => {
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const today = new Date();
-    const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
-    const currentDay = isCurrentMonth ? today.getDate() : daysInMonth;
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const today = new Date()
+    const isCurrentMonth =
+      today.getFullYear() === year && today.getMonth() + 1 === month
+    const currentDay = isCurrentMonth ? today.getDate() : daysInMonth
 
     // Create data for all days up to current day (or full month for past months)
-    const data: { day: number; spending: number | null }[] = [];
+    const data: { day: number; spending: number | null }[] = []
 
     // Create a map of day -> amount for quick lookup
-    const spendingMap = new Map<number, number>();
+    const spendingMap = new Map<number, number>()
     dailySpendingData.forEach((d) => {
-      spendingMap.set(d.day, d.amount);
-    });
+      spendingMap.set(d.day, d.amount)
+    })
 
     // Fill in all days
     for (let day = 1; day <= currentDay; day++) {
       data.push({
         day,
-        spending: spendingMap.get(day) ?? 0,
-      });
+        spending: spendingMap.get(day) ?? 0
+      })
     }
 
-    return data;
-  }, [dailySpendingData, month, year]);
+    return data
+  }, [dailySpendingData, month, year])
 
   // Calculate average spending (only days with spending)
   const averageSpending = useMemo(() => {
-    const daysWithSpending = chartData.filter((d) => d.spending !== null && d.spending > 0);
-    if (daysWithSpending.length === 0) return 0;
-    const total = daysWithSpending.reduce((sum, d) => sum + (d.spending || 0), 0);
-    return total / daysWithSpending.length;
-  }, [chartData]);
+    const daysWithSpending = chartData.filter(
+      (d) => d.spending !== null && d.spending > 0
+    )
+    if (daysWithSpending.length === 0) return 0
+    const total = daysWithSpending.reduce(
+      (sum, d) => sum + (d.spending || 0),
+      0
+    )
+    return total / daysWithSpending.length
+  }, [chartData])
 
   // Calculate max value for Y axis
   const maxValue = useMemo(() => {
-    const maxSpending = Math.max(...chartData.map((d) => d.spending || 0), 0);
-    return Math.max(maxSpending, dailyBudget, averageSpending) * 1.2;
-  }, [chartData, dailyBudget, averageSpending]);
+    const maxSpending = Math.max(...chartData.map((d) => d.spending || 0), 0)
+    return Math.max(maxSpending, dailyBudget, averageSpending) * 1.2
+  }, [chartData, dailyBudget, averageSpending])
 
-  const monthName = getMonthName(month, "long");
+  const monthName = getMonthName(month, "long")
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
+            <BarChart3 className="text-primary h-5 w-5" />
             Daily Spending Graph
           </DialogTitle>
         </DialogHeader>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-6 text-sm mb-2">
+        <div className="mb-2 flex items-center justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#B8622A]" />
+            <div className="h-3 w-3 rounded-full bg-[#B8622A]" />
             <span className="text-muted-foreground">Daily Spending</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-0 border-t-2 border-dashed border-[rgba(184,98,42,0.25)]" />
+            <div className="h-0 w-4 border-t-2 border-dashed border-[rgba(184,98,42,0.25)]" />
             <span className="text-muted-foreground">Daily Budget</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-0 border-t-2 border-dashed border-[rgba(0,196,170,0.25)]" />
+            <div className="h-0 w-4 border-t-2 border-dashed border-[rgba(0,196,170,0.25)]" />
             <span className="text-muted-foreground">Average Spending</span>
           </div>
         </div>
@@ -111,15 +118,22 @@ export function DailySpendingGraphModal({
           <ResponsiveChart width="100%" height="100%">
             <AreaChart
               data={chartData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
-            >
+              margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
               <defs>
-                <linearGradient id="spendingGradient-modal" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="spendingGradient-modal"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1">
                   <stop offset="5%" stopColor="#3A6B52" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#3A6B52" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.10)" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--foreground) / 0.10)"
+              />
               <XAxis
                 dataKey="day"
                 tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
@@ -129,7 +143,7 @@ export function DailySpendingGraphModal({
                   value: `${monthName} (Days)`,
                   position: "bottom",
                   offset: 5,
-                  style: { fontSize: 12, fill: "hsl(var(--muted-foreground))" },
+                  style: { fontSize: 12, fill: "hsl(var(--muted-foreground))" }
                 }}
               />
               <YAxis
@@ -142,7 +156,11 @@ export function DailySpendingGraphModal({
                   value: "Amount Spent",
                   angle: -90,
                   position: "insideLeft",
-                  style: { fontSize: 12, fill: "hsl(var(--muted-foreground))", textAnchor: "middle" },
+                  style: {
+                    fontSize: 12,
+                    fill: "hsl(var(--muted-foreground))",
+                    textAnchor: "middle"
+                  }
                 }}
               />
               <Tooltip
@@ -153,7 +171,7 @@ export function DailySpendingGraphModal({
                   border: "1px solid hsl(var(--border))",
                   borderRadius: "8px",
                   fontSize: "12px",
-                  color: "hsl(var(--foreground))",
+                  color: "hsl(var(--foreground))"
                 }}
                 itemStyle={{ color: "hsl(var(--foreground))" }}
                 labelStyle={{ color: "hsl(var(--muted-foreground))" }}
@@ -182,7 +200,12 @@ export function DailySpendingGraphModal({
                 strokeWidth={2}
                 fill="url(#spendingGradient-modal)"
                 dot={{ fill: "#3A6B52", strokeWidth: 0, r: 4 }}
-                activeDot={{ r: 6, stroke: "#3A6B52", strokeWidth: 2, fill: "white" }}
+                activeDot={{
+                  r: 6,
+                  stroke: "#3A6B52",
+                  strokeWidth: 2,
+                  fill: "white"
+                }}
                 connectNulls
               />
             </AreaChart>
@@ -190,5 +213,5 @@ export function DailySpendingGraphModal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

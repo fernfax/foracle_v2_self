@@ -1,11 +1,11 @@
-import { ReactNode } from "react";
+import { ReactNode } from "react"
 
 interface PageHeaderProps {
-  title: string;
+  title: string
   /** Optional right-side controls (e.g. <Button>Beta View</Button>). */
-  actions?: ReactNode;
+  actions?: ReactNode
   /** Optional tab strip rendered below the title row. */
-  tabs?: ReactNode;
+  tabs?: ReactNode
 }
 
 /**
@@ -36,12 +36,12 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
   return (
-    <div className="sticky top-[env(safe-area-inset-top)] desktop:top-0 z-30 bg-background border-b border-border/20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 desktop:mt-0">
+    <div className="desktop:top-0 bg-background border-border/20 desktop:mt-0 sticky top-[env(safe-area-inset-top)] z-30 -mx-4 -mt-6 border-b px-4 sm:-mx-6 sm:-mt-8 sm:px-6 lg:-mx-8 lg:px-8">
       {/* min-h keeps the title row a uniform height across all tabs whether or
           not a page supplies `actions` (e.g. Budget's month pill) — so e.g. the
           Insurance header isn't shorter than the Budget header. */}
       <div className="flex min-h-[3.25rem] items-center justify-between gap-4 py-2">
-        <h1 className="text-[17px] font-display font-medium tracking-tight text-foreground">
+        <h1 className="font-display text-foreground text-[17px] font-medium tracking-tight">
           {title}
         </h1>
         {actions ? (
@@ -49,8 +49,8 @@ export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
         ) : null}
       </div>
       {tabs ? (
-        <div className="overflow-x-auto scrollbar-hide -mt-0.5">{tabs}</div>
+        <div className="scrollbar-hide -mt-0.5 overflow-x-auto">{tabs}</div>
       ) : null}
     </div>
-  );
+  )
 }

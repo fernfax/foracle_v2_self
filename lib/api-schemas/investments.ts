@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { z } from "zod"
 
-const moneyString = z.string().regex(/^-?\d+(\.\d{1,2})?$/);
-const yieldString = z.string().regex(/^-?\d+(\.\d{1,2})?$/);
+const moneyString = z.string().regex(/^-?\d+(\.\d{1,2})?$/)
+const yieldString = z.string().regex(/^-?\d+(\.\d{1,2})?$/)
 
 const investmentTypeEnum = z.enum([
   "stock",
@@ -10,24 +10,24 @@ const investmentTypeEnum = z.enum([
   "etf",
   "crypto",
   "mutual_fund",
-  "reit",
-]);
+  "reit"
+])
 
-const contributionFrequencyEnum = z.enum(["monthly", "custom"]);
+const contributionFrequencyEnum = z.enum(["monthly", "custom"])
 
 const booleanLike = z
   .union([
     z.boolean(),
     z.literal("true").transform(() => true),
-    z.literal("false").transform(() => false),
+    z.literal("false").transform(() => false)
   ])
-  .pipe(z.boolean());
+  .pipe(z.boolean())
 
 export const listInvestmentsQuerySchema = z.object({
   isActive: booleanLike.optional(),
-  type: investmentTypeEnum.optional(),
-});
-export type ListInvestmentsQuery = z.infer<typeof listInvestmentsQuerySchema>;
+  type: investmentTypeEnum.optional()
+})
+export type ListInvestmentsQuery = z.infer<typeof listInvestmentsQuerySchema>
 
 export const createInvestmentBodySchema = z.object({
   id: z.string().uuid().optional(),
@@ -37,9 +37,9 @@ export const createInvestmentBodySchema = z.object({
   projectedYield: yieldString,
   contributionAmount: moneyString,
   contributionFrequency: contributionFrequencyEnum,
-  customMonths: z.string().nullish(),
-});
-export type CreateInvestmentBody = z.infer<typeof createInvestmentBodySchema>;
+  customMonths: z.string().nullish()
+})
+export type CreateInvestmentBody = z.infer<typeof createInvestmentBodySchema>
 
 export const updateInvestmentBodySchema = z
   .object({
@@ -50,9 +50,9 @@ export const updateInvestmentBodySchema = z
     contributionAmount: moneyString.optional(),
     contributionFrequency: contributionFrequencyEnum.optional(),
     customMonths: z.string().nullish(),
-    isActive: z.boolean().optional(),
+    isActive: z.boolean().optional()
   })
   .refine((v) => Object.keys(v).length > 0, {
-    message: "At least one field must be provided",
-  });
-export type UpdateInvestmentBody = z.infer<typeof updateInvestmentBodySchema>;
+    message: "At least one field must be provided"
+  })
+export type UpdateInvestmentBody = z.infer<typeof updateInvestmentBodySchema>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
 // Public route — lives OUTSIDE app/(app)/, so the auth-gated layout never runs
 // and proxy.ts (Clerk) doesn't protect it. Force-static so it can be precached
@@ -9,11 +9,11 @@ import type { Metadata } from "next";
 // styling is inlined and theme follows prefers-color-scheme (next-themes' .dark
 // class needs app JS, which we can't rely on offline). The logo is precached by
 // the service worker (see public/sw.js PRECACHE_URLS).
-export const dynamic = "force-static";
+export const dynamic = "force-static"
 
 export const metadata: Metadata = {
-  title: "Offline · Foracle",
-};
+  title: "Offline · Foracle"
+}
 
 const css = `
   .of-main {
@@ -41,7 +41,7 @@ const css = `
     .of-btn { background: #D4845A; color: #141E1D; }
     .of-foot { color: rgba(240,235,224,0.45); }
   }
-`;
+`
 
 export default function OfflinePage() {
   return (
@@ -51,17 +51,26 @@ export default function OfflinePage() {
         {/* Plain <img> on purpose: next/image needs the server-side optimizer,
             which is unavailable offline. The raw file is precached. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="of-logo" src="/logo-144.png" alt="Foracle" width={64} height={64} />
+        <img
+          className="of-logo"
+          src="/logo-144.png"
+          alt="Foracle"
+          width={64}
+          height={64}
+        />
         <div>
           <h1 className="of-title">You&apos;re offline</h1>
           <p className="of-copy">
-            Foracle can&apos;t reach the network right now. Your finances need a connection to stay
-            accurate, so the app is paused until you&apos;re back online.
+            Foracle can&apos;t reach the network right now. Your finances need a
+            connection to stay accurate, so the app is paused until you&apos;re
+            back online.
           </p>
         </div>
-        <a className="of-btn" href="/">Try again</a>
+        <a className="of-btn" href="/">
+          Try again
+        </a>
         <p className="of-foot">Foracle</p>
       </main>
     </>
-  );
+  )
 }

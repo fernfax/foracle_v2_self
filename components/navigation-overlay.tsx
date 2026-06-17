@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
+import { usePathname } from "next/navigation"
 
 // Anti-flash: don't show the blur until a navigation has been pending this long,
 // so instant/prefetched tab switches stay crisp and never flicker.
-const SHOW_DELAY_MS = 150;
+const SHOW_DELAY_MS = 150
 // Swap the copy after a long wait (e.g. a Render cold start) so it reads as
 // intentional rather than frozen.
-const LONG_WAIT_MS = 7000;
+const LONG_WAIT_MS = 7000
 // Failsafe: never leave the overlay stuck (e.g. a link that preventDefaults and
 // never navigates). Longer than a typical cold start so real loads aren't cut off.
-const SAFETY_MS = 30000;
+const SAFETY_MS = 30000
 
 /**
  * Immersive route-change overlay.
@@ -28,76 +28,80 @@ const SAFETY_MS = 30000;
  * when usePathname commits to the new route. Respects prefers-reduced-motion.
  */
 export function NavigationOverlay() {
-  const pathname = usePathname();
-  const [visible, setVisible] = useState(false);
-  const [longWait, setLongWait] = useState(false);
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const pathname = usePathname()
+  const [visible, setVisible] = useState(false)
+  const [longWait, setLongWait] = useState(false)
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
   // Route committed (pathname changed) — also runs on mount. Clear + hide.
   useEffect(() => {
-    timersRef.current.forEach(clearTimeout);
-    timersRef.current = [];
-    setVisible(false);
-    setLongWait(false);
-  }, [pathname]);
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current = []
+    setVisible(false)
+    setLongWait(false)
+  }, [pathname])
 
   useEffect(() => {
     const clearAll = () => {
-      timersRef.current.forEach(clearTimeout);
-      timersRef.current = [];
-    };
+      timersRef.current.forEach(clearTimeout)
+      timersRef.current = []
+    }
     const onClick = (e: MouseEvent) => {
       // Ignore modified clicks (new tab/window) and non-primary buttons.
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
-        return;
+        return
       }
-      const anchor = (e.target as HTMLElement | null)?.closest("a");
-      if (!anchor) return;
-      const href = anchor.getAttribute("href");
-      if (!href || anchor.target === "_blank" || anchor.hasAttribute("download")) {
-        return;
+      const anchor = (e.target as HTMLElement | null)?.closest("a")
+      if (!anchor) return
+      const href = anchor.getAttribute("href")
+      if (
+        !href ||
+        anchor.target === "_blank" ||
+        anchor.hasAttribute("download")
+      ) {
+        return
       }
-      let url: URL;
+      let url: URL
       try {
-        url = new URL(href, window.location.href);
+        url = new URL(href, window.location.href)
       } catch {
-        return;
+        return
       }
       // Same-origin, and a real segment change (not a #hash or ?query on the
       // current path, which doesn't trigger a page load).
-      if (url.origin !== window.location.origin) return;
-      if (url.pathname === window.location.pathname) return;
+      if (url.origin !== window.location.origin) return
+      if (url.pathname === window.location.pathname) return
 
-      clearAll();
+      clearAll()
       const showT = setTimeout(() => {
-        setVisible(true);
+        setVisible(true)
         const longT = setTimeout(
           () => setLongWait(true),
           LONG_WAIT_MS - SHOW_DELAY_MS
-        );
+        )
         const safeT = setTimeout(() => {
-          setVisible(false);
-          setLongWait(false);
-        }, SAFETY_MS);
-        timersRef.current.push(longT, safeT);
-      }, SHOW_DELAY_MS);
-      timersRef.current.push(showT);
-    };
+          setVisible(false)
+          setLongWait(false)
+        }, SAFETY_MS)
+        timersRef.current.push(longT, safeT)
+      }, SHOW_DELAY_MS)
+      timersRef.current.push(showT)
+    }
 
-    document.addEventListener("click", onClick, true);
+    document.addEventListener("click", onClick, true)
     return () => {
-      document.removeEventListener("click", onClick, true);
-      clearAll();
-    };
-  }, []);
+      document.removeEventListener("click", onClick, true)
+      clearAll()
+    }
+  }, [])
 
-  if (!visible) return null;
+  if (!visible) return null
 
   return (
     <>
       {/* Thin indeterminate progress bar — above the nav (z-50). Motion only. */}
-      <div className="pointer-events-none fixed inset-x-0 top-[env(safe-area-inset-top)] z-[60] hidden h-[3px] overflow-hidden bg-primary/10 motion-safe:block">
-        <div className="h-full w-full bg-primary motion-safe:animate-[navProgress_1.1s_ease-in-out_infinite]" />
+      <div className="bg-primary/10 pointer-events-none fixed inset-x-0 top-[env(safe-area-inset-top)] z-[60] hidden h-[3px] overflow-hidden motion-safe:block">
+        <div className="bg-primary h-full w-full motion-safe:animate-[navProgress_1.1s_ease-in-out_infinite]" />
       </div>
 
       {/* Content-area frost — nav/sidebar (z-50) paint on top and stay crisp.
@@ -107,11 +111,10 @@ export function NavigationOverlay() {
       <div
         aria-live="polite"
         aria-busy="true"
-        className="pointer-events-none fixed inset-0 z-[45] flex items-center justify-center bg-background/30 backdrop-blur-md motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150"
-      >
+        className="bg-background/30 motion-safe:animate-in motion-safe:fade-in pointer-events-none fixed inset-0 z-[45] flex items-center justify-center backdrop-blur-md motion-safe:duration-150">
         <div className="flex flex-col items-center gap-3">
           <div className="relative flex h-16 w-16 items-center justify-center">
-            <span className="absolute inset-0 rounded-full border-2 border-primary/15 border-t-primary/70 motion-safe:animate-spin" />
+            <span className="border-primary/15 border-t-primary/70 absolute inset-0 rounded-full border-2 motion-safe:animate-spin" />
             {/* Native gunmetal mark reads well on the light frost; in dark mode
                 invert it to cream so it doesn't vanish on the nightfall blur.
                 Mirrors the shell wordmark's dark:brightness-0 dark:invert. */}
@@ -124,11 +127,11 @@ export function NavigationOverlay() {
               className="opacity-90 dark:brightness-0 dark:invert"
             />
           </div>
-          <span className="font-display text-xs tracking-wide text-muted-foreground">
+          <span className="font-display text-muted-foreground text-xs tracking-wide">
             {longWait ? "Taking a little longer…" : "Loading…"}
           </span>
         </div>
       </div>
     </>
-  );
+  )
 }

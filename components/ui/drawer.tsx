@@ -21,7 +21,7 @@ const DrawerOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
       className
     )}
     {...props}
@@ -38,7 +38,7 @@ const DrawerContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 flex flex-col bg-background rounded-t-[20px] border-t border-border shadow-xl",
+        "bg-background border-border fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[20px] border-t shadow-xl",
         "h-[85vh] max-h-[85vh]",
         "duration-300 ease-out",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -46,11 +46,10 @@ const DrawerContent = React.forwardRef<
         "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
         className
       )}
-      {...props}
-    >
+      {...props}>
       {/* Drag Handle */}
       <div className="flex justify-center pt-3 pb-2">
-        <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        <div className="bg-muted-foreground/30 h-1 w-10 rounded-full" />
       </div>
       {children}
     </DialogPrimitive.Content>
@@ -63,10 +62,7 @@ const DrawerHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn(
-      "flex items-center justify-between px-4 pb-2",
-      className
-    )}
+    className={cn("flex items-center justify-between px-4 pb-2", className)}
     {...props}
   />
 )
@@ -76,13 +72,7 @@ const DrawerBody = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex-1 overflow-y-auto px-4",
-      className
-    )}
-    {...props}
-  />
+  <div className={cn("flex-1 overflow-y-auto px-4", className)} {...props} />
 )
 DrawerBody.displayName = "DrawerBody"
 
@@ -90,13 +80,7 @@ const DrawerFooter = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex-shrink-0 px-4 pb-4",
-      className
-    )}
-    {...props}
-  />
+  <div className={cn("flex-shrink-0 px-4 pb-4", className)} {...props} />
 )
 DrawerFooter.displayName = "DrawerFooter"
 
@@ -107,7 +91,7 @@ const DrawerTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
+      "text-lg leading-none font-semibold tracking-tight",
       className
     )}
     {...props}
@@ -121,7 +105,7 @@ const DrawerDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-muted-foreground text-sm", className)}
     {...props}
   />
 ))
@@ -138,5 +122,5 @@ export {
   DrawerBody,
   DrawerFooter,
   DrawerTitle,
-  DrawerDescription,
+  DrawerDescription
 }

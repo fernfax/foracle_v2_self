@@ -1,38 +1,39 @@
-import { and, asc, eq } from "drizzle-orm";
-import { randomUUID } from "crypto";
-import { db } from "@/db";
-import { expenses, vehicleAssets } from "@/db/schema";
-import type { AuthContext } from "@/lib/auth-context";
+import { randomUUID } from "crypto"
+import { db } from "@/db"
+import { and, asc, eq } from "drizzle-orm"
+
 import type {
   CreateVehicleAssetBody,
   ListVehicleAssetsQuery,
-  UpdateVehicleAssetBody,
-} from "@/lib/api-schemas/vehicle-assets";
+  UpdateVehicleAssetBody
+} from "@/lib/api-schemas/vehicle-assets"
+import type { AuthContext } from "@/lib/auth-context"
+import { expenses, vehicleAssets } from "@/db/schema"
 
-export type VehicleAssetRow = typeof vehicleAssets.$inferSelect;
+export type VehicleAssetRow = typeof vehicleAssets.$inferSelect
 
 export class VehicleAssetNotFoundError extends Error {
   constructor() {
-    super("Vehicle asset not found");
+    super("Vehicle asset not found")
   }
 }
 
 export type CreateVehicleAssetResult =
   | { status: "created"; row: VehicleAssetRow }
-  | { status: "conflict"; row: VehicleAssetRow };
+  | { status: "conflict"; row: VehicleAssetRow }
 
 function expenseNameFor(vehicleName: string, override?: string | null): string {
-  return override?.trim() ? override : `${vehicleName} - Loan Payment`;
+  return override?.trim() ? override : `${vehicleName} - Loan Payment`
 }
 
 async function ensureLinkedExpense(opts: {
-  ctx: AuthContext;
-  vehicleId: string;
-  vehicleName: string;
-  amount: string;
-  startDate: string;
-  expenseName?: string | null;
-  existingExpenseId: string | null;
+  ctx: AuthContext
+  vehicleId: string
+  vehicleName: string
+  amount: string
+  startDate: string
+  expenseName?: string | null
+  existingExpenseId: string | null
 }): Promise<string> {
   if (opts.existingExpenseId) {
     await db
@@ -41,12 +42,12 @@ async function ensureLinkedExpense(opts: {
         name: expenseNameFor(opts.vehicleName, opts.expenseName),
         amount: opts.amount,
         startDate: opts.startDate,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       })
-      .where(eq(expenses.id, opts.existingExpenseId));
-    return opts.existingExpenseId;
+      .where(eq(expenses.id, opts.existingExpenseId))
+    return opts.existingExpenseId
   }
-  const id = randomUUID();
+  const id = randomUUID()
   await db.insert(expenses).values({
     id,
     userId: opts.ctx.userId,
@@ -59,23 +60,23 @@ async function ensureLinkedExpense(opts: {
     frequency: "Monthly",
     startDate: opts.startDate,
     description: `Auto-generated from vehicle asset: ${opts.vehicleName}`,
-    isActive: true,
-  });
-  return id;
+    isActive: true
+  })
+  return id
 }
 
 export async function listVehicleAssets(
   ctx: AuthContext,
   filters: ListVehicleAssetsQuery = {}
 ): Promise<VehicleAssetRow[]> {
-  const conditions = [eq(vehicleAssets.familyId, ctx.familyId)];
+  const conditions = [eq(vehicleAssets.familyId, ctx.familyId)]
   if (filters.isActive !== undefined)
-    conditions.push(eq(vehicleAssets.isActive, filters.isActive));
+    conditions.push(eq(vehicleAssets.isActive, filters.isActive))
   return db
     .select()
     .from(vehicleAssets)
     .where(and(...conditions))
-    .orderBy(asc(vehicleAssets.createdAt));
+    .orderBy(asc(vehicleAssets.createdAt))
 }
 
 export async function getVehicleAssetById(
@@ -83,34 +84,39 @@ export async function getVehicleAssetById(
   id: string
 ): Promise<VehicleAssetRow | null> {
   const row = await db.query.vehicleAssets.findFirst({
-    where: and(eq(vehicleAssets.id, id), eq(vehicleAssets.familyId, ctx.familyId)),
-  });
-  return row ?? null;
+    where: and(
+      eq(vehicleAssets.id, id),
+      eq(vehicleAssets.familyId, ctx.familyId)
+    )
+  })
+  return row ?? null
 }
 
 export async function createVehicleAsset(
   ctx: AuthContext,
   body: CreateVehicleAssetBody
 ): Promise<CreateVehicleAssetResult> {
-  const vehicleId = body.id ?? randomUUID();
+  const vehicleId = body.id ?? randomUUID()
 
   if (body.id) {
     const existing = await db.query.vehicleAssets.findFirst({
-      where: eq(vehicleAssets.id, body.id),
-    });
+      where: eq(vehicleAssets.id, body.id)
+    })
     if (existing) {
       if (existing.familyId !== ctx.familyId) {
-        const err = new Error("id collision with another family's row") as Error & {
-          code?: string;
-        };
-        err.code = "CONFLICT";
-        throw err;
+        const err = new Error(
+          "id collision with another family's row"
+        ) as Error & {
+          code?: string
+        }
+        err.code = "CONFLICT"
+        throw err
       }
-      return { status: "conflict", row: existing };
+      return { status: "conflict", row: existing }
     }
   }
 
-  let linkedExpenseId: string | null = null;
+  let linkedExpenseId: string | null = null
   if (
     body.addToExpenditures &&
     body.monthlyLoanPayment &&
@@ -123,8 +129,8 @@ export async function createVehicleAsset(
       amount: body.monthlyLoanPayment,
       startDate: body.purchaseDate,
       expenseName: body.expenseName,
-      existingExpenseId: null,
-    });
+      existingExpenseId: null
+    })
   }
 
   const [row] = await db
@@ -144,10 +150,10 @@ export async function createVehicleAsset(
       loanTenureMonths: body.loanTenureMonths ?? null,
       loanAmountRepaid: body.loanAmountRepaid ?? null,
       monthlyLoanPayment: body.monthlyLoanPayment ?? null,
-      isActive: true,
+      isActive: true
     })
-    .returning();
-  return { status: "created", row };
+    .returning()
+  return { status: "created", row }
 }
 
 export async function updateVehicleAsset(
@@ -155,18 +161,21 @@ export async function updateVehicleAsset(
   id: string,
   patch: UpdateVehicleAssetBody
 ): Promise<VehicleAssetRow> {
-  const existing = await getVehicleAssetById(ctx, id);
-  if (!existing) throw new VehicleAssetNotFoundError();
+  const existing = await getVehicleAssetById(ctx, id)
+  if (!existing) throw new VehicleAssetNotFoundError()
 
-  let linkedExpenseId = existing.linkedExpenseId;
-  const effectiveName = patch.vehicleName ?? existing.vehicleName;
-  const effectiveStart = patch.purchaseDate ?? existing.purchaseDate;
+  let linkedExpenseId = existing.linkedExpenseId
+  const effectiveName = patch.vehicleName ?? existing.vehicleName
+  const effectiveStart = patch.purchaseDate ?? existing.purchaseDate
   const effectiveMonthly =
     patch.monthlyLoanPayment !== undefined
       ? patch.monthlyLoanPayment
-      : existing.monthlyLoanPayment;
+      : existing.monthlyLoanPayment
 
-  if (patch.addToExpenditures !== undefined || patch.monthlyLoanPayment !== undefined) {
+  if (
+    patch.addToExpenditures !== undefined ||
+    patch.monthlyLoanPayment !== undefined
+  ) {
     if (
       patch.addToExpenditures === true &&
       effectiveMonthly &&
@@ -179,55 +188,60 @@ export async function updateVehicleAsset(
         amount: effectiveMonthly,
         startDate: effectiveStart,
         expenseName: patch.expenseName,
-        existingExpenseId: linkedExpenseId,
-      });
+        existingExpenseId: linkedExpenseId
+      })
     } else if (patch.addToExpenditures === false && linkedExpenseId) {
-      await db.delete(expenses).where(eq(expenses.id, linkedExpenseId));
-      linkedExpenseId = null;
+      await db.delete(expenses).where(eq(expenses.id, linkedExpenseId))
+      linkedExpenseId = null
     }
   }
 
   const update: Partial<typeof vehicleAssets.$inferInsert> = {
     updatedAt: new Date(),
-    linkedExpenseId,
-  };
-  if (patch.vehicleName !== undefined) update.vehicleName = patch.vehicleName;
-  if (patch.purchaseDate !== undefined) update.purchaseDate = patch.purchaseDate;
-  if (patch.coeExpiryDate !== undefined) update.coeExpiryDate = patch.coeExpiryDate ?? null;
+    linkedExpenseId
+  }
+  if (patch.vehicleName !== undefined) update.vehicleName = patch.vehicleName
+  if (patch.purchaseDate !== undefined) update.purchaseDate = patch.purchaseDate
+  if (patch.coeExpiryDate !== undefined)
+    update.coeExpiryDate = patch.coeExpiryDate ?? null
   if (patch.originalPurchasePrice !== undefined)
-    update.originalPurchasePrice = patch.originalPurchasePrice;
+    update.originalPurchasePrice = patch.originalPurchasePrice
   if (patch.loanAmountTaken !== undefined)
-    update.loanAmountTaken = patch.loanAmountTaken ?? null;
+    update.loanAmountTaken = patch.loanAmountTaken ?? null
   if (patch.loanInterestRate !== undefined)
-    update.loanInterestRate = patch.loanInterestRate ?? null;
+    update.loanInterestRate = patch.loanInterestRate ?? null
   if (patch.loanTenureYears !== undefined)
-    update.loanTenureYears = patch.loanTenureYears ?? null;
+    update.loanTenureYears = patch.loanTenureYears ?? null
   if (patch.loanTenureMonths !== undefined)
-    update.loanTenureMonths = patch.loanTenureMonths ?? null;
+    update.loanTenureMonths = patch.loanTenureMonths ?? null
   if (patch.loanAmountRepaid !== undefined)
-    update.loanAmountRepaid = patch.loanAmountRepaid ?? null;
+    update.loanAmountRepaid = patch.loanAmountRepaid ?? null
   if (patch.monthlyLoanPayment !== undefined)
-    update.monthlyLoanPayment = patch.monthlyLoanPayment ?? null;
-  if (patch.isActive !== undefined) update.isActive = patch.isActive;
+    update.monthlyLoanPayment = patch.monthlyLoanPayment ?? null
+  if (patch.isActive !== undefined) update.isActive = patch.isActive
 
   const [row] = await db
     .update(vehicleAssets)
     .set(update)
-    .where(and(eq(vehicleAssets.id, id), eq(vehicleAssets.familyId, ctx.familyId)))
-    .returning();
-  return row;
+    .where(
+      and(eq(vehicleAssets.id, id), eq(vehicleAssets.familyId, ctx.familyId))
+    )
+    .returning()
+  return row
 }
 
 export async function deleteVehicleAsset(
   ctx: AuthContext,
   id: string
 ): Promise<void> {
-  const existing = await getVehicleAssetById(ctx, id);
-  if (!existing) throw new VehicleAssetNotFoundError();
+  const existing = await getVehicleAssetById(ctx, id)
+  if (!existing) throw new VehicleAssetNotFoundError()
   if (existing.linkedExpenseId) {
-    await db.delete(expenses).where(eq(expenses.id, existing.linkedExpenseId));
+    await db.delete(expenses).where(eq(expenses.id, existing.linkedExpenseId))
   }
   await db
     .delete(vehicleAssets)
-    .where(and(eq(vehicleAssets.id, id), eq(vehicleAssets.familyId, ctx.familyId)));
+    .where(
+      and(eq(vehicleAssets.id, id), eq(vehicleAssets.familyId, ctx.familyId))
+    )
 }

@@ -1,65 +1,73 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import { formatBudgetCurrency } from "@/lib/budget-utils";
-import { deleteBudgetShift, type BudgetShift } from "@/lib/actions/budget-shifts";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { useState } from "react"
+import { format } from "date-fns"
+import { ArrowRight, ChevronDown, ChevronUp, Trash2 } from "lucide-react"
+
+import {
+  deleteBudgetShift,
+  type BudgetShift
+} from "@/lib/actions/budget-shifts"
+import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 interface BudgetShiftHistoryProps {
-  shifts: BudgetShift[];
-  onShiftDeleted?: () => void;
-  readOnly?: boolean;
-  defaultExpanded?: boolean;
+  shifts: BudgetShift[]
+  onShiftDeleted?: () => void
+  readOnly?: boolean
+  defaultExpanded?: boolean
 }
 
-export function BudgetShiftHistory({ shifts, onShiftDeleted, readOnly = false, defaultExpanded = false }: BudgetShiftHistoryProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+export function BudgetShiftHistory({
+  shifts,
+  onShiftDeleted,
+  readOnly = false,
+  defaultExpanded = false
+}: BudgetShiftHistoryProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   if (shifts.length === 0) {
-    return null;
+    return null
   }
 
   const handleDelete = async (shiftId: string) => {
-    setDeletingId(shiftId);
+    setDeletingId(shiftId)
     try {
-      await deleteBudgetShift(shiftId);
-      onShiftDeleted?.();
+      await deleteBudgetShift(shiftId)
+      onShiftDeleted?.()
     } catch (error) {
-      console.error("Error deleting shift:", error);
+      console.error("Error deleting shift:", error)
     } finally {
-      setDeletingId(null);
+      setDeletingId(null)
     }
-  };
+  }
 
   // Calculate total shifted this month
-  const totalShifted = shifts.reduce((sum, s) => sum + parseFloat(s.amount), 0);
+  const totalShifted = shifts.reduce((sum, s) => sum + parseFloat(s.amount), 0)
 
   return (
     <Card className="p-4">
       {/* Header */}
       <button
-        className="w-full flex items-center justify-between"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+        className="flex w-full items-center justify-between"
+        onClick={() => setIsExpanded(!isExpanded)}>
         <div>
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left">
+          <div className="text-muted-foreground text-left text-xs font-semibold tracking-wider uppercase">
             Budget Adjustments
           </div>
-          <div className="text-sm text-muted-foreground mt-1">
+          <div className="text-muted-foreground mt-1 text-sm">
             {shifts.length} shift{shifts.length !== 1 ? "s" : ""} this month
             {" · "}
             {formatBudgetCurrency(totalShifted)} moved
           </div>
         </div>
         {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp className="text-muted-foreground h-4 w-4" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="text-muted-foreground h-4 w-4" />
         )}
       </button>
 
@@ -69,15 +77,18 @@ export function BudgetShiftHistory({ shifts, onShiftDeleted, readOnly = false, d
           {shifts.map((shift) => (
             <div
               key={shift.id}
-              className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg"
-            >
-              <div className="flex-1 min-w-0">
+              className="bg-muted/30 flex items-center gap-3 rounded-lg p-3">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium truncate">{shift.fromCategoryName}</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium truncate">{shift.toCategoryName}</span>
+                  <span className="truncate font-medium">
+                    {shift.fromCategoryName}
+                  </span>
+                  <ArrowRight className="text-muted-foreground h-3 w-3 flex-shrink-0" />
+                  <span className="truncate font-medium">
+                    {shift.toCategoryName}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
                   <span>{formatBudgetCurrency(parseFloat(shift.amount))}</span>
                   {shift.note && (
                     <>
@@ -86,7 +97,7 @@ export function BudgetShiftHistory({ shifts, onShiftDeleted, readOnly = false, d
                     </>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
+                <div className="text-muted-foreground mt-0.5 text-xs">
                   {format(new Date(shift.createdAt), "d MMM, h:mm a")}
                 </div>
               </div>
@@ -94,11 +105,15 @@ export function BudgetShiftHistory({ shifts, onShiftDeleted, readOnly = false, d
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-[#8B0000]"
+                  className="text-muted-foreground h-8 w-8 hover:text-[#8B0000]"
                   onClick={() => handleDelete(shift.id)}
-                  disabled={deletingId === shift.id}
-                >
-                  <Trash2 className={cn("h-4 w-4", deletingId === shift.id && "animate-pulse")} />
+                  disabled={deletingId === shift.id}>
+                  <Trash2
+                    className={cn(
+                      "h-4 w-4",
+                      deletingId === shift.id && "animate-pulse"
+                    )}
+                  />
                 </Button>
               )}
             </div>
@@ -106,5 +121,5 @@ export function BudgetShiftHistory({ shifts, onShiftDeleted, readOnly = false, d
         </div>
       )}
     </Card>
-  );
+  )
 }

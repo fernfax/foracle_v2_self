@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useEffect, useState, type ComponentProps } from "react";
-import { ResponsiveContainer } from "recharts";
+import { useEffect, useState, type ComponentProps } from "react"
+import { ResponsiveContainer } from "recharts"
 
 /**
  * Mount-gated wrapper around Recharts' `ResponsiveContainer`.
@@ -18,19 +18,19 @@ import { ResponsiveContainer } from "recharts";
 export function ResponsiveChart(
   props: ComponentProps<typeof ResponsiveContainer>
 ) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   if (!mounted) {
-    const { width = "100%", height = "100%", className, style } = props;
+    const { width = "100%", height = "100%", className, style } = props
     return (
       <div
         className={typeof className === "string" ? className : undefined}
         style={{ width, height, ...style }}
         aria-hidden
       />
-    );
+    )
   }
 
-  return <ResponsiveContainer {...props} />;
+  return <ResponsiveContainer {...props} />
 }

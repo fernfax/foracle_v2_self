@@ -1,5 +1,17 @@
-import { pgTable, text, timestamp, decimal, integer, varchar, date, boolean, jsonb, index, customType } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm"
+import {
+  boolean,
+  customType,
+  date,
+  decimal,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  varchar
+} from "drizzle-orm/pg-core"
 
 // =============================================================================
 // Custom Types for pgvector
@@ -8,22 +20,23 @@ import { relations, sql } from "drizzle-orm";
 // Custom vector type for pgvector extension
 // Voyage AI voyage-3-lite outputs 512 dimensions, OpenAI text-embedding-3-small outputs 1536 dimensions
 // We use 1536 as max to support both providers
-const vector = customType<{ data: number[]; driverData: string; config: { dimensions: number } }>({
+const vector = customType<{
+  data: number[]
+  driverData: string
+  config: { dimensions: number }
+}>({
   dataType(config) {
-    const dimensions = config?.dimensions ?? 1536;
-    return `vector(${dimensions})`;
+    const dimensions = config?.dimensions ?? 1536
+    return `vector(${dimensions})`
   },
   toDriver(value: number[]): string {
-    return `[${value.join(",")}]`;
+    return `[${value.join(",")}]`
   },
   fromDriver(value: string): number[] {
     // Parse "[1,2,3]" format from Postgres
-    return value
-      .slice(1, -1)
-      .split(",")
-      .map(Number);
-  },
-});
+    return value.slice(1, -1).split(",").map(Number)
+  }
+})
 
 // Users table - synced with Clerk
 export const users = pgTable("users", {
@@ -45,8 +58,8 @@ export const users = pgTable("users", {
   // inserting the user row.
   familyId: varchar("family_id", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Families table - groups multiple Clerk users into a single shared account.
 // Every user belongs to exactly one family (one-family-per-user, v1).
@@ -56,11 +69,14 @@ export const families = pgTable("families", {
   id: varchar("id", { length: 255 }).primaryKey(),
   // The Master User can invite/remove members. Use `set null` so removing the master's
   // Clerk account does not orphan-delete the family — admin promotion is a separate flow.
-  masterUserId: varchar("master_user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }),
+  masterUserId: varchar("master_user_id", { length: 255 }).references(
+    () => users.id,
+    { onDelete: "set null" }
+  ),
   name: varchar("name", { length: 255 }), // Optional household name
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Family members table.
 // Two row kinds coexist:
@@ -68,21 +84,28 @@ export const families = pgTable("families", {
 //   2. Clerk-linked rows — populated by the invite flow. status='pending' before acceptance, 'active' after.
 export const familyMembers = pgTable("family_members", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   // clerkUserId: present only for invited members who accepted. `set null` so a Clerk
   // user deletion demotes the row to informational rather than removing it.
   // Uniqueness is enforced by a partial index `family_members_clerk_user_id_unique`
   // (in 0003_family_id_additive.sql) — partial because we want many NULL rows
   // (informational members) but at most one Clerk-linked row per user.
-  clerkUserId: varchar("clerk_user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }),
+  clerkUserId: varchar("clerk_user_id", { length: 255 }).references(
+    () => users.id,
+    { onDelete: "set null" }
+  ),
   status: varchar("status", { length: 20 }).notNull().default("active"), // active | pending | revoked | informational
   invitedEmail: varchar("invited_email", { length: 255 }),
   clerkInvitationId: varchar("clerk_invitation_id", { length: 255 }),
   // True once the invitee clicks the Clerk email link and completes signup.
   // Redundant with `status='active'` for invited rows but exposed as a discrete
   // boolean so reports/queries don't need to match against the status enum.
-  emailInvitationAccepted: boolean("email_invitation_accepted").notNull().default(false),
+  emailInvitationAccepted: boolean("email_invitation_accepted")
+    .notNull()
+    .default(false),
   name: varchar("name", { length: 255 }).notNull(),
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
@@ -91,48 +114,58 @@ export const familyMembers = pgTable("family_members", {
   isContributing: boolean("is_contributing").default(false),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Expense categories table
 export const expenseCategories = pgTable("expense_categories", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   name: varchar("name", { length: 100 }).notNull(),
   icon: varchar("icon", { length: 50 }), // lucide icon name (e.g., "utensils", "car", "home")
   isDefault: boolean("is_default").default(false), // System default categories
   trackedInBudget: boolean("tracked_in_budget").default(true), // Whether to include in budget tracker
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Expense subcategories table - for more granular expense tracking
 export const expenseSubcategories = pgTable("expense_subcategories", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
-  categoryId: varchar("category_id", { length: 255 }).notNull().references(() => expenseCategories.id, { onDelete: "cascade" }),
+  categoryId: varchar("category_id", { length: 255 })
+    .notNull()
+    .references(() => expenseCategories.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Insurance providers table
 export const insuranceProviders = pgTable("insurance_providers", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   name: varchar("name", { length: 100 }).notNull(),
   isDefault: boolean("is_default").default(false), // System default providers
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Expenses table
 export const expenses = pgTable("expenses", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   linkedPolicyId: varchar("linked_policy_id", { length: 255 }), // Link to insurance policy if expense is auto-generated from policy
   linkedPropertyId: varchar("linked_property_id", { length: 255 }), // Link to property asset if expense is auto-generated from property
@@ -140,7 +173,9 @@ export const expenses = pgTable("expenses", {
   linkedGoalId: varchar("linked_goal_id", { length: 255 }), // Link to goal if expense is auto-generated from goal contribution
   name: varchar("name", { length: 255 }).notNull(), // Expense name (e.g., "Rent", "Groceries")
   category: varchar("category", { length: 100 }).notNull(), // housing, food, transportation, utilities, etc.
-  expenseCategory: varchar("expense_category", { length: 50 }).default("current-recurring"), // current-recurring, future-recurring, temporary, one-off
+  expenseCategory: varchar("expense_category", { length: 50 }).default(
+    "current-recurring"
+  ), // current-recurring, future-recurring, temporary, one-off
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   frequency: varchar("frequency", { length: 50 }).notNull(), // monthly, yearly, one-time, weekly, bi-weekly, custom
   customMonths: text("custom_months"), // JSON array of month numbers for custom frequency (e.g., "[1,3,6,12]" for Jan, Mar, Jun, Dec)
@@ -150,17 +185,25 @@ export const expenses = pgTable("expenses", {
   isActive: boolean("is_active").default(true),
   trackedInBudget: boolean("tracked_in_budget").default(true), // Whether to include in budget tracker
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Daily expenses table - for tracking actual daily spending
 export const dailyExpenses = pgTable("daily_expenses", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
-  categoryId: varchar("category_id", { length: 255 }).references(() => expenseCategories.id, { onDelete: "set null" }),
+  categoryId: varchar("category_id", { length: 255 }).references(
+    () => expenseCategories.id,
+    { onDelete: "set null" }
+  ),
   categoryName: varchar("category_name", { length: 100 }).notNull(), // Store category name for historical reference
-  subcategoryId: varchar("subcategory_id", { length: 255 }).references(() => expenseSubcategories.id, { onDelete: "set null" }),
+  subcategoryId: varchar("subcategory_id", { length: 255 }).references(
+    () => expenseSubcategories.id,
+    { onDelete: "set null" }
+  ),
   subcategoryName: varchar("subcategory_name", { length: 100 }), // Store subcategory name for historical reference
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(), // Amount in SGD (converted if foreign currency)
   note: text("note"),
@@ -168,14 +211,20 @@ export const dailyExpenses = pgTable("daily_expenses", {
   originalCurrency: varchar("original_currency", { length: 10 }), // Currency code if not SGD (e.g., "USD", "EUR")
   originalAmount: decimal("original_amount", { precision: 12, scale: 2 }), // Amount in original currency
   exchangeRate: decimal("exchange_rate", { precision: 12, scale: 6 }), // Exchange rate used (1 foreign = X SGD)
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull()
+})
 
 // Assets table (generic)
 export const assets = pgTable("assets", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   type: varchar("type", { length: 100 }).notNull(), // property, vehicle, investment, savings, etc.
   name: varchar("name", { length: 255 }).notNull(),
@@ -184,13 +233,15 @@ export const assets = pgTable("assets", {
   purchaseDate: date("purchase_date"),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Property Assets table
 export const propertyAssets = pgTable("property_assets", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   linkedExpenseId: varchar("linked_expense_id", { length: 255 }),
 
@@ -199,18 +250,36 @@ export const propertyAssets = pgTable("property_assets", {
   purchaseDate: date("purchase_date").notNull(),
 
   // Purchase Details
-  originalPurchasePrice: decimal("original_purchase_price", { precision: 15, scale: 2 }).notNull(),
+  originalPurchasePrice: decimal("original_purchase_price", {
+    precision: 15,
+    scale: 2
+  }).notNull(),
   loanAmountTaken: decimal("loan_amount_taken", { precision: 15, scale: 2 }),
 
   // Loan Repayment
-  outstandingLoan: decimal("outstanding_loan", { precision: 15, scale: 2 }).notNull(),
-  monthlyLoanPayment: decimal("monthly_loan_payment", { precision: 12, scale: 2 }).notNull(),
+  outstandingLoan: decimal("outstanding_loan", {
+    precision: 15,
+    scale: 2
+  }).notNull(),
+  monthlyLoanPayment: decimal("monthly_loan_payment", {
+    precision: 12,
+    scale: 2
+  }).notNull(),
   interestRate: decimal("interest_rate", { precision: 5, scale: 2 }).notNull(),
 
   // Additional Details (CPF)
-  principalCpfWithdrawn: decimal("principal_cpf_withdrawn", { precision: 15, scale: 2 }),
-  housingGrantTaken: decimal("housing_grant_taken", { precision: 15, scale: 2 }),
-  accruedInterestToDate: decimal("accrued_interest_to_date", { precision: 15, scale: 2 }),
+  principalCpfWithdrawn: decimal("principal_cpf_withdrawn", {
+    precision: 15,
+    scale: 2
+  }),
+  housingGrantTaken: decimal("housing_grant_taken", {
+    precision: 15,
+    scale: 2
+  }),
+  accruedInterestToDate: decimal("accrued_interest_to_date", {
+    precision: 15,
+    scale: 2
+  }),
 
   // CPF Integration
   paidByCpf: boolean("paid_by_cpf").default(false),
@@ -218,13 +287,15 @@ export const propertyAssets = pgTable("property_assets", {
   // Metadata
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Vehicle Assets table
 export const vehicleAssets = pgTable("vehicle_assets", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   linkedExpenseId: varchar("linked_expense_id", { length: 255 }),
 
@@ -234,7 +305,10 @@ export const vehicleAssets = pgTable("vehicle_assets", {
   coeExpiryDate: date("coe_expiry_date"), // Certificate of Entitlement expiry date (Singapore)
 
   // Purchase Details
-  originalPurchasePrice: decimal("original_purchase_price", { precision: 15, scale: 2 }).notNull(),
+  originalPurchasePrice: decimal("original_purchase_price", {
+    precision: 15,
+    scale: 2
+  }).notNull(),
   loanAmountTaken: decimal("loan_amount_taken", { precision: 15, scale: 2 }),
   loanInterestRate: decimal("loan_interest_rate", { precision: 5, scale: 2 }), // annual interest rate %
   loanTenureYears: integer("loan_tenure_years"),
@@ -242,20 +316,28 @@ export const vehicleAssets = pgTable("vehicle_assets", {
 
   // Loan Repayment
   loanAmountRepaid: decimal("loan_amount_repaid", { precision: 15, scale: 2 }),
-  monthlyLoanPayment: decimal("monthly_loan_payment", { precision: 12, scale: 2 }),
+  monthlyLoanPayment: decimal("monthly_loan_payment", {
+    precision: 12,
+    scale: 2
+  }),
 
   // Metadata
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Policies table (insurance, subscriptions, etc.)
 export const policies = pgTable("policies", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
-  familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Policy holder
+  familyMemberId: varchar("family_member_id", { length: 255 }).references(
+    () => familyMembers.id,
+    { onDelete: "cascade" }
+  ), // Policy holder
   linkedExpenseId: varchar("linked_expense_id", { length: 255 }), // Link to auto-generated expense if policy is tracked in expenditures
 
   // Policy Information
@@ -271,7 +353,10 @@ export const policies = pgTable("policies", {
   coverageUntilAge: integer("coverage_until_age"), // Age when coverage ends
 
   // Premium Details
-  premiumAmount: decimal("premium_amount", { precision: 12, scale: 2 }).notNull(),
+  premiumAmount: decimal("premium_amount", {
+    precision: 12,
+    scale: 2
+  }).notNull(),
   premiumAmountCPF: decimal("premium_amount_cpf", { precision: 12, scale: 2 }), // CPF-funded portion of premium (SG-specific)
   premiumFrequency: varchar("premium_frequency", { length: 50 }).notNull(), // monthly, custom
   customMonths: text("custom_months"), // JSON array of month numbers for custom frequency (e.g., "[1,3,6,12]" for Jan, Mar, Jun, Dec)
@@ -287,13 +372,15 @@ export const policies = pgTable("policies", {
   description: text("description"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Goals table
 export const goals = pgTable("goals", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   linkedExpenseId: varchar("linked_expense_id", { length: 255 }), // Link to auto-generated expense if goal contribution is tracked
 
@@ -304,43 +391,63 @@ export const goals = pgTable("goals", {
   targetDate: date("target_date").notNull(),
 
   // Progress Tracking
-  currentAmountSaved: decimal("current_amount_saved", { precision: 15, scale: 2 }).default("0"),
-  monthlyContribution: decimal("monthly_contribution", { precision: 12, scale: 2 }),
+  currentAmountSaved: decimal("current_amount_saved", {
+    precision: 15,
+    scale: 2
+  }).default("0"),
+  monthlyContribution: decimal("monthly_contribution", {
+    precision: 12,
+    scale: 2
+  }),
   description: text("description"),
 
   // Metadata
   isAchieved: boolean("is_achieved").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Current Holdings table
 export const currentHoldings = pgTable("current_holdings", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
-  familyMemberId: varchar("family_member_id", { length: 255 }).references(() => familyMembers.id, { onDelete: "cascade" }), // Account holder
+  familyMemberId: varchar("family_member_id", { length: 255 }).references(
+    () => familyMembers.id,
+    { onDelete: "cascade" }
+  ), // Account holder
   bankName: varchar("bank_name", { length: 255 }).notNull(),
-  holdingAmount: decimal("holding_amount", { precision: 15, scale: 2 }).notNull(),
+  holdingAmount: decimal("holding_amount", {
+    precision: 15,
+    scale: 2
+  }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Holding Amount History table - tracks historical amount snapshots for graphing
 export const holdingAmountHistory = pgTable("holding_amount_history", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  holdingId: varchar("holding_id", { length: 255 }).notNull().references(() => currentHoldings.id, { onDelete: "cascade" }),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  holdingId: varchar("holding_id", { length: 255 })
+    .notNull()
+    .references(() => currentHoldings.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
-  recordedAt: timestamp("recorded_at").defaultNow().notNull(),
-});
+  recordedAt: timestamp("recorded_at").defaultNow().notNull()
+})
 
 // Quick Links table - user-customizable header shortcuts
 export const quickLinks = pgTable("quick_links", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   linkKey: varchar("link_key", { length: 100 }).notNull(), // e.g., "expenses-graph", "user-incomes"
   label: varchar("label", { length: 100 }).notNull(),
@@ -348,13 +455,15 @@ export const quickLinks = pgTable("quick_links", {
   icon: varchar("icon", { length: 50 }).notNull(), // lucide icon name
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Investment Policies table - for tracking investment assets and contributions
 export const investmentPolicies = pgTable("investment_policies", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
 
   // Core fields
@@ -362,12 +471,23 @@ export const investmentPolicies = pgTable("investment_policies", {
   type: varchar("type", { length: 50 }).notNull(), // stock, cash, bonds, etf, crypto, mutual_fund, reit
 
   // Financial details
-  currentCapital: decimal("current_capital", { precision: 15, scale: 2 }).notNull(),
-  projectedYield: decimal("projected_yield", { precision: 5, scale: 2 }).notNull(), // Annual yield %
+  currentCapital: decimal("current_capital", {
+    precision: 15,
+    scale: 2
+  }).notNull(),
+  projectedYield: decimal("projected_yield", {
+    precision: 5,
+    scale: 2
+  }).notNull(), // Annual yield %
 
   // Contribution details
-  contributionAmount: decimal("contribution_amount", { precision: 12, scale: 2 }).notNull(),
-  contributionFrequency: varchar("contribution_frequency", { length: 50 }).notNull(), // monthly, custom
+  contributionAmount: decimal("contribution_amount", {
+    precision: 12,
+    scale: 2
+  }).notNull(),
+  contributionFrequency: varchar("contribution_frequency", {
+    length: 50
+  }).notNull(), // monthly, custom
   customMonths: text("custom_months"), // JSON array of month numbers [1,3,6,9,12]
 
   // Status
@@ -375,13 +495,15 @@ export const investmentPolicies = pgTable("investment_policies", {
 
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 // Budget Shifts table - for transferring budget between categories within a month
 export const budgetShifts = pgTable("budget_shifts", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   familyId: varchar("family_id", { length: 255 }),
   year: integer("year").notNull(),
   month: integer("month").notNull(), // 1-12
@@ -389,8 +511,8 @@ export const budgetShifts = pgTable("budget_shifts", {
   toCategoryName: varchar("to_category_name", { length: 100 }).notNull(), // Destination category
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   note: text("note"), // Optional note explaining the shift
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+  createdAt: timestamp("created_at").defaultNow().notNull()
+})
 
 // =============================================================================
 // Vector Search Tables (pgvector)
@@ -401,53 +523,63 @@ export const budgetShifts = pgTable("budget_shifts", {
  * Used for storing embeddings of public/shared documentation, FAQs, etc.
  * All users can query these chunks for semantic search.
  */
-export const kbChunks = pgTable("kb_chunks", {
-  id: varchar("id", { length: 255 }).primaryKey(),
-  docId: varchar("doc_id", { length: 255 }).notNull(), // Document identifier (e.g., "cpf-guide", "financial-terms")
-  chunkIndex: integer("chunk_index").notNull(), // Position of this chunk in the document
-  content: text("content").notNull(), // The actual text content
-  embedding: vector("embedding", { dimensions: 1536 }), // Vector embedding (null until generated)
-  metadata: jsonb("metadata"), // Flexible metadata: { source, title, section, tags, etc. }
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [
-  // Btree indexes for filtering
-  index("kb_chunks_doc_id_idx").on(table.docId),
-  index("kb_chunks_created_at_idx").on(table.createdAt),
-  // Note: HNSW index for vector similarity search is created via raw SQL migration
-  // because Drizzle doesn't have native HNSW index support
-]);
+export const kbChunks = pgTable(
+  "kb_chunks",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    docId: varchar("doc_id", { length: 255 }).notNull(), // Document identifier (e.g., "cpf-guide", "financial-terms")
+    chunkIndex: integer("chunk_index").notNull(), // Position of this chunk in the document
+    content: text("content").notNull(), // The actual text content
+    embedding: vector("embedding", { dimensions: 1536 }), // Vector embedding (null until generated)
+    metadata: jsonb("metadata"), // Flexible metadata: { source, title, section, tags, etc. }
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull()
+  },
+  (table) => [
+    // Btree indexes for filtering
+    index("kb_chunks_doc_id_idx").on(table.docId),
+    index("kb_chunks_created_at_idx").on(table.createdAt)
+    // Note: HNSW index for vector similarity search is created via raw SQL migration
+    // because Drizzle doesn't have native HNSW index support
+  ]
+)
 
 /**
  * User Chunks - Private per-user knowledge (multi-tenant safe)
  * Used for storing embeddings of user-uploaded documents, notes, etc.
  * Each user can only access their own chunks.
  */
-export const userChunks = pgTable("user_chunks", {
-  id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
-  familyId: varchar("family_id", { length: 255 }),
-  docId: varchar("doc_id", { length: 255 }).notNull(), // Document identifier within user's namespace
-  chunkIndex: integer("chunk_index").notNull(), // Position of this chunk in the document
-  content: text("content").notNull(), // The actual text content
-  embedding: vector("embedding", { dimensions: 1536 }), // Vector embedding (null until generated)
-  metadata: jsonb("metadata"), // Flexible metadata: { filename, pageNumber, section, tags, etc. }
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [
-  // Btree indexes for filtering
-  index("user_chunks_user_id_idx").on(table.userId),
-  index("user_chunks_doc_id_idx").on(table.docId),
-  index("user_chunks_user_doc_idx").on(table.userId, table.docId),
-  index("user_chunks_created_at_idx").on(table.createdAt),
-  // Note: HNSW index for vector similarity search is created via raw SQL migration
-]);
+export const userChunks = pgTable(
+  "user_chunks",
+  {
+    id: varchar("id", { length: 255 }).primaryKey(),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    familyId: varchar("family_id", { length: 255 }),
+    docId: varchar("doc_id", { length: 255 }).notNull(), // Document identifier within user's namespace
+    chunkIndex: integer("chunk_index").notNull(), // Position of this chunk in the document
+    content: text("content").notNull(), // The actual text content
+    embedding: vector("embedding", { dimensions: 1536 }), // Vector embedding (null until generated)
+    metadata: jsonb("metadata"), // Flexible metadata: { filename, pageNumber, section, tags, etc. }
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull()
+  },
+  (table) => [
+    // Btree indexes for filtering
+    index("user_chunks_user_id_idx").on(table.userId),
+    index("user_chunks_doc_id_idx").on(table.docId),
+    index("user_chunks_user_doc_idx").on(table.userId, table.docId),
+    index("user_chunks_created_at_idx").on(table.createdAt)
+    // Note: HNSW index for vector similarity search is created via raw SQL migration
+  ]
+)
 
 // Relations
 export const familiesRelations = relations(families, ({ many }) => ({
   users: many(users),
-  familyMembers: many(familyMembers),
-}));
+  familyMembers: many(familyMembers)
+}))
 
 export const usersRelations = relations(users, ({ many }) => ({
   familyMembers: many(familyMembers),
@@ -464,17 +596,20 @@ export const usersRelations = relations(users, ({ many }) => ({
   quickLinks: many(quickLinks),
   investmentPolicies: many(investmentPolicies),
   budgetShifts: many(budgetShifts),
-  userChunks: many(userChunks),
-}));
+  userChunks: many(userChunks)
+}))
 
-export const familyMembersRelations = relations(familyMembers, ({ one, many }) => ({
-  user: one(users, {
-    fields: [familyMembers.userId],
-    references: [users.id],
-  }),
-  currentHoldings: many(currentHoldings),
-  policies: many(policies),
-}));
+export const familyMembersRelations = relations(
+  familyMembers,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [familyMembers.userId],
+      references: [users.id]
+    }),
+    currentHoldings: many(currentHoldings),
+    policies: many(policies)
+  })
+)
 
 // Parallel incomes table that powers the Beta view. Same column set as
 // `incomes` minus `frequency` / `custom_months` (beta assumes monthly
@@ -505,169 +640,199 @@ export const incomesBeta = pgTable("incomes_beta", {
   subjectToCpf: boolean("subject_to_cpf").default(false),
   accountForBonus: boolean("account_for_bonus").default(false),
   bonusGroups: text("bonus_groups"),
-  employeeCpfContribution: decimal("employee_cpf_contribution", { precision: 12, scale: 2 }),
-  employerCpfContribution: decimal("employer_cpf_contribution", { precision: 12, scale: 2 }),
+  employeeCpfContribution: decimal("employee_cpf_contribution", {
+    precision: 12,
+    scale: 2
+  }),
+  employerCpfContribution: decimal("employer_cpf_contribution", {
+    precision: 12,
+    scale: 2
+  }),
   netTakeHome: decimal("net_take_home", { precision: 12, scale: 2 }),
   // Rate-set identity used when the stored CPF values above were computed (e.g.
   // "2026"). Null when the row carries no CPF (no DOB'd member / not subject).
   // Drives recompute-on-read so an annual rate change can't leave stale values.
   cpfRatesVersion: varchar("cpf_rates_version", { length: 20 }),
-  cpfOrdinaryAccount: decimal("cpf_ordinary_account", { precision: 12, scale: 2 }),
-  cpfSpecialAccount: decimal("cpf_special_account", { precision: 12, scale: 2 }),
-  cpfMedisaveAccount: decimal("cpf_medisave_account", { precision: 12, scale: 2 }),
+  cpfOrdinaryAccount: decimal("cpf_ordinary_account", {
+    precision: 12,
+    scale: 2
+  }),
+  cpfSpecialAccount: decimal("cpf_special_account", {
+    precision: 12,
+    scale: 2
+  }),
+  cpfMedisaveAccount: decimal("cpf_medisave_account", {
+    precision: 12,
+    scale: 2
+  }),
   description: text("description"),
   pastIncomeHistory: text("past_income_history"),
   futureMilestones: text("future_milestones"),
   accountForFutureChange: boolean("account_for_future_change").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+})
 
 export const incomesBetaRelations = relations(incomesBeta, ({ one }) => ({
   user: one(users, {
     fields: [incomesBeta.userId],
-    references: [users.id],
+    references: [users.id]
   }),
   family: one(families, {
     fields: [incomesBeta.familyId],
-    references: [families.id],
+    references: [families.id]
   }),
   familyMember: one(familyMembers, {
     fields: [incomesBeta.familyMemberId],
-    references: [familyMembers.id],
-  }),
-}));
+    references: [familyMembers.id]
+  })
+}))
 
 export const expensesRelations = relations(expenses, ({ one }) => ({
   user: one(users, {
     fields: [expenses.userId],
-    references: [users.id],
-  }),
-}));
+    references: [users.id]
+  })
+}))
 
-export const expenseCategoriesRelations = relations(expenseCategories, ({ one, many }) => ({
-  user: one(users, {
-    fields: [expenseCategories.userId],
-    references: [users.id],
-  }),
-  subcategories: many(expenseSubcategories),
-  dailyExpenses: many(dailyExpenses),
-}));
+export const expenseCategoriesRelations = relations(
+  expenseCategories,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [expenseCategories.userId],
+      references: [users.id]
+    }),
+    subcategories: many(expenseSubcategories),
+    dailyExpenses: many(dailyExpenses)
+  })
+)
 
-export const expenseSubcategoriesRelations = relations(expenseSubcategories, ({ one, many }) => ({
-  user: one(users, {
-    fields: [expenseSubcategories.userId],
-    references: [users.id],
-  }),
-  category: one(expenseCategories, {
-    fields: [expenseSubcategories.categoryId],
-    references: [expenseCategories.id],
-  }),
-  dailyExpenses: many(dailyExpenses),
-}));
+export const expenseSubcategoriesRelations = relations(
+  expenseSubcategories,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [expenseSubcategories.userId],
+      references: [users.id]
+    }),
+    category: one(expenseCategories, {
+      fields: [expenseSubcategories.categoryId],
+      references: [expenseCategories.id]
+    }),
+    dailyExpenses: many(dailyExpenses)
+  })
+)
 
 export const dailyExpensesRelations = relations(dailyExpenses, ({ one }) => ({
   user: one(users, {
     fields: [dailyExpenses.userId],
-    references: [users.id],
+    references: [users.id]
   }),
   category: one(expenseCategories, {
     fields: [dailyExpenses.categoryId],
-    references: [expenseCategories.id],
+    references: [expenseCategories.id]
   }),
   subcategory: one(expenseSubcategories, {
     fields: [dailyExpenses.subcategoryId],
-    references: [expenseSubcategories.id],
-  }),
-}));
+    references: [expenseSubcategories.id]
+  })
+}))
 
 export const assetsRelations = relations(assets, ({ one }) => ({
   user: one(users, {
     fields: [assets.userId],
-    references: [users.id],
-  }),
-}));
+    references: [users.id]
+  })
+}))
 
 export const propertyAssetsRelations = relations(propertyAssets, ({ one }) => ({
   user: one(users, {
     fields: [propertyAssets.userId],
-    references: [users.id],
-  }),
-}));
+    references: [users.id]
+  })
+}))
 
 export const vehicleAssetsRelations = relations(vehicleAssets, ({ one }) => ({
   user: one(users, {
     fields: [vehicleAssets.userId],
-    references: [users.id],
-  }),
-}));
+    references: [users.id]
+  })
+}))
 
 export const policiesRelations = relations(policies, ({ one }) => ({
   user: one(users, {
     fields: [policies.userId],
-    references: [users.id],
+    references: [users.id]
   }),
   familyMember: one(familyMembers, {
     fields: [policies.familyMemberId],
-    references: [familyMembers.id],
-  }),
-}));
+    references: [familyMembers.id]
+  })
+}))
 
 export const goalsRelations = relations(goals, ({ one }) => ({
   user: one(users, {
     fields: [goals.userId],
-    references: [users.id],
-  }),
-}));
+    references: [users.id]
+  })
+}))
 
-export const currentHoldingsRelations = relations(currentHoldings, ({ one, many }) => ({
-  user: one(users, {
-    fields: [currentHoldings.userId],
-    references: [users.id],
-  }),
-  familyMember: one(familyMembers, {
-    fields: [currentHoldings.familyMemberId],
-    references: [familyMembers.id],
-  }),
-  amountHistory: many(holdingAmountHistory),
-}));
+export const currentHoldingsRelations = relations(
+  currentHoldings,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [currentHoldings.userId],
+      references: [users.id]
+    }),
+    familyMember: one(familyMembers, {
+      fields: [currentHoldings.familyMemberId],
+      references: [familyMembers.id]
+    }),
+    amountHistory: many(holdingAmountHistory)
+  })
+)
 
-export const holdingAmountHistoryRelations = relations(holdingAmountHistory, ({ one }) => ({
-  holding: one(currentHoldings, {
-    fields: [holdingAmountHistory.holdingId],
-    references: [currentHoldings.id],
-  }),
-  user: one(users, {
-    fields: [holdingAmountHistory.userId],
-    references: [users.id],
-  }),
-}));
+export const holdingAmountHistoryRelations = relations(
+  holdingAmountHistory,
+  ({ one }) => ({
+    holding: one(currentHoldings, {
+      fields: [holdingAmountHistory.holdingId],
+      references: [currentHoldings.id]
+    }),
+    user: one(users, {
+      fields: [holdingAmountHistory.userId],
+      references: [users.id]
+    })
+  })
+)
 
 export const quickLinksRelations = relations(quickLinks, ({ one }) => ({
   user: one(users, {
     fields: [quickLinks.userId],
-    references: [users.id],
-  }),
-}));
+    references: [users.id]
+  })
+}))
 
-export const investmentPoliciesRelations = relations(investmentPolicies, ({ one }) => ({
-  user: one(users, {
-    fields: [investmentPolicies.userId],
-    references: [users.id],
-  }),
-}));
+export const investmentPoliciesRelations = relations(
+  investmentPolicies,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [investmentPolicies.userId],
+      references: [users.id]
+    })
+  })
+)
 
 export const budgetShiftsRelations = relations(budgetShifts, ({ one }) => ({
   user: one(users, {
     fields: [budgetShifts.userId],
-    references: [users.id],
-  }),
-}));
+    references: [users.id]
+  })
+}))
 
 export const userChunksRelations = relations(userChunks, ({ one }) => ({
   user: one(users, {
     fields: [userChunks.userId],
-    references: [users.id],
-  }),
-}));
+    references: [users.id]
+  })
+}))

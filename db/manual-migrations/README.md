@@ -22,11 +22,11 @@ the rest. Run them via `psql $DATABASE_URL -f db/manual-migrations/<file>.sql`.
 
 Three-step migration. Run in order, gated on application code:
 
-| File | Run when | What it does | Revertible? |
-| --- | --- | --- | --- |
-| `0003_family_id_additive.sql` | Before merging the schema-only PR | Adds `families` table, nullable `family_id` everywhere, `family_members` invite-flow fields | Yes — drop the new columns/table |
-| `0004_family_id_backfill.sql` | After 0003 deployed and app is writing both `userId` and `familyId` on inserts | Creates a family-of-1 per user, backfills `family_id` everywhere, links the auto-created Self row to its Clerk user | No (data migration) |
-| `0005_family_id_lockdown.sql` | After 0004 succeeded AND app reads/writes by `familyId` everywhere | NOT NULL `family_id`, swap cascade FKs from `users` to `families`, demote `user_id` to SET NULL | No |
+| File                          | Run when                                                                       | What it does                                                                                                        | Revertible?                      |
+| ----------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `0003_family_id_additive.sql` | Before merging the schema-only PR                                              | Adds `families` table, nullable `family_id` everywhere, `family_members` invite-flow fields                         | Yes — drop the new columns/table |
+| `0004_family_id_backfill.sql` | After 0003 deployed and app is writing both `userId` and `familyId` on inserts | Creates a family-of-1 per user, backfills `family_id` everywhere, links the auto-created Self row to its Clerk user | No (data migration)              |
+| `0005_family_id_lockdown.sql` | After 0004 succeeded AND app reads/writes by `familyId` everywhere             | NOT NULL `family_id`, swap cascade FKs from `users` to `families`, demote `user_id` to SET NULL                     | No                               |
 
 Run only after verifying the previous step on a staging clone. Each migration
 ends with assertions that fail loudly if the state is inconsistent.

@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import Lenis from "lenis";
+import { useEffect } from "react"
+import Lenis from "lenis"
 
 /**
  * Landing-only smooth/momentum scroll (Lenis). Mounted inside <main> in
@@ -16,51 +16,51 @@ import Lenis from "lenis";
  */
 declare global {
   interface Window {
-    __lenis?: Lenis;
+    __lenis?: Lenis
   }
 }
 
 export function SmoothScroll() {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    if (!window.matchMedia("(pointer: fine)").matches) return
 
     const lenis = new Lenis({
       duration: 1.1,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-    window.__lenis = lenis;
+      smoothWheel: true
+    })
+    window.__lenis = lenis
 
-    let raf = 0;
+    let raf = 0
     const loop = (time: number) => {
-      lenis.raf(time);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
+      lenis.raf(time)
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
 
     // Smooth in-page anchor jumps (#how, #features, …).
     const onClick = (e: MouseEvent) => {
       const a = (e.target as HTMLElement)?.closest?.(
         'a[href^="#"]'
-      ) as HTMLAnchorElement | null;
-      if (!a) return;
-      const id = a.getAttribute("href");
-      if (!id || id === "#") return;
-      const target = document.querySelector(id);
-      if (!target) return;
-      e.preventDefault();
-      lenis.scrollTo(target as HTMLElement, { offset: -72 });
-    };
-    document.addEventListener("click", onClick);
+      ) as HTMLAnchorElement | null
+      if (!a) return
+      const id = a.getAttribute("href")
+      if (!id || id === "#") return
+      const target = document.querySelector(id)
+      if (!target) return
+      e.preventDefault()
+      lenis.scrollTo(target as HTMLElement, { offset: -72 })
+    }
+    document.addEventListener("click", onClick)
 
     return () => {
-      cancelAnimationFrame(raf);
-      document.removeEventListener("click", onClick);
-      lenis.destroy();
-      delete window.__lenis;
-    };
-  }, []);
+      cancelAnimationFrame(raf)
+      document.removeEventListener("click", onClick)
+      lenis.destroy()
+      delete window.__lenis
+    }
+  }, [])
 
-  return null;
+  return null
 }

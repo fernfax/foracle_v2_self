@@ -1,14 +1,15 @@
-import { and, asc, eq } from "drizzle-orm";
-import { randomUUID } from "crypto";
-import { db } from "@/db";
-import { expenseSubcategories } from "@/db/schema";
-import type { AuthContext } from "@/lib/auth-context";
+import { randomUUID } from "crypto"
+import { db } from "@/db"
+import { and, asc, eq } from "drizzle-orm"
 
-export type ExpenseSubcategoryRow = typeof expenseSubcategories.$inferSelect;
+import type { AuthContext } from "@/lib/auth-context"
+import { expenseSubcategories } from "@/db/schema"
+
+export type ExpenseSubcategoryRow = typeof expenseSubcategories.$inferSelect
 
 export class SubcategoryNotFoundError extends Error {
   constructor() {
-    super("Subcategory not found");
+    super("Subcategory not found")
   }
 }
 
@@ -16,15 +17,15 @@ export async function listExpenseSubcategories(
   ctx: AuthContext,
   opts: { categoryId?: string } = {}
 ): Promise<ExpenseSubcategoryRow[]> {
-  const conditions = [eq(expenseSubcategories.familyId, ctx.familyId)];
+  const conditions = [eq(expenseSubcategories.familyId, ctx.familyId)]
   if (opts.categoryId) {
-    conditions.push(eq(expenseSubcategories.categoryId, opts.categoryId));
+    conditions.push(eq(expenseSubcategories.categoryId, opts.categoryId))
   }
   return db
     .select()
     .from(expenseSubcategories)
     .where(and(...conditions))
-    .orderBy(asc(expenseSubcategories.name));
+    .orderBy(asc(expenseSubcategories.name))
 }
 
 export async function getExpenseSubcategoryById(
@@ -35,9 +36,9 @@ export async function getExpenseSubcategoryById(
     where: and(
       eq(expenseSubcategories.id, id),
       eq(expenseSubcategories.familyId, ctx.familyId)
-    ),
-  });
-  return row ?? null;
+    )
+  })
+  return row ?? null
 }
 
 export async function createExpenseSubcategory(
@@ -51,10 +52,10 @@ export async function createExpenseSubcategory(
       userId: ctx.userId,
       familyId: ctx.familyId,
       categoryId: input.categoryId,
-      name: input.name,
+      name: input.name
     })
-    .returning();
-  return row;
+    .returning()
+  return row
 }
 
 export async function updateExpenseSubcategory(
@@ -62,13 +63,13 @@ export async function updateExpenseSubcategory(
   id: string,
   patch: { name?: string }
 ): Promise<ExpenseSubcategoryRow> {
-  const existing = await getExpenseSubcategoryById(ctx, id);
-  if (!existing) throw new SubcategoryNotFoundError();
+  const existing = await getExpenseSubcategoryById(ctx, id)
+  if (!existing) throw new SubcategoryNotFoundError()
 
   const update: Partial<typeof expenseSubcategories.$inferInsert> = {
-    updatedAt: new Date(),
-  };
-  if (patch.name !== undefined) update.name = patch.name;
+    updatedAt: new Date()
+  }
+  if (patch.name !== undefined) update.name = patch.name
 
   const [row] = await db
     .update(expenseSubcategories)
@@ -79,16 +80,16 @@ export async function updateExpenseSubcategory(
         eq(expenseSubcategories.familyId, ctx.familyId)
       )
     )
-    .returning();
-  return row;
+    .returning()
+  return row
 }
 
 export async function deleteExpenseSubcategory(
   ctx: AuthContext,
   id: string
 ): Promise<void> {
-  const existing = await getExpenseSubcategoryById(ctx, id);
-  if (!existing) throw new SubcategoryNotFoundError();
+  const existing = await getExpenseSubcategoryById(ctx, id)
+  if (!existing) throw new SubcategoryNotFoundError()
   await db
     .delete(expenseSubcategories)
     .where(
@@ -96,5 +97,5 @@ export async function deleteExpenseSubcategory(
         eq(expenseSubcategories.id, id),
         eq(expenseSubcategories.familyId, ctx.familyId)
       )
-    );
+    )
 }

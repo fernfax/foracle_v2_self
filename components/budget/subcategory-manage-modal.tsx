@@ -1,30 +1,31 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react"
+
+import type { ExpenseSubcategory } from "@/lib/actions/expense-subcategories"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Drawer,
+  DrawerBody,
+  DrawerClose,
   DrawerContent,
   DrawerHeader,
-  DrawerTitle,
-  DrawerClose,
-  DrawerBody,
-} from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { X, Plus, Pencil, Trash2, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { ExpenseSubcategory } from "@/lib/actions/expense-subcategories";
+  DrawerTitle
+} from "@/components/ui/drawer"
+import { Input } from "@/components/ui/input"
 
 interface SubcategoryManageModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  categoryName: string;
-  subcategories: ExpenseSubcategory[];
-  selectedSubcategory: ExpenseSubcategory | null;
-  onSelect: (subcategory: ExpenseSubcategory | null) => void;
-  onAdd: (name: string) => Promise<ExpenseSubcategory>;
-  onEdit: (id: string, name: string) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  categoryName: string
+  subcategories: ExpenseSubcategory[]
+  selectedSubcategory: ExpenseSubcategory | null
+  onSelect: (subcategory: ExpenseSubcategory | null) => void
+  onAdd: (name: string) => Promise<ExpenseSubcategory>
+  onEdit: (id: string, name: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }
 
 export function SubcategoryManageModal({
@@ -36,90 +37,93 @@ export function SubcategoryManageModal({
   onSelect,
   onAdd,
   onEdit,
-  onDelete,
+  onDelete
 }: SubcategoryManageModalProps) {
-  const [newName, setNewName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newName, setNewName] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleAdd = async () => {
-    if (!newName.trim() || isSubmitting) return;
+    if (!newName.trim() || isSubmitting) return
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const newSub = await onAdd(newName.trim());
-      onSelect(newSub);
-      setNewName("");
+      const newSub = await onAdd(newName.trim())
+      onSelect(newSub)
+      setNewName("")
     } catch (error) {
-      console.error("Error adding subcategory:", error);
+      console.error("Error adding subcategory:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleEdit = async () => {
-    if (!editingId || !editingName.trim() || isSubmitting) return;
+    if (!editingId || !editingName.trim() || isSubmitting) return
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await onEdit(editingId, editingName.trim());
-      setEditingId(null);
-      setEditingName("");
+      await onEdit(editingId, editingName.trim())
+      setEditingId(null)
+      setEditingName("")
     } catch (error) {
-      console.error("Error editing subcategory:", error);
+      console.error("Error editing subcategory:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
-    if (isSubmitting) return;
+    if (isSubmitting) return
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await onDelete(id);
+      await onDelete(id)
       if (selectedSubcategory?.id === id) {
-        onSelect(null);
+        onSelect(null)
       }
     } catch (error) {
-      console.error("Error deleting subcategory:", error);
+      console.error("Error deleting subcategory:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const startEditing = (subcategory: ExpenseSubcategory) => {
-    setEditingId(subcategory.id);
-    setEditingName(subcategory.name);
-  };
+    setEditingId(subcategory.id)
+    setEditingName(subcategory.name)
+  }
 
   const cancelEditing = () => {
-    setEditingId(null);
-    setEditingName("");
-  };
+    setEditingId(null)
+    setEditingName("")
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent, action: "add" | "edit") => {
     if (e.key === "Enter") {
-      e.preventDefault();
+      e.preventDefault()
       if (action === "add") {
-        handleAdd();
+        handleAdd()
       } else {
-        handleEdit();
+        handleEdit()
       }
     } else if (e.key === "Escape") {
       if (action === "edit") {
-        cancelEditing();
+        cancelEditing()
       }
     }
-  };
+  }
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 touch-manipulation">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 touch-manipulation">
               <X className="h-4 w-4" />
             </Button>
           </DrawerClose>
@@ -131,7 +135,7 @@ export function SubcategoryManageModal({
 
         <DrawerBody>
           {/* Add new subcategory */}
-          <div className="flex items-center gap-2 mb-6 mt-2 relative z-10">
+          <div className="relative z-10 mt-2 mb-6 flex items-center gap-2">
             <Input
               type="text"
               value={newName}
@@ -145,31 +149,29 @@ export function SubcategoryManageModal({
               type="button"
               onClick={handleAdd}
               disabled={isSubmitting || !newName.trim()}
-              className="touch-manipulation min-h-[44px] min-w-[70px]"
-            >
-              <Plus className="h-4 w-4 mr-1" />
+              className="min-h-[44px] min-w-[70px] touch-manipulation">
+              <Plus className="mr-1 h-4 w-4" />
               Add
             </Button>
           </div>
 
           {/* Subcategory list */}
           {subcategories.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               <p>No subcategories yet.</p>
-              <p className="text-sm mt-1">Add one above to get started.</p>
+              <p className="mt-1 text-sm">Add one above to get started.</p>
             </div>
           ) : (
             <div className="space-y-2">
               {subcategories.map((subcategory) => {
-                const isEditing = editingId === subcategory.id;
-                const isSelected = selectedSubcategory?.id === subcategory.id;
+                const isEditing = editingId === subcategory.id
+                const isSelected = selectedSubcategory?.id === subcategory.id
 
                 if (isEditing) {
                   return (
                     <div
                       key={subcategory.id}
-                      className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30"
-                    >
+                      className="bg-muted/30 flex items-center gap-2 rounded-lg border p-3">
                       <Input
                         type="text"
                         value={editingName}
@@ -184,8 +186,7 @@ export function SubcategoryManageModal({
                         size="icon"
                         className="h-8 w-8 touch-manipulation"
                         onClick={handleEdit}
-                        disabled={isSubmitting || !editingName.trim()}
-                      >
+                        disabled={isSubmitting || !editingName.trim()}>
                         <Check className="h-4 w-4 text-[#007A68]" />
                       </Button>
                       <Button
@@ -193,29 +194,29 @@ export function SubcategoryManageModal({
                         size="icon"
                         className="h-8 w-8 touch-manipulation"
                         onClick={cancelEditing}
-                        disabled={isSubmitting}
-                      >
-                        <X className="h-4 w-4 text-muted-foreground" />
+                        disabled={isSubmitting}>
+                        <X className="text-muted-foreground h-4 w-4" />
                       </Button>
                     </div>
-                  );
+                  )
                 }
 
                 return (
                   <div
                     key={subcategory.id}
                     className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all",
+                      "flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all",
                       isSelected
                         ? "border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)]"
                         : "border-border hover:bg-muted/50"
                     )}
                     onClick={() => {
-                      onSelect(subcategory);
-                      onOpenChange(false);
-                    }}
-                  >
-                    <span className="flex-1 font-medium text-foreground">{subcategory.name}</span>
+                      onSelect(subcategory)
+                      onOpenChange(false)
+                    }}>
+                    <span className="text-foreground flex-1 font-medium">
+                      {subcategory.name}
+                    </span>
 
                     {/* Edit button */}
                     <Button
@@ -223,12 +224,11 @@ export function SubcategoryManageModal({
                       size="icon"
                       className="h-8 w-8 touch-manipulation"
                       onClick={(e) => {
-                        e.stopPropagation();
-                        startEditing(subcategory);
+                        e.stopPropagation()
+                        startEditing(subcategory)
                       }}
-                      disabled={isSubmitting}
-                    >
-                      <Pencil className="h-4 w-4 text-muted-foreground" />
+                      disabled={isSubmitting}>
+                      <Pencil className="text-muted-foreground h-4 w-4" />
                     </Button>
 
                     {/* Delete button */}
@@ -237,20 +237,19 @@ export function SubcategoryManageModal({
                       size="icon"
                       className="h-8 w-8 touch-manipulation"
                       onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(subcategory.id);
+                        e.stopPropagation()
+                        handleDelete(subcategory.id)
                       }}
-                      disabled={isSubmitting}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      disabled={isSubmitting}>
+                      <Trash2 className="text-destructive h-4 w-4" />
                     </Button>
                   </div>
-                );
+                )
               })}
             </div>
           )}
         </DrawerBody>
       </DrawerContent>
     </Drawer>
-  );
+  )
 }

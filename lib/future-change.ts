@@ -3,16 +3,16 @@
 // bars) and server/calculation code (balance-calculator, cashflow-sankey).
 
 export interface FutureMilestone {
-  id: string;
-  targetMonth: string; // "YYYY-MM" — month the new amount takes effect
-  amount: number; // new ABSOLUTE monthly amount from targetMonth
+  id: string
+  targetMonth: string // "YYYY-MM" — month the new amount takes effect
+  amount: number // new ABSOLUTE monthly amount from targetMonth
   // endMonth: last "YYYY-MM" the change applies (inclusive). null/absent =
   // permanent (applies indefinitely, until a later permanent change). When set,
   // the change is TEMPORARY: after endMonth the income reverts to whatever was
   // in effect just before this change started.
-  endMonth?: string | null;
-  reason?: string;
-  notes?: string;
+  endMonth?: string | null
+  reason?: string
+  notes?: string
 }
 
 /**
@@ -35,19 +35,18 @@ export function resolveEffectiveAmount(
 ): number {
   const permanent = milestones
     .filter((m) => !m.endMonth && m.targetMonth <= monthKey)
-    .sort((a, b) => a.targetMonth.localeCompare(b.targetMonth));
-  let baseline = baseAmount;
-  for (const m of permanent) baseline = m.amount;
+    .sort((a, b) => a.targetMonth.localeCompare(b.targetMonth))
+  let baseline = baseAmount
+  for (const m of permanent) baseline = m.amount
 
   const activeTemp = milestones
     .filter(
-      (m) =>
-        !!m.endMonth && m.targetMonth <= monthKey && monthKey <= m.endMonth
+      (m) => !!m.endMonth && m.targetMonth <= monthKey && monthKey <= m.endMonth
     )
-    .sort((a, b) => a.targetMonth.localeCompare(b.targetMonth));
-  if (activeTemp.length > 0) return activeTemp[activeTemp.length - 1].amount;
+    .sort((a, b) => a.targetMonth.localeCompare(b.targetMonth))
+  if (activeTemp.length > 0) return activeTemp[activeTemp.length - 1].amount
 
-  return baseline;
+  return baseline
 }
 
 /**
@@ -66,15 +65,15 @@ export function activeMilestoneAt(
     .filter(
       (m) => !!m.endMonth && m.targetMonth <= monthKey && monthKey <= m.endMonth
     )
-    .sort((a, b) => a.targetMonth.localeCompare(b.targetMonth));
-  if (activeTemp.length > 0) return activeTemp[activeTemp.length - 1];
+    .sort((a, b) => a.targetMonth.localeCompare(b.targetMonth))
+  if (activeTemp.length > 0) return activeTemp[activeTemp.length - 1]
 
   const permanent = milestones
     .filter((m) => !m.endMonth && m.targetMonth <= monthKey)
-    .sort((a, b) => a.targetMonth.localeCompare(b.targetMonth));
-  if (permanent.length > 0) return permanent[permanent.length - 1];
+    .sort((a, b) => a.targetMonth.localeCompare(b.targetMonth))
+  if (permanent.length > 0) return permanent[permanent.length - 1]
 
-  return null;
+  return null
 }
 
 /**
@@ -88,15 +87,19 @@ export function priorEffectiveAmount(
   milestones: FutureMilestone[],
   milestone: FutureMilestone
 ): number {
-  const others = milestones.filter((m) => m.id !== milestone.id);
-  return resolveEffectiveAmount(baseAmount, others, prevMonthKey(milestone.targetMonth));
+  const others = milestones.filter((m) => m.id !== milestone.id)
+  return resolveEffectiveAmount(
+    baseAmount,
+    others,
+    prevMonthKey(milestone.targetMonth)
+  )
 }
 
 // "YYYY-MM" → the previous month's "YYYY-MM" (string math, no Date parsing).
 function prevMonthKey(monthKey: string): string {
-  const [y, m] = monthKey.split("-").map(Number);
-  const d = new Date(y, m - 2, 1); // m is 1-based; m-2 = previous month index
-  const yy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  return `${yy}-${mm}`;
+  const [y, m] = monthKey.split("-").map(Number)
+  const d = new Date(y, m - 2, 1) // m is 1-based; m-2 = previous month index
+  const yy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  return `${yy}-${mm}`
 }

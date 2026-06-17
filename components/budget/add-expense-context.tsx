@@ -1,37 +1,43 @@
-"use client";
+"use client"
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useState
+} from "react"
 
 interface AddExpenseContextType {
-  isOpen: boolean;
-  openModal: () => void;
-  closeModal: () => void;
+  isOpen: boolean
+  openModal: () => void
+  closeModal: () => void
 }
 
-const AddExpenseContext = createContext<AddExpenseContextType | null>(null);
+const AddExpenseContext = createContext<AddExpenseContextType | null>(null)
 
 export function AddExpenseProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
 
   const openModal = useCallback(() => {
-    setIsOpen(true);
-  }, []);
+    setIsOpen(true)
+  }, [])
 
   const closeModal = useCallback(() => {
-    setIsOpen(false);
-  }, []);
+    setIsOpen(false)
+  }, [])
 
   return (
     <AddExpenseContext.Provider value={{ isOpen, openModal, closeModal }}>
       {children}
     </AddExpenseContext.Provider>
-  );
+  )
 }
 
 export function useAddExpense() {
-  const context = useContext(AddExpenseContext);
+  const context = useContext(AddExpenseContext)
   if (!context) {
-    throw new Error("useAddExpense must be used within an AddExpenseProvider");
+    throw new Error("useAddExpense must be used within an AddExpenseProvider")
   }
-  return context;
+  return context
 }

@@ -1,24 +1,25 @@
-import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
-import { checkOnboardingStatus } from "@/lib/actions/onboarding";
-import { LandingShader } from "@/components/landing/landing-shader";
+import { redirect } from "next/navigation"
+import { auth } from "@clerk/nextjs/server"
+
+import { checkOnboardingStatus } from "@/lib/actions/onboarding"
+import { LandingShader } from "@/components/landing/landing-shader"
 
 export default async function OnboardingLayout({
-  children,
+  children
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  const { userId } = await auth();
+  const { userId } = await auth()
 
   // Redirect to sign-in if not authenticated
   if (!userId) {
-    redirect("/sign-in");
+    redirect("/sign-in")
   }
 
   // Redirect to dashboard if already onboarded
-  const isOnboarded = await checkOnboardingStatus();
+  const isOnboarded = await checkOnboardingStatus()
   if (isOnboarded) {
-    redirect("/overview");
+    redirect("/overview")
   }
 
   return (
@@ -27,5 +28,5 @@ export default async function OnboardingLayout({
       <LandingShader />
       <div className="relative z-10">{children}</div>
     </div>
-  );
+  )
 }

@@ -1,10 +1,11 @@
-import { and, asc, eq, sql } from "drizzle-orm";
-import { randomUUID } from "crypto";
-import { db } from "@/db";
-import { expenseCategories, expenses } from "@/db/schema";
-import type { AuthContext } from "@/lib/auth-context";
+import { randomUUID } from "crypto"
+import { db } from "@/db"
+import { and, asc, eq, sql } from "drizzle-orm"
 
-export type ExpenseCategoryRow = typeof expenseCategories.$inferSelect;
+import type { AuthContext } from "@/lib/auth-context"
+import { expenseCategories, expenses } from "@/db/schema"
+
+export type ExpenseCategoryRow = typeof expenseCategories.$inferSelect
 
 // Must match the categories used in onboarding (ExpensesStep.tsx).
 const DEFAULT_CATEGORIES = [
@@ -18,15 +19,15 @@ const DEFAULT_CATEGORIES = [
   "Entertainment",
   "Allowances",
   "Vehicle",
-  "Shopping",
-];
+  "Shopping"
+]
 
 function readFamilyCategories(ctx: AuthContext) {
   return db
     .select()
     .from(expenseCategories)
     .where(eq(expenseCategories.familyId, ctx.familyId))
-    .orderBy(asc(expenseCategories.name));
+    .orderBy(asc(expenseCategories.name))
 }
 
 /**
@@ -38,19 +39,21 @@ function readFamilyCategories(ctx: AuthContext) {
  */
 function dedupeByName(rows: ExpenseCategoryRow[]): ExpenseCategoryRow[] {
   const score = (r: ExpenseCategoryRow) =>
-    (r.trackedInBudget !== false ? 4 : 0) + (r.isDefault ? 2 : 0) + (r.icon ? 1 : 0);
-  const byName = new Map<string, ExpenseCategoryRow>();
+    (r.trackedInBudget !== false ? 4 : 0) +
+    (r.isDefault ? 2 : 0) +
+    (r.icon ? 1 : 0)
+  const byName = new Map<string, ExpenseCategoryRow>()
   for (const r of rows) {
-    const cur = byName.get(r.name);
+    const cur = byName.get(r.name)
     if (
       !cur ||
       score(r) > score(cur) ||
       (score(r) === score(cur) && r.createdAt < cur.createdAt)
     ) {
-      byName.set(r.name, r);
+      byName.set(r.name, r)
     }
   }
-  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name))
 }
 
 // Returns the family's categories, seeding defaults for fresh families and
@@ -67,9 +70,9 @@ function dedupeByName(rows: ExpenseCategoryRow[]): ExpenseCategoryRow[] {
 export async function listExpenseCategories(
   ctx: AuthContext
 ): Promise<ExpenseCategoryRow[]> {
-  let categories = await readFamilyCategories(ctx);
+  let categories = await readFamilyCategories(ctx)
 
-  const existingNames = new Set(categories.map((c) => c.name));
+  const existingNames = new Set(categories.map((c) => c.name))
   const namesInExpenses =
     categories.length === 0
       ? []
@@ -78,10 +81,13 @@ export async function listExpenseCategories(
             .selectDistinct({ category: expenses.category })
             .from(expenses)
             .where(
-              and(eq(expenses.familyId, ctx.familyId), eq(expenses.isActive, true))
+              and(
+                eq(expenses.familyId, ctx.familyId),
+                eq(expenses.isActive, true)
+              )
             )
-        ).map((e) => e.category);
-  const missing = namesInExpenses.filter((name) => !existingNames.has(name));
+        ).map((e) => e.category)
+  const missing = namesInExpenses.filter((name) => !existingNames.has(name))
 
   if (categories.length === 0 || missing.length > 0) {
     await db.transaction(async (tx) => {
@@ -89,13 +95,13 @@ export async function listExpenseCategories(
       // concurrent requests can't both pass the existence check and insert.
       await tx.execute(
         sql`SELECT pg_advisory_xact_lock(hashtext(${ctx.familyId})::bigint)`
-      );
+      )
 
       const current = await tx
         .select()
         .from(expenseCategories)
-        .where(eq(expenseCategories.familyId, ctx.familyId));
-      const have = new Set(current.map((c) => c.name));
+        .where(eq(expenseCategories.familyId, ctx.familyId))
+      const have = new Set(current.map((c) => c.name))
 
       if (current.length === 0) {
         await tx
@@ -106,11 +112,11 @@ export async function listExpenseCategories(
               userId: ctx.userId,
               familyId: ctx.familyId,
               name,
-              isDefault: true,
+              isDefault: true
             }))
           )
-          .onConflictDoNothing();
-        DEFAULT_CATEGORIES.forEach((n) => have.add(n));
+          .onConflictDoNothing()
+        DEFAULT_CATEGORIES.forEach((n) => have.add(n))
       }
 
       const inExpenses = (
@@ -118,10 +124,13 @@ export async function listExpenseCategories(
           .selectDistinct({ category: expenses.category })
           .from(expenses)
           .where(
-            and(eq(expenses.familyId, ctx.familyId), eq(expenses.isActive, true))
+            and(
+              eq(expenses.familyId, ctx.familyId),
+              eq(expenses.isActive, true)
+            )
           )
-      ).map((e) => e.category);
-      const stillMissing = inExpenses.filter((name) => !have.has(name));
+      ).map((e) => e.category)
+      const stillMissing = inExpenses.filter((name) => !have.has(name))
 
       if (stillMissing.length > 0) {
         await tx
@@ -133,16 +142,16 @@ export async function listExpenseCategories(
               familyId: ctx.familyId,
               name,
               isDefault: false,
-              trackedInBudget: true,
+              trackedInBudget: true
             }))
           )
-          .onConflictDoNothing();
+          .onConflictDoNothing()
       }
-    });
-    categories = await readFamilyCategories(ctx);
+    })
+    categories = await readFamilyCategories(ctx)
   }
 
-  return dedupeByName(categories);
+  return dedupeByName(categories)
 }
 
 export async function createExpenseCategory(
@@ -160,8 +169,8 @@ export async function createExpenseCategory(
         eq(expenseCategories.name, name)
       )
     )
-    .limit(1);
-  if (existing) return existing;
+    .limit(1)
+  if (existing) return existing
 
   const [row] = await db
     .insert(expenseCategories)
@@ -170,11 +179,11 @@ export async function createExpenseCategory(
       userId: ctx.userId,
       familyId: ctx.familyId,
       name,
-      isDefault: false,
+      isDefault: false
     })
     .onConflictDoNothing()
-    .returning();
-  if (row) return row;
+    .returning()
+  if (row) return row
 
   // Lost a race with a concurrent create — return the row the other writer made.
   const [raced] = await db
@@ -186,6 +195,6 @@ export async function createExpenseCategory(
         eq(expenseCategories.name, name)
       )
     )
-    .limit(1);
-  return raced;
+    .limit(1)
+  return raced
 }

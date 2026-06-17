@@ -1,12 +1,27 @@
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
-import { Mail, Clock, RotateCw, X, Crown, Copy, Check, UserPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useTransition } from "react"
+import {
+  Check,
+  Clock,
+  Copy,
+  Crown,
+  Mail,
+  RotateCw,
+  UserPlus,
+  X
+} from "lucide-react"
+import { toast } from "sonner"
+
+import {
+  convertFamilyMember,
+  resendInvitation,
+  revokeInvitation,
+  type FamilyAdminData,
+  type FamilyMemberSummary,
+  type PendingInvitation
+} from "@/lib/actions/family-invitations"
+import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,139 +30,142 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { InviteFamilyMemberForm } from "./invite-family-member-form";
-import {
-  convertFamilyMember,
-  resendInvitation,
-  revokeInvitation,
-  type FamilyAdminData,
-  type FamilyMemberSummary,
-  type PendingInvitation,
-} from "@/lib/actions/family-invitations";
-import { cn } from "@/lib/utils";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
+import { InviteFamilyMemberForm } from "./invite-family-member-form"
 
 interface FamilyAdminPanelProps {
-  initialData: FamilyAdminData;
-  className?: string;
+  initialData: FamilyAdminData
+  className?: string
   // When true, lays out as a compact list (Clerk modal). When false, full
   // panel with cards/headings for the /user page.
-  compact?: boolean;
+  compact?: boolean
   // Triggered after a successful invite — lets the host refresh the local
   // pending list without a full page navigation.
-  onPendingChanged?: () => void;
+  onPendingChanged?: () => void
 }
 
 function formatRelativeDate(iso: string): string {
-  const sent = new Date(iso);
-  const diffMs = Date.now() - sent.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "today";
-  if (diffDays === 1) return "1 day ago";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-  return sent.toLocaleDateString();
+  const sent = new Date(iso)
+  const diffMs = Date.now() - sent.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return "today"
+  if (diffDays === 1) return "1 day ago"
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+  return sent.toLocaleDateString()
 }
 
 export function FamilyAdminPanel({
   initialData,
   className,
   compact = false,
-  onPendingChanged,
+  onPendingChanged
 }: FamilyAdminPanelProps) {
-  const [data, setData] = useState<FamilyAdminData>(initialData);
-  const [pendingAction, startTransition] = useTransition();
-  const [actingOnId, setActingOnId] = useState<string | null>(null);
-  const [revokeTarget, setRevokeTarget] = useState<PendingInvitation | null>(null);
-  const [familyIdCopied, setFamilyIdCopied] = useState(false);
-  const [convertTarget, setConvertTarget] = useState<FamilyMemberSummary | null>(null);
-  const [convertEmail, setConvertEmail] = useState("");
-  const [convertSubmitting, setConvertSubmitting] = useState(false);
-  const [convertError, setConvertError] = useState<string | null>(null);
+  const [data, setData] = useState<FamilyAdminData>(initialData)
+  const [pendingAction, startTransition] = useTransition()
+  const [actingOnId, setActingOnId] = useState<string | null>(null)
+  const [revokeTarget, setRevokeTarget] = useState<PendingInvitation | null>(
+    null
+  )
+  const [familyIdCopied, setFamilyIdCopied] = useState(false)
+  const [convertTarget, setConvertTarget] =
+    useState<FamilyMemberSummary | null>(null)
+  const [convertEmail, setConvertEmail] = useState("")
+  const [convertSubmitting, setConvertSubmitting] = useState(false)
+  const [convertError, setConvertError] = useState<string | null>(null)
 
   const handleCopyFamilyId = async () => {
     try {
-      await navigator.clipboard.writeText(data.familyId);
-      setFamilyIdCopied(true);
-      setTimeout(() => setFamilyIdCopied(false), 1500);
+      await navigator.clipboard.writeText(data.familyId)
+      setFamilyIdCopied(true)
+      setTimeout(() => setFamilyIdCopied(false), 1500)
     } catch {
       // Clipboard API not available — silent ignore
     }
-  };
+  }
 
   const handleResend = (invite: PendingInvitation) => {
-    setActingOnId(invite.id);
+    setActingOnId(invite.id)
     startTransition(async () => {
       try {
-        await resendInvitation(invite.id);
+        await resendInvitation(invite.id)
         toast.success(`Resent invitation to ${invite.email}`, {
           description: "They will receive a fresh sign-in email shortly.",
-          duration: 5000,
-        });
+          duration: 5000
+        })
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Could not resend invitation";
-        toast.error("Resend failed", { description: message });
+        const message =
+          err instanceof Error ? err.message : "Could not resend invitation"
+        toast.error("Resend failed", { description: message })
       } finally {
-        setActingOnId(null);
+        setActingOnId(null)
       }
-    });
-  };
+    })
+  }
 
   const handleRevokeConfirm = () => {
-    if (!revokeTarget) return;
-    const target = revokeTarget;
-    setActingOnId(target.id);
-    setRevokeTarget(null);
+    if (!revokeTarget) return
+    const target = revokeTarget
+    setActingOnId(target.id)
+    setRevokeTarget(null)
     startTransition(async () => {
       try {
-        await revokeInvitation(target.id);
+        await revokeInvitation(target.id)
         setData((prev) => ({
           ...prev,
-          pendingInvitations: prev.pendingInvitations.filter((p) => p.id !== target.id),
-        }));
-        toast.success(`Revoked invitation for ${target.email}`);
-        onPendingChanged?.();
+          pendingInvitations: prev.pendingInvitations.filter(
+            (p) => p.id !== target.id
+          )
+        }))
+        toast.success(`Revoked invitation for ${target.email}`)
+        onPendingChanged?.()
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Could not revoke invitation";
-        toast.error("Revoke failed", { description: message });
+        const message =
+          err instanceof Error ? err.message : "Could not revoke invitation"
+        toast.error("Revoke failed", { description: message })
       } finally {
-        setActingOnId(null);
+        setActingOnId(null)
       }
-    });
-  };
+    })
+  }
 
   // Optimistic refresh after a successful invite from the embedded form.
   const handleInviteSuccess = () => {
-    onPendingChanged?.();
-  };
+    onPendingChanged?.()
+  }
 
   const handleOpenConvert = (member: FamilyMemberSummary) => {
-    setConvertTarget(member);
-    setConvertEmail("");
-    setConvertError(null);
-  };
+    setConvertTarget(member)
+    setConvertEmail("")
+    setConvertError(null)
+  }
 
   const handleCloseConvert = () => {
-    if (convertSubmitting) return;
-    setConvertTarget(null);
-    setConvertEmail("");
-    setConvertError(null);
-  };
+    if (convertSubmitting) return
+    setConvertTarget(null)
+    setConvertEmail("")
+    setConvertError(null)
+  }
 
   const handleConvertSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!convertTarget || convertSubmitting) return;
-    const trimmedEmail = convertEmail.trim();
+    e.preventDefault()
+    if (!convertTarget || convertSubmitting) return
+    const trimmedEmail = convertEmail.trim()
     if (!trimmedEmail) {
-      setConvertError("Email is required");
-      return;
+      setConvertError("Email is required")
+      return
     }
-    setConvertSubmitting(true);
-    setConvertError(null);
-    const target = convertTarget;
+    setConvertSubmitting(true)
+    setConvertError(null)
+    const target = convertTarget
     try {
-      await convertFamilyMember(target.id, { email: trimmedEmail });
+      await convertFamilyMember(target.id, { email: trimmedEmail })
       // The row flips from member → pending. Reflect that in local state so
       // the panel updates immediately, without a page nav.
       setData((prev) => ({
@@ -159,47 +177,59 @@ export function FamilyAdminPanel({
             name: target.name,
             email: trimmedEmail,
             relationship: target.relationship,
-            sentAt: new Date().toISOString(),
+            sentAt: new Date().toISOString()
           },
-          ...prev.pendingInvitations,
-        ],
-      }));
+          ...prev.pendingInvitations
+        ]
+      }))
       toast.success(`Invitation sent to ${target.name}`, {
         description: `${trimmedEmail} will appear as Pending until they accept.`,
-        duration: 6000,
-      });
-      setConvertTarget(null);
-      setConvertEmail("");
-      onPendingChanged?.();
+        duration: 6000
+      })
+      setConvertTarget(null)
+      setConvertEmail("")
+      onPendingChanged?.()
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not convert member";
-      setConvertError(message);
-      toast.error("Conversion failed", { description: message });
+      const message =
+        err instanceof Error ? err.message : "Could not convert member"
+      setConvertError(message)
+      toast.error("Conversion failed", { description: message })
     } finally {
-      setConvertSubmitting(false);
+      setConvertSubmitting(false)
     }
-  };
+  }
 
-  const { familyId, isMaster, masterName, masterEmail, members, pendingInvitations } = data;
+  const {
+    familyId,
+    isMaster,
+    masterName,
+    masterEmail,
+    members,
+    pendingInvitations
+  } = data
 
   return (
     <div className={cn("space-y-5", className)}>
       {/* Family identity block */}
-      <div className={compact ? "space-y-2" : "rounded-lg border border-border/60 bg-card p-4 space-y-3"}>
-        {!compact && (
-          <h3 className="text-base font-semibold">This family</h3>
-        )}
+      <div
+        className={
+          compact
+            ? "space-y-2"
+            : "border-border/60 bg-card space-y-3 rounded-lg border p-4"
+        }>
+        {!compact && <h3 className="text-base font-semibold">This family</h3>}
         <div className="flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">Family ID</span>
-          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">{familyId}</code>
+          <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-[11px]">
+            {familyId}
+          </code>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
             onClick={handleCopyFamilyId}
-            aria-label="Copy family ID"
-          >
+            aria-label="Copy family ID">
             {familyIdCopied ? (
               <Check className="h-3 w-3 text-emerald-600" />
             ) : (
@@ -211,21 +241,21 @@ export function FamilyAdminPanel({
         {members.length > 0 && (
           <ul className="space-y-2">
             {members.map((member) => {
-              const isConverting = convertTarget?.id === member.id;
+              const isConverting = convertTarget?.id === member.id
               return (
                 <li
                   key={member.id}
-                  className="rounded-md border border-border/40 bg-background px-3 py-2"
-                >
+                  className="border-border/40 bg-background rounded-md border px-3 py-2">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-medium">{member.name}</span>
+                        <span className="truncate text-sm font-medium">
+                          {member.name}
+                        </span>
                         {member.isMaster && (
                           <Badge
                             variant="outline"
-                            className="gap-1 border-amber-300 bg-amber-50 text-amber-900 text-[10px] dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
-                          >
+                            className="gap-1 border-amber-300 bg-amber-50 text-[10px] text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
                             <Crown className="h-3 w-3" />
                             Master
                           </Badge>
@@ -242,36 +272,43 @@ export function FamilyAdminPanel({
                         )}
                       </div>
                       {member.email && (
-                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <div className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
                           <Mail className="h-3 w-3 shrink-0" />
                           <span className="truncate">{member.email}</span>
                         </div>
                       )}
                     </div>
-                    {isMaster && member.canConvert && !member.isYou && !isConverting && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 shrink-0 gap-1 text-xs"
-                        onClick={() => handleOpenConvert(member)}
-                      >
-                        <UserPlus className="h-3.5 w-3.5" />
-                        Convert
-                      </Button>
-                    )}
+                    {isMaster &&
+                      member.canConvert &&
+                      !member.isYou &&
+                      !isConverting && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 shrink-0 gap-1 text-xs"
+                          onClick={() => handleOpenConvert(member)}>
+                          <UserPlus className="h-3.5 w-3.5" />
+                          Convert
+                        </Button>
+                      )}
                   </div>
                   {isConverting && (
                     <form
                       onSubmit={handleConvertSubmit}
-                      className="mt-3 space-y-2 border-t border-border/40 pt-3"
-                    >
-                      <p className="text-xs text-muted-foreground">
-                        Send <span className="font-medium text-foreground">{member.name}</span> a
-                        sign-in invite. They&apos;ll get their own login and unique user ID,
-                        but skip onboarding — they inherit this family&apos;s data.
+                      className="border-border/40 mt-3 space-y-2 border-t pt-3">
+                      <p className="text-muted-foreground text-xs">
+                        Send{" "}
+                        <span className="text-foreground font-medium">
+                          {member.name}
+                        </span>{" "}
+                        a sign-in invite. They&apos;ll get their own login and
+                        unique user ID, but skip onboarding — they inherit this
+                        family&apos;s data.
                       </p>
                       <div className="space-y-1">
-                        <Label htmlFor={`convert-email-${member.id}`} className="text-xs">
+                        <Label
+                          htmlFor={`convert-email-${member.id}`}
+                          className="text-xs">
                           Email
                         </Label>
                         <Input
@@ -287,7 +324,9 @@ export function FamilyAdminPanel({
                         />
                       </div>
                       {convertError && (
-                        <p className="text-xs text-destructive">{convertError}</p>
+                        <p className="text-destructive text-xs">
+                          {convertError}
+                        </p>
                       )}
                       <div className="flex justify-end gap-2">
                         <Button
@@ -295,22 +334,20 @@ export function FamilyAdminPanel({
                           variant="ghost"
                           size="sm"
                           onClick={handleCloseConvert}
-                          disabled={convertSubmitting}
-                        >
+                          disabled={convertSubmitting}>
                           Cancel
                         </Button>
                         <Button
                           type="submit"
                           size="sm"
-                          disabled={!convertEmail.trim() || convertSubmitting}
-                        >
+                          disabled={!convertEmail.trim() || convertSubmitting}>
                           {convertSubmitting ? "Sending…" : "Send invitation"}
                         </Button>
                       </div>
                     </form>
                   )}
                 </li>
-              );
+              )
             })}
           </ul>
         )}
@@ -318,11 +355,18 @@ export function FamilyAdminPanel({
 
       {/* Invite form (master only) */}
       {isMaster ? (
-        <div className={compact ? undefined : "rounded-lg border border-border/60 bg-card p-4"}>
+        <div
+          className={
+            compact
+              ? undefined
+              : "border-border/60 bg-card rounded-lg border p-4"
+          }>
           {!compact && (
             <div className="mb-3">
-              <h3 className="text-base font-semibold">Invite a family member</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-base font-semibold">
+                Invite a family member
+              </h3>
+              <p className="text-muted-foreground text-sm">
                 Send a sign-in invitation so they can share this account.
               </p>
             </div>
@@ -330,10 +374,12 @@ export function FamilyAdminPanel({
           <InviteFamilyMemberForm onSuccess={handleInviteSuccess} />
         </div>
       ) : (
-        <div className="rounded-lg border border-border/60 bg-muted/40 px-4 py-3">
-          <p className="text-sm font-medium">Only the family master can invite members.</p>
+        <div className="border-border/60 bg-muted/40 rounded-lg border px-4 py-3">
+          <p className="text-sm font-medium">
+            Only the family master can invite members.
+          </p>
           {(masterName || masterEmail) && (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               Ask {masterName ?? masterEmail} to send the invitation.
             </p>
           )}
@@ -342,7 +388,12 @@ export function FamilyAdminPanel({
 
       {/* Pending invitations list */}
       {pendingInvitations.length > 0 && (
-        <div className={compact ? "space-y-2" : "rounded-lg border border-border/60 bg-card p-4 space-y-3"}>
+        <div
+          className={
+            compact
+              ? "space-y-2"
+              : "border-border/60 bg-card space-y-3 rounded-lg border p-4"
+          }>
           {!compact && (
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold">Pending invitations</h3>
@@ -353,22 +404,23 @@ export function FamilyAdminPanel({
           )}
           <ul className="space-y-2">
             {pendingInvitations.map((invite) => {
-              const isActing = actingOnId === invite.id && pendingAction;
+              const isActing = actingOnId === invite.id && pendingAction
               return (
                 <li
                   key={invite.id}
-                  className="flex items-center justify-between gap-3 rounded-md border border-border/40 bg-background px-3 py-2"
-                >
+                  className="border-border/40 bg-background flex items-center justify-between gap-3 rounded-md border px-3 py-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium">{invite.name}</span>
+                      <span className="truncate text-sm font-medium">
+                        {invite.name}
+                      </span>
                       {invite.relationship && (
                         <Badge variant="outline" className="text-xs">
                           {invite.relationship}
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground mt-0.5 flex items-center gap-2 text-xs">
                       <Mail className="h-3 w-3 shrink-0" />
                       <span className="truncate">{invite.email}</span>
                       <span aria-hidden>·</span>
@@ -383,31 +435,36 @@ export function FamilyAdminPanel({
                         size="sm"
                         className="h-8 gap-1 text-xs"
                         disabled={isActing}
-                        onClick={() => handleResend(invite)}
-                      >
-                        <RotateCw className={cn("h-3.5 w-3.5", isActing && "animate-spin")} />
+                        onClick={() => handleResend(invite)}>
+                        <RotateCw
+                          className={cn(
+                            "h-3.5 w-3.5",
+                            isActing && "animate-spin"
+                          )}
+                        />
                         Resend
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 gap-1 text-xs text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive h-8 gap-1 text-xs"
                         disabled={isActing}
-                        onClick={() => setRevokeTarget(invite)}
-                      >
+                        onClick={() => setRevokeTarget(invite)}>
                         <X className="h-3.5 w-3.5" />
                         Revoke
                       </Button>
                     </div>
                   )}
                 </li>
-              );
+              )
             })}
           </ul>
         </div>
       )}
 
-      <AlertDialog open={revokeTarget !== null} onOpenChange={(open) => !open && setRevokeTarget(null)}>
+      <AlertDialog
+        open={revokeTarget !== null}
+        onOpenChange={(open) => !open && setRevokeTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Revoke invitation?</AlertDialogTitle>
@@ -415,20 +472,22 @@ export function FamilyAdminPanel({
               {revokeTarget && (
                 <>
                   The pending invitation for{" "}
-                  <span className="font-medium">{revokeTarget.email}</span> will be cancelled.
-                  They will no longer be able to use the existing email link to join your family.
-                  You can invite them again later.
+                  <span className="font-medium">{revokeTarget.email}</span> will
+                  be cancelled. They will no longer be able to use the existing
+                  email link to join your family. You can invite them again
+                  later.
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRevokeConfirm}>Revoke invitation</AlertDialogAction>
+            <AlertDialogAction onClick={handleRevokeConfirm}>
+              Revoke invitation
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
-  );
+  )
 }

@@ -1,69 +1,70 @@
-import { grossForMonth } from "@/lib/income-month";
-import { calculateMonthlyAmount } from "@/lib/expense-calculator";
-import { format } from "date-fns";
+import { format } from "date-fns"
+
+import { calculateMonthlyAmount } from "@/lib/expense-calculator"
+import { grossForMonth } from "@/lib/income-month"
 
 export interface HouseholdSummary {
   /** Sum of grossForMonth across all active incomes for the current month. */
-  grossIncome: number;
+  grossIncome: number
   /** Gross minus employee CPF deductions. */
-  netIncome: number;
+  netIncome: number
   /** Employee-side CPF contributions (gross × (1 − netTakeHome/amount) ratio). */
-  cpfEmployeeTotal: number;
+  cpfEmployeeTotal: number
   /** Sum of monthly-equivalent active expenses (one-time excluded). */
-  monthlyExpenses: number;
+  monthlyExpenses: number
   /** netIncome − monthlyExpenses. */
-  surplus: number;
+  surplus: number
   /** Sum of liquid bank holdings (currentHoldings). CPF excluded. */
-  liquidHoldings: number;
+  liquidHoldings: number
   /**
    * liquidHoldings / monthlyExpenses, rounded to 1 decimal.
    * Null when monthlyExpenses = 0 (would be division by zero).
    * v1: CPF OA excluded even though it's partially accessible for housing loan.
    */
-  runwayMonths: number | null;
+  runwayMonths: number | null
   /** Count of family members in the household. */
-  memberCount: number;
+  memberCount: number
 }
 
 // ---- minimal shapes for the function inputs --------------------------------
 // These use the fields we actually need; callers pass the full DB row objects.
 
 type IncomeRow = {
-  amount: string;
-  frequency: string;
-  netTakeHome: string | null;
-  subjectToCpf: boolean | null;
-  isActive: boolean | null;
-  startDate: string;
-  endDate: string | null;
-  futureMilestones: string | null;
-  accountForFutureChange: boolean | null;
-  accountForBonus: boolean | null;
-  bonusGroups: string | null;
-  customMonths: string | null;
-};
+  amount: string
+  frequency: string
+  netTakeHome: string | null
+  subjectToCpf: boolean | null
+  isActive: boolean | null
+  startDate: string
+  endDate: string | null
+  futureMilestones: string | null
+  accountForFutureChange: boolean | null
+  accountForBonus: boolean | null
+  bonusGroups: string | null
+  customMonths: string | null
+}
 
 type ExpenseRow = {
-  amount: string;
-  frequency: string;
-  customMonths: string | null;
-  isActive: boolean | null;
-};
+  amount: string
+  frequency: string
+  customMonths: string | null
+  isActive: boolean | null
+}
 
 type HoldingRow = {
-  holdingAmount: string;
-};
+  holdingAmount: string
+}
 
 type FamilyMemberRow = {
-  id: string;
-};
+  id: string
+}
 
 // ---------------------------------------------------------------------------
 
 const toNum = (s: string | null | undefined): number => {
-  const n = parseFloat(s ?? "");
-  return Number.isFinite(n) ? n : 0;
-};
+  const n = parseFloat(s ?? "")
+  return Number.isFinite(n) ? n : 0
+}
 
 /**
  * CPF employee deduction ratio for a single income, derived from the stored
@@ -71,11 +72,11 @@ const toNum = (s: string | null | undefined): number => {
  * HouseholdContextStrip and the Sankey always agree numerically.
  */
 function cpfRatioFor(income: IncomeRow): number {
-  if (!income.subjectToCpf || income.netTakeHome == null) return 0;
-  const rawGross = toNum(income.amount);
-  if (rawGross <= 0) return 0;
-  const rawNet = toNum(income.netTakeHome);
-  return Math.max(0, rawGross - rawNet) / rawGross;
+  if (!income.subjectToCpf || income.netTakeHome == null) return 0
+  const rawGross = toNum(income.amount)
+  if (rawGross <= 0) return 0
+  const rawNet = toNum(income.netTakeHome)
+  return Math.max(0, rawGross - rawNet) / rawGross
 }
 
 /**
@@ -88,15 +89,15 @@ export function computeHouseholdSummary(
   incomes: IncomeRow[],
   expenses: ExpenseRow[],
   holdings: HoldingRow[],
-  familyMembers: FamilyMemberRow[],
+  familyMembers: FamilyMemberRow[]
 ): HouseholdSummary {
-  const currentMonthKey = format(new Date(), "yyyy-MM");
+  const currentMonthKey = format(new Date(), "yyyy-MM")
 
-  let grossIncome = 0;
-  let cpfEmployeeTotal = 0;
+  let grossIncome = 0
+  let cpfEmployeeTotal = 0
 
   for (const inc of incomes) {
-    if (inc.isActive === false) continue;
+    if (inc.isActive === false) continue
 
     const gross = grossForMonth(
       {
@@ -109,33 +110,40 @@ export function computeHouseholdSummary(
         accountForFutureChange: inc.accountForFutureChange,
         accountForBonus: inc.accountForBonus,
         bonusGroups: inc.bonusGroups,
-        customMonths: inc.customMonths,
+        customMonths: inc.customMonths
       },
-      currentMonthKey,
-    );
+      currentMonthKey
+    )
 
-    if (gross <= 0) continue;
+    if (gross <= 0) continue
 
-    const cpf = gross * cpfRatioFor(inc);
-    grossIncome += gross;
-    cpfEmployeeTotal += cpf;
+    const cpf = gross * cpfRatioFor(inc)
+    grossIncome += gross
+    cpfEmployeeTotal += cpf
   }
 
-  const netIncome = grossIncome - cpfEmployeeTotal;
+  const netIncome = grossIncome - cpfEmployeeTotal
 
   const monthlyExpenses = expenses
     .filter((e) => e.isActive !== false)
     .reduce(
-      (sum, e) => sum + calculateMonthlyAmount(toNum(e.amount), e.frequency, e.customMonths),
-      0,
-    );
+      (sum, e) =>
+        sum +
+        calculateMonthlyAmount(toNum(e.amount), e.frequency, e.customMonths),
+      0
+    )
 
-  const surplus = netIncome - monthlyExpenses;
+  const surplus = netIncome - monthlyExpenses
 
-  const liquidHoldings = holdings.reduce((sum, h) => sum + toNum(h.holdingAmount), 0);
+  const liquidHoldings = holdings.reduce(
+    (sum, h) => sum + toNum(h.holdingAmount),
+    0
+  )
 
   const runwayMonths =
-    monthlyExpenses > 0 ? Math.round((liquidHoldings / monthlyExpenses) * 10) / 10 : null;
+    monthlyExpenses > 0
+      ? Math.round((liquidHoldings / monthlyExpenses) * 10) / 10
+      : null
 
   return {
     grossIncome,
@@ -145,6 +153,6 @@ export function computeHouseholdSummary(
     surplus,
     liquidHoldings,
     runwayMonths,
-    memberCount: familyMembers.length,
-  };
+    memberCount: familyMembers.length
+  }
 }

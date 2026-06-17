@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { AlertTriangle } from "lucide-react";
+import * as React from "react"
+import { AlertTriangle } from "lucide-react"
 
 import {
   AlertDialog,
@@ -11,20 +11,20 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
 
 export interface ConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
   /** e.g. "Delete this policy?" */
-  title: string;
+  title: string
   /** One-line consequence. */
-  description?: React.ReactNode;
+  description?: React.ReactNode
   /** Red confirm button label, e.g. "Delete policy". */
-  confirmLabel?: string;
-  cancelLabel?: string;
-  onConfirm: () => void;
+  confirmLabel?: string
+  cancelLabel?: string
+  onConfirm: () => void
 }
 
 /**
@@ -40,7 +40,7 @@ export function ConfirmDialog({
   description,
   confirmLabel = "Delete",
   cancelLabel = "Cancel",
-  onConfirm,
+  onConfirm
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -62,12 +62,11 @@ export function ConfirmDialog({
           <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className="bg-[#E05555] text-white hover:bg-[#E05555]/90"
-          >
+            className="bg-[#E05555] text-white hover:bg-[#E05555]/90">
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

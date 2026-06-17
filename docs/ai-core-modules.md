@@ -58,12 +58,12 @@ The Orchestrator is the **central controller** for the AI Assistant. It manages 
 
 ```typescript
 interface ConversationState {
-  id: string;
-  messages: Message[];
-  lastResponseId?: string;  // For OpenAI conversation continuity
-  toolsUsed: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  messages: Message[]
+  lastResponseId?: string // For OpenAI conversation continuity
+  toolsUsed: string[]
+  createdAt: Date
+  updatedAt: Date
 }
 ```
 
@@ -96,12 +96,12 @@ The orchestrator implements an **agentic loop** that:
 ```typescript
 // Simplified flow
 while (response.toolCalls.length > 0 && toolCallCount < maxToolCalls) {
-  const toolResults = await this.executeToolCalls(response.toolCalls);
+  const toolResults = await this.executeToolCalls(response.toolCalls)
   response = await this.client.createResponse({
     input: toolResults,
-    previous_response_id: response.id,
-  });
-  toolCallCount++;
+    previous_response_id: response.id
+  })
+  toolCallCount++
 }
 ```
 
@@ -112,23 +112,26 @@ while (response.toolCalls.length > 0 && toolCallCount < maxToolCalls) {
 ```typescript
 return {
   response: finalResponse,
-  toolsUsed: toolsUsedThisRound,  // Always included
+  toolsUsed: toolsUsedThisRound, // Always included
   conversationId: conversation.id,
-  responseId: response.id,
-};
+  responseId: response.id
+}
 ```
 
 ### Usage
 
 ```typescript
-import { getOrchestrator } from "@/lib/ai/orchestrator";
+import { getOrchestrator } from "@/lib/ai/orchestrator"
 
-const orchestrator = getOrchestrator();
-const result = await orchestrator.chat("What's my income this month?", conversationId);
+const orchestrator = getOrchestrator()
+const result = await orchestrator.chat(
+  "What's my income this month?",
+  conversationId
+)
 
-console.log(result.response);     // AI's response text
-console.log(result.toolsUsed);    // ["get_income_summary"]
-console.log(result.conversationId); // For continuing the conversation
+console.log(result.response) // AI's response text
+console.log(result.toolsUsed) // ["get_income_summary"]
+console.log(result.conversationId) // For continuing the conversation
 ```
 
 ---
@@ -141,19 +144,19 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 
 ### Available Tools
 
-| Tool Name | Description |
-|-----------|-------------|
-| `get_income_summary` | Income breakdown with CPF calculations |
-| `get_expenses_summary` | Recurring expense breakdown by category |
-| `get_daily_expense_summary` | Actual daily spending history and totals |
-| `get_family_summary` | Household structure and member info |
-| `get_balance_summary` | Balance projections with safety assessment |
-| `get_holdings_summary` | Current cash and liquid asset holdings |
-| `get_property_assets_summary` | Property assets with mortgage/loan details |
-| `get_vehicle_assets_summary` | Vehicle assets with loan and COE details |
-| `get_other_assets_summary` | Other assets (investments, savings, etc.) |
-| `get_insurance_summary` | Insurance policies and coverage details |
-| `search_knowledge` | Semantic search over financial knowledge base |
+| Tool Name                     | Description                                   |
+| ----------------------------- | --------------------------------------------- |
+| `get_income_summary`          | Income breakdown with CPF calculations        |
+| `get_expenses_summary`        | Recurring expense breakdown by category       |
+| `get_daily_expense_summary`   | Actual daily spending history and totals      |
+| `get_family_summary`          | Household structure and member info           |
+| `get_balance_summary`         | Balance projections with safety assessment    |
+| `get_holdings_summary`        | Current cash and liquid asset holdings        |
+| `get_property_assets_summary` | Property assets with mortgage/loan details    |
+| `get_vehicle_assets_summary`  | Vehicle assets with loan and COE details      |
+| `get_other_assets_summary`    | Other assets (investments, savings, etc.)     |
+| `get_insurance_summary`       | Insurance policies and coverage details       |
+| `search_knowledge`            | Semantic search over financial knowledge base |
 
 ---
 
@@ -162,11 +165,15 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns detailed income and CPF summary for a specific month.
 
 **Parameters**:
+
 ```typescript
-{ month: "YYYY-MM" }  // e.g., "2026-02"
+{
+  month: "YYYY-MM"
+} // e.g., "2026-02"
 ```
 
 **Returns**:
+
 - Total gross/net income
 - CPF contributions (employee, employer, account allocations)
 - Breakdown by income source with family member attribution
@@ -179,11 +186,15 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns recurring expense summary for a specific month.
 
 **Parameters**:
+
 ```typescript
-{ month: "YYYY-MM" }
+{
+  month: "YYYY-MM"
+}
 ```
 
 **Returns**:
+
 - Total monthly expenses
 - Category breakdown with percentages
 - All expense items with frequency and type
@@ -195,6 +206,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns actual daily spending summary for a date range. Unlike `get_expenses_summary` which shows planned recurring expenses, this shows real money spent.
 
 **Parameters**:
+
 ```typescript
 {
   month?: "YYYY-MM",        // Shorthand for entire month
@@ -206,6 +218,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 ```
 
 **Returns**:
+
 - Date range and days covered
 - Total spent and average per day
 - Category breakdown with subcategory details
@@ -221,6 +234,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns household structure and income inclusion settings.
 
 **Parameters**:
+
 ```typescript
 {
   scope?: "household" | "member" | "auto",
@@ -231,6 +245,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 ```
 
 **Returns**:
+
 - List of family members
 - Which members are included in income totals
 - Income change signals (scheduled salary changes)
@@ -242,6 +257,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Cashflow projection engine with safety assessment and affordability analysis.
 
 **Parameters**:
+
 ```typescript
 {
   fromMonth: "YYYY-MM",
@@ -259,6 +275,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 ```
 
 **Returns**:
+
 - Monthly balance projections
 - Safety assessment with traffic light system
 - Affordability analysis
@@ -271,11 +288,14 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns current cash and liquid asset holdings across all bank accounts.
 
 **Parameters**:
+
 ```typescript
-{}  // No parameters required
+{
+} // No parameters required
 ```
 
 **Returns**:
+
 - Total holdings amount across all accounts
 - Number of accounts
 - Individual holdings with bank name, amount, and family member ownership
@@ -291,11 +311,14 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns details about all property assets including mortgage and CPF information.
 
 **Parameters**:
+
 ```typescript
-{}  // No parameters required
+{
+} // No parameters required
 ```
 
 **Returns**:
+
 - Total property value (sum of purchase prices)
 - Total outstanding loans
 - Total equity owned
@@ -318,11 +341,14 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns details about all vehicle assets including loan status and COE information.
 
 **Parameters**:
+
 ```typescript
-{}  // No parameters required
+{
+} // No parameters required
 ```
 
 **Returns**:
+
 - Total vehicle value
 - Total outstanding loans
 - Total monthly payments
@@ -343,6 +369,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns details about other tracked assets like investments, savings, and collectibles.
 
 **Parameters**:
+
 ```typescript
 {
   assetType?: string  // Optional filter: "investment", "savings", "collectible", etc.
@@ -350,6 +377,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 ```
 
 **Returns**:
+
 - Total current value
 - Total purchase value
 - Overall gain/loss amount and percentage
@@ -369,6 +397,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Returns details about all insurance policies including coverage and premium information.
 
 **Parameters**:
+
 ```typescript
 {
   policyType?: string,  // Optional filter: "life", "health", "auto", "home", etc.
@@ -377,6 +406,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 ```
 
 **Returns**:
+
 - Total annual and monthly premiums
 - Total death coverage
 - Total critical illness coverage
@@ -400,6 +430,7 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 **Purpose**: Semantic search over the Foracle knowledge base for general financial information.
 
 **Parameters**:
+
 ```typescript
 {
   query: string,    // Natural language search query
@@ -408,19 +439,23 @@ The Tool Executors are the **data layer** for the AI Assistant. They query the d
 ```
 
 **Returns**:
+
 - Relevant knowledge chunks with similarity scores
 - Document metadata (source, category, etc.)
 
 **When to Use**:
+
 - General financial questions: "What is CPF?", "How much emergency fund should I have?"
 - Concept explanations: "What are the CPF account types?"
 - Best practices: "What are good budgeting strategies?"
 
 **NOT for**:
+
 - User-specific data (use the other tools)
 - Balance projections (use `get_balance_summary`)
 
 **Example Response**:
+
 ```typescript
 {
   query: "What is CPF?",
@@ -445,29 +480,29 @@ The `get_balance_summary` tool includes a **safety assessment** that evaluates w
 
 #### Thresholds
 
-| Status | Emergency Fund Coverage | Meaning |
-|--------|------------------------|---------|
-| 🟢 **Green** | ≥ 9 months of net income | Safe - healthy emergency fund |
+| Status        | Emergency Fund Coverage  | Meaning                         |
+| ------------- | ------------------------ | ------------------------------- |
+| 🟢 **Green**  | ≥ 9 months of net income | Safe - healthy emergency fund   |
 | 🟡 **Yellow** | 6-9 months of net income | Caution - consider if essential |
-| 🔴 **Red** | < 6 months of net income | At Risk - not recommended |
+| 🔴 **Red**    | < 6 months of net income | At Risk - not recommended       |
 
 #### How It Works
 
 ```typescript
 // Calculate average monthly net income
-const baseMonthlyNetIncome = totalBaseIncome / monthCount;
+const baseMonthlyNetIncome = totalBaseIncome / monthCount
 
 // Calculate thresholds
-const yellowThreshold = baseMonthlyNetIncome * 6;  // 6 months
-const greenThreshold = baseMonthlyNetIncome * 9;   // 9 months
+const yellowThreshold = baseMonthlyNetIncome * 6 // 6 months
+const greenThreshold = baseMonthlyNetIncome * 9 // 9 months
 
 // Determine status based on balance after hypothetical expense
 if (balance >= greenThreshold) {
-  status = "green";
+  status = "green"
 } else if (balance >= yellowThreshold) {
-  status = "yellow";
+  status = "yellow"
 } else {
-  status = "red";
+  status = "red"
 }
 ```
 
@@ -477,8 +512,8 @@ When computing the **maximum affordable expense** (`computeMaxAffordableExpenseM
 
 ```typescript
 // Default to 6 months of net income as the safety floor
-const defaultSafetyFloor = baseMonthlyNetIncome * 6;
-const minAllowedBalance = params.minMonthlyBalance ?? defaultSafetyFloor;
+const defaultSafetyFloor = baseMonthlyNetIncome * 6
+const minAllowedBalance = params.minMonthlyBalance ?? defaultSafetyFloor
 ```
 
 This ensures the AI **never recommends an expense that would deplete the emergency fund** below safe levels.
@@ -491,12 +526,12 @@ All tool executions are logged for transparency:
 
 ```typescript
 interface AuditRecord {
-  toolName: ToolName;
-  userId: string;
-  timestamp: Date;
-  durationMs: number;
-  status: "success" | "error" | "unauthorized" | "validation_error";
-  errorMessage?: string;
+  toolName: ToolName
+  userId: string
+  timestamp: Date
+  durationMs: number
+  status: "success" | "error" | "unauthorized" | "validation_error"
+  errorMessage?: string
 }
 ```
 

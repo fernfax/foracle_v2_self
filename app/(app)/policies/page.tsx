@@ -1,23 +1,24 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation"
+import { currentUser } from "@clerk/nextjs/server"
 
-export const dynamic = 'force-dynamic';
+import { getUserPolicies } from "@/lib/actions/policies"
+import { getUserFamilyMembers } from "@/lib/actions/user"
 
-import { redirect } from "next/navigation";
-import { getUserPolicies } from "@/lib/actions/policies";
-import { getUserFamilyMembers } from "@/lib/actions/user";
-import { PoliciesClient } from "./client";
+import { PoliciesClient } from "./client"
+
+export const dynamic = "force-dynamic"
 
 export default async function PoliciesPage() {
-  const user = await currentUser();
+  const user = await currentUser()
 
   if (!user) {
-    redirect("/sign-in");
+    redirect("/sign-in")
   }
 
   const [policies, familyMembers] = await Promise.all([
     getUserPolicies(),
-    getUserFamilyMembers(),
-  ]);
+    getUserFamilyMembers()
+  ])
 
   return (
     <PoliciesClient
@@ -25,5 +26,5 @@ export default async function PoliciesPage() {
       familyMembers={familyMembers}
       userId={user.id}
     />
-  );
+  )
 }

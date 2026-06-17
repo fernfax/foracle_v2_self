@@ -1,84 +1,85 @@
-"use client";
+"use client"
 
-import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { Check, Loader2 } from "lucide-react"
+
+import {
+  getBackgroundDecor,
+  setBackgroundDecor
+} from "@/lib/actions/singlish-mode"
+import type { BackgroundDecor } from "@/lib/services/user-prefs"
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  getBackgroundDecor,
-  setBackgroundDecor,
-} from "@/lib/actions/singlish-mode";
-import type { BackgroundDecor } from "@/lib/services/user-prefs";
-import { cn } from "@/lib/utils";
-import { Loader2, Check } from "lucide-react";
+  CardTitle
+} from "@/components/ui/card"
 
 interface BackgroundDecorPickerProps {
   // Optional: when omitted, the picker fetches its own initial value on
   // mount. Pass it explicitly when the parent already has the value SSR'd
   // (e.g. server pages) to avoid a flash of the radial default.
-  initialValue?: BackgroundDecor;
+  initialValue?: BackgroundDecor
 }
 
 const OPTIONS: {
-  value: BackgroundDecor;
-  label: string;
-  description: string;
+  value: BackgroundDecor
+  label: string
+  description: string
 }[] = [
   {
     value: "radial",
     label: "Radial circles",
-    description: "Faint concentric circles anchored top-right",
+    description: "Faint concentric circles anchored top-right"
   },
   {
     value: "peranakan",
     label: "Peranakan tiles",
-    description: "Tiled floral / geometric motifs in brand colors",
+    description: "Tiled floral / geometric motifs in brand colors"
   },
   {
     value: "none",
     label: "None",
-    description: "Plain warm-cream canvas, no pattern",
-  },
-];
+    description: "Plain warm-cream canvas, no pattern"
+  }
+]
 
 export function BackgroundDecorPicker({
-  initialValue,
+  initialValue
 }: BackgroundDecorPickerProps) {
-  const router = useRouter();
-  const [value, setValue] = useState<BackgroundDecor>(initialValue ?? "radial");
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const [value, setValue] = useState<BackgroundDecor>(initialValue ?? "radial")
+  const [isPending, startTransition] = useTransition()
 
   // Fetch the real value on mount when no SSR'd initial was provided
   // (e.g. when mounted inside Clerk's UserProfile modal, which is fully
   // client-rendered).
   useEffect(() => {
-    if (initialValue !== undefined) return;
-    let cancelled = false;
+    if (initialValue !== undefined) return
+    let cancelled = false
     getBackgroundDecor().then((current) => {
-      if (!cancelled) setValue(current);
-    });
+      if (!cancelled) setValue(current)
+    })
     return () => {
-      cancelled = true;
-    };
-  }, [initialValue]);
+      cancelled = true
+    }
+  }, [initialValue])
 
   function handleSelect(next: BackgroundDecor) {
-    if (next === value || isPending) return;
-    const previous = value;
-    setValue(next);
+    if (next === value || isPending) return
+    const previous = value
+    setValue(next)
     startTransition(async () => {
       try {
-        await setBackgroundDecor(next);
-        router.refresh();
+        await setBackgroundDecor(next)
+        router.refresh()
       } catch {
-        setValue(previous);
+        setValue(previous)
       }
-    });
+    })
   }
 
   return (
@@ -93,7 +94,7 @@ export function BackgroundDecorPicker({
       <CardContent>
         <div className="grid gap-3 sm:grid-cols-3">
           {OPTIONS.map((opt) => {
-            const selected = opt.value === value;
+            const selected = opt.value === value
             return (
               <button
                 key={opt.value}
@@ -101,38 +102,37 @@ export function BackgroundDecorPicker({
                 onClick={() => handleSelect(opt.value)}
                 disabled={isPending}
                 className={cn(
-                  "group relative flex flex-col items-stretch text-left rounded-2xl border p-4 transition-all",
-                  "hover:shadow-md disabled:opacity-60 disabled:cursor-wait",
+                  "group relative flex flex-col items-stretch rounded-2xl border p-4 text-left transition-all",
+                  "hover:shadow-md disabled:cursor-wait disabled:opacity-60",
                   selected
                     ? "border-brand-terracotta bg-brand-terracotta/[0.06] shadow-sm"
                     : "border-border/40 bg-background hover:border-border/70"
-                )}
-              >
+                )}>
                 <DecorPreview kind={opt.value} />
                 <div className="mt-3 flex items-start justify-between gap-2">
                   <div>
-                    <div className="font-display text-sm font-semibold text-foreground">
+                    <div className="font-display text-foreground text-sm font-semibold">
                       {opt.label}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                    <div className="text-muted-foreground mt-0.5 text-xs leading-snug">
                       {opt.description}
                     </div>
                   </div>
                   {selected ? (
                     isPending ? (
-                      <Loader2 className="h-4 w-4 shrink-0 text-brand-terracotta animate-spin" />
+                      <Loader2 className="text-brand-terracotta h-4 w-4 shrink-0 animate-spin" />
                     ) : (
-                      <Check className="h-4 w-4 shrink-0 text-brand-terracotta" />
+                      <Check className="text-brand-terracotta h-4 w-4 shrink-0" />
                     )
                   ) : null}
                 </div>
               </button>
-            );
+            )
           })}
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 // ─── Inline preview thumbnails ──────────────────────────────────────────
@@ -142,14 +142,13 @@ export function BackgroundDecorPicker({
 function DecorPreview({ kind }: { kind: BackgroundDecor }) {
   if (kind === "radial") {
     return (
-      <div className="relative w-full aspect-[3/2] rounded-lg bg-background overflow-hidden border border-border/30">
+      <div className="bg-background border-border/30 relative aspect-[3/2] w-full overflow-hidden rounded-lg border">
         <svg
           width="100%"
           height="100%"
           viewBox="0 0 300 200"
           preserveAspectRatio="xMaxYMin slice"
-          className="opacity-40"
-        >
+          className="opacity-40">
           {[20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240].map((r) => (
             <circle
               key={r}
@@ -163,11 +162,11 @@ function DecorPreview({ kind }: { kind: BackgroundDecor }) {
           ))}
         </svg>
       </div>
-    );
+    )
   }
   if (kind === "peranakan") {
     return (
-      <div className="relative w-full aspect-[3/2] rounded-lg bg-background overflow-hidden border border-border/30">
+      <div className="bg-background border-border/30 relative aspect-[3/2] w-full overflow-hidden rounded-lg border">
         <svg width="100%" height="100%" className="opacity-50">
           <defs>
             <pattern
@@ -176,8 +175,7 @@ function DecorPreview({ kind }: { kind: BackgroundDecor }) {
               y="0"
               width="60"
               height="60"
-              patternUnits="userSpaceOnUse"
-            >
+              patternUnits="userSpaceOnUse">
               <rect
                 x="1"
                 y="1"
@@ -206,13 +204,13 @@ function DecorPreview({ kind }: { kind: BackgroundDecor }) {
           <rect width="100%" height="100%" fill="url(#prev-peranakan)" />
         </svg>
       </div>
-    );
+    )
   }
   return (
-    <div className="relative w-full aspect-[3/2] rounded-lg bg-background overflow-hidden border border-border/30 flex items-center justify-center">
-      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+    <div className="bg-background border-border/30 relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden rounded-lg border">
+      <span className="text-muted-foreground text-[10px] tracking-widest uppercase">
         plain
       </span>
     </div>
-  );
+  )
 }

@@ -1,53 +1,53 @@
-"use client";
+"use client"
 
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
+
 import {
   getMonthName,
-  getPreviousMonth,
   getNextMonth,
-  isCurrentMonth,
-} from "@/lib/budget-utils";
+  getPreviousMonth,
+  isCurrentMonth
+} from "@/lib/budget-utils"
 
 interface MonthNavigatorProps {
-  year: number;
-  month: number;
-  onMonthChange: (year: number, month: number) => void;
+  year: number
+  month: number
+  onMonthChange: (year: number, month: number) => void
 }
 
 export function MonthNavigator({
   year,
   month,
-  onMonthChange,
+  onMonthChange
 }: MonthNavigatorProps) {
   const handlePrevious = () => {
-    const prev = getPreviousMonth(year, month);
-    onMonthChange(prev.year, prev.month);
-  };
+    const prev = getPreviousMonth(year, month)
+    onMonthChange(prev.year, prev.month)
+  }
 
   const handleNext = () => {
-    const next = getNextMonth(year, month);
+    const next = getNextMonth(year, month)
     if (next) {
-      onMonthChange(next.year, next.month);
+      onMonthChange(next.year, next.month)
     }
-  };
+  }
 
-  const canGoNext = !isCurrentMonth(year, month);
+  const canGoNext = !isCurrentMonth(year, month)
 
   // Fixed-width pill mirroring the Sankey month switcher: standardised width
   // (independent of the label), breathing room on the arrows, calendar icon.
   return (
-    <div className="flex items-center justify-between rounded-full bg-muted px-1 py-1 w-[200px]">
+    <div className="bg-muted flex w-[200px] items-center justify-between rounded-full px-1 py-1">
       <button
         type="button"
         onClick={handlePrevious}
         aria-label="Previous month"
-        className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-foreground/[0.06]"
-      >
+        className="text-muted-foreground hover:bg-foreground/[0.06] rounded-full p-1.5 transition-colors">
         <ChevronLeft className="h-4 w-4" />
       </button>
 
       <div className="flex items-center gap-1.5 px-2">
-        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+        <CalendarDays className="text-muted-foreground h-4 w-4" />
         <span className="text-sm font-medium tabular-nums">
           {getMonthName(month, "long")} {year}
         </span>
@@ -58,10 +58,9 @@ export function MonthNavigator({
         onClick={handleNext}
         disabled={!canGoNext}
         aria-label="Next month"
-        className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-foreground/[0.06] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-      >
+        className="text-muted-foreground hover:bg-foreground/[0.06] rounded-full p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent">
         <ChevronRight className="h-4 w-4" />
       </button>
     </div>
-  );
+  )
 }

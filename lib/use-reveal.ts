@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react"
 
 /**
  * Scroll-reveal via IntersectionObserver — adds `.revealed` once the element
@@ -11,29 +11,29 @@ import { useEffect, useRef } from "react";
  * Under prefers-reduced-motion the element is shown immediately (no animation).
  */
 export function useReveal<T extends HTMLElement = HTMLDivElement>() {
-  const ref = useRef<T>(null);
+  const ref = useRef<T>(null)
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    const el = ref.current
+    if (!el) return
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.classList.add("revealed");
-      return;
+      el.classList.add("revealed")
+      return
     }
 
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          el.classList.add("revealed");
-          io.disconnect();
+          el.classList.add("revealed")
+          io.disconnect()
         }
       },
       { threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
-  return ref;
+  return ref
 }

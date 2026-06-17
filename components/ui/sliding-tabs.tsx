@@ -1,97 +1,97 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useRef, useState, useEffect, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import * as React from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { LucideIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 interface TabItem {
-  value: string;
-  label: string;
-  icon?: LucideIcon;
-  dataTour?: string;
-  badge?: number;
-  badgeVariant?: "default" | "success";
+  value: string
+  label: string
+  icon?: LucideIcon
+  dataTour?: string
+  badge?: number
+  badgeVariant?: "default" | "success"
 }
 
 interface SlidingTabsProps {
-  tabs: TabItem[];
-  value: string;
-  onValueChange: (value: string) => void;
-  className?: string;
+  tabs: TabItem[]
+  value: string
+  onValueChange: (value: string) => void
+  className?: string
 }
 
 export function SlidingTabs({
   tabs,
   value,
   onValueChange,
-  className,
+  className
 }: SlidingTabsProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+  const containerRef = useRef<HTMLDivElement>(null)
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
 
   const updateIndicator = useCallback(() => {
-    const activeTab = tabRefs.current.get(value);
-    const container = containerRef.current;
+    const activeTab = tabRefs.current.get(value)
+    const container = containerRef.current
 
     if (activeTab && container) {
-      const containerRect = container.getBoundingClientRect();
-      const tabRect = activeTab.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect()
+      const tabRect = activeTab.getBoundingClientRect()
 
       setIndicatorStyle({
         left: tabRect.left - containerRect.left,
-        width: tabRect.width,
-      });
+        width: tabRect.width
+      })
     }
-  }, [value]);
+  }, [value])
 
   useEffect(() => {
-    updateIndicator();
-  }, [value, updateIndicator]);
+    updateIndicator()
+  }, [value, updateIndicator])
 
   useEffect(() => {
     // Update on resize
-    window.addEventListener("resize", updateIndicator);
+    window.addEventListener("resize", updateIndicator)
     // Small delay to ensure fonts are loaded
-    const timer = setTimeout(updateIndicator, 100);
+    const timer = setTimeout(updateIndicator, 100)
 
     return () => {
-      window.removeEventListener("resize", updateIndicator);
-      clearTimeout(timer);
-    };
-  }, [updateIndicator]);
+      window.removeEventListener("resize", updateIndicator)
+      clearTimeout(timer)
+    }
+  }, [updateIndicator])
 
   const setTabRef = (value: string) => (el: HTMLButtonElement | null) => {
     if (el) {
-      tabRefs.current.set(value, el);
+      tabRefs.current.set(value, el)
     } else {
-      tabRefs.current.delete(value);
+      tabRefs.current.delete(value)
     }
-  };
+  }
 
   return (
     <div
       ref={containerRef}
       className={cn(
         "relative inline-flex items-center gap-0.5",
-        "max-w-full overflow-x-auto scrollbar-hide",
+        "scrollbar-hide max-w-full overflow-x-auto",
         className
-      )}
-    >
+      )}>
       {/* Sliding underline indicator */}
       <div
-        className="absolute bottom-0 h-[2px] rounded-full bg-brand-terracotta transition-all duration-300 ease-out"
+        className="bg-brand-terracotta absolute bottom-0 h-[2px] rounded-full transition-all duration-300 ease-out"
         style={{
           left: indicatorStyle.left,
-          width: indicatorStyle.width,
+          width: indicatorStyle.width
         }}
       />
 
       {/* Tab buttons */}
       {tabs.map((tab) => {
-        const isActive = value === tab.value;
-        const Icon = tab.icon;
+        const isActive = value === tab.value
+        const Icon = tab.icon
 
         return (
           <button
@@ -100,32 +100,30 @@ export function SlidingTabs({
             onClick={() => onValueChange(tab.value)}
             data-tour={tab.dataTour}
             className={cn(
-              "relative z-10 flex items-center gap-1.5 px-3 pb-2 pt-1 font-display text-[13px] font-medium transition-colors duration-200",
+              "font-display relative z-10 flex items-center gap-1.5 px-3 pt-1 pb-2 text-[13px] font-medium transition-colors duration-200",
               "md:gap-2 md:px-4",
               isActive
                 ? "text-brand-terracotta"
                 : "text-muted-foreground hover:text-foreground"
-            )}
-          >
+            )}>
             {Icon && <Icon className="h-4 w-4" />}
             <span>{tab.label}</span>
             {tab.badge !== undefined && tab.badge > 0 && (
               <span
                 className={cn(
-                  "ml-1 text-xs px-1.5 py-0.5 rounded-full",
+                  "ml-1 rounded-full px-1.5 py-0.5 text-xs",
                   isActive
                     ? "bg-brand-terracotta/15 text-brand-terracotta"
                     : tab.badgeVariant === "success"
-                    ? "bg-[rgba(0,196,170,0.15)] text-[#007A68]"
-                    : "bg-primary/10 text-primary"
-                )}
-              >
+                      ? "bg-[rgba(0,196,170,0.15)] text-[#007A68]"
+                      : "bg-primary/10 text-primary"
+                )}>
                 {tab.badge}
               </span>
             )}
           </button>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

@@ -1,69 +1,83 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp, Bot, Database } from "lucide-react";
+import { useState } from "react"
+import { Bot, ChevronDown, ChevronUp, Database } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
+
+import { cn } from "@/lib/utils"
 
 interface ChatMessageProps {
-  role: "user" | "assistant";
-  content: string;
+  role: "user" | "assistant"
+  content: string
   /**
    * HARD RULE: When tools are used, the "Data sources used" collapsible section
    * MUST always appear at the bottom of assistant messages. This provides
    * transparency about which data sources were queried to generate the response.
    */
-  toolsUsed?: string[];
-  timestamp?: Date;
+  toolsUsed?: string[]
+  timestamp?: Date
 }
 
-export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessageProps) {
-  const [showDataUsed, setShowDataUsed] = useState(false);
-  const isUser = role === "user";
+export function ChatMessage({
+  role,
+  content,
+  toolsUsed,
+  timestamp
+}: ChatMessageProps) {
+  const [showDataUsed, setShowDataUsed] = useState(false)
+  const isUser = role === "user"
 
-  const hasDataUsed = toolsUsed && toolsUsed.length > 0;
+  const hasDataUsed = toolsUsed && toolsUsed.length > 0
 
   // Remove "Data used" section from displayed content (we'll show it separately)
   const displayContent = content
     .replace(/\n*---\n*\*\*Data used:\*\*\s*`[^`]+`\s*$/g, "")
-    .trim();
+    .trim()
 
   // User messages: right-aligned speech bubble (ChatGPT style)
   if (isUser) {
     return (
       <div className="flex justify-end px-4 py-3">
         <div className="max-w-[85%] sm:max-w-[75%]">
-          <div className="bg-foreground/80 dark:bg-foreground/80 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{displayContent}</p>
+          <div className="bg-foreground/80 dark:bg-foreground/80 rounded-2xl rounded-tr-sm px-4 py-2.5 text-white shadow-sm">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {displayContent}
+            </p>
           </div>
           {timestamp && (
-            <div className="flex justify-end mt-1">
-              <span className="text-xs text-muted-foreground">
-                {timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            <div className="mt-1 flex justify-end">
+              <span className="text-muted-foreground text-xs">
+                {timestamp.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })}
               </span>
             </div>
           )}
         </div>
       </div>
-    );
+    )
   }
 
   // Assistant messages: left-aligned with avatar
   return (
-    <div className="flex gap-3 px-4 py-4 bg-background">
+    <div className="bg-background flex gap-3 px-4 py-4">
       {/* Avatar */}
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)] text-[#007A68]">
         <Bot className="h-4 w-4" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0 space-y-3 overflow-hidden">
+      <div className="min-w-0 flex-1 space-y-3 overflow-hidden">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Foracle Assistant</span>
           {timestamp && (
-            <span className="text-xs text-muted-foreground">
-              {timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            <span className="text-muted-foreground text-xs">
+              {timestamp.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+              })}
             </span>
           )}
         </div>
@@ -75,54 +89,54 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
             components={{
               // Headings
               h1: ({ children }) => (
-                <h1 className="text-xl font-bold mt-6 mb-3 first:mt-0 text-foreground">
+                <h1 className="text-foreground mt-6 mb-3 text-xl font-bold first:mt-0">
                   {children}
                 </h1>
               ),
               h2: ({ children }) => (
-                <h2 className="text-lg font-semibold mt-5 mb-2 first:mt-0 text-foreground">
+                <h2 className="text-foreground mt-5 mb-2 text-lg font-semibold first:mt-0">
                   {children}
                 </h2>
               ),
               h3: ({ children }) => (
-                <h3 className="text-base font-semibold mt-4 mb-2 first:mt-0 text-foreground">
+                <h3 className="text-foreground mt-4 mb-2 text-base font-semibold first:mt-0">
                   {children}
                 </h3>
               ),
               h4: ({ children }) => (
-                <h4 className="text-sm font-semibold mt-3 mb-1 text-muted-foreground">
+                <h4 className="text-muted-foreground mt-3 mb-1 text-sm font-semibold">
                   {children}
                 </h4>
               ),
 
               // Paragraphs
               p: ({ children }) => (
-                <p className="text-sm leading-relaxed mb-3 last:mb-0 text-foreground">
+                <p className="text-foreground mb-3 text-sm leading-relaxed last:mb-0">
                   {children}
                 </p>
               ),
 
               // Lists
               ul: ({ children }) => (
-                <ul className="my-3 ml-4 space-y-1.5 text-sm list-none">
+                <ul className="my-3 ml-4 list-none space-y-1.5 text-sm">
                   {children}
                 </ul>
               ),
               ol: ({ children }) => (
-                <ol className="my-3 ml-4 space-y-2 text-sm list-none counter-reset-item">
+                <ol className="counter-reset-item my-3 ml-4 list-none space-y-2 text-sm">
                   {children}
                 </ol>
               ),
               li: ({ children }) => (
-                <li className="flex items-start gap-2 text-foreground">
-                  <span className="flex-shrink-0 h-1.5 w-1.5 rounded-full bg-foreground/50 mt-2" />
+                <li className="text-foreground flex items-start gap-2">
+                  <span className="bg-foreground/50 mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
                   <span className="flex-1">{children}</span>
                 </li>
               ),
 
               // Strong/Bold - with safety status color coding
               strong: ({ children }) => {
-                const text = String(children).toLowerCase();
+                const text = String(children).toLowerCase()
 
                 // Green status indicators
                 if (text.includes("green") || text.includes("safe")) {
@@ -130,7 +144,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                     <strong className="font-semibold text-[#007A68] dark:text-[#007A68]">
                       {children}
                     </strong>
-                  );
+                  )
                 }
 
                 // Yellow/Caution status indicators
@@ -139,7 +153,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                     <strong className="font-semibold text-[#7A5A00] dark:text-[#7A5A00]">
                       {children}
                     </strong>
-                  );
+                  )
                 }
 
                 // Red/At Risk status indicators
@@ -148,37 +162,39 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                     <strong className="font-semibold text-[#8B0000] dark:text-[#8B0000]">
                       {children}
                     </strong>
-                  );
+                  )
                 }
 
-                return <strong className="font-semibold text-foreground">{children}</strong>;
+                return (
+                  <strong className="text-foreground font-semibold">
+                    {children}
+                  </strong>
+                )
               },
 
               // Emphasis/Italic
-              em: ({ children }) => (
-                <em className="italic">{children}</em>
-              ),
+              em: ({ children }) => <em className="italic">{children}</em>,
 
               // Code
               code: ({ children, className }) => {
-                const isInline = !className;
+                const isInline = !className
                 if (isInline) {
                   return (
-                    <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono text-foreground">
+                    <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
                       {children}
                     </code>
-                  );
+                  )
                 }
                 return (
-                  <code className={cn("text-xs font-mono", className)}>
+                  <code className={cn("font-mono text-xs", className)}>
                     {children}
                   </code>
-                );
+                )
               },
 
               // Code blocks
               pre: ({ children }) => (
-                <pre className="my-3 overflow-x-auto rounded-lg bg-muted p-3 text-xs">
+                <pre className="bg-muted my-3 overflow-x-auto rounded-lg p-3 text-xs">
                   {children}
                 </pre>
               ),
@@ -186,7 +202,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
               // Tables
               table: ({ children }) => (
                 <div className="my-4 overflow-x-auto rounded-lg border">
-                  <table className="min-w-full text-sm divide-y divide-border">
+                  <table className="divide-border min-w-full divide-y text-sm">
                     {children}
                   </table>
                 </div>
@@ -195,30 +211,30 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                 <thead className="bg-muted/50">{children}</thead>
               ),
               tbody: ({ children }) => (
-                <tbody className="divide-y divide-border">{children}</tbody>
+                <tbody className="divide-border divide-y">{children}</tbody>
               ),
               tr: ({ children }) => (
-                <tr className="hover:bg-muted/30 transition-colors">{children}</tr>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  {children}
+                </tr>
               ),
               th: ({ children }) => (
-                <th className="px-3 py-2 text-left text-xs font-semibold text-foreground whitespace-nowrap">
+                <th className="text-foreground px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">
                   {children}
                 </th>
               ),
               td: ({ children }) => (
-                <td className="px-3 py-2 text-sm text-foreground whitespace-nowrap">
+                <td className="text-foreground px-3 py-2 text-sm whitespace-nowrap">
                   {children}
                 </td>
               ),
 
               // Horizontal rule
-              hr: () => (
-                <hr className="my-4 border-border" />
-              ),
+              hr: () => <hr className="border-border my-4" />,
 
               // Blockquote
               blockquote: ({ children }) => (
-                <blockquote className="my-3 border-l-4 border-[rgba(0,196,170,0.25)] pl-4 italic text-muted-foreground">
+                <blockquote className="text-muted-foreground my-3 border-l-4 border-[rgba(0,196,170,0.25)] pl-4 italic">
                   {children}
                 </blockquote>
               ),
@@ -229,13 +245,11 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#007A68] hover:text-[#007A68] underline"
-                >
+                  className="text-[#007A68] underline hover:text-[#007A68]">
                   {children}
                 </a>
-              ),
-            }}
-          >
+              )
+            }}>
             {displayContent}
           </ReactMarkdown>
         </div>
@@ -246,11 +260,10 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
           to generate the response, ensuring transparency for the user.
         */}
         {hasDataUsed && (
-          <div className="mt-4 rounded-lg border bg-muted/30">
+          <div className="bg-muted/30 mt-4 rounded-lg border">
             <button
               onClick={() => setShowDataUsed(!showDataUsed)}
-              className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
+              className="text-muted-foreground hover:text-foreground flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium transition-colors">
               <span className="flex items-center gap-2">
                 <Database className="h-3.5 w-3.5" />
                 Data sources used ({toolsUsed.length})
@@ -266,9 +279,13 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
               <div className="border-t px-3 py-2.5">
                 <ul className="space-y-1.5">
                   {toolsUsed.map((tool, idx) => (
-                    <li key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#00C4AA] flex-shrink-0" />
-                      <code className="rounded bg-muted px-1.5 py-0.5 font-mono">{tool}</code>
+                    <li
+                      key={idx}
+                      className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#00C4AA]" />
+                      <code className="bg-muted rounded px-1.5 py-0.5 font-mono">
+                        {tool}
+                      </code>
                       <span className="text-muted-foreground/70">
                         {getToolDescription(tool)}
                       </span>
@@ -281,7 +298,7 @@ export function ChatMessage({ role, content, toolsUsed, timestamp }: ChatMessage
         )}
       </div>
     </div>
-  );
+  )
 }
 
 // Tool descriptions for display
@@ -290,7 +307,7 @@ function getToolDescription(tool: string): string {
     get_income_summary: "Income and CPF details",
     get_expenses_summary: "Expense breakdown",
     get_family_summary: "Household structure",
-    get_balance_summary: "Balance projections",
-  };
-  return descriptions[tool] || "";
+    get_balance_summary: "Balance projections"
+  }
+  return descriptions[tool] || ""
 }

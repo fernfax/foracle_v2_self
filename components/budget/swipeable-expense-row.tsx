@@ -1,14 +1,15 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import { Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react"
+import { Trash2 } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 interface SwipeableExpenseRowProps {
-  children: React.ReactNode;
-  onDelete: () => void;
-  isOpen: boolean;
-  onSwipeStart: () => void;
+  children: React.ReactNode
+  onDelete: () => void
+  isOpen: boolean
+  onSwipeStart: () => void
 }
 
 export function SwipeableExpenseRow({
@@ -17,67 +18,67 @@ export function SwipeableExpenseRow({
   isOpen,
   onSwipeStart
 }: SwipeableExpenseRowProps) {
-  const [translateX, setTranslateX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const startXRef = useRef(0);
-  const currentXRef = useRef(0);
+  const [translateX, setTranslateX] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const startXRef = useRef(0)
+  const currentXRef = useRef(0)
 
-  const DELETE_BUTTON_WIDTH = 80;
+  const DELETE_BUTTON_WIDTH = 80
 
   // Sync with external isOpen state
   useEffect(() => {
     if (!isOpen && translateX !== 0) {
-      setTranslateX(0);
+      setTranslateX(0)
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    startXRef.current = e.touches[0].clientX;
-    currentXRef.current = translateX;
-    setIsDragging(true);
+    startXRef.current = e.touches[0].clientX
+    currentXRef.current = translateX
+    setIsDragging(true)
     // Notify parent that this row is being swiped
-    onSwipeStart();
-  };
+    onSwipeStart()
+  }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!isDragging) return
 
-    const diff = e.touches[0].clientX - startXRef.current;
-    const newTranslate = currentXRef.current + diff;
+    const diff = e.touches[0].clientX - startXRef.current
+    const newTranslate = currentXRef.current + diff
 
     // Only allow swiping left (negative values) and limit the swipe distance
     if (newTranslate <= 0 && newTranslate >= -DELETE_BUTTON_WIDTH) {
-      setTranslateX(newTranslate);
+      setTranslateX(newTranslate)
     } else if (newTranslate > 0) {
-      setTranslateX(0);
+      setTranslateX(0)
     } else if (newTranslate < -DELETE_BUTTON_WIDTH) {
-      setTranslateX(-DELETE_BUTTON_WIDTH);
+      setTranslateX(-DELETE_BUTTON_WIDTH)
     }
-  };
+  }
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
+    setIsDragging(false)
 
     // Snap to either open or closed position
     if (translateX < -DELETE_BUTTON_WIDTH / 2) {
-      setTranslateX(-DELETE_BUTTON_WIDTH);
+      setTranslateX(-DELETE_BUTTON_WIDTH)
     } else {
-      setTranslateX(0);
+      setTranslateX(0)
     }
-  };
+  }
 
   const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation()
     // Reset position first, then trigger delete
-    setTranslateX(0);
-    onDelete();
-  };
+    setTranslateX(0)
+    onDelete()
+  }
 
   const closeSwipe = () => {
-    setTranslateX(0);
-  };
+    setTranslateX(0)
+  }
 
-  const isRevealed = translateX < 0;
+  const isRevealed = translateX < 0
 
   return (
     <div className="relative overflow-hidden">
@@ -90,24 +91,21 @@ export function SwipeableExpenseRow({
         style={{ transform: `translateX(${translateX}px)` }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+        onTouchEnd={handleTouchEnd}>
         {/* Main content */}
         <div
-          className="w-full flex-shrink-0 bg-background"
-          onClick={isRevealed ? closeSwipe : undefined}
-        >
+          className="bg-background w-full flex-shrink-0"
+          onClick={isRevealed ? closeSwipe : undefined}>
           {children}
         </div>
 
         {/* Delete button - positioned right after content */}
         <div
-          className="w-20 flex-shrink-0 bg-[#E05555] flex items-center justify-center cursor-pointer"
-          onClick={handleDeleteClick}
-        >
+          className="flex w-20 flex-shrink-0 cursor-pointer items-center justify-center bg-[#E05555]"
+          onClick={handleDeleteClick}>
           <Trash2 className="h-5 w-5 text-white" />
         </div>
       </div>
     </div>
-  );
+  )
 }

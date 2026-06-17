@@ -1,7 +1,8 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { useGlassRefraction } from "@/lib/use-glass-refraction";
+import { useEffect } from "react"
+
+import { useGlassRefraction } from "@/lib/use-glass-refraction"
 
 /**
  * Renders the hidden #glass-refraction SVG filter and, on engines that paint
@@ -14,14 +15,14 @@ import { useGlassRefraction } from "@/lib/use-glass-refraction";
  * warp of the backdrop (tuned subtle to suit a finance brand, not watery).
  */
 export function GlassDefs() {
-  const refract = useGlassRefraction();
+  const refract = useGlassRefraction()
 
   useEffect(() => {
-    if (!refract) return;
-    const root = document.documentElement;
-    root.setAttribute("data-glass-refract", "true");
-    return () => root.removeAttribute("data-glass-refract");
-  }, [refract]);
+    if (!refract) return
+    const root = document.documentElement
+    root.setAttribute("data-glass-refract", "true")
+    return () => root.removeAttribute("data-glass-refract")
+  }, [refract])
 
   return (
     <svg
@@ -29,8 +30,12 @@ export function GlassDefs() {
       focusable="false"
       width="0"
       height="0"
-      style={{ position: "absolute", width: 0, height: 0, pointerEvents: "none" }}
-    >
+      style={{
+        position: "absolute",
+        width: 0,
+        height: 0,
+        pointerEvents: "none"
+      }}>
       <defs>
         <filter
           id="glass-refraction"
@@ -38,8 +43,7 @@ export function GlassDefs() {
           y="-15%"
           width="130%"
           height="130%"
-          colorInterpolationFilters="sRGB"
-        >
+          colorInterpolationFilters="sRGB">
           <feTurbulence
             type="fractalNoise"
             baseFrequency="0.012 0.014"
@@ -58,5 +62,5 @@ export function GlassDefs() {
         </filter>
       </defs>
     </svg>
-  );
+  )
 }

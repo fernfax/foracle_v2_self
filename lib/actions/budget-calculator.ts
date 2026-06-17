@@ -1,23 +1,23 @@
-"use server";
+"use server"
 
-import { getCurrentUserAndFamily } from "@/lib/auth-context";
-import { getBudgetForMonth } from "@/lib/services/budget";
+import { getCurrentUserAndFamily } from "@/lib/auth-context"
+import { getBudgetForMonth } from "@/lib/services/budget"
 
 export interface CategoryBudget {
-  categoryId: string | null;
-  categoryName: string;
-  monthlyBudget: number;
-  icon: string | null;
+  categoryId: string | null
+  categoryName: string
+  monthlyBudget: number
+  icon: string | null
 }
 
 export interface BudgetVsActual {
-  categoryName: string;
-  categoryId: string | null;
-  icon: string | null;
-  monthlyBudget: number;
-  spent: number;
-  remaining: number;
-  percentUsed: number;
+  categoryName: string
+  categoryId: string | null
+  icon: string | null
+  monthlyBudget: number
+  spent: number
+  remaining: number
+  percentUsed: number
 }
 
 /**
@@ -30,22 +30,22 @@ export async function calculateCategoryBudgets(
   month?: number
 ): Promise<CategoryBudget[]> {
   try {
-    const ctx = await getCurrentUserAndFamily();
+    const ctx = await getCurrentUserAndFamily()
     // No year/month → use current month for the rollup. Mirrors how the
     // existing UI calls this when it just wants "this month".
-    const now = new Date();
-    const y = year ?? now.getFullYear();
-    const m = month ?? now.getMonth() + 1;
-    const { categories } = await getBudgetForMonth(ctx, y, m);
+    const now = new Date()
+    const y = year ?? now.getFullYear()
+    const m = month ?? now.getMonth() + 1
+    const { categories } = await getBudgetForMonth(ctx, y, m)
     return categories.map((c) => ({
       categoryId: c.categoryId,
       categoryName: c.categoryName,
       monthlyBudget: c.monthlyBudget,
-      icon: c.icon,
-    }));
+      icon: c.icon
+    }))
   } catch (error) {
-    console.error("Error calculating category budgets:", error);
-    return [];
+    console.error("Error calculating category budgets:", error)
+    return []
   }
 }
 
@@ -57,15 +57,15 @@ export async function getTotalMonthlyBudget(
   month?: number
 ): Promise<number> {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    const now = new Date();
-    const y = year ?? now.getFullYear();
-    const m = month ?? now.getMonth() + 1;
-    const { summary } = await getBudgetForMonth(ctx, y, m);
-    return summary.totalBudget;
+    const ctx = await getCurrentUserAndFamily()
+    const now = new Date()
+    const y = year ?? now.getFullYear()
+    const m = month ?? now.getMonth() + 1
+    const { summary } = await getBudgetForMonth(ctx, y, m)
+    return summary.totalBudget
   } catch (error) {
-    console.error("Error calculating total monthly budget:", error);
-    return 0;
+    console.error("Error calculating total monthly budget:", error)
+    return 0
   }
 }
 
@@ -77,12 +77,12 @@ export async function getBudgetVsActual(
   month: number
 ): Promise<BudgetVsActual[]> {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    const { categories } = await getBudgetForMonth(ctx, year, month);
-    return categories;
+    const ctx = await getCurrentUserAndFamily()
+    const { categories } = await getBudgetForMonth(ctx, year, month)
+    return categories
   } catch (error) {
-    console.error("Error calculating budget vs actual:", error);
-    return [];
+    console.error("Error calculating budget vs actual:", error)
+    return []
   }
 }
 
@@ -91,11 +91,11 @@ export async function getBudgetVsActual(
  */
 export async function getBudgetSummary(year: number, month: number) {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    const { summary } = await getBudgetForMonth(ctx, year, month);
-    return summary;
+    const ctx = await getCurrentUserAndFamily()
+    const { summary } = await getBudgetForMonth(ctx, year, month)
+    return summary
   } catch (error) {
-    console.error("Error calculating budget summary:", error);
+    console.error("Error calculating budget summary:", error)
     return {
       totalBudget: 0,
       totalSpent: 0,
@@ -105,7 +105,7 @@ export async function getBudgetSummary(year: number, month: number) {
       expectedSpentByToday: 0,
       pacingStatus: "on-track" as const,
       daysInMonth: 30,
-      currentDay: 1,
-    };
+      currentDay: 1
+    }
   }
 }

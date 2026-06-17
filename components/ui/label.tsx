@@ -17,12 +17,12 @@ const labelVariants = cva(
          * Brand-guide "label-caps" — Space Grotesk 11px / 600 / 0.1em uppercase.
          * Use for KPI labels, eyebrow text, and form section headers.
          */
-        caps: "text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground",
-      },
+        caps: "text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+      }
     },
     defaultVariants: {
-      variant: "default",
-    },
+      variant: "default"
+    }
   }
 )
 

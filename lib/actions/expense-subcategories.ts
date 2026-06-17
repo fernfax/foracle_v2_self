@@ -1,22 +1,23 @@
-"use server";
+"use server"
 
-import { revalidatePath } from "next/cache";
-import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import { revalidatePath } from "next/cache"
+
+import { getCurrentUserAndFamily } from "@/lib/auth-context"
 import {
   createExpenseSubcategory,
   deleteExpenseSubcategory as deleteSubcategoryService,
   listExpenseSubcategories,
-  updateExpenseSubcategory as updateSubcategoryService,
-} from "@/lib/services/expense-subcategories";
+  updateExpenseSubcategory as updateSubcategoryService
+} from "@/lib/services/expense-subcategories"
 
 export type ExpenseSubcategory = {
-  id: string;
-  userId: string;
-  categoryId: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+  id: string
+  userId: string
+  categoryId: string
+  name: string
+  createdAt: Date
+  updatedAt: Date
+}
 
 /**
  * Get all subcategories for a specific category
@@ -25,11 +26,11 @@ export async function getSubcategoriesByCategory(
   categoryId: string
 ): Promise<ExpenseSubcategory[]> {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    return await listExpenseSubcategories(ctx, { categoryId });
+    const ctx = await getCurrentUserAndFamily()
+    return await listExpenseSubcategories(ctx, { categoryId })
   } catch (error) {
-    console.error("Error fetching subcategories:", error);
-    return [];
+    console.error("Error fetching subcategories:", error)
+    return []
   }
 }
 
@@ -38,11 +39,11 @@ export async function getSubcategoriesByCategory(
  */
 export async function getAllSubcategories(): Promise<ExpenseSubcategory[]> {
   try {
-    const ctx = await getCurrentUserAndFamily();
-    return await listExpenseSubcategories(ctx);
+    const ctx = await getCurrentUserAndFamily()
+    return await listExpenseSubcategories(ctx)
   } catch (error) {
-    console.error("Error fetching all subcategories:", error);
-    return [];
+    console.error("Error fetching all subcategories:", error)
+    return []
   }
 }
 
@@ -53,10 +54,10 @@ export async function addSubcategory(
   categoryId: string,
   name: string
 ): Promise<ExpenseSubcategory> {
-  const ctx = await getCurrentUserAndFamily();
-  const row = await createExpenseSubcategory(ctx, { categoryId, name });
-  revalidatePath("/budget");
-  return row;
+  const ctx = await getCurrentUserAndFamily()
+  const row = await createExpenseSubcategory(ctx, { categoryId, name })
+  revalidatePath("/budget")
+  return row
 }
 
 /**
@@ -66,17 +67,17 @@ export async function updateSubcategory(
   id: string,
   name: string
 ): Promise<ExpenseSubcategory> {
-  const ctx = await getCurrentUserAndFamily();
-  const row = await updateSubcategoryService(ctx, id, { name });
-  revalidatePath("/budget");
-  return row;
+  const ctx = await getCurrentUserAndFamily()
+  const row = await updateSubcategoryService(ctx, id, { name })
+  revalidatePath("/budget")
+  return row
 }
 
 /**
  * Delete a subcategory
  */
 export async function deleteSubcategory(id: string): Promise<void> {
-  const ctx = await getCurrentUserAndFamily();
-  await deleteSubcategoryService(ctx, id);
-  revalidatePath("/budget");
+  const ctx = await getCurrentUserAndFamily()
+  await deleteSubcategoryService(ctx, id)
+  revalidatePath("/budget")
 }

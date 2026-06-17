@@ -26,16 +26,17 @@ export function RadialDecor() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 opacity-[0.10] dark:opacity-[0.14]"
-    >
+      className="pointer-events-none fixed inset-0 -z-10 opacity-[0.10] dark:opacity-[0.14]">
       <svg
         width="100%"
         height="100%"
         viewBox="0 0 1200 900"
         preserveAspectRatio="xMaxYMin slice"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {[60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080].map((r) => (
+        xmlns="http://www.w3.org/2000/svg">
+        {[
+          60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840,
+          900, 960, 1020, 1080
+        ].map((r) => (
           <circle
             key={r}
             cx={1080}
@@ -48,5 +49,5 @@ export function RadialDecor() {
         ))}
       </svg>
     </div>
-  );
+  )
 }

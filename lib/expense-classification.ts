@@ -10,12 +10,14 @@ export const NON_SPENDING_CATEGORIES = new Set([
   "savings",
   "investment",
   "investments",
-  "retirement",
-]);
+  "retirement"
+])
 
 /** True when the category counts as day-to-day spending (an expense). False for
  *  savings/investment/retirement categories (those count toward savings). */
-export function isSpendingCategory(category: string | null | undefined): boolean {
-  if (!category) return true; // uncategorised → treat as spending
-  return !NON_SPENDING_CATEGORIES.has(category.trim().toLowerCase());
+export function isSpendingCategory(
+  category: string | null | undefined
+): boolean {
+  if (!category) return true // uncategorised → treat as spending
+  return !NON_SPENDING_CATEGORIES.has(category.trim().toLowerCase())
 }

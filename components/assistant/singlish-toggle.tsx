@@ -1,24 +1,34 @@
-"use client";
+"use client"
 
-import { useTransition } from "react";
-import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTransition } from "react"
+
+import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip"
 
 interface SinglishToggleProps {
-  enabled: boolean;
-  onToggle: (enabled: boolean) => Promise<void>;
-  disabled?: boolean;
+  enabled: boolean
+  onToggle: (enabled: boolean) => Promise<void>
+  disabled?: boolean
 }
 
-export function SinglishToggle({ enabled, onToggle, disabled }: SinglishToggleProps) {
-  const [isPending, startTransition] = useTransition();
+export function SinglishToggle({
+  enabled,
+  onToggle,
+  disabled
+}: SinglishToggleProps) {
+  const [isPending, startTransition] = useTransition()
 
   const handleClick = () => {
-    if (disabled || isPending) return;
+    if (disabled || isPending) return
     startTransition(async () => {
-      await onToggle(!enabled);
-    });
-  };
+      await onToggle(!enabled)
+    })
+  }
 
   return (
     <TooltipProvider>
@@ -29,14 +39,15 @@ export function SinglishToggle({ enabled, onToggle, disabled }: SinglishTogglePr
             onClick={handleClick}
             disabled={disabled || isPending}
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-md transition-all text-lg",
+              "flex h-8 w-8 items-center justify-center rounded-md text-lg transition-all",
               enabled
                 ? "bg-[rgba(0,196,170,0.12)] ring-2 ring-[#00C4AA]"
                 : "bg-muted hover:bg-muted/80 opacity-50 grayscale",
               (disabled || isPending) && "cursor-not-allowed opacity-40"
             )}
-            aria-label={enabled ? "Disable Singlish mode" : "Enable Singlish mode"}
-          >
+            aria-label={
+              enabled ? "Disable Singlish mode" : "Enable Singlish mode"
+            }>
             🇸🇬
           </button>
         </TooltipTrigger>
@@ -45,5 +56,5 @@ export function SinglishToggle({ enabled, onToggle, disabled }: SinglishTogglePr
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  );
+  )
 }

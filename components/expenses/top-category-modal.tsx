@@ -1,34 +1,34 @@
-"use client";
+"use client"
 
-import { TrendingDown } from "lucide-react";
+import { TrendingDown } from "lucide-react"
 
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  DialogTitle
+} from "@/components/ui/dialog"
 
 interface TopCategory {
-  name: string;
-  amount: number;
-  percentage: number;
+  name: string
+  amount: number
+  percentage: number
 }
 
 interface CategorySlice {
-  category: string;
-  amount: number;
-  percentage: number;
-  color: string;
+  category: string
+  amount: number
+  percentage: number
+  color: string
 }
 
 interface TopCategoryModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  topCategory: TopCategory | null;
-  topCategories: CategorySlice[];
-  monthLabel: string;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  topCategory: TopCategory | null
+  topCategories: CategorySlice[]
+  monthLabel: string
 }
 
 /**
@@ -41,7 +41,7 @@ export function TopCategoryModal({
   onOpenChange,
   topCategory,
   topCategories,
-  monthLabel,
+  monthLabel
 }: TopCategoryModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,16 +64,17 @@ export function TopCategoryModal({
 
         {topCategory ? (
           <div>
-            <div className="font-display text-data-lg font-semibold tabular-nums tracking-tight">
+            <div className="font-display text-data-lg font-semibold tracking-tight tabular-nums">
               {topCategory.name}
             </div>
-            <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-              ${topCategory.amount.toLocaleString()} ({topCategory.percentage.toFixed(1)}%)
+            <p className="text-muted-foreground mt-1 text-sm tabular-nums">
+              ${topCategory.amount.toLocaleString()} (
+              {topCategory.percentage.toFixed(1)}%)
             </p>
 
             {topCategories.length > 1 && (
-              <div className="mt-5 border-t border-border/40 pt-4">
-                <p className="mb-3 text-label-caps uppercase text-muted-foreground">
+              <div className="border-border/40 mt-5 border-t pt-4">
+                <p className="text-label-caps text-muted-foreground mb-3 uppercase">
                   Top 5 Categories
                 </p>
                 <div className="space-y-3">
@@ -85,16 +86,21 @@ export function TopCategoryModal({
                             className="size-2.5 shrink-0 rounded-full"
                             style={{ backgroundColor: cat.color }}
                           />
-                          <span className="truncate font-medium">{cat.category}</span>
+                          <span className="truncate font-medium">
+                            {cat.category}
+                          </span>
                         </span>
-                        <span className="ml-2 shrink-0 tabular-nums text-muted-foreground">
+                        <span className="text-muted-foreground ml-2 shrink-0 tabular-nums">
                           ${cat.amount.toLocaleString()}
                         </span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div className="bg-muted h-2 overflow-hidden rounded-full">
                         <div
                           className="h-full rounded-full"
-                          style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
+                          style={{
+                            width: `${cat.percentage}%`,
+                            backgroundColor: cat.color
+                          }}
                         />
                       </div>
                     </div>
@@ -104,11 +110,11 @@ export function TopCategoryModal({
             )}
           </div>
         ) : (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <p className="text-muted-foreground py-6 text-center text-sm">
             No expenses this month.
           </p>
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

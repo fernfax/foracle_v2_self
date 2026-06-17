@@ -1,19 +1,20 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 interface WizardNavigationProps {
-  onBack?: () => void;
-  onNext: () => void;
-  onSkip?: () => void;
-  isFirstStep?: boolean;
-  isLastStep?: boolean;
-  isOptional?: boolean;
-  canProceed?: boolean;
-  isSubmitting?: boolean;
-  nextLabel?: string;
-  backLabel?: string;
+  onBack?: () => void
+  onNext: () => void
+  onSkip?: () => void
+  isFirstStep?: boolean
+  isLastStep?: boolean
+  isOptional?: boolean
+  canProceed?: boolean
+  isSubmitting?: boolean
+  nextLabel?: string
+  backLabel?: string
 }
 
 export function WizardNavigation({
@@ -26,16 +27,16 @@ export function WizardNavigation({
   canProceed = true,
   isSubmitting = false,
   nextLabel,
-  backLabel = "Back",
+  backLabel = "Back"
 }: WizardNavigationProps) {
   const getNextLabel = () => {
-    if (nextLabel) return nextLabel;
-    if (isLastStep) return "Complete Setup";
-    return "Continue";
-  };
+    if (nextLabel) return nextLabel
+    if (isLastStep) return "Complete Setup"
+    return "Continue"
+  }
 
   return (
-    <div className="flex items-center justify-between pt-6 mt-auto border-t border-border/60">
+    <div className="border-border/60 mt-auto flex items-center justify-between border-t pt-6">
       <div>
         {!isFirstStep && onBack && (
           <Button
@@ -43,8 +44,7 @@ export function WizardNavigation({
             variant="ghost"
             onClick={onBack}
             disabled={isSubmitting}
-            className="gap-2"
-          >
+            className="gap-2">
             <ChevronLeft className="h-4 w-4" />
             {backLabel}
           </Button>
@@ -57,8 +57,7 @@ export function WizardNavigation({
             type="button"
             variant="ghost"
             onClick={onSkip}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             Skip for now
           </Button>
         )}
@@ -66,12 +65,11 @@ export function WizardNavigation({
           type="button"
           onClick={onNext}
           disabled={!canProceed || isSubmitting}
-          className={`gap-2 min-w-[140px] ${
+          className={`min-w-[140px] gap-2 ${
             isLastStep
-              ? "bg-[#B8622A] hover:bg-[#B8622A] text-white shadow-lg shadow-[#B8622A]/20"
+              ? "bg-[#B8622A] text-white shadow-lg shadow-[#B8622A]/20 hover:bg-[#B8622A]"
               : ""
-          }`}
-        >
+          }`}>
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -86,5 +84,5 @@ export function WizardNavigation({
         </Button>
       </div>
     </div>
-  );
+  )
 }

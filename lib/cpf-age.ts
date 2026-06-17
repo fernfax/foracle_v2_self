@@ -13,22 +13,26 @@
 export function resolveCpfAge(
   dateOfBirth: string | Date | null | undefined
 ): number | null {
-  if (dateOfBirth == null) return null;
+  if (dateOfBirth == null) return null
 
   // DOB calendar parts — prefer the literal YYYY-MM-DD parts to avoid UTC shift.
-  let dobYear: number;
-  let dobMonth: number; // 1-12
-  let dobDay: number;
-  if (typeof dateOfBirth === "string" && /^\d{4}-\d{2}-\d{2}/.test(dateOfBirth)) {
-    dobYear = Number(dateOfBirth.slice(0, 4));
-    dobMonth = Number(dateOfBirth.slice(5, 7));
-    dobDay = Number(dateOfBirth.slice(8, 10));
+  let dobYear: number
+  let dobMonth: number // 1-12
+  let dobDay: number
+  if (
+    typeof dateOfBirth === "string" &&
+    /^\d{4}-\d{2}-\d{2}/.test(dateOfBirth)
+  ) {
+    dobYear = Number(dateOfBirth.slice(0, 4))
+    dobMonth = Number(dateOfBirth.slice(5, 7))
+    dobDay = Number(dateOfBirth.slice(8, 10))
   } else {
-    const d = typeof dateOfBirth === "string" ? new Date(dateOfBirth) : dateOfBirth;
-    if (Number.isNaN(d.getTime())) return null;
-    dobYear = d.getFullYear();
-    dobMonth = d.getMonth() + 1;
-    dobDay = d.getDate();
+    const d =
+      typeof dateOfBirth === "string" ? new Date(dateOfBirth) : dateOfBirth
+    if (Number.isNaN(d.getTime())) return null
+    dobYear = d.getFullYear()
+    dobMonth = d.getMonth() + 1
+    dobDay = d.getDate()
   }
 
   // Today, in Asia/Singapore.
@@ -36,15 +40,15 @@ export function resolveCpfAge(
     timeZone: "Asia/Singapore",
     year: "numeric",
     month: "numeric",
-    day: "numeric",
-  }).formatToParts(new Date());
-  const todayYear = Number(parts.find((p) => p.type === "year")?.value);
-  const todayMonth = Number(parts.find((p) => p.type === "month")?.value);
-  const todayDay = Number(parts.find((p) => p.type === "day")?.value);
+    day: "numeric"
+  }).formatToParts(new Date())
+  const todayYear = Number(parts.find((p) => p.type === "year")?.value)
+  const todayMonth = Number(parts.find((p) => p.type === "month")?.value)
+  const todayDay = Number(parts.find((p) => p.type === "day")?.value)
 
-  let age = todayYear - dobYear;
+  let age = todayYear - dobYear
   if (todayMonth < dobMonth || (todayMonth === dobMonth && todayDay < dobDay)) {
-    age--;
+    age--
   }
-  return age >= 0 && age < 130 ? age : null;
+  return age >= 0 && age < 130 ? age : null
 }

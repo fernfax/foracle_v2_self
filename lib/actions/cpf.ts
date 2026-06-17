@@ -1,66 +1,70 @@
-"use server";
+"use server"
 
-import { db } from "@/db";
-import { incomesBeta, familyMembers } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { db } from "@/db"
+import { and, eq } from "drizzle-orm"
+
+import { getCurrentUserAndFamily } from "@/lib/auth-context"
 import {
-  getCPFRatesByAge,
-  getCPFAllocationByAge,
-  computeAnnualBonusCpf,
   calculateCPF,
-} from "@/lib/cpf-calculator";
-import { bonusDollarsForYear } from "@/lib/income-month";
-import { effectiveIncomeCategory } from "@/lib/income-category";
-import { getCurrentUserAndFamily } from "@/lib/auth-context";
+  computeAnnualBonusCpf,
+  getCPFAllocationByAge,
+  getCPFRatesByAge
+} from "@/lib/cpf-calculator"
+import { effectiveIncomeCategory } from "@/lib/income-category"
+import { bonusDollarsForYear } from "@/lib/income-month"
+import { familyMembers, incomesBeta } from "@/db/schema"
 
 export interface CpfByFamilyMember {
-  familyMemberId: string;
-  familyMemberName: string;
-  age: number | null;
-  monthlyGrossIncome: number;
-  monthlyNettIncome: number;
-  monthlyTotalCpf: number;
-  monthlyEmployeeCpf: number;
-  monthlyEmployerCpf: number;
-  employeeCpfRate: number;
-  employerCpfRate: number;
-  monthlyOaContribution: number;
-  monthlySaContribution: number;
-  monthlyMaContribution: number;
-  oaPercentage: number;
-  saPercentage: number;
-  maPercentage: number;
+  familyMemberId: string
+  familyMemberName: string
+  age: number | null
+  monthlyGrossIncome: number
+  monthlyNettIncome: number
+  monthlyTotalCpf: number
+  monthlyEmployeeCpf: number
+  monthlyEmployerCpf: number
+  employeeCpfRate: number
+  employerCpfRate: number
+  monthlyOaContribution: number
+  monthlySaContribution: number
+  monthlyMaContribution: number
+  oaPercentage: number
+  saPercentage: number
+  maPercentage: number
   // CPF allocation amounts (based on age-specific allocation rates)
-  monthlyOaAllocation: number;
-  monthlySaAllocation: number;
-  monthlyMaAllocation: number;
-  oaAllocationRate: number;
-  saAllocationRate: number;
-  maAllocationRate: number;
+  monthlyOaAllocation: number
+  monthlySaAllocation: number
+  monthlyMaAllocation: number
+  oaAllocationRate: number
+  saAllocationRate: number
+  maAllocationRate: number
   // Bonus CPF fields
-  bonusAmount: number;
-  bonusCpfApplicableAmount: number;
-  bonusEmployeeCpf: number;
-  bonusEmployerCpf: number;
-  bonusTotalCpf: number;
-  bonusOaAllocation: number;
-  bonusSaAllocation: number;
-  bonusMaAllocation: number;
+  bonusAmount: number
+  bonusCpfApplicableAmount: number
+  bonusEmployeeCpf: number
+  bonusEmployerCpf: number
+  bonusTotalCpf: number
+  bonusOaAllocation: number
+  bonusSaAllocation: number
+  bonusMaAllocation: number
 }
 
 /**
  * Calculate age from date of birth
  */
 function calculateAge(dateOfBirth: Date): number {
-  const today = new Date();
-  let age = today.getFullYear() - dateOfBirth.getFullYear();
-  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+  const today = new Date()
+  let age = today.getFullYear() - dateOfBirth.getFullYear()
+  const monthDiff = today.getMonth() - dateOfBirth.getMonth()
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
-    age--;
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())
+  ) {
+    age--
   }
 
-  return age;
+  return age
 }
 
 /**
@@ -73,7 +77,7 @@ function calculateAge(dateOfBirth: Date): number {
  * passed reads as current — see lib/income-category).
  */
 export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
-  const { familyId } = await getCurrentUserAndFamily();
+  const { familyId } = await getCurrentUserAndFamily()
 
   // Fetch all contributing family members in this family
   const members = await db
@@ -84,15 +88,15 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
         eq(familyMembers.familyId, familyId),
         eq(familyMembers.isContributing, true)
       )
-    );
+    )
 
   // Fetch all incomes in this family (canonical incomes_beta table)
   const allIncomes = await db
     .select()
     .from(incomesBeta)
-    .where(eq(incomesBeta.familyId, familyId));
+    .where(eq(incomesBeta.familyId, familyId))
 
-  const cpfData: CpfByFamilyMember[] = [];
+  const cpfData: CpfByFamilyMember[] = []
 
   // Process each contributing family member
   for (const member of members) {
@@ -104,43 +108,43 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
         income.isActive === true &&
         effectiveIncomeCategory(income.incomeCategory, income.startDate) ===
           "current"
-    );
+    )
 
     // Skip if no CPF-eligible incomes
     if (memberIncomes.length === 0) {
-      continue;
+      continue
     }
 
     // Get CPF rates based on family member's age
-    let memberAge: number | null = null;
-    let employeeCpfRate = 20; // Default for age 55 and below
-    let employerCpfRate = 17; // Default for age 55 and below
-    let oaAllocationRate = 62.17; // Default for age 35 and below
-    let saAllocationRate = 16.22;
-    let maAllocationRate = 21.62;
+    let memberAge: number | null = null
+    let employeeCpfRate = 20 // Default for age 55 and below
+    let employerCpfRate = 17 // Default for age 55 and below
+    let oaAllocationRate = 62.17 // Default for age 35 and below
+    let saAllocationRate = 16.22
+    let maAllocationRate = 21.62
 
     if (member.dateOfBirth) {
-      const age = calculateAge(new Date(member.dateOfBirth));
-      memberAge = age;
-      const rates = getCPFRatesByAge(age);
-      employeeCpfRate = rates.employee * 100;
-      employerCpfRate = rates.employer * 100;
+      const age = calculateAge(new Date(member.dateOfBirth))
+      memberAge = age
+      const rates = getCPFRatesByAge(age)
+      employeeCpfRate = rates.employee * 100
+      employerCpfRate = rates.employer * 100
 
       // Get CPF allocation rates based on age
-      const allocation = getCPFAllocationByAge(age);
-      oaAllocationRate = allocation.oa * 100;
-      saAllocationRate = allocation.sa * 100;
-      maAllocationRate = allocation.ma * 100;
+      const allocation = getCPFAllocationByAge(age)
+      oaAllocationRate = allocation.oa * 100
+      saAllocationRate = allocation.sa * 100
+      maAllocationRate = allocation.ma * 100
     }
 
     // Aggregate all income data
-    let totalGross = 0;
-    let totalEmployeeCpf = 0;
-    let totalEmployerCpf = 0;
-    let totalOa = 0;
-    let totalSa = 0;
-    let totalMa = 0;
-    let totalBonusAmount = 0;
+    let totalGross = 0
+    let totalEmployeeCpf = 0
+    let totalEmployerCpf = 0
+    let totalOa = 0
+    let totalSa = 0
+    let totalMa = 0
+    let totalBonusAmount = 0
 
     // Current calendar year pinned to Asia/Singapore. Render runs UTC, and an
     // unpinned new Date().getFullYear() would drop a year-boundary one-off
@@ -149,13 +153,13 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
     const sgYear = Number(
       new Intl.DateTimeFormat("en-US", {
         timeZone: "Asia/Singapore",
-        year: "numeric",
+        year: "numeric"
       }).format(new Date())
-    );
+    )
 
     for (const income of memberIncomes) {
       // Beta incomes are monthly by design — use the amount directly.
-      const monthlyGross = parseFloat(income.amount);
+      const monthlyGross = parseFloat(income.amount)
 
       // Bonus dollars attracting CPF this year. Recurring entries are
       // months-of-salary MULTIPLIERS (count every year); one-off entries are
@@ -163,7 +167,11 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       // helper keeps the recurring/one-off contract in one place — reading a
       // $5,000 one-off as a multiplier would inflate it to 5,000 months of pay.
       if (income.bonusGroups) {
-        totalBonusAmount += bonusDollarsForYear(income.bonusGroups, monthlyGross, sgYear);
+        totalBonusAmount += bonusDollarsForYear(
+          income.bonusGroups,
+          monthlyGross,
+          sgYear
+        )
       }
 
       // Per-income CPF via calculateCPF — the same function income rows are
@@ -173,34 +181,34 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       const cpf =
         memberAge !== null
           ? calculateCPF(monthlyGross, memberAge)
-          : { employeeCpfContribution: 0, employerCpfContribution: 0 };
-      const monthlyEmployeeCpf = cpf.employeeCpfContribution;
-      const monthlyEmployerCpf = cpf.employerCpfContribution;
+          : { employeeCpfContribution: 0, employerCpfContribution: 0 }
+      const monthlyEmployeeCpf = cpf.employeeCpfContribution
+      const monthlyEmployerCpf = cpf.employerCpfContribution
 
-      const monthlyOa = parseFloat(income.cpfOrdinaryAccount || "0");
-      const monthlySa = parseFloat(income.cpfSpecialAccount || "0");
-      const monthlyMa = parseFloat(income.cpfMedisaveAccount || "0");
+      const monthlyOa = parseFloat(income.cpfOrdinaryAccount || "0")
+      const monthlySa = parseFloat(income.cpfSpecialAccount || "0")
+      const monthlyMa = parseFloat(income.cpfMedisaveAccount || "0")
 
-      totalGross += monthlyGross;
-      totalEmployeeCpf += monthlyEmployeeCpf;
-      totalEmployerCpf += monthlyEmployerCpf;
-      totalOa += monthlyOa;
-      totalSa += monthlySa;
-      totalMa += monthlyMa;
+      totalGross += monthlyGross
+      totalEmployeeCpf += monthlyEmployeeCpf
+      totalEmployerCpf += monthlyEmployerCpf
+      totalOa += monthlyOa
+      totalSa += monthlySa
+      totalMa += monthlyMa
     }
 
-    const totalCpf = totalEmployeeCpf + totalEmployerCpf;
-    const nettIncome = totalGross - totalEmployeeCpf;
+    const totalCpf = totalEmployeeCpf + totalEmployerCpf
+    const nettIncome = totalGross - totalEmployeeCpf
 
     // Calculate OA/SA/MA percentages (from stored values)
-    const oaPercentage = totalCpf > 0 ? (totalOa / totalCpf) * 100 : 0;
-    const saPercentage = totalCpf > 0 ? (totalSa / totalCpf) * 100 : 0;
-    const maPercentage = totalCpf > 0 ? (totalMa / totalCpf) * 100 : 0;
+    const oaPercentage = totalCpf > 0 ? (totalOa / totalCpf) * 100 : 0
+    const saPercentage = totalCpf > 0 ? (totalSa / totalCpf) * 100 : 0
+    const maPercentage = totalCpf > 0 ? (totalMa / totalCpf) * 100 : 0
 
     // Calculate CPF allocation amounts based on age-specific rates
-    const monthlyOaAllocation = totalCpf * (oaAllocationRate / 100);
-    const monthlySaAllocation = totalCpf * (saAllocationRate / 100);
-    const monthlyMaAllocation = totalCpf * (maAllocationRate / 100);
+    const monthlyOaAllocation = totalCpf * (oaAllocationRate / 100)
+    const monthlySaAllocation = totalCpf * (saAllocationRate / 100)
+    const monthlyMaAllocation = totalCpf * (maAllocationRate / 100)
 
     // Calculate bonus CPF (if there's a bonus amount)
     let bonusCpfData = {
@@ -211,13 +219,17 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       bonusTotalCpf: 0,
       bonusOaAllocation: 0,
       bonusSaAllocation: 0,
-      bonusMaAllocation: 0,
-    };
+      bonusMaAllocation: 0
+    }
 
     if (totalBonusAmount > 0 && memberAge !== null) {
       // Year-level bonus CPF: AW ceiling + $37,740 annual limit + statutory
       // rounding, all in computeAnnualBonusCpf (this tab is a year snapshot).
-      const step = computeAnnualBonusCpf(totalGross, totalBonusAmount, memberAge);
+      const step = computeAnnualBonusCpf(
+        totalGross,
+        totalBonusAmount,
+        memberAge
+      )
       bonusCpfData = {
         bonusAmount: totalBonusAmount,
         bonusCpfApplicableAmount: step.cpfApplicableBonus,
@@ -226,8 +238,8 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
         bonusTotalCpf: step.total,
         bonusOaAllocation: step.oaAllocation,
         bonusSaAllocation: step.saAllocation,
-        bonusMaAllocation: step.maAllocation,
-      };
+        bonusMaAllocation: step.maAllocation
+      }
     }
 
     cpfData.push({
@@ -255,18 +267,20 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       maAllocationRate: parseFloat(maAllocationRate.toFixed(2)),
       // Bonus CPF fields
       bonusAmount: parseFloat(bonusCpfData.bonusAmount.toFixed(2)),
-      bonusCpfApplicableAmount: parseFloat(bonusCpfData.bonusCpfApplicableAmount.toFixed(2)),
+      bonusCpfApplicableAmount: parseFloat(
+        bonusCpfData.bonusCpfApplicableAmount.toFixed(2)
+      ),
       bonusEmployeeCpf: parseFloat(bonusCpfData.bonusEmployeeCpf.toFixed(2)),
       bonusEmployerCpf: parseFloat(bonusCpfData.bonusEmployerCpf.toFixed(2)),
       bonusTotalCpf: parseFloat(bonusCpfData.bonusTotalCpf.toFixed(2)),
       bonusOaAllocation: parseFloat(bonusCpfData.bonusOaAllocation.toFixed(2)),
       bonusSaAllocation: parseFloat(bonusCpfData.bonusSaAllocation.toFixed(2)),
-      bonusMaAllocation: parseFloat(bonusCpfData.bonusMaAllocation.toFixed(2)),
-    });
+      bonusMaAllocation: parseFloat(bonusCpfData.bonusMaAllocation.toFixed(2))
+    })
   }
 
   // Sort by family member name
-  cpfData.sort((a, b) => a.familyMemberName.localeCompare(b.familyMemberName));
+  cpfData.sort((a, b) => a.familyMemberName.localeCompare(b.familyMemberName))
 
-  return cpfData;
+  return cpfData
 }

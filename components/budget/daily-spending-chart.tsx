@@ -1,26 +1,27 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
+import { useMemo } from "react"
+import { BarChart3 } from "lucide-react"
 import {
-  AreaChart,
   Area,
-  XAxis,
-  YAxis,
+  AreaChart,
   CartesianGrid,
-  Tooltip,
   ReferenceLine,
-} from "recharts";
-import { ResponsiveChart } from "@/components/ui/responsive-chart";
-import { BarChart3 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getMonthName } from "@/lib/budget-utils";
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts"
+
+import { getMonthName } from "@/lib/budget-utils"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ResponsiveChart } from "@/components/ui/responsive-chart"
 
 interface DailySpendingChartProps {
-  dailySpendingData: { day: number; date: string; amount: number }[];
-  dailyBudget: number;
-  month: number;
-  year: number;
-  gradientId?: string;
+  dailySpendingData: { day: number; date: string; amount: number }[]
+  dailyBudget: number
+  month: number
+  year: number
+  gradientId?: string
 }
 
 export function DailySpendingChart({
@@ -28,75 +29,81 @@ export function DailySpendingChart({
   dailyBudget,
   month,
   year,
-  gradientId = "spendingGradient-inline",
+  gradientId = "spendingGradient-inline"
 }: DailySpendingChartProps) {
   // Calculate days in month and prepare chart data
   const chartData = useMemo(() => {
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const today = new Date();
-    const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
-    const currentDay = isCurrentMonth ? today.getDate() : daysInMonth;
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const today = new Date()
+    const isCurrentMonth =
+      today.getFullYear() === year && today.getMonth() + 1 === month
+    const currentDay = isCurrentMonth ? today.getDate() : daysInMonth
 
-    const data: { day: number; spending: number | null }[] = [];
-    const spendingMap = new Map<number, number>();
+    const data: { day: number; spending: number | null }[] = []
+    const spendingMap = new Map<number, number>()
     dailySpendingData.forEach((d) => {
-      spendingMap.set(d.day, d.amount);
-    });
+      spendingMap.set(d.day, d.amount)
+    })
 
     for (let day = 1; day <= currentDay; day++) {
       data.push({
         day,
-        spending: spendingMap.get(day) ?? 0,
-      });
+        spending: spendingMap.get(day) ?? 0
+      })
     }
 
-    return data;
-  }, [dailySpendingData, month, year]);
+    return data
+  }, [dailySpendingData, month, year])
 
   // Calculate average spending (only days with spending)
   const averageSpending = useMemo(() => {
-    const daysWithSpending = chartData.filter((d) => d.spending !== null && d.spending > 0);
-    if (daysWithSpending.length === 0) return 0;
-    const total = daysWithSpending.reduce((sum, d) => sum + (d.spending || 0), 0);
-    return total / daysWithSpending.length;
-  }, [chartData]);
+    const daysWithSpending = chartData.filter(
+      (d) => d.spending !== null && d.spending > 0
+    )
+    if (daysWithSpending.length === 0) return 0
+    const total = daysWithSpending.reduce(
+      (sum, d) => sum + (d.spending || 0),
+      0
+    )
+    return total / daysWithSpending.length
+  }, [chartData])
 
   // Calculate max value for Y axis
   const maxValue = useMemo(() => {
-    const maxSpending = Math.max(...chartData.map((d) => d.spending || 0), 0);
-    return Math.max(maxSpending, dailyBudget, averageSpending) * 1.2;
-  }, [chartData, dailyBudget, averageSpending]);
+    const maxSpending = Math.max(...chartData.map((d) => d.spending || 0), 0)
+    return Math.max(maxSpending, dailyBudget, averageSpending) * 1.2
+  }, [chartData, dailyBudget, averageSpending])
 
-  const monthName = getMonthName(month, "long");
-  const hasData = dailySpendingData.length > 0;
+  const monthName = getMonthName(month, "long")
+  const hasData = dailySpendingData.length > 0
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="flex h-full flex-col">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-primary" />
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+          <BarChart3 className="text-primary h-4 w-4" />
           Daily Spending Trend
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
+      <CardContent className="flex flex-1 flex-col">
         {!hasData ? (
-          <div className="flex-1 min-h-[250px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="text-muted-foreground flex min-h-[250px] flex-1 items-center justify-center text-sm">
             No spending data available
           </div>
         ) : (
           <>
             {/* Legend */}
-            <div className="flex items-center justify-center gap-4 text-xs mb-3">
+            <div className="mb-3 flex items-center justify-center gap-4 text-xs">
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#B8622A]" />
+                <div className="h-2.5 w-2.5 rounded-full bg-[#B8622A]" />
                 <span className="text-muted-foreground">Daily Spending</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-0 border-t-2 border-dashed border-[rgba(184,98,42,0.25)]" />
+                <div className="h-0 w-3 border-t-2 border-dashed border-[rgba(184,98,42,0.25)]" />
                 <span className="text-muted-foreground">Daily Budget</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-0 border-t-2 border-dashed border-[rgba(0,196,170,0.25)]" />
+                <div className="h-0 w-3 border-t-2 border-dashed border-[rgba(0,196,170,0.25)]" />
                 <span className="text-muted-foreground">Average</span>
               </div>
             </div>
@@ -108,29 +115,40 @@ export function DailySpendingChart({
               <ResponsiveChart width="100%" height="100%">
                 <AreaChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
-                >
+                  margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
                   <defs>
                     <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3A6B52" stopOpacity={0.3} />
                       <stop offset="95%" stopColor="#3A6B52" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.10)" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--foreground) / 0.10)"
+                  />
                   <XAxis
                     dataKey="day"
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    tick={{
+                      fontSize: 11,
+                      fill: "hsl(var(--muted-foreground))"
+                    }}
                     tickLine={false}
                     axisLine={{ stroke: "hsl(var(--foreground) / 0.10)" }}
                     label={{
                       value: `${monthName} (Days)`,
                       position: "bottom",
                       offset: 5,
-                      style: { fontSize: 11, fill: "hsl(var(--muted-foreground))" },
+                      style: {
+                        fontSize: 11,
+                        fill: "hsl(var(--muted-foreground))"
+                      }
                     }}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    tick={{
+                      fontSize: 11,
+                      fill: "hsl(var(--muted-foreground))"
+                    }}
                     tickLine={false}
                     axisLine={{ stroke: "hsl(var(--foreground) / 0.10)" }}
                     tickFormatter={(value) => `$${value}`}
@@ -138,14 +156,17 @@ export function DailySpendingChart({
                     width={50}
                   />
                   <Tooltip
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, "Spent"]}
+                    formatter={(value: number) => [
+                      `$${value.toFixed(2)}`,
+                      "Spent"
+                    ]}
                     labelFormatter={(label) => `Day ${label}`}
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "8px",
                       fontSize: "12px",
-                      color: "hsl(var(--foreground))",
+                      color: "hsl(var(--foreground))"
                     }}
                     itemStyle={{ color: "hsl(var(--foreground))" }}
                     labelStyle={{ color: "hsl(var(--muted-foreground))" }}
@@ -174,7 +195,12 @@ export function DailySpendingChart({
                     strokeWidth={2}
                     fill={`url(#${gradientId})`}
                     dot={{ fill: "#3A6B52", strokeWidth: 0, r: 3 }}
-                    activeDot={{ r: 5, stroke: "#3A6B52", strokeWidth: 2, fill: "white" }}
+                    activeDot={{
+                      r: 5,
+                      stroke: "#3A6B52",
+                      strokeWidth: 2,
+                      fill: "white"
+                    }}
                     connectNulls
                   />
                 </AreaChart>
@@ -184,5 +210,5 @@ export function DailySpendingChart({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

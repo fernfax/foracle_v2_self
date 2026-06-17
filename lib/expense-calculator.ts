@@ -4,31 +4,31 @@
  */
 
 interface Expense {
-  id: string;
-  name: string;
-  category: string;
-  expenseCategory: string | null;
-  amount: string;
-  frequency: string;
-  customMonths: string | null;
-  startDate: string | null;
-  endDate: string | null;
-  isActive: boolean | null;
+  id: string
+  name: string
+  category: string
+  expenseCategory: string | null
+  amount: string
+  frequency: string
+  customMonths: string | null
+  startDate: string | null
+  endDate: string | null
+  isActive: boolean | null
 }
 
 export interface CategoryTotal {
-  category: string;
-  amount: number;
-  percentage: number;
-  count: number;
-  avgPerExpense: number;
-  color: string;
+  category: string
+  amount: number
+  percentage: number
+  count: number
+  avgPerExpense: number
+  color: string
 }
 
 export interface ExpenseBreakdown {
-  categories: CategoryTotal[];
-  totalAmount: number;
-  totalExpenses: number;
+  categories: CategoryTotal[]
+  totalAmount: number
+  totalExpenses: number
 }
 
 /**
@@ -52,17 +52,17 @@ export function getCategoryColor(categoryName: string): string {
     "#D4845A", // purple
     "#d946ef", // fuchsia
     "#D4845A", // pink
-    "#f43f5e", // rose
-  ];
+    "#f43f5e" // rose
+  ]
 
   // Hash the category name to get a consistent index
-  let hash = 0;
+  let hash = 0
   for (let i = 0; i < categoryName.length; i++) {
-    hash = categoryName.charCodeAt(i) + ((hash << 5) - hash);
+    hash = categoryName.charCodeAt(i) + ((hash << 5) - hash)
   }
-  const index = Math.abs(hash) % colors.length;
+  const index = Math.abs(hash) % colors.length
 
-  return colors[index];
+  return colors[index]
 }
 
 /**
@@ -74,39 +74,41 @@ export function filterExpensesByDateRange(
   endDate: Date
 ): Expense[] {
   return expenses.filter((expense) => {
-    if (!expense.isActive) return false;
+    if (!expense.isActive) return false
 
     // For recurring expenses (current-recurring), startDate may be null - treat as always valid
-    const expenseStart = expense.startDate ? new Date(expense.startDate) : null;
-    const expenseEnd = expense.endDate ? new Date(expense.endDate) : null;
+    const expenseStart = expense.startDate ? new Date(expense.startDate) : null
+    const expenseEnd = expense.endDate ? new Date(expense.endDate) : null
 
     // Check if expense overlaps with the date range
     // Skip check if no startDate - always valid (recurring expenses)
-    if (expenseStart && expenseStart > endDate) return false;
-    if (expenseEnd && expenseEnd < startDate) return false;
+    if (expenseStart && expenseStart > endDate) return false
+    if (expenseEnd && expenseEnd < startDate) return false
 
-    return true;
-  });
+    return true
+  })
 }
 
 /**
  * Calculate total expenses by category
  */
-export function calculateExpensesByCategory(expenses: Expense[]): ExpenseBreakdown {
-  const categoryTotals: Record<string, { amount: number; count: number }> = {};
-  let totalAmount = 0;
+export function calculateExpensesByCategory(
+  expenses: Expense[]
+): ExpenseBreakdown {
+  const categoryTotals: Record<string, { amount: number; count: number }> = {}
+  let totalAmount = 0
 
   expenses.forEach((expense) => {
-    const amount = parseFloat(expense.amount);
-    totalAmount += amount;
+    const amount = parseFloat(expense.amount)
+    totalAmount += amount
 
     if (!categoryTotals[expense.category]) {
-      categoryTotals[expense.category] = { amount: 0, count: 0 };
+      categoryTotals[expense.category] = { amount: 0, count: 0 }
     }
 
-    categoryTotals[expense.category].amount += amount;
-    categoryTotals[expense.category].count += 1;
-  });
+    categoryTotals[expense.category].amount += amount
+    categoryTotals[expense.category].count += 1
+  })
 
   const categories: CategoryTotal[] = Object.entries(categoryTotals)
     .map(([category, data]) => ({
@@ -115,15 +117,15 @@ export function calculateExpensesByCategory(expenses: Expense[]): ExpenseBreakdo
       percentage: (data.amount / totalAmount) * 100,
       count: data.count,
       avgPerExpense: data.amount / data.count,
-      color: getCategoryColor(category),
+      color: getCategoryColor(category)
     }))
-    .sort((a, b) => b.amount - a.amount);
+    .sort((a, b) => b.amount - a.amount)
 
   return {
     categories,
     totalAmount,
-    totalExpenses: expenses.length,
-  };
+    totalExpenses: expenses.length
+  }
 }
 
 /**
@@ -133,8 +135,8 @@ export function getTopCategories(
   expenses: Expense[],
   topN: number = 5
 ): CategoryTotal[] {
-  const breakdown = calculateExpensesByCategory(expenses);
-  return breakdown.categories.slice(0, topN);
+  const breakdown = calculateExpensesByCategory(expenses)
+  return breakdown.categories.slice(0, topN)
 }
 
 /**
@@ -146,68 +148,71 @@ export function calculateMonthlyAmount(
   customMonths: string | null
 ): number {
   // Normalize frequency to lowercase for case-insensitive comparison
-  const normalizedFrequency = frequency.toLowerCase();
+  const normalizedFrequency = frequency.toLowerCase()
 
   switch (normalizedFrequency) {
     case "monthly":
-      return amount;
+      return amount
     case "yearly":
-      return amount / 12;
+      return amount / 12
     case "quarterly":
-      return amount / 3;
+      return amount / 3
     case "semi-yearly":
-      return amount / 6;
+      return amount / 6
     case "one-time":
-      return 0; // One-time expenses don't count toward monthly
+      return 0 // One-time expenses don't count toward monthly
     case "custom":
       if (customMonths) {
         try {
-          const months = JSON.parse(customMonths);
+          const months = JSON.parse(customMonths)
           // Assume the amount is per occurrence, and calculate average monthly
-          return (amount * months.length) / 12;
+          return (amount * months.length) / 12
         } catch {
-          return 0;
+          return 0
         }
       }
-      return 0;
+      return 0
     default:
-      return 0;
+      return 0
   }
 }
 
 /**
  * Calculate date ranges for time period selector
  */
-export function getDateRangeForPeriod(period: string): { start: Date; end: Date } {
-  const end = new Date();
-  const start = new Date();
+export function getDateRangeForPeriod(period: string): {
+  start: Date
+  end: Date
+} {
+  const end = new Date()
+  const start = new Date()
 
   switch (period) {
     case "current-month":
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      break;
+      start.setDate(1)
+      start.setHours(0, 0, 0, 0)
+      break
     case "3-months":
-      start.setMonth(start.getMonth() - 3);
-      break;
+      start.setMonth(start.getMonth() - 3)
+      break
     case "6-months":
-      start.setMonth(start.getMonth() - 6);
-      break;
+      start.setMonth(start.getMonth() - 6)
+      break
     case "ytd":
-      start.setMonth(0);
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      break;
+      start.setMonth(0)
+      start.setDate(1)
+      start.setHours(0, 0, 0, 0)
+      break
     case "12-months":
-      start.setFullYear(start.getFullYear() - 1);
-      break;
+      start.setFullYear(start.getFullYear() - 1)
+      break
     case "all-time":
-      start.setFullYear(2000, 0, 1);
-      break;
+      start.setFullYear(2000, 0, 1)
+      break
     default:
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
+      start.setDate(1)
+      start.setHours(0, 0, 0, 0)
   }
 
-  return { start, end };
+  return { start, end }
 }

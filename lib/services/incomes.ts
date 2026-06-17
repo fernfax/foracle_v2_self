@@ -1,38 +1,39 @@
-import { and, desc, eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
-import { db } from "@/db";
-import { familyMembers, incomesBeta } from "@/db/schema";
-import { calculateCPF, CPF_RATES_VERSION } from "@/lib/cpf-calculator";
-import { resolveCpfAge } from "@/lib/cpf-age";
-import type { AuthContext } from "@/lib/auth-context";
+import { db } from "@/db"
+import { and, desc, eq } from "drizzle-orm"
+import { nanoid } from "nanoid"
+
 import {
   createIncomeBodySchema,
   updateIncomeBodySchema,
   type CreateIncomeBody,
-  type UpdateIncomeBody,
-} from "@/lib/api-schemas/incomes";
+  type UpdateIncomeBody
+} from "@/lib/api-schemas/incomes"
+import type { AuthContext } from "@/lib/auth-context"
+import { resolveCpfAge } from "@/lib/cpf-age"
+import { calculateCPF, CPF_RATES_VERSION } from "@/lib/cpf-calculator"
+import { familyMembers, incomesBeta } from "@/db/schema"
 
-export type IncomeRow = typeof incomesBeta.$inferSelect;
+export type IncomeRow = typeof incomesBeta.$inferSelect
 
 export class IncomeNotFoundError extends Error {
   constructor() {
-    super("Income not found");
+    super("Income not found")
   }
 }
 
 type ResolvedCpf = {
-  employeeCpfContribution: string | null;
-  employerCpfContribution: string | null;
-  netTakeHome: string | null;
-  cpfRatesVersion: string | null;
-};
+  employeeCpfContribution: string | null
+  employerCpfContribution: string | null
+  netTakeHome: string | null
+  cpfRatesVersion: string | null
+}
 
 const CPF_OFF: ResolvedCpf = {
   employeeCpfContribution: null,
   employerCpfContribution: null,
   netTakeHome: null,
-  cpfRatesVersion: null,
-};
+  cpfRatesVersion: null
+}
 
 // Resolve the CPF contribution fields. POLICY (member + DOB, decided 2026-06-10):
 // CPF is computed ONLY when the income is subject to CPF AND linked to a family
@@ -41,44 +42,46 @@ const CPF_OFF: ResolvedCpf = {
 // solely from the member's DOB; any client-supplied age is ignored (closing the
 // tamper hole where a client could send an age to shrink CPF).
 export async function resolveCpfFields(opts: {
-  subjectToCpf: boolean;
-  amount: number;
-  familyId: string;
-  familyMemberId: string | null;
+  subjectToCpf: boolean
+  amount: number
+  familyId: string
+  familyMemberId: string | null
 }): Promise<ResolvedCpf> {
-  if (!opts.subjectToCpf || !opts.familyMemberId) return CPF_OFF;
+  if (!opts.subjectToCpf || !opts.familyMemberId) return CPF_OFF
 
   const fm = await db.query.familyMembers.findFirst({
     where: and(
       eq(familyMembers.id, opts.familyMemberId),
       eq(familyMembers.familyId, opts.familyId)
-    ),
-  });
-  const age = resolveCpfAge(fm?.dateOfBirth ?? null);
-  if (age === null) return CPF_OFF; // foreign/unknown member or no DOB → CPF locked
+    )
+  })
+  const age = resolveCpfAge(fm?.dateOfBirth ?? null)
+  if (age === null) return CPF_OFF // foreign/unknown member or no DOB → CPF locked
 
-  const cpf = calculateCPF(opts.amount, age);
+  const cpf = calculateCPF(opts.amount, age)
   return {
     employeeCpfContribution: cpf.employeeCpfContribution.toString(),
     employerCpfContribution: cpf.employerCpfContribution.toString(),
     netTakeHome: cpf.netTakeHome.toString(),
-    cpfRatesVersion: CPF_RATES_VERSION,
-  };
+    cpfRatesVersion: CPF_RATES_VERSION
+  }
 }
 
 // List all incomes for the caller's family, including the linked family
 // member columns the existing UI needs. Family-scoped: returns rows for every
 // member of the family, not just the caller.
 export async function listIncomes(ctx: AuthContext): Promise<
-  Array<IncomeRow & {
-    familyMember: {
-      id: string;
-      name: string;
-      relationship: string | null;
-      dateOfBirth: string | null;
-      isContributing: boolean | null;
-    } | null;
-  }>
+  Array<
+    IncomeRow & {
+      familyMember: {
+        id: string
+        name: string
+        relationship: string | null
+        dateOfBirth: string | null
+        isContributing: boolean | null
+      } | null
+    }
+  >
 > {
   const rows = await db.query.incomesBeta.findMany({
     where: eq(incomesBeta.familyId, ctx.familyId),
@@ -90,11 +93,11 @@ export async function listIncomes(ctx: AuthContext): Promise<
           name: true,
           relationship: true,
           dateOfBirth: true,
-          isContributing: true,
-        },
-      },
-    },
-  });
+          isContributing: true
+        }
+      }
+    }
+  })
   // Recompute-on-read: a CPF row stamped with an older rate set (e.g. after a
   // January rate change) is shown with fresh values so the UI never displays
   // stale CPF. Read-only — the durable rewrite is the backfill migration; this
@@ -106,19 +109,19 @@ export async function listIncomes(ctx: AuthContext): Promise<
       row.cpfRatesVersion === CPF_RATES_VERSION ||
       !row.familyMember?.dateOfBirth
     ) {
-      return row;
+      return row
     }
-    const age = resolveCpfAge(row.familyMember.dateOfBirth);
-    if (age === null) return row;
-    const cpf = calculateCPF(Number(row.amount), age);
+    const age = resolveCpfAge(row.familyMember.dateOfBirth)
+    if (age === null) return row
+    const cpf = calculateCPF(Number(row.amount), age)
     return {
       ...row,
       employeeCpfContribution: cpf.employeeCpfContribution.toString(),
       employerCpfContribution: cpf.employerCpfContribution.toString(),
       netTakeHome: cpf.netTakeHome.toString(),
-      cpfRatesVersion: CPF_RATES_VERSION,
-    };
-  });
+      cpfRatesVersion: CPF_RATES_VERSION
+    }
+  })
 }
 
 export async function getIncomeById(
@@ -126,9 +129,9 @@ export async function getIncomeById(
   id: string
 ): Promise<IncomeRow | null> {
   const row = await db.query.incomesBeta.findFirst({
-    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId)),
-  });
-  return row ?? null;
+    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId))
+  })
+  return row ?? null
 }
 
 export async function createIncome(
@@ -137,14 +140,14 @@ export async function createIncome(
 ): Promise<IncomeRow> {
   // Enforce the wire contract at runtime: positive amount, valid dates/enums,
   // no negatives/NaN/$0. The schema was previously type-only and never ran.
-  createIncomeBodySchema.parse(body);
+  createIncomeBodySchema.parse(body)
 
   const cpf = await resolveCpfFields({
     subjectToCpf: body.subjectToCpf,
     amount: Number(body.amount),
     familyId: ctx.familyId,
-    familyMemberId: body.familyMemberId ?? null,
-  });
+    familyMemberId: body.familyMemberId ?? null
+  })
 
   const [row] = await db
     .insert(incomesBeta)
@@ -173,10 +176,10 @@ export async function createIncome(
       futureMilestones: body.futureMilestones ?? null,
       accountForFutureChange: body.accountForFutureChange ?? false,
       description: body.description ?? null,
-      isActive: true,
+      isActive: true
     })
-    .returning();
-  return row;
+    .returning()
+  return row
 }
 
 export async function updateIncome(
@@ -184,84 +187,98 @@ export async function updateIncome(
   id: string,
   patch: UpdateIncomeBody
 ): Promise<IncomeRow> {
-  updateIncomeBodySchema.parse(patch);
+  updateIncomeBodySchema.parse(patch)
 
-  const existing = await getIncomeById(ctx, id);
-  if (!existing) throw new IncomeNotFoundError();
+  const existing = await getIncomeById(ctx, id)
+  if (!existing) throw new IncomeNotFoundError()
 
   const update: Partial<typeof incomesBeta.$inferInsert> = {
-    updatedAt: new Date(),
-  };
-  if (patch.name !== undefined) update.name = patch.name;
-  if (patch.category !== undefined) update.category = patch.category;
-  if (patch.incomeCategory !== undefined) update.incomeCategory = patch.incomeCategory;
-  if (patch.amount !== undefined) update.amount = patch.amount;
-  if (patch.subjectToCpf !== undefined) update.subjectToCpf = patch.subjectToCpf;
-  if (patch.accountForBonus !== undefined) update.accountForBonus = patch.accountForBonus;
-  if (patch.bonusGroups !== undefined) update.bonusGroups = patch.bonusGroups ?? null;
-  if (patch.startDate !== undefined) update.startDate = patch.startDate;
-  if (patch.endDate !== undefined) update.endDate = patch.endDate ?? null;
-  if (patch.pastIncomeHistory !== undefined) update.pastIncomeHistory = patch.pastIncomeHistory ?? null;
-  if (patch.futureMilestones !== undefined) update.futureMilestones = patch.futureMilestones ?? null;
-  if (patch.accountForFutureChange !== undefined) update.accountForFutureChange = patch.accountForFutureChange;
-  if (patch.description !== undefined) update.description = patch.description ?? null;
-  if (patch.isActive !== undefined) update.isActive = patch.isActive;
-  if (patch.familyMemberId !== undefined) update.familyMemberId = patch.familyMemberId ?? null;
-  if (patch.cpfOrdinaryAccount !== undefined) update.cpfOrdinaryAccount = patch.cpfOrdinaryAccount ?? null;
-  if (patch.cpfSpecialAccount !== undefined) update.cpfSpecialAccount = patch.cpfSpecialAccount ?? null;
-  if (patch.cpfMedisaveAccount !== undefined) update.cpfMedisaveAccount = patch.cpfMedisaveAccount ?? null;
+    updatedAt: new Date()
+  }
+  if (patch.name !== undefined) update.name = patch.name
+  if (patch.category !== undefined) update.category = patch.category
+  if (patch.incomeCategory !== undefined)
+    update.incomeCategory = patch.incomeCategory
+  if (patch.amount !== undefined) update.amount = patch.amount
+  if (patch.subjectToCpf !== undefined) update.subjectToCpf = patch.subjectToCpf
+  if (patch.accountForBonus !== undefined)
+    update.accountForBonus = patch.accountForBonus
+  if (patch.bonusGroups !== undefined)
+    update.bonusGroups = patch.bonusGroups ?? null
+  if (patch.startDate !== undefined) update.startDate = patch.startDate
+  if (patch.endDate !== undefined) update.endDate = patch.endDate ?? null
+  if (patch.pastIncomeHistory !== undefined)
+    update.pastIncomeHistory = patch.pastIncomeHistory ?? null
+  if (patch.futureMilestones !== undefined)
+    update.futureMilestones = patch.futureMilestones ?? null
+  if (patch.accountForFutureChange !== undefined)
+    update.accountForFutureChange = patch.accountForFutureChange
+  if (patch.description !== undefined)
+    update.description = patch.description ?? null
+  if (patch.isActive !== undefined) update.isActive = patch.isActive
+  if (patch.familyMemberId !== undefined)
+    update.familyMemberId = patch.familyMemberId ?? null
+  if (patch.cpfOrdinaryAccount !== undefined)
+    update.cpfOrdinaryAccount = patch.cpfOrdinaryAccount ?? null
+  if (patch.cpfSpecialAccount !== undefined)
+    update.cpfSpecialAccount = patch.cpfSpecialAccount ?? null
+  if (patch.cpfMedisaveAccount !== undefined)
+    update.cpfMedisaveAccount = patch.cpfMedisaveAccount ?? null
 
   // CPF is a function of (subjectToCpf, amount, age). Recompute whenever any
   // input could have shifted — mirrors lib/actions/incomes-beta.ts behavior so
   // the action delegating to this service stays observably identical.
   const finalAmount =
-    patch.amount !== undefined ? Number(patch.amount) : Number(existing.amount);
+    patch.amount !== undefined ? Number(patch.amount) : Number(existing.amount)
   const finalSubject =
     patch.subjectToCpf !== undefined
       ? patch.subjectToCpf
-      : (existing.subjectToCpf ?? false);
+      : (existing.subjectToCpf ?? false)
   const effectiveFamilyMemberId =
     patch.familyMemberId !== undefined
       ? (patch.familyMemberId ?? null)
-      : existing.familyMemberId;
+      : existing.familyMemberId
 
   const cpf = await resolveCpfFields({
     subjectToCpf: finalSubject,
     amount: finalAmount,
     familyId: ctx.familyId,
-    familyMemberId: effectiveFamilyMemberId,
-  });
-  update.employeeCpfContribution = cpf.employeeCpfContribution;
-  update.employerCpfContribution = cpf.employerCpfContribution;
-  update.netTakeHome = cpf.netTakeHome;
-  update.cpfRatesVersion = cpf.cpfRatesVersion;
+    familyMemberId: effectiveFamilyMemberId
+  })
+  update.employeeCpfContribution = cpf.employeeCpfContribution
+  update.employerCpfContribution = cpf.employerCpfContribution
+  update.netTakeHome = cpf.netTakeHome
+  update.cpfRatesVersion = cpf.cpfRatesVersion
 
   const [row] = await db
     .update(incomesBeta)
     .set(update)
     .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId)))
-    .returning();
-  return row;
+    .returning()
+  return row
 }
 
 export async function toggleIncomeActive(
   ctx: AuthContext,
   id: string
 ): Promise<IncomeRow> {
-  const existing = await getIncomeById(ctx, id);
-  if (!existing) throw new IncomeNotFoundError();
+  const existing = await getIncomeById(ctx, id)
+  if (!existing) throw new IncomeNotFoundError()
   const [row] = await db
     .update(incomesBeta)
     .set({ isActive: !existing.isActive, updatedAt: new Date() })
     .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId)))
-    .returning();
-  return row;
+    .returning()
+  return row
 }
 
-export async function deleteIncome(ctx: AuthContext, id: string): Promise<void> {
-  const existing = await getIncomeById(ctx, id);
-  if (!existing) throw new IncomeNotFoundError();
+export async function deleteIncome(
+  ctx: AuthContext,
+  id: string
+): Promise<void> {
+  const existing = await getIncomeById(ctx, id)
+  if (!existing) throw new IncomeNotFoundError()
   await db
     .delete(incomesBeta)
-    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId)));
+    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId)))
 }

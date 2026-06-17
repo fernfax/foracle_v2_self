@@ -10,31 +10,31 @@ export const SUPPORTED_CURRENCIES = {
   MYR: { symbol: "RM", name: "Malaysian Ringgit" },
   THB: { symbol: "฿", name: "Thai Baht" },
   IDR: { symbol: "Rp", name: "Indonesian Rupiah" },
-  KRW: { symbol: "₩", name: "South Korean Won" },
-} as const;
+  KRW: { symbol: "₩", name: "South Korean Won" }
+} as const
 
-export type CurrencyCode = keyof typeof SUPPORTED_CURRENCIES;
+export type CurrencyCode = keyof typeof SUPPORTED_CURRENCIES
 
 export interface ExchangeRates {
-  base: string;
-  date: string;
-  rates: Record<string, number>;
+  base: string
+  date: string
+  rates: Record<string, number>
 }
 
 /**
  * Format currency amount with proper symbol
  */
 export function formatCurrency(amount: number, currency: CurrencyCode): string {
-  const currencyInfo = SUPPORTED_CURRENCIES[currency];
+  const currencyInfo = SUPPORTED_CURRENCIES[currency]
 
   // Handle special cases for formatting
   if (currency === "JPY" || currency === "KRW" || currency === "IDR") {
     // These currencies don't use decimal places
-    return `${currencyInfo.symbol}${Math.round(amount).toLocaleString()}`;
+    return `${currencyInfo.symbol}${Math.round(amount).toLocaleString()}`
   }
 
   return `${currencyInfo.symbol}${amount.toLocaleString("en-SG", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+    maximumFractionDigits: 2
+  })}`
 }

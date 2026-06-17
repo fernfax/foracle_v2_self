@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { differenceInMonths, format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogBody,
-  DialogFooterSticky,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  createVehicleAsset,
+  updateVehicleAsset
+} from "@/lib/actions/vehicle-assets"
+import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,655 +17,771 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Calendar } from "@/components/ui/calendar";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooterSticky,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format, differenceInMonths } from "date-fns";
-import { cn } from "@/lib/utils";
-import { createVehicleAsset, updateVehicleAsset } from "@/lib/actions/vehicle-assets";
+  PopoverTrigger
+} from "@/components/ui/popover"
+import { Switch } from "@/components/ui/switch"
 
 interface VehicleAsset {
-  id: string;
-  vehicleName: string;
-  purchaseDate: string;
-  coeExpiryDate: string | null;
-  originalPurchasePrice: string;
-  loanAmountTaken: string | null;
-  loanInterestRate: string | null;
-  loanTenureYears: number | null;
-  loanTenureMonths: number | null;
-  loanAmountRepaid: string | null;
-  monthlyLoanPayment: string | null;
-  linkedExpenseId: string | null;
+  id: string
+  vehicleName: string
+  purchaseDate: string
+  coeExpiryDate: string | null
+  originalPurchasePrice: string
+  loanAmountTaken: string | null
+  loanInterestRate: string | null
+  loanTenureYears: number | null
+  loanTenureMonths: number | null
+  loanAmountRepaid: string | null
+  monthlyLoanPayment: string | null
+  linkedExpenseId: string | null
 }
 
 interface AddVehicleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  vehicle?: VehicleAsset | null;
-  onSuccess?: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  vehicle?: VehicleAsset | null
+  onSuccess?: () => void
 }
 
 export function AddVehicleDialog({
   open,
   onOpenChange,
   vehicle,
-  onSuccess,
+  onSuccess
 }: AddVehicleDialogProps) {
   // Vehicle Information
-  const [vehicleName, setVehicleName] = useState(vehicle?.vehicleName || "");
+  const [vehicleName, setVehicleName] = useState(vehicle?.vehicleName || "")
   const [purchaseDate, setPurchaseDate] = useState<Date | undefined>(
     vehicle?.purchaseDate ? new Date(vehicle.purchaseDate) : undefined
-  );
-  const [purchaseDateOpen, setPurchaseDateOpen] = useState(false);
+  )
+  const [purchaseDateOpen, setPurchaseDateOpen] = useState(false)
   const [coeExpiryDate, setCoeExpiryDate] = useState<Date | undefined>(
     vehicle?.coeExpiryDate ? new Date(vehicle.coeExpiryDate) : undefined
-  );
-  const [coeExpiryDateOpen, setCoeExpiryDateOpen] = useState(false);
+  )
+  const [coeExpiryDateOpen, setCoeExpiryDateOpen] = useState(false)
 
   // Purchase Details
   const [originalPurchasePrice, setOriginalPurchasePrice] = useState(
     vehicle?.originalPurchasePrice || ""
-  );
+  )
   const [loanAmountTaken, setLoanAmountTaken] = useState(
     vehicle?.loanAmountTaken || ""
-  );
+  )
   const [loanInterestRate, setLoanInterestRate] = useState(
     vehicle?.loanInterestRate || ""
-  );
+  )
   const [loanTenureYears, setLoanTenureYears] = useState(
     vehicle?.loanTenureYears != null ? String(vehicle.loanTenureYears) : ""
-  );
+  )
   const [loanTenureMonths, setLoanTenureMonths] = useState(
     vehicle?.loanTenureMonths != null ? String(vehicle.loanTenureMonths) : ""
-  );
+  )
 
   // Loan Repayment
   const [loanAmountRepaid, setLoanAmountRepaid] = useState(
     vehicle?.loanAmountRepaid || ""
-  );
+  )
   const [monthlyLoanPayment, setMonthlyLoanPayment] = useState(
     vehicle?.monthlyLoanPayment || ""
-  );
+  )
 
   // Expenditure Integration
   const [addToExpenditures, setAddToExpenditures] = useState(
     !!vehicle?.linkedExpenseId
-  );
-  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-  const [expenseName, setExpenseName] = useState("");
-  const [validationError, setValidationError] = useState("");
+  )
+  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false)
+  const [expenseName, setExpenseName] = useState("")
+  const [validationError, setValidationError] = useState("")
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Flat-rate outstanding loan: P × (n − k) / n (SG banks use flat rate, not compound)
   const { outstandingLoan, outstandingLoanMethod } = useMemo(() => {
-    const principal = parseFloat(loanAmountTaken) || 0;
-    const tenureYears = parseInt(loanTenureYears) || 0;
-    const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
-    const totalMonths = tenureYears * 12 + tenureMonthsPart;
+    const principal = parseFloat(loanAmountTaken) || 0
+    const tenureYears = parseInt(loanTenureYears) || 0
+    const tenureMonthsPart = parseInt(loanTenureMonths) || 0
+    const totalMonths = tenureYears * 12 + tenureMonthsPart
 
     if (principal > 0 && totalMonths > 0 && purchaseDate) {
-      const monthsElapsed = Math.max(0, differenceInMonths(new Date(), purchaseDate));
-      const k = Math.min(monthsElapsed, totalMonths);
-      const balance = principal * (totalMonths - k) / totalMonths;
-      return { outstandingLoan: Math.max(0, balance), outstandingLoanMethod: "flat" as const };
+      const monthsElapsed = Math.max(
+        0,
+        differenceInMonths(new Date(), purchaseDate)
+      )
+      const k = Math.min(monthsElapsed, totalMonths)
+      const balance = (principal * (totalMonths - k)) / totalMonths
+      return {
+        outstandingLoan: Math.max(0, balance),
+        outstandingLoanMethod: "flat" as const
+      }
     }
 
     // Fallback: simple subtraction
-    const repaid = parseFloat(loanAmountRepaid) || 0;
-    return { outstandingLoan: Math.max(0, principal - repaid), outstandingLoanMethod: "simple" as const };
-  }, [loanAmountTaken, loanTenureYears, loanTenureMonths, purchaseDate, loanAmountRepaid]);
+    const repaid = parseFloat(loanAmountRepaid) || 0
+    return {
+      outstandingLoan: Math.max(0, principal - repaid),
+      outstandingLoanMethod: "simple" as const
+    }
+  }, [
+    loanAmountTaken,
+    loanTenureYears,
+    loanTenureMonths,
+    purchaseDate,
+    loanAmountRepaid
+  ])
 
   // Suggested monthly payment from flat rate formula: (P + P × rate × years) / totalMonths
   const suggestedMonthlyPayment = useMemo(() => {
-    const principal = parseFloat(loanAmountTaken) || 0;
-    const rate = parseFloat(loanInterestRate) || 0;
-    const tenureYears = parseInt(loanTenureYears) || 0;
-    const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
-    const totalMonths = tenureYears * 12 + tenureMonthsPart;
+    const principal = parseFloat(loanAmountTaken) || 0
+    const rate = parseFloat(loanInterestRate) || 0
+    const tenureYears = parseInt(loanTenureYears) || 0
+    const tenureMonthsPart = parseInt(loanTenureMonths) || 0
+    const totalMonths = tenureYears * 12 + tenureMonthsPart
     if (principal > 0 && rate > 0 && totalMonths > 0) {
-      const years = totalMonths / 12;
-      return (principal + principal * (rate / 100) * years) / totalMonths;
+      const years = totalMonths / 12
+      return (principal + principal * (rate / 100) * years) / totalMonths
     }
-    return null;
-  }, [loanAmountTaken, loanInterestRate, loanTenureYears, loanTenureMonths]);
+    return null
+  }, [loanAmountTaken, loanInterestRate, loanTenureYears, loanTenureMonths])
 
   // MAS quantum warning: loan > 70% of purchase price
   const masWarning = useMemo(() => {
-    const principal = parseFloat(loanAmountTaken) || 0;
-    const price = parseFloat(originalPurchasePrice) || 0;
-    if (principal > 0 && price > 0 && principal > price * 0.70) return true;
-    return false;
-  }, [loanAmountTaken, originalPurchasePrice]);
+    const principal = parseFloat(loanAmountTaken) || 0
+    const price = parseFloat(originalPurchasePrice) || 0
+    if (principal > 0 && price > 0 && principal > price * 0.7) return true
+    return false
+  }, [loanAmountTaken, originalPurchasePrice])
 
   // COE vs tenure mismatch warning
   const coeOverlapWarning = useMemo(() => {
-    if (!purchaseDate || !coeExpiryDate) return false;
-    const tenureYears = parseInt(loanTenureYears) || 0;
-    const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
-    const totalMonths = tenureYears * 12 + tenureMonthsPart;
-    if (totalMonths === 0) return false;
-    const loanEndDate = new Date(purchaseDate);
-    loanEndDate.setMonth(loanEndDate.getMonth() + totalMonths);
-    return loanEndDate > coeExpiryDate;
-  }, [purchaseDate, coeExpiryDate, loanTenureYears, loanTenureMonths]);
+    if (!purchaseDate || !coeExpiryDate) return false
+    const tenureYears = parseInt(loanTenureYears) || 0
+    const tenureMonthsPart = parseInt(loanTenureMonths) || 0
+    const totalMonths = tenureYears * 12 + tenureMonthsPart
+    if (totalMonths === 0) return false
+    const loanEndDate = new Date(purchaseDate)
+    loanEndDate.setMonth(loanEndDate.getMonth() + totalMonths)
+    return loanEndDate > coeExpiryDate
+  }, [purchaseDate, coeExpiryDate, loanTenureYears, loanTenureMonths])
 
   // MAS max tenure warning: > 7 years
   const tenureWarning = useMemo(() => {
-    const tenureYears = parseInt(loanTenureYears) || 0;
-    const tenureMonthsPart = parseInt(loanTenureMonths) || 0;
-    return (tenureYears * 12 + tenureMonthsPart) > 84;
-  }, [loanTenureYears, loanTenureMonths]);
+    const tenureYears = parseInt(loanTenureYears) || 0
+    const tenureMonthsPart = parseInt(loanTenureMonths) || 0
+    return tenureYears * 12 + tenureMonthsPart > 84
+  }, [loanTenureYears, loanTenureMonths])
 
   // Calculate loan progress
   const loanProgress = useMemo(() => {
-    const taken = parseFloat(loanAmountTaken) || 0;
-    if (taken === 0) return 100;
-    return Math.min(100, Math.max(0, ((taken - outstandingLoan) / taken) * 100));
-  }, [loanAmountTaken, outstandingLoan]);
+    const taken = parseFloat(loanAmountTaken) || 0
+    if (taken === 0) return 100
+    return Math.min(100, Math.max(0, ((taken - outstandingLoan) / taken) * 100))
+  }, [loanAmountTaken, outstandingLoan])
 
   const resetForm = () => {
-    setVehicleName("");
-    setPurchaseDate(undefined);
-    setCoeExpiryDate(undefined);
-    setOriginalPurchasePrice("");
-    setLoanAmountTaken("");
-    setLoanInterestRate("");
-    setLoanTenureYears("");
-    setLoanTenureMonths("");
-    setLoanAmountRepaid("");
-    setMonthlyLoanPayment("");
-    setAddToExpenditures(false);
-    setConfirmationModalOpen(false);
-    setExpenseName("");
-    setValidationError("");
-  };
+    setVehicleName("")
+    setPurchaseDate(undefined)
+    setCoeExpiryDate(undefined)
+    setOriginalPurchasePrice("")
+    setLoanAmountTaken("")
+    setLoanInterestRate("")
+    setLoanTenureYears("")
+    setLoanTenureMonths("")
+    setLoanAmountRepaid("")
+    setMonthlyLoanPayment("")
+    setAddToExpenditures(false)
+    setConfirmationModalOpen(false)
+    setExpenseName("")
+    setValidationError("")
+  }
 
   // Handle toggle change with validation
   const handleToggleChange = (checked: boolean) => {
     if (checked) {
       // Validate required fields before allowing toggle
       if (!purchaseDate || !monthlyLoanPayment) {
-        setValidationError("Please fill in Purchase Date and Monthly Loan Payment before adding to expenses.");
-        return;
+        setValidationError(
+          "Please fill in Purchase Date and Monthly Loan Payment before adding to expenses."
+        )
+        return
       }
-      setValidationError("");
+      setValidationError("")
       // Generate default expense name
-      setExpenseName(vehicleName ? `${vehicleName} - Loan Payment` : "Vehicle Loan Payment");
-      setConfirmationModalOpen(true);
+      setExpenseName(
+        vehicleName ? `${vehicleName} - Loan Payment` : "Vehicle Loan Payment"
+      )
+      setConfirmationModalOpen(true)
     } else {
-      setAddToExpenditures(false);
-      setExpenseName("");
+      setAddToExpenditures(false)
+      setExpenseName("")
     }
-  };
+  }
 
   // Confirm adding to expenditures
   const handleConfirmAddToExpenditures = () => {
-    setAddToExpenditures(true);
-    setConfirmationModalOpen(false);
-  };
+    setAddToExpenditures(true)
+    setConfirmationModalOpen(false)
+  }
 
   // Cancel adding to expenditures
   const handleCancelAddToExpenditures = () => {
-    setConfirmationModalOpen(false);
-    setExpenseName("");
-  };
+    setConfirmationModalOpen(false)
+    setExpenseName("")
+  }
 
   // Update form fields when vehicle prop changes (for edit mode)
   useEffect(() => {
     if (vehicle) {
-      setVehicleName(vehicle.vehicleName);
-      setPurchaseDate(new Date(vehicle.purchaseDate));
-      setCoeExpiryDate(vehicle.coeExpiryDate ? new Date(vehicle.coeExpiryDate) : undefined);
-      setOriginalPurchasePrice(vehicle.originalPurchasePrice);
-      setLoanAmountTaken(vehicle.loanAmountTaken || "");
-      setLoanInterestRate(vehicle.loanInterestRate || "");
-      setLoanTenureYears(vehicle.loanTenureYears != null ? String(vehicle.loanTenureYears) : "");
-      setLoanTenureMonths(vehicle.loanTenureMonths != null ? String(vehicle.loanTenureMonths) : "");
-      setLoanAmountRepaid(vehicle.loanAmountRepaid || "");
-      setMonthlyLoanPayment(vehicle.monthlyLoanPayment || "");
-      setAddToExpenditures(!!vehicle.linkedExpenseId);
+      setVehicleName(vehicle.vehicleName)
+      setPurchaseDate(new Date(vehicle.purchaseDate))
+      setCoeExpiryDate(
+        vehicle.coeExpiryDate ? new Date(vehicle.coeExpiryDate) : undefined
+      )
+      setOriginalPurchasePrice(vehicle.originalPurchasePrice)
+      setLoanAmountTaken(vehicle.loanAmountTaken || "")
+      setLoanInterestRate(vehicle.loanInterestRate || "")
+      setLoanTenureYears(
+        vehicle.loanTenureYears != null ? String(vehicle.loanTenureYears) : ""
+      )
+      setLoanTenureMonths(
+        vehicle.loanTenureMonths != null ? String(vehicle.loanTenureMonths) : ""
+      )
+      setLoanAmountRepaid(vehicle.loanAmountRepaid || "")
+      setMonthlyLoanPayment(vehicle.monthlyLoanPayment || "")
+      setAddToExpenditures(!!vehicle.linkedExpenseId)
     }
-  }, [vehicle]);
+  }, [vehicle])
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
-      resetForm();
+      resetForm()
     }
-    onOpenChange(isOpen);
-  };
+    onOpenChange(isOpen)
+  }
 
   const handleSubmit = async () => {
     if (!vehicleName || !purchaseDate || !originalPurchasePrice) {
-      return;
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       const data = {
         vehicleName,
         purchaseDate: format(purchaseDate, "yyyy-MM-dd"),
-        coeExpiryDate: coeExpiryDate ? format(coeExpiryDate, "yyyy-MM-dd") : undefined,
+        coeExpiryDate: coeExpiryDate
+          ? format(coeExpiryDate, "yyyy-MM-dd")
+          : undefined,
         originalPurchasePrice: parseFloat(originalPurchasePrice),
-        loanAmountTaken: loanAmountTaken ? parseFloat(loanAmountTaken) : undefined,
-        loanInterestRate: loanInterestRate ? parseFloat(loanInterestRate) : undefined,
-        loanTenureYears: loanTenureYears ? parseInt(loanTenureYears) : undefined,
-        loanTenureMonths: loanTenureMonths ? parseInt(loanTenureMonths) : undefined,
-        loanAmountRepaid: loanAmountRepaid ? parseFloat(loanAmountRepaid) : undefined,
-        monthlyLoanPayment: monthlyLoanPayment ? parseFloat(monthlyLoanPayment) : undefined,
+        loanAmountTaken: loanAmountTaken
+          ? parseFloat(loanAmountTaken)
+          : undefined,
+        loanInterestRate: loanInterestRate
+          ? parseFloat(loanInterestRate)
+          : undefined,
+        loanTenureYears: loanTenureYears
+          ? parseInt(loanTenureYears)
+          : undefined,
+        loanTenureMonths: loanTenureMonths
+          ? parseInt(loanTenureMonths)
+          : undefined,
+        loanAmountRepaid: loanAmountRepaid
+          ? parseFloat(loanAmountRepaid)
+          : undefined,
+        monthlyLoanPayment: monthlyLoanPayment
+          ? parseFloat(monthlyLoanPayment)
+          : undefined,
         addToExpenditures,
-        expenseName: addToExpenditures ? expenseName : undefined,
-      };
-
-      if (vehicle) {
-        await updateVehicleAsset(vehicle.id, data);
-      } else {
-        await createVehicleAsset(data);
+        expenseName: addToExpenditures ? expenseName : undefined
       }
 
-      handleClose(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error("Failed to save vehicle:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      if (vehicle) {
+        await updateVehicleAsset(vehicle.id, data)
+      } else {
+        await createVehicleAsset(data)
+      }
 
-  const isFormValid = vehicleName && purchaseDate && originalPurchasePrice;
+      handleClose(false)
+      onSuccess?.()
+    } catch (error) {
+      console.error("Failed to save vehicle:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const isFormValid = vehicleName && purchaseDate && originalPurchasePrice
 
   return (
     <>
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>
-            {vehicle ? "Edit Vehicle" : "Add Vehicle"}
-          </DialogTitle>
-        </DialogHeader>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="max-h-[90vh] max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>
+              {vehicle ? "Edit Vehicle" : "Add Vehicle"}
+            </DialogTitle>
+          </DialogHeader>
 
-        <DialogBody>
-        <div className="space-y-6 py-4">
-          {/* Vehicle Information */}
-          <div className="space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Vehicle Information</h3>
-            </div>
-            <div className="bg-muted rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="vehicleName">
-                    Vehicle Name <span className="text-[#8B0000]">*</span>
-                  </Label>
-                  <Input
-                    id="vehicleName"
-                    placeholder="e.g. Honda Vezel"
-                    value={vehicleName}
-                    onChange={(e) => setVehicleName(e.target.value)}
-                    className="bg-card"
-                  />
+          <DialogBody>
+            <div className="space-y-6 py-4">
+              {/* Vehicle Information */}
+              <div className="space-y-4">
+                <div className="border-border border-b pb-3">
+                  <h3 className="text-foreground text-sm font-semibold">
+                    Vehicle Information
+                  </h3>
                 </div>
-                <div className="space-y-2">
-                  <Label>
-                    Purchase Date <span className="text-[#8B0000]">*</span>
-                  </Label>
-                  <Popover open={purchaseDateOpen} onOpenChange={setPurchaseDateOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal bg-card",
-                          !purchaseDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {purchaseDate ? format(purchaseDate, "dd/MM/yyyy") : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={purchaseDate}
-                        onSelect={(date) => {
-                          setPurchaseDate(date);
-                          setPurchaseDateOpen(false);
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-              <div className="mt-4">
-                <div className="space-y-2">
-                  <Label>COE Expiry Date</Label>
-                  <Popover open={coeExpiryDateOpen} onOpenChange={setCoeExpiryDateOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal bg-card",
-                          !coeExpiryDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {coeExpiryDate ? format(coeExpiryDate, "dd/MM/yyyy") : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={coeExpiryDate}
-                        onSelect={(date) => {
-                          setCoeExpiryDate(date);
-                          setCoeExpiryDateOpen(false);
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <p className="text-xs text-muted-foreground">
-                    Certificate of Entitlement expiry date (Singapore)
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Purchase Details */}
-          <div className="space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Purchase Details</h3>
-            </div>
-            <div className="bg-muted rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="originalPurchasePrice">
-                    Original Purchase Price <span className="text-[#8B0000]">*</span>
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
-                    <Input
-                      id="originalPurchasePrice"
-                      type="number"
-                      placeholder="0.00"
-                      value={originalPurchasePrice}
-                      onChange={(e) => setOriginalPurchasePrice(e.target.value)}
-                      min="0"
-                      step="0.01"
-                      className="bg-card pl-7"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="loanAmountTaken">Loan Amount Taken</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
-                    <Input
-                      id="loanAmountTaken"
-                      type="number"
-                      placeholder="0.00"
-                      value={loanAmountTaken}
-                      onChange={(e) => setLoanAmountTaken(e.target.value)}
-                      min="0"
-                      step="0.01"
-                      className="bg-card pl-7"
-                    />
-                  </div>
-                  {masWarning && (
-                    <p className="text-xs text-[#7A5A00]">Exceeds MAS cap of 70% of purchase price</p>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="loanInterestRate">Flat Interest Rate (%)</Label>
-                  <div className="relative">
-                    <Input
-                      id="loanInterestRate"
-                      type="number"
-                      placeholder="e.g. 2.68"
-                      value={loanInterestRate}
-                      onChange={(e) => setLoanInterestRate(e.target.value)}
-                      min="0"
-                      step="0.01"
-                      className="bg-card pr-8"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Flat rate p.a. as quoted by your bank</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Loan Tenure</Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
+                <div className="bg-muted rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="vehicleName">
+                        Vehicle Name <span className="text-[#8B0000]">*</span>
+                      </Label>
                       <Input
-                        id="loanTenureYears"
-                        type="number"
-                        placeholder="0"
-                        value={loanTenureYears}
-                        onChange={(e) => setLoanTenureYears(e.target.value)}
-                        min="0"
-                        max="7"
-                        step="1"
-                        className="bg-card pr-10"
+                        id="vehicleName"
+                        placeholder="e.g. Honda Vezel"
+                        value={vehicleName}
+                        onChange={(e) => setVehicleName(e.target.value)}
+                        className="bg-card"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">yr</span>
                     </div>
-                    <div className="relative flex-1">
-                      <Input
-                        id="loanTenureMonths"
-                        type="number"
-                        placeholder="0"
-                        value={loanTenureMonths}
-                        onChange={(e) => setLoanTenureMonths(e.target.value)}
-                        min="0"
-                        max="11"
-                        step="1"
-                        className="bg-card pr-10"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">mo</span>
+                    <div className="space-y-2">
+                      <Label>
+                        Purchase Date <span className="text-[#8B0000]">*</span>
+                      </Label>
+                      <Popover
+                        open={purchaseDateOpen}
+                        onOpenChange={setPurchaseDateOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "bg-card w-full justify-start text-left font-normal",
+                              !purchaseDate && "text-muted-foreground"
+                            )}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {purchaseDate
+                              ? format(purchaseDate, "dd/MM/yyyy")
+                              : "Select date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={purchaseDate}
+                            onSelect={(date) => {
+                              setPurchaseDate(date)
+                              setPurchaseDateOpen(false)
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
-                  {tenureWarning ? (
-                    <p className="text-xs text-[#7A5A00]">MAS caps car loans at 7 years</p>
-                  ) : coeOverlapWarning ? (
-                    <p className="text-xs text-[#7A5A00]">Loan tenure extends past COE expiry date</p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Max 7 years (MAS)</p>
+                  <div className="mt-4">
+                    <div className="space-y-2">
+                      <Label>COE Expiry Date</Label>
+                      <Popover
+                        open={coeExpiryDateOpen}
+                        onOpenChange={setCoeExpiryDateOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "bg-card w-full justify-start text-left font-normal",
+                              !coeExpiryDate && "text-muted-foreground"
+                            )}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {coeExpiryDate
+                              ? format(coeExpiryDate, "dd/MM/yyyy")
+                              : "Select date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={coeExpiryDate}
+                            onSelect={(date) => {
+                              setCoeExpiryDate(date)
+                              setCoeExpiryDateOpen(false)
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <p className="text-muted-foreground text-xs">
+                        Certificate of Entitlement expiry date (Singapore)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Purchase Details */}
+              <div className="space-y-4">
+                <div className="border-border border-b pb-3">
+                  <h3 className="text-foreground text-sm font-semibold">
+                    Purchase Details
+                  </h3>
+                </div>
+                <div className="bg-muted rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="originalPurchasePrice">
+                        Original Purchase Price{" "}
+                        <span className="text-[#8B0000]">*</span>
+                      </Label>
+                      <div className="relative">
+                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                          $
+                        </span>
+                        <Input
+                          id="originalPurchasePrice"
+                          type="number"
+                          placeholder="0.00"
+                          value={originalPurchasePrice}
+                          onChange={(e) =>
+                            setOriginalPurchasePrice(e.target.value)
+                          }
+                          min="0"
+                          step="0.01"
+                          className="bg-card pl-7"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="loanAmountTaken">Loan Amount Taken</Label>
+                      <div className="relative">
+                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                          $
+                        </span>
+                        <Input
+                          id="loanAmountTaken"
+                          type="number"
+                          placeholder="0.00"
+                          value={loanAmountTaken}
+                          onChange={(e) => setLoanAmountTaken(e.target.value)}
+                          min="0"
+                          step="0.01"
+                          className="bg-card pl-7"
+                        />
+                      </div>
+                      {masWarning && (
+                        <p className="text-xs text-[#7A5A00]">
+                          Exceeds MAS cap of 70% of purchase price
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="loanInterestRate">
+                        Flat Interest Rate (%)
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="loanInterestRate"
+                          type="number"
+                          placeholder="e.g. 2.68"
+                          value={loanInterestRate}
+                          onChange={(e) => setLoanInterestRate(e.target.value)}
+                          min="0"
+                          step="0.01"
+                          className="bg-card pr-8"
+                        />
+                        <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
+                          %
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        Flat rate p.a. as quoted by your bank
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Loan Tenure</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            id="loanTenureYears"
+                            type="number"
+                            placeholder="0"
+                            value={loanTenureYears}
+                            onChange={(e) => setLoanTenureYears(e.target.value)}
+                            min="0"
+                            max="7"
+                            step="1"
+                            className="bg-card pr-10"
+                          />
+                          <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
+                            yr
+                          </span>
+                        </div>
+                        <div className="relative flex-1">
+                          <Input
+                            id="loanTenureMonths"
+                            type="number"
+                            placeholder="0"
+                            value={loanTenureMonths}
+                            onChange={(e) =>
+                              setLoanTenureMonths(e.target.value)
+                            }
+                            min="0"
+                            max="11"
+                            step="1"
+                            className="bg-card pr-10"
+                          />
+                          <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
+                            mo
+                          </span>
+                        </div>
+                      </div>
+                      {tenureWarning ? (
+                        <p className="text-xs text-[#7A5A00]">
+                          MAS caps car loans at 7 years
+                        </p>
+                      ) : coeOverlapWarning ? (
+                        <p className="text-xs text-[#7A5A00]">
+                          Loan tenure extends past COE expiry date
+                        </p>
+                      ) : (
+                        <p className="text-muted-foreground text-xs">
+                          Max 7 years (MAS)
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Loan Repayment */}
+              <div className="space-y-4">
+                <div className="border-border border-b pb-3">
+                  <h3 className="text-foreground text-sm font-semibold">
+                    Loan Repayment
+                  </h3>
+                </div>
+                <div className="bg-muted space-y-4 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="loanAmountRepaid">
+                        Loan Amount Repaid
+                      </Label>
+                      <div className="relative">
+                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                          $
+                        </span>
+                        <Input
+                          id="loanAmountRepaid"
+                          type="number"
+                          placeholder="0.00"
+                          value={loanAmountRepaid}
+                          onChange={(e) => setLoanAmountRepaid(e.target.value)}
+                          min="0"
+                          step="0.01"
+                          className="bg-card pl-7"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="outstandingLoan">Outstanding Loan</Label>
+                      <div className="relative">
+                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                          $
+                        </span>
+                        <Input
+                          id="outstandingLoan"
+                          type="number"
+                          value={outstandingLoan.toFixed(2)}
+                          disabled
+                          className="bg-muted pl-7"
+                        />
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        {outstandingLoanMethod === "flat"
+                          ? "Flat rate: principal reduces linearly over tenure"
+                          : "Calculated as: Loan Amount Taken − Loan Amount Repaid"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyLoanPayment">
+                        Monthly Loan Payment
+                      </Label>
+                      <div className="relative">
+                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                          $
+                        </span>
+                        <Input
+                          id="monthlyLoanPayment"
+                          type="number"
+                          placeholder="0.00"
+                          value={monthlyLoanPayment}
+                          onChange={(e) =>
+                            setMonthlyLoanPayment(e.target.value)
+                          }
+                          min="0"
+                          step="0.01"
+                          className="bg-card pl-7"
+                        />
+                      </div>
+                      {suggestedMonthlyPayment !== null && (
+                        <p className="text-muted-foreground text-xs">
+                          Suggested:{" "}
+                          <button
+                            type="button"
+                            className="text-[#007A68] underline-offset-2 hover:underline"
+                            onClick={() =>
+                              setMonthlyLoanPayment(
+                                suggestedMonthlyPayment.toFixed(2)
+                              )
+                            }>
+                            ${suggestedMonthlyPayment.toFixed(2)}
+                          </button>{" "}
+                          (from flat rate)
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Expenditure Integration */}
+              <div className="space-y-4">
+                <div className="border-border border-b pb-3">
+                  <h3 className="text-foreground text-sm font-semibold">
+                    Expenditure Integration
+                  </h3>
+                </div>
+                <div className="bg-muted rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="addToExpenditures"
+                        className="text-foreground text-sm font-semibold">
+                        Add to expenditures
+                      </Label>
+                      <p className="text-foreground/400 mt-1 text-xs">
+                        Enable this to automatically track this vehicle's
+                        monthly loan payment as a recurring expenditure
+                      </p>
+                    </div>
+                    <Switch
+                      id="addToExpenditures"
+                      checked={addToExpenditures}
+                      onCheckedChange={handleToggleChange}
+                    />
+                  </div>
+                  {validationError && (
+                    <div className="mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm text-[#8B0000]">
+                      {validationError}
+                    </div>
                   )}
                 </div>
               </div>
             </div>
-          </div>
+          </DialogBody>
 
-          {/* Loan Repayment */}
-          <div className="space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Loan Repayment</h3>
+          {/* Footer */}
+          <DialogFooterSticky>
+            <Button
+              variant="ghost"
+              onClick={() => handleClose(false)}
+              disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!isFormValid || isSubmitting}>
+              {isSubmitting
+                ? "Saving..."
+                : vehicle
+                  ? "Update Vehicle"
+                  : "Add Vehicle"}
+            </Button>
+          </DialogFooterSticky>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add to Expenditures Confirmation Modal */}
+      <AlertDialog
+        open={confirmationModalOpen}
+        onOpenChange={setConfirmationModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Add to Expenses</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will create an expense entry with the following details:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="my-4 space-y-4">
+            {/* Expense Name Input - Editable */}
+            <div className="space-y-2">
+              <Label htmlFor="expenseName" className="text-sm font-medium">
+                Expense Name
+              </Label>
+              <Input
+                id="expenseName"
+                value={expenseName}
+                onChange={(e) => setExpenseName(e.target.value)}
+                placeholder="Enter expense name"
+                className="w-full"
+              />
             </div>
-            <div className="bg-muted rounded-lg p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="loanAmountRepaid">Loan Amount Repaid</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
-                    <Input
-                      id="loanAmountRepaid"
-                      type="number"
-                      placeholder="0.00"
-                      value={loanAmountRepaid}
-                      onChange={(e) => setLoanAmountRepaid(e.target.value)}
-                      min="0"
-                      step="0.01"
-                      className="bg-card pl-7"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="outstandingLoan">Outstanding Loan</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
-                    <Input
-                      id="outstandingLoan"
-                      type="number"
-                      value={outstandingLoan.toFixed(2)}
-                      disabled
-                      className="bg-muted pl-7"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {outstandingLoanMethod === "flat"
-                      ? "Flat rate: principal reduces linearly over tenure"
-                      : "Calculated as: Loan Amount Taken − Loan Amount Repaid"}
-                  </p>
-                </div>
+
+            {/* Display-only Details */}
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="text-foreground">Vehicle:</div>
+              <div className="font-medium">{vehicleName || "-"}</div>
+
+              <div className="text-foreground">Monthly Payment:</div>
+              <div className="font-medium">
+                $
+                {monthlyLoanPayment
+                  ? parseFloat(monthlyLoanPayment).toLocaleString()
+                  : "0"}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="monthlyLoanPayment">Monthly Loan Payment</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
-                    <Input
-                      id="monthlyLoanPayment"
-                      type="number"
-                      placeholder="0.00"
-                      value={monthlyLoanPayment}
-                      onChange={(e) => setMonthlyLoanPayment(e.target.value)}
-                      min="0"
-                      step="0.01"
-                      className="bg-card pl-7"
-                    />
-                  </div>
-                  {suggestedMonthlyPayment !== null && (
-                    <p className="text-xs text-muted-foreground">
-                      Suggested:{" "}
-                      <button
-                        type="button"
-                        className="text-[#007A68] underline-offset-2 hover:underline"
-                        onClick={() => setMonthlyLoanPayment(suggestedMonthlyPayment.toFixed(2))}
-                      >
-                        ${suggestedMonthlyPayment.toFixed(2)}
-                      </button>
-                      {" "}(from flat rate)
-                    </p>
-                  )}
-                </div>
+              <div className="text-foreground">Frequency:</div>
+              <div className="font-medium">Monthly</div>
+
+              <div className="text-foreground">Start Date:</div>
+              <div className="font-medium">
+                {purchaseDate ? format(purchaseDate, "MMMM d, yyyy") : "-"}
               </div>
             </div>
           </div>
 
-          {/* Expenditure Integration */}
-          <div className="space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Expenditure Integration</h3>
-            </div>
-            <div className="bg-muted rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <Label htmlFor="addToExpenditures" className="text-sm font-semibold text-foreground">
-                    Add to expenditures
-                  </Label>
-                  <p className="text-xs text-foreground/400 mt-1">
-                    Enable this to automatically track this vehicle's monthly loan payment as a recurring expenditure
-                  </p>
-                </div>
-                <Switch
-                  id="addToExpenditures"
-                  checked={addToExpenditures}
-                  onCheckedChange={handleToggleChange}
-                />
-              </div>
-              {validationError && (
-                <div className="mt-3 text-sm text-[#8B0000] bg-[rgba(224,85,85,0.12)] p-2 rounded">
-                  {validationError}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        </DialogBody>
-
-        {/* Footer */}
-        <DialogFooterSticky>
-          <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!isFormValid || isSubmitting}>
-            {isSubmitting ? "Saving..." : vehicle ? "Update Vehicle" : "Add Vehicle"}
-          </Button>
-        </DialogFooterSticky>
-      </DialogContent>
-    </Dialog>
-
-    {/* Add to Expenditures Confirmation Modal */}
-    <AlertDialog open={confirmationModalOpen} onOpenChange={setConfirmationModalOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Add to Expenses</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will create an expense entry with the following details:
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <div className="space-y-4 my-4">
-          {/* Expense Name Input - Editable */}
-          <div className="space-y-2">
-            <Label htmlFor="expenseName" className="text-sm font-medium">
-              Expense Name
-            </Label>
-            <Input
-              id="expenseName"
-              value={expenseName}
-              onChange={(e) => setExpenseName(e.target.value)}
-              placeholder="Enter expense name"
-              className="w-full"
-            />
-          </div>
-
-          {/* Display-only Details */}
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="text-foreground">Vehicle:</div>
-            <div className="font-medium">{vehicleName || "-"}</div>
-
-            <div className="text-foreground">Monthly Payment:</div>
-            <div className="font-medium">
-              ${monthlyLoanPayment ? parseFloat(monthlyLoanPayment).toLocaleString() : "0"}
-            </div>
-
-            <div className="text-foreground">Frequency:</div>
-            <div className="font-medium">Monthly</div>
-
-            <div className="text-foreground">Start Date:</div>
-            <div className="font-medium">
-              {purchaseDate ? format(purchaseDate, "MMMM d, yyyy") : "-"}
-            </div>
-          </div>
-        </div>
-
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancelAddToExpenditures}>
-            Cancel
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirmAddToExpenditures}>
-            Confirm
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  </>
-  );
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelAddToExpenditures}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAddToExpenditures}>
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
 }

@@ -1,15 +1,16 @@
-import { getGoals } from "@/lib/actions/goals";
-import { GoalsClient } from "./client";
+import { getGoals } from "@/lib/actions/goals"
 
-export const dynamic = 'force-dynamic';
+import { GoalsClient } from "./client"
+
+export const dynamic = "force-dynamic"
 
 export const metadata = {
   title: "Goals | Foracle",
-  description: "Set and track your financial goals",
-};
+  description: "Set and track your financial goals"
+}
 
 export default async function GoalsPage() {
-  const goals = await getGoals();
+  const goals = await getGoals()
 
-  return <GoalsClient initialGoals={goals} />;
+  return <GoalsClient initialGoals={goals} />
 }

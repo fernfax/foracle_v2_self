@@ -1,4 +1,4 @@
-import type { DriveStep } from "driver.js";
+import type { DriveStep } from "driver.js"
 
 export type TourName =
   | "overall"
@@ -8,13 +8,13 @@ export type TourName =
   | "cpf"
   | "holdings"
   | "goals"
-  | "budget";
+  | "budget"
 
 export interface TourConfig {
-  name: TourName;
-  title: string;
-  description: string;
-  steps: DriveStep[];
+  name: TourName
+  title: string
+  description: string
+  steps: DriveStep[]
 }
 
 // ---------------------------------------------------------------------------
@@ -40,8 +40,8 @@ const overallSteps: DriveStep[] = [
       description:
         "Move between sections from here — Overview, your profile and incomes, Expenses, Investments, Goals, and Budget. Hover to expand the labels.",
       side: "right",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     // Mobile: the bottom tab bar. display:none on desktop.
@@ -51,8 +51,8 @@ const overallSteps: DriveStep[] = [
       description:
         "Tap these tabs to move between sections. Swipe the bar sideways to reach every page.",
       side: "top",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="overview-nav-bridge"]',
@@ -61,8 +61,8 @@ const overallSteps: DriveStep[] = [
       description:
         "Shortcuts straight to the parts of your profile you visit most — Family, Incomes, Expenses, CPF, and Holdings.",
       side: "bottom",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     element: '[data-tour="help-button"]',
@@ -71,10 +71,10 @@ const overallSteps: DriveStep[] = [
       description:
         "Lost? Tap this button on any page to replay these guided tours or jump to a specific section.",
       side: "top",
-      align: "end",
-    },
-  },
-];
+      align: "end"
+    }
+  }
+]
 
 // Dashboard — the /overview page. Defaults to the Cashflow view; the classic
 // metrics layout (under ?view=classic) is covered by the trailing steps, which
@@ -87,8 +87,8 @@ const dashboardSteps: DriveStep[] = [
       description:
         "Your Overview pulls everything together. These chips jump you to any part of your profile.",
       side: "bottom",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     element: '[data-tour="cashflow-diagram"]',
@@ -97,8 +97,8 @@ const dashboardSteps: DriveStep[] = [
       description:
         "This Sankey traces every dollar: income on the left flows through CPF, your expense categories, and into savings. Tap a category to break it down.",
       side: "top",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="cashflow-controls"]',
@@ -107,8 +107,8 @@ const dashboardSteps: DriveStep[] = [
       description:
         "Flip between the Sankey flow and a 12-month balance Projection, and step through months to see how each one looks.",
       side: "left",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     // Classic view only (?view=classic) — filtered out on the default Sankey.
@@ -118,10 +118,10 @@ const dashboardSteps: DriveStep[] = [
       description:
         "Your total assets, the goals you're working toward, and everyone in your household — at a glance.",
       side: "top",
-      align: "center",
-    },
-  },
-];
+      align: "center"
+    }
+  }
+]
 
 // Incomes — the "Projected Income River" timeline on /user?tab=incomes.
 const incomesSteps: DriveStep[] = [
@@ -132,8 +132,8 @@ const incomesSteps: DriveStep[] = [
       description:
         "Your gross and take-home totals, how many streams are active, and your largest source — summarised up top.",
       side: "bottom",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="income-river-chart"]',
@@ -142,8 +142,8 @@ const incomesSteps: DriveStep[] = [
       description:
         "This curve is your income over time. It rises and falls as streams start, change, and end — so you can read your earning shape at a glance.",
       side: "bottom",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="income-display-toggle"]',
@@ -152,8 +152,8 @@ const incomesSteps: DriveStep[] = [
       description:
         "Switch between Gross (before CPF) and Nett (your actual take-home), whichever number you're planning around.",
       side: "left",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     // Desktop-only control — the scale slider is hidden on phones.
@@ -163,8 +163,8 @@ const incomesSteps: DriveStep[] = [
       description:
         "Drag the Scale slider to widen the window up to 10 years — handy for planning raises, breaks, or retirement.",
       side: "left",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     element: '[data-tour="income-member-lane"]',
@@ -173,8 +173,8 @@ const incomesSteps: DriveStep[] = [
       description:
         "Each person gets their own lane, labelled with their name and age at the month in view. Their income bars stack beneath the river.",
       side: "top",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="income-month-axis"]',
@@ -183,8 +183,8 @@ const incomesSteps: DriveStep[] = [
       description:
         "Everything left of now is history; everything right is projected. Scroll sideways to travel through time.",
       side: "bottom",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="add-income-stream-btn"]',
@@ -193,8 +193,8 @@ const incomesSteps: DriveStep[] = [
       description:
         "Add a salary, side gig, rental, or bonus. Assign it to a family member and set whether it's permanent or temporary.",
       side: "top",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     // "Enter edit mode" label is only present when not already editing.
@@ -204,10 +204,10 @@ const incomesSteps: DriveStep[] = [
       description:
         "Tap Edit to reshape the river directly — draw new bars on a lane, drag them to other months, or resize them to change start and end dates.",
       side: "left",
-      align: "end",
-    },
-  },
-];
+      align: "end"
+    }
+  }
+]
 
 // Expenses — /user?tab=expenses (the standalone /expenses route redirects here).
 const expensesSteps: DriveStep[] = [
@@ -218,8 +218,8 @@ const expensesSteps: DriveStep[] = [
       description:
         "Your total expected spending for the selected month, with your top category and daily average alongside it.",
       side: "bottom",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     element: '[data-tour="expense-filters"]',
@@ -228,17 +228,18 @@ const expensesSteps: DriveStep[] = [
       description:
         "Narrow the table by category or frequency to focus on the spending you care about.",
       side: "bottom",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     element: '[data-tour="manage-categories-btn"]',
     popover: {
       title: "Manage categories",
-      description: "Create and rename categories so your budget matches how you actually spend.",
+      description:
+        "Create and rename categories so your budget matches how you actually spend.",
       side: "bottom",
-      align: "end",
-    },
+      align: "end"
+    }
   },
   {
     element: '[data-tour="add-expense-btn"]',
@@ -247,8 +248,8 @@ const expensesSteps: DriveStep[] = [
       description:
         "Add recurring bills, one-off purchases, or custom payment schedules — they flow into your projections automatically.",
       side: "bottom",
-      align: "end",
-    },
+      align: "end"
+    }
   },
   {
     element: '[data-tour="expense-table"]',
@@ -257,10 +258,10 @@ const expensesSteps: DriveStep[] = [
       description:
         "Every expense you track. Edit, delete, or open details from the menu on each row.",
       side: "top",
-      align: "center",
-    },
-  },
-];
+      align: "center"
+    }
+  }
+]
 
 // CPF — /user?tab=cpf
 const cpfSteps: DriveStep[] = [
@@ -271,8 +272,8 @@ const cpfSteps: DriveStep[] = [
       description:
         "Total household CPF balance, monthly contributions, and the Full Retirement Sum you're tracking toward.",
       side: "bottom",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="cpf-member-cards"]',
@@ -281,8 +282,8 @@ const cpfSteps: DriveStep[] = [
       description:
         "Each member's OA, SA, and MA balances, and how far they are toward the Full Retirement Sum.",
       side: "top",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="cpf-projection-controls"]',
@@ -291,8 +292,8 @@ const cpfSteps: DriveStep[] = [
       description:
         "Switch between cumulative balance and monthly contributions, change the breakdown, and pick a time range.",
       side: "bottom",
-      align: "end",
-    },
+      align: "end"
+    }
   },
   {
     element: '[data-tour="cpf-projection-chart"]',
@@ -301,10 +302,10 @@ const cpfSteps: DriveStep[] = [
       description:
         "How your CPF grows over time, with contribution rates adjusting automatically as members age through CPF brackets.",
       side: "top",
-      align: "center",
-    },
-  },
-];
+      align: "center"
+    }
+  }
+]
 
 // Holdings / Net Worth — /user?tab=holdings
 const holdingsSteps: DriveStep[] = [
@@ -315,8 +316,8 @@ const holdingsSteps: DriveStep[] = [
       description:
         "Everything you own minus what you owe, with the split between assets and liabilities just below.",
       side: "bottom",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     element: '[data-tour="asset-class-chips"]',
@@ -325,8 +326,8 @@ const holdingsSteps: DriveStep[] = [
       description:
         "Cash, property, vehicles, investments, insurance, and CPF — each summarised so you can see what makes up your wealth.",
       side: "top",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="add-holding-btn"]',
@@ -335,10 +336,10 @@ const holdingsSteps: DriveStep[] = [
       description:
         "Record a bank balance or other asset here. Property, vehicles, and investments flow in from their own pages.",
       side: "left",
-      align: "end",
-    },
-  },
-];
+      align: "end"
+    }
+  }
+]
 
 // Goals — /goals
 const goalsSteps: DriveStep[] = [
@@ -349,8 +350,8 @@ const goalsSteps: DriveStep[] = [
       description:
         "See how many goals you're working toward, and add a new one — a home deposit, a trip, an emergency fund.",
       side: "bottom",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     element: '[data-tour="goals-list"]',
@@ -359,10 +360,10 @@ const goalsSteps: DriveStep[] = [
       description:
         "Each card shows how close you are to a goal. Tap one to update what you've saved or adjust the target.",
       side: "top",
-      align: "center",
-    },
-  },
-];
+      align: "center"
+    }
+  }
+]
 
 // Budget — /budget. Mobile and desktop render different layouts; both sets of
 // anchors live here and the visibility filter shows whichever is on screen.
@@ -375,8 +376,8 @@ const budgetSteps: DriveStep[] = [
       description:
         "How much you've spent against your budget, what's left, and whether you're pacing ahead or behind for the month.",
       side: "bottom",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="budget-categories"]',
@@ -385,8 +386,8 @@ const budgetSteps: DriveStep[] = [
       description:
         "A quick read on each category's budget and how much of it you've used. Tap one to see its expenses.",
       side: "top",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="budget-manage-categories-btn"]',
@@ -395,8 +396,8 @@ const budgetSteps: DriveStep[] = [
       description:
         "Add categories and set monthly limits so your budget reflects how you really spend.",
       side: "top",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   // --- Desktop layout ---
   {
@@ -406,8 +407,8 @@ const budgetSteps: DriveStep[] = [
       description:
         "Spent, remaining, daily pacing, and today's spend — the four numbers that tell you if you're on track.",
       side: "bottom",
-      align: "center",
-    },
+      align: "center"
+    }
   },
   {
     element: '[data-tour="budget-breakdown"]',
@@ -416,8 +417,8 @@ const budgetSteps: DriveStep[] = [
       description:
         "Every category's limit against what you've actually spent, plus your daily spending trend for the month.",
       side: "right",
-      align: "start",
-    },
+      align: "start"
+    }
   },
   {
     element: '[data-tour="budget-recent"]',
@@ -426,58 +427,58 @@ const budgetSteps: DriveStep[] = [
       description:
         "Your latest expenses and any budget adjustments you've made this month.",
       side: "left",
-      align: "start",
-    },
-  },
-];
+      align: "start"
+    }
+  }
+]
 
 export const TOUR_CONFIGS: Record<TourName, TourConfig> = {
   overall: {
     name: "overall",
     title: "App Overview",
     description: "Get familiar with Foracle's navigation and key features",
-    steps: overallSteps,
+    steps: overallSteps
   },
   dashboard: {
     name: "dashboard",
     title: "Dashboard Tour",
     description: "Read your money at a glance on the Overview page",
-    steps: dashboardSteps,
+    steps: dashboardSteps
   },
   incomes: {
     name: "incomes",
     title: "Incomes Tour",
     description: "Map your income streams on the Projected Income River",
-    steps: incomesSteps,
+    steps: incomesSteps
   },
   expenses: {
     name: "expenses",
     title: "Expenses Tour",
     description: "Track and categorise your spending",
-    steps: expensesSteps,
+    steps: expensesSteps
   },
   cpf: {
     name: "cpf",
     title: "CPF Tour",
     description: "Understand your CPF balances and projection",
-    steps: cpfSteps,
+    steps: cpfSteps
   },
   holdings: {
     name: "holdings",
     title: "Net Worth Tour",
     description: "See everything you own and owe in one place",
-    steps: holdingsSteps,
+    steps: holdingsSteps
   },
   goals: {
     name: "goals",
     title: "Goals Tour",
     description: "Set financial goals and track your progress",
-    steps: goalsSteps,
+    steps: goalsSteps
   },
   budget: {
     name: "budget",
     title: "Budget Tour",
     description: "Stay on top of your monthly spending",
-    steps: budgetSteps,
-  },
-};
+    steps: budgetSteps
+  }
+}

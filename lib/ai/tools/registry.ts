@@ -1,5 +1,6 @@
-import { z } from "zod";
-import type { Tool } from "../openai-client";
+import { z } from "zod"
+
+import type { Tool } from "../openai-client"
 
 // =============================================================================
 // Tool Parameter Schemas (Zod)
@@ -8,8 +9,8 @@ import type { Tool } from "../openai-client";
 export const MonthParamSchema = z.object({
   month: z
     .string()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format"),
-});
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format")
+})
 
 export const FamilySummaryParamSchema = z.object({
   scope: z.enum(["household", "member", "auto"]).default("auto"),
@@ -18,72 +19,92 @@ export const FamilySummaryParamSchema = z.object({
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format")
     .optional(),
   memberId: z.string().optional(),
-  memberName: z.string().optional(),
-});
+  memberName: z.string().optional()
+})
 
 // Schema for individual hypothetical items (multi-scenario support)
 export const HypotheticalItemSchema = z.object({
   type: z.enum(["income", "expense"]),
   amount: z.number().positive("Amount must be positive"),
-  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format"),
-  label: z.string().optional(),
-});
+  month: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format"),
+  label: z.string().optional()
+})
 
 export const SearchKnowledgeParamSchema = z.object({
   query: z.string().min(1, "Query cannot be empty"),
-  limit: z.number().int().min(1).max(10).default(5).optional(),
-});
+  limit: z.number().int().min(1).max(10).default(5).optional()
+})
 
-export const HoldingsSummaryParamSchema = z.object({});
+export const HoldingsSummaryParamSchema = z.object({})
 
-export const PropertyAssetsSummaryParamSchema = z.object({});
+export const PropertyAssetsSummaryParamSchema = z.object({})
 
-export const VehicleAssetsSummaryParamSchema = z.object({});
+export const VehicleAssetsSummaryParamSchema = z.object({})
 
 export const OtherAssetsSummaryParamSchema = z.object({
   assetType: z
     .string()
     .optional()
-    .describe("Optional filter by asset type (e.g., 'investment', 'savings', 'collectible')"),
-});
+    .describe(
+      "Optional filter by asset type (e.g., 'investment', 'savings', 'collectible')"
+    )
+})
 
 export const InsuranceSummaryParamSchema = z.object({
   policyType: z
     .string()
     .optional()
-    .describe("Optional filter by policy type (e.g., 'life', 'health', 'auto', 'home')"),
+    .describe(
+      "Optional filter by policy type (e.g., 'life', 'health', 'auto', 'home')"
+    ),
   status: z
     .enum(["active", "lapsed", "cancelled", "matured", "all"])
     .optional()
     .default("active")
-    .describe("Filter by policy status (default: active)"),
-});
+    .describe("Filter by policy status (default: active)")
+})
 
 export const DailyExpenseSummaryParamSchema = z.object({
   fromDate: z
     .string()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "fromDate must be in YYYY-MM-DD format")
+    .regex(
+      /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/,
+      "fromDate must be in YYYY-MM-DD format"
+    )
     .optional()
-    .describe("Start date for filtering (YYYY-MM-DD). Defaults to start of current month."),
+    .describe(
+      "Start date for filtering (YYYY-MM-DD). Defaults to start of current month."
+    ),
   toDate: z
     .string()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "toDate must be in YYYY-MM-DD format")
+    .regex(
+      /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/,
+      "toDate must be in YYYY-MM-DD format"
+    )
     .optional()
     .describe("End date for filtering (YYYY-MM-DD). Defaults to today."),
   month: z
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "month must be in YYYY-MM format")
     .optional()
-    .describe("Shorthand to get all expenses for a specific month (YYYY-MM). Overrides fromDate/toDate if provided."),
+    .describe(
+      "Shorthand to get all expenses for a specific month (YYYY-MM). Overrides fromDate/toDate if provided."
+    ),
   categoryName: z
     .string()
     .optional()
-    .describe("Optional filter by category name (e.g., 'Food', 'Transport', 'Shopping')"),
+    .describe(
+      "Optional filter by category name (e.g., 'Food', 'Transport', 'Shopping')"
+    ),
   subcategoryName: z
     .string()
     .optional()
-    .describe("Optional filter by subcategory name (e.g., 'Groceries', 'Dining Out', 'Grab')"),
-});
+    .describe(
+      "Optional filter by subcategory name (e.g., 'Groceries', 'Dining Out', 'Grab')"
+    )
+})
 
 export const BalanceSummaryParamSchema = z.object({
   // ===== EXISTING PARAMS (backwards compatible) =====
@@ -100,7 +121,10 @@ export const BalanceSummaryParamSchema = z.object({
     .optional(),
   hypotheticalExpenseMonth: z
     .string()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "hypotheticalExpenseMonth must be in YYYY-MM format")
+    .regex(
+      /^\d{4}-(0[1-9]|1[0-2])$/,
+      "hypotheticalExpenseMonth must be in YYYY-MM format"
+    )
     .optional(),
   hypotheticalIncome: z
     .number()
@@ -108,7 +132,10 @@ export const BalanceSummaryParamSchema = z.object({
     .optional(),
   hypotheticalIncomeMonth: z
     .string()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "hypotheticalIncomeMonth must be in YYYY-MM format")
+    .regex(
+      /^\d{4}-(0[1-9]|1[0-2])$/,
+      "hypotheticalIncomeMonth must be in YYYY-MM format"
+    )
     .optional(),
 
   // ===== NEW PARAMS (v2 enhancements) =====
@@ -130,31 +157,43 @@ export const BalanceSummaryParamSchema = z.object({
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Must be in YYYY-MM format")
     .optional()
-    .describe("If provided, computes the maximum one-time expense affordable in this month while respecting constraints"),
+    .describe(
+      "If provided, computes the maximum one-time expense affordable in this month while respecting constraints"
+    ),
 
   // Find safe purchase month - given an expense amount, find when it's safe to purchase
   findSafeMonthForExpense: z
     .number()
     .positive("Expense amount must be positive")
     .optional()
-    .describe("If provided, finds the earliest month where this expense can be made while maintaining at least 6 months of income as emergency fund"),
-});
+    .describe(
+      "If provided, finds the earliest month where this expense can be made while maintaining at least 6 months of income as emergency fund"
+    )
+})
 
 // =============================================================================
 // Tool Type Definitions
 // =============================================================================
 
-export type MonthParams = z.infer<typeof MonthParamSchema>;
-export type FamilySummaryParams = z.infer<typeof FamilySummaryParamSchema>;
-export type BalanceSummaryParams = z.infer<typeof BalanceSummaryParamSchema>;
-export type SearchKnowledgeParams = z.infer<typeof SearchKnowledgeParamSchema>;
-export type HoldingsSummaryParams = z.infer<typeof HoldingsSummaryParamSchema>;
-export type PropertyAssetsSummaryParams = z.infer<typeof PropertyAssetsSummaryParamSchema>;
-export type VehicleAssetsSummaryParams = z.infer<typeof VehicleAssetsSummaryParamSchema>;
-export type OtherAssetsSummaryParams = z.infer<typeof OtherAssetsSummaryParamSchema>;
-export type InsuranceSummaryParams = z.infer<typeof InsuranceSummaryParamSchema>;
-export type DailyExpenseSummaryParams = z.infer<typeof DailyExpenseSummaryParamSchema>;
-export type HypotheticalItem = z.infer<typeof HypotheticalItemSchema>;
+export type MonthParams = z.infer<typeof MonthParamSchema>
+export type FamilySummaryParams = z.infer<typeof FamilySummaryParamSchema>
+export type BalanceSummaryParams = z.infer<typeof BalanceSummaryParamSchema>
+export type SearchKnowledgeParams = z.infer<typeof SearchKnowledgeParamSchema>
+export type HoldingsSummaryParams = z.infer<typeof HoldingsSummaryParamSchema>
+export type PropertyAssetsSummaryParams = z.infer<
+  typeof PropertyAssetsSummaryParamSchema
+>
+export type VehicleAssetsSummaryParams = z.infer<
+  typeof VehicleAssetsSummaryParamSchema
+>
+export type OtherAssetsSummaryParams = z.infer<
+  typeof OtherAssetsSummaryParamSchema
+>
+export type InsuranceSummaryParams = z.infer<typeof InsuranceSummaryParamSchema>
+export type DailyExpenseSummaryParams = z.infer<
+  typeof DailyExpenseSummaryParamSchema
+>
+export type HypotheticalItem = z.infer<typeof HypotheticalItemSchema>
 
 export type ToolName =
   | "get_income_summary"
@@ -167,13 +206,13 @@ export type ToolName =
   | "get_other_assets_summary"
   | "get_insurance_summary"
   | "get_daily_expense_summary"
-  | "search_knowledge";
+  | "search_knowledge"
 
 export interface ToolDefinition {
-  name: ToolName;
-  description: string;
-  schema: z.ZodSchema;
-  parameters: Record<string, unknown>;
+  name: ToolName
+  description: string
+  schema: z.ZodSchema
+  parameters: Record<string, unknown>
 }
 
 // =============================================================================
@@ -191,11 +230,12 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       properties: {
         month: {
           type: "string",
-          description: "The month to get income for in YYYY-MM format (e.g., '2025-02')",
-        },
+          description:
+            "The month to get income for in YYYY-MM format (e.g., '2025-02')"
+        }
       },
-      required: ["month"],
-    },
+      required: ["month"]
+    }
   },
 
   get_expenses_summary: {
@@ -208,11 +248,12 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       properties: {
         month: {
           type: "string",
-          description: "The month to get expenses for in YYYY-MM format (e.g., '2025-02')",
-        },
+          description:
+            "The month to get expenses for in YYYY-MM format (e.g., '2025-02')"
+        }
       },
-      required: ["month"],
-    },
+      required: ["month"]
+    }
   },
 
   get_family_summary: {
@@ -226,23 +267,26 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
         scope: {
           type: "string",
           enum: ["household", "member", "auto"],
-          description: "Scope of summary: 'household' for all members, 'member' for specific member, 'auto' to choose based on other params (default: auto)",
+          description:
+            "Scope of summary: 'household' for all members, 'member' for specific member, 'auto' to choose based on other params (default: auto)"
         },
         month: {
           type: "string",
-          description: "Optional month context in YYYY-MM format for income change detection",
+          description:
+            "Optional month context in YYYY-MM format for income change detection"
         },
         memberId: {
           type: "string",
-          description: "Optional family member ID for member-specific queries",
+          description: "Optional family member ID for member-specific queries"
         },
         memberName: {
           type: "string",
-          description: "Optional family member name for lookup (e.g., 'Bei Yu', 'my wife', 'spouse')",
-        },
+          description:
+            "Optional family member name for lookup (e.g., 'Bei Yu', 'my wife', 'spouse')"
+        }
       },
-      required: [],
-    },
+      required: []
+    }
   },
 
   get_balance_summary: {
@@ -255,61 +299,77 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       properties: {
         fromMonth: {
           type: "string",
-          description: "Start month in YYYY-MM format (e.g., '2025-02')",
+          description: "Start month in YYYY-MM format (e.g., '2025-02')"
         },
         toMonth: {
           type: "string",
-          description: "End month in YYYY-MM format (e.g., '2025-12')",
+          description: "End month in YYYY-MM format (e.g., '2025-12')"
         },
         hypotheticalExpense: {
           type: "number",
-          description: "[Legacy] Single one-time expense to simulate. For multiple scenarios, use hypotheticals[] instead.",
+          description:
+            "[Legacy] Single one-time expense to simulate. For multiple scenarios, use hypotheticals[] instead."
         },
         hypotheticalExpenseMonth: {
           type: "string",
-          description: "[Legacy] Month for hypotheticalExpense in YYYY-MM format",
+          description:
+            "[Legacy] Month for hypotheticalExpense in YYYY-MM format"
         },
         hypotheticalIncome: {
           type: "number",
-          description: "[Legacy] Single one-time income to simulate. For multiple scenarios, use hypotheticals[] instead.",
+          description:
+            "[Legacy] Single one-time income to simulate. For multiple scenarios, use hypotheticals[] instead."
         },
         hypotheticalIncomeMonth: {
           type: "string",
-          description: "[Legacy] Month for hypotheticalIncome in YYYY-MM format",
+          description: "[Legacy] Month for hypotheticalIncome in YYYY-MM format"
         },
         hypotheticals: {
           type: "array",
-          description: "Array of hypothetical income/expense scenarios. If provided, legacy single hypothetical params are ignored.",
+          description:
+            "Array of hypothetical income/expense scenarios. If provided, legacy single hypothetical params are ignored.",
           items: {
             type: "object",
             properties: {
-              type: { type: "string", enum: ["income", "expense"], description: "Whether this is income or expense" },
+              type: {
+                type: "string",
+                enum: ["income", "expense"],
+                description: "Whether this is income or expense"
+              },
               amount: { type: "number", description: "Amount in dollars" },
               month: { type: "string", description: "Month in YYYY-MM format" },
-              label: { type: "string", description: "Optional label (e.g., 'Valentine gift', 'Japan trip')" },
+              label: {
+                type: "string",
+                description:
+                  "Optional label (e.g., 'Valentine gift', 'Japan trip')"
+              }
             },
-            required: ["type", "amount", "month"],
-          },
+            required: ["type", "amount", "month"]
+          }
         },
         minEndBalance: {
           type: "number",
-          description: "Minimum acceptable balance at end of projection. Used for constraint checking.",
+          description:
+            "Minimum acceptable balance at end of projection. Used for constraint checking."
         },
         minMonthlyBalance: {
           type: "number",
-          description: "Minimum acceptable balance for any month. Used for constraint checking and affordability calculations.",
+          description:
+            "Minimum acceptable balance for any month. Used for constraint checking and affordability calculations."
         },
         computeMaxAffordableExpenseMonth: {
           type: "string",
-          description: "If provided (YYYY-MM format), computes the MAXIMUM one-time expense the user can afford in that month while never going below minMonthlyBalance (default 0). Use this for questions like 'how much can I spend on X'.",
+          description:
+            "If provided (YYYY-MM format), computes the MAXIMUM one-time expense the user can afford in that month while never going below minMonthlyBalance (default 0). Use this for questions like 'how much can I spend on X'."
         },
         findSafeMonthForExpense: {
           type: "number",
-          description: "If provided (expense amount), finds the EARLIEST month where this expense can be made while maintaining at least 6 months of income as emergency fund. Use this for questions like 'when is a good time to buy X' or 'when can I safely purchase Y'.",
-        },
+          description:
+            "If provided (expense amount), finds the EARLIEST month where this expense can be made while maintaining at least 6 months of income as emergency fund. Use this for questions like 'when is a good time to buy X' or 'when can I safely purchase Y'."
+        }
       },
-      required: ["fromMonth", "toMonth"],
-    },
+      required: ["fromMonth", "toMonth"]
+    }
   },
 
   get_holdings_summary: {
@@ -320,8 +380,8 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
     parameters: {
       type: "object",
       properties: {},
-      required: [],
-    },
+      required: []
+    }
   },
 
   get_property_assets_summary: {
@@ -332,8 +392,8 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
     parameters: {
       type: "object",
       properties: {},
-      required: [],
-    },
+      required: []
+    }
   },
 
   get_vehicle_assets_summary: {
@@ -344,8 +404,8 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
     parameters: {
       type: "object",
       properties: {},
-      required: [],
-    },
+      required: []
+    }
   },
 
   get_other_assets_summary: {
@@ -358,11 +418,12 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       properties: {
         assetType: {
           type: "string",
-          description: "Optional filter by asset type (e.g., 'investment', 'savings', 'collectible')",
-        },
+          description:
+            "Optional filter by asset type (e.g., 'investment', 'savings', 'collectible')"
+        }
       },
-      required: [],
-    },
+      required: []
+    }
   },
 
   get_insurance_summary: {
@@ -375,16 +436,17 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       properties: {
         policyType: {
           type: "string",
-          description: "Optional filter by policy type (e.g., 'life', 'health', 'auto', 'home')",
+          description:
+            "Optional filter by policy type (e.g., 'life', 'health', 'auto', 'home')"
         },
         status: {
           type: "string",
           enum: ["active", "lapsed", "cancelled", "matured", "all"],
-          description: "Filter by policy status (default: active)",
-        },
+          description: "Filter by policy status (default: active)"
+        }
       },
-      required: [],
-    },
+      required: []
+    }
   },
 
   get_daily_expense_summary: {
@@ -397,27 +459,31 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       properties: {
         fromDate: {
           type: "string",
-          description: "Start date in YYYY-MM-DD format. Defaults to start of current month.",
+          description:
+            "Start date in YYYY-MM-DD format. Defaults to start of current month."
         },
         toDate: {
           type: "string",
-          description: "End date in YYYY-MM-DD format. Defaults to today.",
+          description: "End date in YYYY-MM-DD format. Defaults to today."
         },
         month: {
           type: "string",
-          description: "Shorthand for a specific month in YYYY-MM format. Overrides fromDate/toDate if provided.",
+          description:
+            "Shorthand for a specific month in YYYY-MM format. Overrides fromDate/toDate if provided."
         },
         categoryName: {
           type: "string",
-          description: "Optional filter by category name (e.g., 'Food', 'Transport', 'Shopping')",
+          description:
+            "Optional filter by category name (e.g., 'Food', 'Transport', 'Shopping')"
         },
         subcategoryName: {
           type: "string",
-          description: "Optional filter by subcategory name (e.g., 'Groceries', 'Dining Out', 'Grab')",
-        },
+          description:
+            "Optional filter by subcategory name (e.g., 'Groceries', 'Dining Out', 'Grab')"
+        }
       },
-      required: [],
-    },
+      required: []
+    }
   },
 
   search_knowledge: {
@@ -430,17 +496,18 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
       properties: {
         query: {
           type: "string",
-          description: "The search query - a natural language question or topic to search for",
+          description:
+            "The search query - a natural language question or topic to search for"
         },
         limit: {
           type: "number",
-          description: "Maximum number of results to return (1-10, default: 5)",
-        },
+          description: "Maximum number of results to return (1-10, default: 5)"
+        }
       },
-      required: ["query"],
-    },
-  },
-};
+      required: ["query"]
+    }
+  }
+}
 
 // =============================================================================
 // Tool Allowlist
@@ -457,23 +524,23 @@ const ALLOWED_TOOLS: Set<ToolName> = new Set([
   "get_other_assets_summary",
   "get_insurance_summary",
   "get_daily_expense_summary",
-  "search_knowledge",
-]);
+  "search_knowledge"
+])
 
 // =============================================================================
 // Tool Registry Class
 // =============================================================================
 
 export class ToolRegistry {
-  private definitions: Map<ToolName, ToolDefinition>;
+  private definitions: Map<ToolName, ToolDefinition>
 
   constructor() {
-    this.definitions = new Map();
+    this.definitions = new Map()
 
     // Register only allowlisted tools
     for (const [name, def] of Object.entries(TOOL_DEFINITIONS)) {
       if (ALLOWED_TOOLS.has(name as ToolName)) {
-        this.definitions.set(name as ToolName, def);
+        this.definitions.set(name as ToolName, def)
       }
     }
   }
@@ -482,14 +549,14 @@ export class ToolRegistry {
    * Check if a tool is allowed
    */
   isAllowed(name: string): name is ToolName {
-    return ALLOWED_TOOLS.has(name as ToolName);
+    return ALLOWED_TOOLS.has(name as ToolName)
   }
 
   /**
    * Get a tool definition by name
    */
   getDefinition(name: ToolName): ToolDefinition | undefined {
-    return this.definitions.get(name);
+    return this.definitions.get(name)
   }
 
   /**
@@ -497,11 +564,11 @@ export class ToolRegistry {
    * @returns Validated arguments or throws ZodError
    */
   validateArgs<T>(name: ToolName, args: unknown): T {
-    const definition = this.definitions.get(name);
+    const definition = this.definitions.get(name)
     if (!definition) {
-      throw new Error(`Unknown tool: ${name}`);
+      throw new Error(`Unknown tool: ${name}`)
     }
-    return definition.schema.parse(args) as T;
+    return definition.schema.parse(args) as T
   }
 
   /**
@@ -512,15 +579,15 @@ export class ToolRegistry {
     args: unknown
   ): { success: true; data: T } | { success: false; error: string } {
     try {
-      const data = this.validateArgs<T>(name, args);
-      return { success: true, data };
+      const data = this.validateArgs<T>(name, args)
+      return { success: true, data }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const issues = error.issues || [];
-        const messages = issues.map((e) => `${e.path.join(".")}: ${e.message}`);
-        return { success: false, error: messages.join("; ") || error.message };
+        const issues = error.issues || []
+        const messages = issues.map((e) => `${e.path.join(".")}: ${e.message}`)
+        return { success: false, error: messages.join("; ") || error.message }
       }
-      return { success: false, error: String(error) };
+      return { success: false, error: String(error) }
     }
   }
 
@@ -533,16 +600,16 @@ export class ToolRegistry {
       function: {
         name: def.name,
         description: def.description,
-        parameters: def.parameters,
-      },
-    }));
+        parameters: def.parameters
+      }
+    }))
   }
 
   /**
    * Get list of all registered tool names
    */
   getToolNames(): ToolName[] {
-    return Array.from(this.definitions.keys());
+    return Array.from(this.definitions.keys())
   }
 }
 
@@ -550,15 +617,15 @@ export class ToolRegistry {
 // Singleton Instance
 // =============================================================================
 
-let registryInstance: ToolRegistry | null = null;
+let registryInstance: ToolRegistry | null = null
 
 export function getToolRegistry(): ToolRegistry {
   if (!registryInstance) {
-    registryInstance = new ToolRegistry();
+    registryInstance = new ToolRegistry()
   }
-  return registryInstance;
+  return registryInstance
 }
 
 export function resetToolRegistry(): void {
-  registryInstance = null;
+  registryInstance = null
 }

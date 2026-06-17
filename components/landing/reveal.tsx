@@ -1,7 +1,8 @@
-"use client";
+"use client"
 
-import { useReveal } from "@/lib/use-reveal";
-import type { ElementType, ReactNode } from "react";
+import type { ElementType, ReactNode } from "react"
+
+import { useReveal } from "@/lib/use-reveal"
 
 /**
  * Thin client wrapper that applies the scroll-reveal (fade + rise on enter).
@@ -12,21 +13,20 @@ export function Reveal({
   children,
   className = "",
   delay = 0,
-  as: Tag = "div",
+  as: Tag = "div"
 }: {
-  children: ReactNode;
-  className?: string;
-  delay?: number;
-  as?: ElementType;
+  children: ReactNode
+  className?: string
+  delay?: number
+  as?: ElementType
 }) {
-  const ref = useReveal<HTMLElement>();
+  const ref = useReveal<HTMLElement>()
   return (
     <Tag
       ref={ref}
       className={`reveal ${className}`}
-      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
-    >
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}>
       {children}
     </Tag>
-  );
+  )
 }

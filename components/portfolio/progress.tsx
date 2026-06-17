@@ -1,20 +1,22 @@
-import * as React from "react";
+import * as React from "react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-export interface ProgressBarProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "color"> {
+export interface ProgressBarProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "color"
+> {
   /** 0–100. Clamped; non-finite falls back to 0. */
-  value: number;
+  value: number
   /**
    * CSS color OR gradient for the fill (e.g. "#00C4AA" or
    * "linear-gradient(90deg, #00C4AA, #5A9470)"). Defaults to the brand accent.
    */
-  color?: string;
+  color?: string
   /** Track height in px (default 8). */
-  size?: number;
+  size?: number
   /** Extra classes on the track. */
-  trackClassName?: string;
+  trackClassName?: string
 }
 
 /**
@@ -33,7 +35,7 @@ export function ProgressBar({
   style,
   ...props
 }: ProgressBarProps) {
-  const pct = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+  const pct = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0))
   return (
     <div
       role="progressbar"
@@ -46,12 +48,14 @@ export function ProgressBar({
         className
       )}
       style={{ height: size, ...style }}
-      {...props}
-    >
+      {...props}>
       <div
         className="h-full rounded-full transition-[width] duration-500 ease-out"
-        style={{ width: `${pct}%`, background: color ?? "var(--brand-terracotta)" }}
+        style={{
+          width: `${pct}%`,
+          background: color ?? "var(--brand-terracotta)"
+        }}
       />
     </div>
-  );
+  )
 }

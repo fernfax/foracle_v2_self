@@ -14,10 +14,10 @@
  */
 
 // Load environment variables FIRST (before any other imports)
-require("dotenv").config({ path: ".env.local" });
-
 // Now import modules that depend on env vars
-import { ingestToKnowledgeBase, listKnowledgeBaseDocs } from "../lib/vectors";
+import { ingestToKnowledgeBase, listKnowledgeBaseDocs } from "../lib/vectors"
+
+require("dotenv").config({ path: ".env.local" })
 
 // Sample knowledge base documents
 const SAMPLE_DOCUMENTS = [
@@ -61,8 +61,8 @@ Based on monthly wages:
     metadata: {
       source: "cpf-official",
       category: "retirement",
-      lastUpdated: "2024-01-01",
-    },
+      lastUpdated: "2024-01-01"
+    }
   },
   {
     docId: "emergency-fund",
@@ -108,8 +108,8 @@ Good options in Singapore:
     metadata: {
       source: "financial-planning",
       category: "savings",
-      lastUpdated: "2024-01-15",
-    },
+      lastUpdated: "2024-01-15"
+    }
   },
   {
     docId: "budgeting-basics",
@@ -159,49 +159,49 @@ Expenses that occur occasionally:
     metadata: {
       source: "financial-literacy",
       category: "budgeting",
-      lastUpdated: "2024-02-01",
-    },
-  },
-];
+      lastUpdated: "2024-02-01"
+    }
+  }
+]
 
 async function main() {
-  console.log("🌱 Seeding Knowledge Base...\n");
+  console.log("🌱 Seeding Knowledge Base...\n")
 
   // Check current state
-  const existingDocs = await listKnowledgeBaseDocs();
-  console.log(`📚 Current documents in KB: ${existingDocs.length}`);
+  const existingDocs = await listKnowledgeBaseDocs()
+  console.log(`📚 Current documents in KB: ${existingDocs.length}`)
   if (existingDocs.length > 0) {
     existingDocs.forEach((doc) => {
-      console.log(`   - ${doc.docId}: ${doc.chunkCount} chunks`);
-    });
-    console.log("");
+      console.log(`   - ${doc.docId}: ${doc.chunkCount} chunks`)
+    })
+    console.log("")
   }
 
   // Ingest documents
   for (const doc of SAMPLE_DOCUMENTS) {
-    console.log(`📄 Ingesting: ${doc.docId}`);
+    console.log(`📄 Ingesting: ${doc.docId}`)
     try {
-      const result = await ingestToKnowledgeBase(doc);
+      const result = await ingestToKnowledgeBase(doc)
       console.log(
         `   ✅ Created ${result.chunksCreated} chunks, ${result.embeddingsGenerated} embeddings`
-      );
+      )
     } catch (error) {
-      console.error(`   ❌ Failed:`, error);
+      console.error(`   ❌ Failed:`, error)
     }
   }
 
   // Verify
-  console.log("\n📊 Final state:");
-  const finalDocs = await listKnowledgeBaseDocs();
+  console.log("\n📊 Final state:")
+  const finalDocs = await listKnowledgeBaseDocs()
   finalDocs.forEach((doc) => {
-    console.log(`   - ${doc.docId}: ${doc.chunkCount} chunks`);
-  });
+    console.log(`   - ${doc.docId}: ${doc.chunkCount} chunks`)
+  })
 
-  console.log("\n✨ Done!");
-  process.exit(0);
+  console.log("\n✨ Done!")
+  process.exit(0)
 }
 
 main().catch((error) => {
-  console.error("Seed failed:", error);
-  process.exit(1);
-});
+  console.error("Seed failed:", error)
+  process.exit(1)
+})

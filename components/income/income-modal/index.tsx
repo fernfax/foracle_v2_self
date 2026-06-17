@@ -1,28 +1,16 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect, useRef } from "react";
-
-// Safe JSON parse helper that handles corrupted data
-function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
-  if (!value) return fallback;
-  if (typeof value !== 'string') return value as T;
-  if (value.startsWith('[object')) return fallback;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return fallback;
-  }
-}
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useRef, useState } from "react"
+import { differenceInYears, format } from "date-fns"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogBody,
-  DialogFooterSticky,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ChevronLeft,
+  DollarSign,
+  History,
+  Info,
+  TrendingUp
+} from "lucide-react"
+
+import { createIncome, updateIncome } from "@/lib/actions/income"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,35 +19,55 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Info, ChevronLeft, History, DollarSign, TrendingUp } from "lucide-react";
-import { format, differenceInYears } from "date-fns";
-import { createIncome, updateIncome } from "@/lib/actions/income";
-import { StepIndicator } from "@/components/ui/step-indicator";
-import { PresentIncomeTab } from "./present-income-tab";
-import { PastIncomeTab } from "./past-income-tab";
-import { FutureMilestonesTab } from "./future-milestones-tab";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 import {
-  Income,
-  FamilyMember,
-  PastIncomeEntry,
-  FutureMilestone,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooterSticky,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import { StepIndicator } from "@/components/ui/step-indicator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { FutureMilestonesTab } from "./future-milestones-tab"
+import { PastIncomeTab } from "./past-income-tab"
+import { PresentIncomeTab } from "./present-income-tab"
+import {
   BonusGroup,
-  TabValue,
-} from "./types";
+  FamilyMember,
+  FutureMilestone,
+  Income,
+  PastIncomeEntry,
+  TabValue
+} from "./types"
+
+// Safe JSON parse helper that handles corrupted data
+function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback
+  if (typeof value !== "string") return value as T
+  if (value.startsWith("[object")) return fallback
+  try {
+    return JSON.parse(value)
+  } catch {
+    return fallback
+  }
+}
 
 interface IncomeModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onIncomeAdded: (income: Income) => void;
-  familyMember?: FamilyMember;
-  income?: Income | null;
-  pendingFormData?: any;
-  onBack?: () => void;
-  onCpfDetailsNeeded?: (incomeData: any) => void;
-  mode?: "add" | "edit";
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onIncomeAdded: (income: Income) => void
+  familyMember?: FamilyMember
+  income?: Income | null
+  pendingFormData?: any
+  onBack?: () => void
+  onCpfDetailsNeeded?: (incomeData: any) => void
+  mode?: "add" | "edit"
 }
 
 export function IncomeModal({
@@ -71,147 +79,165 @@ export function IncomeModal({
   pendingFormData,
   onBack,
   onCpfDetailsNeeded,
-  mode = "add",
+  mode = "add"
 }: IncomeModalProps) {
   // Tab state - always default to "present"
-  const [activeTab, setActiveTab] = useState<TabValue>("present");
+  const [activeTab, setActiveTab] = useState<TabValue>("present")
 
   // Present tab state
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [amount, setAmount] = useState("");
-  const [frequency, setFrequency] = useState("monthly");
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [incomeCategory, setIncomeCategory] = useState("");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [subjectToCpf, setSubjectToCpf] = useState(false);
-  const [accountForBonus, setAccountForBonus] = useState(false);
-  const [bonusGroups, setBonusGroups] = useState<BonusGroup[]>([]);
-  const [notes, setNotes] = useState("");
+  const [name, setName] = useState("")
+  const [category, setCategory] = useState("")
+  const [amount, setAmount] = useState("")
+  const [frequency, setFrequency] = useState("monthly")
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([])
+  const [incomeCategory, setIncomeCategory] = useState("")
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [subjectToCpf, setSubjectToCpf] = useState(false)
+  const [accountForBonus, setAccountForBonus] = useState(false)
+  const [bonusGroups, setBonusGroups] = useState<BonusGroup[]>([])
+  const [notes, setNotes] = useState("")
 
   // Past tab state
-  const [pastIncomeHistory, setPastIncomeHistory] = useState<PastIncomeEntry[]>([]);
+  const [pastIncomeHistory, setPastIncomeHistory] = useState<PastIncomeEntry[]>(
+    []
+  )
 
   // Future tab state
-  const [futureMilestones, setFutureMilestones] = useState<FutureMilestone[]>([]);
-  const [accountForFutureChange, setAccountForFutureChange] = useState(false);
+  const [futureMilestones, setFutureMilestones] = useState<FutureMilestone[]>(
+    []
+  )
+  const [accountForFutureChange, setAccountForFutureChange] = useState(false)
 
   // UI state
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [initialValues, setInitialValues] = useState<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [initialValues, setInitialValues] = useState<any>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Calculate family member's age if provided
   const familyMemberAge = familyMember?.dateOfBirth
     ? differenceInYears(new Date(), new Date(familyMember.dateOfBirth))
-    : undefined;
+    : undefined
 
   // Reset form
   const resetForm = () => {
-    setName("");
-    setCategory("");
-    setAmount("");
-    setFrequency("monthly");
-    setSelectedMonths([]);
-    setIncomeCategory("");
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setSubjectToCpf(false);
-    setAccountForBonus(false);
-    setBonusGroups([]);
-    setNotes("");
-    setPastIncomeHistory([]);
-    setFutureMilestones([]);
-    setAccountForFutureChange(false);
-    setActiveTab("present");
-  };
+    setName("")
+    setCategory("")
+    setAmount("")
+    setFrequency("monthly")
+    setSelectedMonths([])
+    setIncomeCategory("")
+    setStartDate(undefined)
+    setEndDate(undefined)
+    setSubjectToCpf(false)
+    setAccountForBonus(false)
+    setBonusGroups([])
+    setNotes("")
+    setPastIncomeHistory([])
+    setFutureMilestones([])
+    setAccountForFutureChange(false)
+    setActiveTab("present")
+  }
 
   // Pre-fill income name when family member is provided (on mount only)
   useEffect(() => {
     if (familyMember && open && !name && !income) {
-      setName(`${familyMember.name}'s Salary`);
+      setName(`${familyMember.name}'s Salary`)
     }
-  }, [familyMember, open, name, income]);
+  }, [familyMember, open, name, income])
 
   // Pre-populate all fields when editing existing income or restoring pending form data
   useEffect(() => {
     if (open) {
-      let values: any;
+      let values: any
 
       // Priority 1: Pending form data (from back navigation)
       if (pendingFormData) {
-        values = pendingFormData;
-        setName(pendingFormData.name || "");
-        setCategory(pendingFormData.category || "");
-        setAmount(pendingFormData.amount?.toString() || "");
-        setFrequency(pendingFormData.frequency || "monthly");
-        setSelectedMonths(safeJsonParse(pendingFormData.customMonths, []));
-        setIncomeCategory(pendingFormData.incomeCategory || "current-recurring");
-        setSubjectToCpf(pendingFormData.subjectToCpf || false);
-        setAccountForBonus(pendingFormData.accountForBonus || false);
-        setBonusGroups(safeJsonParse(pendingFormData.bonusGroups, []));
-        setStartDate(pendingFormData.startDate ? new Date(pendingFormData.startDate) : undefined);
-        setEndDate(pendingFormData.endDate ? new Date(pendingFormData.endDate) : undefined);
-        setNotes(pendingFormData.description || "");
-        setPastIncomeHistory(safeJsonParse(pendingFormData.pastIncomeHistory, []));
-        setFutureMilestones(safeJsonParse(pendingFormData.futureMilestones, []));
-        setAccountForFutureChange(pendingFormData.accountForFutureChange || false);
+        values = pendingFormData
+        setName(pendingFormData.name || "")
+        setCategory(pendingFormData.category || "")
+        setAmount(pendingFormData.amount?.toString() || "")
+        setFrequency(pendingFormData.frequency || "monthly")
+        setSelectedMonths(safeJsonParse(pendingFormData.customMonths, []))
+        setIncomeCategory(pendingFormData.incomeCategory || "current-recurring")
+        setSubjectToCpf(pendingFormData.subjectToCpf || false)
+        setAccountForBonus(pendingFormData.accountForBonus || false)
+        setBonusGroups(safeJsonParse(pendingFormData.bonusGroups, []))
+        setStartDate(
+          pendingFormData.startDate
+            ? new Date(pendingFormData.startDate)
+            : undefined
+        )
+        setEndDate(
+          pendingFormData.endDate
+            ? new Date(pendingFormData.endDate)
+            : undefined
+        )
+        setNotes(pendingFormData.description || "")
+        setPastIncomeHistory(
+          safeJsonParse(pendingFormData.pastIncomeHistory, [])
+        )
+        setFutureMilestones(safeJsonParse(pendingFormData.futureMilestones, []))
+        setAccountForFutureChange(
+          pendingFormData.accountForFutureChange || false
+        )
       }
       // Priority 2: Existing income (editing mode)
       else if (income) {
-        values = income;
-        setName(income.name);
-        setCategory(income.category);
-        setAmount(income.amount);
-        setFrequency(income.frequency);
-        setSelectedMonths(safeJsonParse(income.customMonths, []));
-        setIncomeCategory(income.incomeCategory || "current-recurring");
-        setSubjectToCpf(income.subjectToCpf || false);
-        setAccountForBonus(income.accountForBonus || false);
-        setBonusGroups(safeJsonParse(income.bonusGroups, []));
-        setStartDate(income.startDate ? new Date(income.startDate) : undefined);
-        setEndDate(income.endDate ? new Date(income.endDate) : undefined);
-        setNotes(income.description || "");
-        setPastIncomeHistory(safeJsonParse(income.pastIncomeHistory, []));
-        setFutureMilestones(safeJsonParse(income.futureMilestones, []));
-        setAccountForFutureChange(income.accountForFutureChange || false);
+        values = income
+        setName(income.name)
+        setCategory(income.category)
+        setAmount(income.amount)
+        setFrequency(income.frequency)
+        setSelectedMonths(safeJsonParse(income.customMonths, []))
+        setIncomeCategory(income.incomeCategory || "current-recurring")
+        setSubjectToCpf(income.subjectToCpf || false)
+        setAccountForBonus(income.accountForBonus || false)
+        setBonusGroups(safeJsonParse(income.bonusGroups, []))
+        setStartDate(income.startDate ? new Date(income.startDate) : undefined)
+        setEndDate(income.endDate ? new Date(income.endDate) : undefined)
+        setNotes(income.description || "")
+        setPastIncomeHistory(safeJsonParse(income.pastIncomeHistory, []))
+        setFutureMilestones(safeJsonParse(income.futureMilestones, []))
+        setAccountForFutureChange(income.accountForFutureChange || false)
       }
       // Priority 3: Reset form for new income
       else {
-        values = null;
-        resetForm();
+        values = null
+        resetForm()
       }
-      setInitialValues(values);
-      setHasUnsavedChanges(false);
-      setActiveTab("present"); // Always start on Present tab
+      setInitialValues(values)
+      setHasUnsavedChanges(false)
+      setActiveTab("present") // Always start on Present tab
     }
-  }, [income, pendingFormData, open]);
+  }, [income, pendingFormData, open])
 
   // Track changes to detect unsaved modifications
-  const familyMemberName = familyMember?.name;
+  const familyMemberName = familyMember?.name
   useEffect(() => {
     if (!open) {
-      setHasUnsavedChanges(false);
-      return;
+      setHasUnsavedChanges(false)
+      return
     }
 
     // For new income (no initialValues), only show warning if user has entered meaningful data
     if (!initialValues) {
       // Check if user has entered any meaningful data beyond defaults/pre-fills
-      const prefilledName = familyMemberName ? `${familyMemberName}'s Salary` : "";
+      const prefilledName = familyMemberName
+        ? `${familyMemberName}'s Salary`
+        : ""
       const hasUserEnteredData =
         category !== "" || // User selected a category
         amount !== "" || // User entered an amount
         (incomeCategory !== "" && name !== "" && name !== prefilledName) || // User changed pre-filled name
         notes !== "" ||
         pastIncomeHistory.length > 0 ||
-        futureMilestones.length > 0;
+        futureMilestones.length > 0
 
-      setHasUnsavedChanges(hasUserEnteredData);
-      return;
+      setHasUnsavedChanges(hasUserEnteredData)
+      return
     }
 
     // For editing existing income, compare against initial values
@@ -220,15 +246,18 @@ export function IncomeModal({
       category !== (initialValues?.category || "") ||
       amount !== (initialValues?.amount?.toString() || "") ||
       frequency !== (initialValues?.frequency || "monthly") ||
-      incomeCategory !== (initialValues?.incomeCategory || "current-recurring") ||
+      incomeCategory !==
+        (initialValues?.incomeCategory || "current-recurring") ||
       subjectToCpf !== (initialValues?.subjectToCpf || false) ||
       accountForBonus !== (initialValues?.accountForBonus || false) ||
-      JSON.stringify(bonusGroups) !== JSON.stringify(initialValues?.bonusGroups || []) ||
+      JSON.stringify(bonusGroups) !==
+        JSON.stringify(initialValues?.bonusGroups || []) ||
       notes !== (initialValues?.description || "") ||
-      pastIncomeHistory.length !== (initialValues?.pastIncomeHistory?.length || 0) ||
-      futureMilestones.length !== (initialValues?.futureMilestones?.length || 0);
+      pastIncomeHistory.length !==
+        (initialValues?.pastIncomeHistory?.length || 0) ||
+      futureMilestones.length !== (initialValues?.futureMilestones?.length || 0)
 
-    setHasUnsavedChanges(hasChanges);
+    setHasUnsavedChanges(hasChanges)
   }, [
     initialValues,
     name,
@@ -243,44 +272,47 @@ export function IncomeModal({
     open,
     pastIncomeHistory,
     futureMilestones,
-    familyMemberName,
-  ]);
+    familyMemberName
+  ])
 
   // Switch to present tab when income type is empty or one-off
   useEffect(() => {
-    if ((!incomeCategory || incomeCategory === "one-off") && (activeTab === "past" || activeTab === "future")) {
-      setActiveTab("present");
+    if (
+      (!incomeCategory || incomeCategory === "one-off") &&
+      (activeTab === "past" || activeTab === "future")
+    ) {
+      setActiveTab("present")
     }
-  }, [incomeCategory, activeTab]);
+  }, [incomeCategory, activeTab])
 
   const handleClose = (openState: boolean) => {
     if (!openState && hasUnsavedChanges) {
-      setShowUnsavedWarning(true);
+      setShowUnsavedWarning(true)
     } else {
-      onOpenChange(openState);
+      onOpenChange(openState)
     }
-  };
+  }
 
   const handleConfirmClose = () => {
-    setShowUnsavedWarning(false);
-    setHasUnsavedChanges(false);
-    onOpenChange(false);
-  };
+    setShowUnsavedWarning(false)
+    setHasUnsavedChanges(false)
+    onOpenChange(false)
+  }
 
   const handleSubmit = async () => {
     // Validate required fields
     if (!name || !category || !amount || !(parseFloat(amount) > 0)) {
-      return;
+      return
     }
 
     // Validate custom frequency has months selected
     if (frequency === "custom" && selectedMonths.length === 0) {
-      return;
+      return
     }
 
     // Start date is required for all categories except "Current Recurring Income"
     if (incomeCategory !== "current-recurring" && !startDate) {
-      return;
+      return
     }
 
     // If family member exists, CPF is checked, and we have CPF handler, collect data first
@@ -291,28 +323,35 @@ export function IncomeModal({
         incomeCategory,
         amount: parseFloat(amount),
         frequency,
-        customMonths: frequency === "custom" ? JSON.stringify(selectedMonths) : null,
+        customMonths:
+          frequency === "custom" ? JSON.stringify(selectedMonths) : null,
         subjectToCpf,
         accountForBonus,
         bonusGroups: accountForBonus ? JSON.stringify(bonusGroups) : undefined,
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+        startDate: startDate
+          ? format(startDate, "yyyy-MM-dd")
+          : format(new Date(), "yyyy-MM-dd"),
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         description: notes || undefined,
         familyMemberId: familyMember.id,
         familyMemberAge,
-        pastIncomeHistory: pastIncomeHistory.length > 0 ? JSON.stringify(pastIncomeHistory) : null,
-        futureMilestones: futureMilestones.length > 0 ? JSON.stringify(futureMilestones) : null,
-        accountForFutureChange,
-      };
-      setHasUnsavedChanges(false);
-      onCpfDetailsNeeded(incomeData);
-      return;
+        pastIncomeHistory:
+          pastIncomeHistory.length > 0
+            ? JSON.stringify(pastIncomeHistory)
+            : null,
+        futureMilestones:
+          futureMilestones.length > 0 ? JSON.stringify(futureMilestones) : null,
+        accountForFutureChange
+      }
+      setHasUnsavedChanges(false)
+      onCpfDetailsNeeded(incomeData)
+      return
     }
 
     // Otherwise, create or update income directly
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      let resultIncome;
+      let resultIncome
 
       const incomeData = {
         name,
@@ -320,171 +359,197 @@ export function IncomeModal({
         incomeCategory,
         amount: parseFloat(amount),
         frequency,
-        customMonths: frequency === "custom" ? JSON.stringify(selectedMonths) : null,
+        customMonths:
+          frequency === "custom" ? JSON.stringify(selectedMonths) : null,
         subjectToCpf,
         accountForBonus,
         bonusGroups: accountForBonus ? JSON.stringify(bonusGroups) : undefined,
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+        startDate: startDate
+          ? format(startDate, "yyyy-MM-dd")
+          : format(new Date(), "yyyy-MM-dd"),
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         description: notes || undefined,
         familyMemberId: familyMember?.id,
         familyMemberAge,
-        pastIncomeHistory: pastIncomeHistory.length > 0 ? JSON.stringify(pastIncomeHistory) : null,
-        futureMilestones: futureMilestones.length > 0 ? JSON.stringify(futureMilestones) : null,
-        accountForFutureChange,
-      };
+        pastIncomeHistory:
+          pastIncomeHistory.length > 0
+            ? JSON.stringify(pastIncomeHistory)
+            : null,
+        futureMilestones:
+          futureMilestones.length > 0 ? JSON.stringify(futureMilestones) : null,
+        accountForFutureChange
+      }
 
       if (income && income.id) {
         // Edit mode - update existing income
-        resultIncome = await updateIncome(income.id, incomeData);
+        resultIncome = await updateIncome(income.id, incomeData)
       } else {
         // Create mode - create new income
-        resultIncome = await createIncome(incomeData);
+        resultIncome = await createIncome(incomeData)
       }
 
-      onIncomeAdded(resultIncome);
-      resetForm();
-      setHasUnsavedChanges(false);
-      onOpenChange(false);
+      onIncomeAdded(resultIncome)
+      resetForm()
+      setHasUnsavedChanges(false)
+      onOpenChange(false)
     } catch (error) {
-      console.error("Failed to save income:", error);
+      console.error("Failed to save income:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const isFormValid = () => {
-    if (!incomeCategory) return false; // Income type is required
-    if (!name || !category || !amount) return false;
-    if (!(parseFloat(amount) > 0)) return false; // reject $0 / negative / non-numeric
-    if (frequency === "custom" && selectedMonths.length === 0) return false;
-    if (incomeCategory !== "current-recurring" && !startDate) return false;
-    return true;
-  };
+    if (!incomeCategory) return false // Income type is required
+    if (!name || !category || !amount) return false
+    if (!(parseFloat(amount) > 0)) return false // reject $0 / negative / non-numeric
+    if (frequency === "custom" && selectedMonths.length === 0) return false
+    if (incomeCategory !== "current-recurring" && !startDate) return false
+    return true
+  }
 
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh]" ref={containerRef}>
+        <DialogContent
+          className="max-h-[90vh] sm:max-w-[700px]"
+          ref={containerRef}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {income ? "Edit Income" : familyMember ? `Add Income for ${familyMember.name}` : "Add New Income"}
-              <Info className="h-4 w-4 text-muted-foreground" />
+              {income
+                ? "Edit Income"
+                : familyMember
+                  ? `Add Income for ${familyMember.name}`
+                  : "Add New Income"}
+              <Info className="text-muted-foreground h-4 w-4" />
             </DialogTitle>
             <DialogDescription asChild>
               {familyMember ? (
                 <div className="space-y-1">
                   <div>
                     Add income details for {familyMember.name}.{" "}
-                    {familyMemberAge !== undefined ? `Age: ${familyMemberAge} years old.` : ""}
+                    {familyMemberAge !== undefined
+                      ? `Age: ${familyMemberAge} years old.`
+                      : ""}
                   </div>
-                  <div className="text-[#7A3A0A] font-medium text-sm">
+                  <div className="text-sm font-medium text-[#7A3A0A]">
                     This income will be linked to {familyMember.name}
                   </div>
                 </div>
               ) : (
-                <div>Fill in the form to {income ? "update" : "add"} an income source.</div>
+                <div>
+                  Fill in the form to {income ? "update" : "add"} an income
+                  source.
+                </div>
               )}
             </DialogDescription>
           </DialogHeader>
 
           <DialogBody>
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
-            <TabsList className="w-full h-auto p-0 bg-transparent border-b border-border rounded-none grid grid-cols-3">
-              <TabsTrigger
-                value="past"
-                disabled={!incomeCategory || incomeCategory === "one-off"}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none text-foreground/400 hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-foreground/400"
-              >
-                <History className="h-4 w-4" />
-                Past
-              </TabsTrigger>
-              <TabsTrigger
-                value="present"
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none text-foreground/400 hover:text-foreground transition-colors"
-              >
-                <DollarSign className="h-4 w-4" />
-                Present
-              </TabsTrigger>
-              <TabsTrigger
-                value="future"
-                disabled={!incomeCategory || incomeCategory === "one-off"}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-transparent border-b-2 border-transparent data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none text-foreground/400 hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-foreground/400"
-              >
-                <TrendingUp className="h-4 w-4" />
-                Future
-              </TabsTrigger>
-            </TabsList>
+            {/* Tabs */}
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) => setActiveTab(v as TabValue)}
+              className="w-full">
+              <TabsList className="border-border grid h-auto w-full grid-cols-3 rounded-none border-b bg-transparent p-0">
+                <TabsTrigger
+                  value="past"
+                  disabled={!incomeCategory || incomeCategory === "one-off"}
+                  className="text-foreground/400 hover:text-foreground disabled:hover:text-foreground/400 flex items-center justify-center gap-2 rounded-none border-b-2 border-transparent bg-transparent px-4 py-3 transition-colors disabled:cursor-not-allowed disabled:opacity-40 data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none">
+                  <History className="h-4 w-4" />
+                  Past
+                </TabsTrigger>
+                <TabsTrigger
+                  value="present"
+                  className="text-foreground/400 hover:text-foreground flex items-center justify-center gap-2 rounded-none border-b-2 border-transparent bg-transparent px-4 py-3 transition-colors data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none">
+                  <DollarSign className="h-4 w-4" />
+                  Present
+                </TabsTrigger>
+                <TabsTrigger
+                  value="future"
+                  disabled={!incomeCategory || incomeCategory === "one-off"}
+                  className="text-foreground/400 hover:text-foreground disabled:hover:text-foreground/400 flex items-center justify-center gap-2 rounded-none border-b-2 border-transparent bg-transparent px-4 py-3 transition-colors disabled:cursor-not-allowed disabled:opacity-40 data-[state=active]:border-[rgba(184,98,42,0.25)] data-[state=active]:text-[#7A3A0A] data-[state=active]:shadow-none">
+                  <TrendingUp className="h-4 w-4" />
+                  Future
+                </TabsTrigger>
+              </TabsList>
 
-            <div className="mt-4">
-              <TabsContent value="past" className="mt-0">
-                <PastIncomeTab
-                  pastIncomeHistory={pastIncomeHistory}
-                  setPastIncomeHistory={setPastIncomeHistory}
-                />
-              </TabsContent>
+              <div className="mt-4">
+                <TabsContent value="past" className="mt-0">
+                  <PastIncomeTab
+                    pastIncomeHistory={pastIncomeHistory}
+                    setPastIncomeHistory={setPastIncomeHistory}
+                  />
+                </TabsContent>
 
-              <TabsContent value="present" className="mt-0">
-                <PresentIncomeTab
-                  name={name}
-                  setName={setName}
-                  category={category}
-                  setCategory={setCategory}
-                  amount={amount}
-                  setAmount={setAmount}
-                  frequency={frequency}
-                  setFrequency={setFrequency}
-                  selectedMonths={selectedMonths}
-                  setSelectedMonths={setSelectedMonths}
-                  incomeCategory={incomeCategory}
-                  setIncomeCategory={setIncomeCategory}
-                  startDate={startDate}
-                  setStartDate={setStartDate}
-                  endDate={endDate}
-                  setEndDate={setEndDate}
-                  subjectToCpf={subjectToCpf}
-                  setSubjectToCpf={setSubjectToCpf}
-                  accountForBonus={accountForBonus}
-                  setAccountForBonus={setAccountForBonus}
-                  bonusGroups={bonusGroups}
-                  setBonusGroups={setBonusGroups}
-                  notes={notes}
-                  setNotes={setNotes}
-                  familyMemberAge={familyMemberAge}
-                />
-              </TabsContent>
+                <TabsContent value="present" className="mt-0">
+                  <PresentIncomeTab
+                    name={name}
+                    setName={setName}
+                    category={category}
+                    setCategory={setCategory}
+                    amount={amount}
+                    setAmount={setAmount}
+                    frequency={frequency}
+                    setFrequency={setFrequency}
+                    selectedMonths={selectedMonths}
+                    setSelectedMonths={setSelectedMonths}
+                    incomeCategory={incomeCategory}
+                    setIncomeCategory={setIncomeCategory}
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    endDate={endDate}
+                    setEndDate={setEndDate}
+                    subjectToCpf={subjectToCpf}
+                    setSubjectToCpf={setSubjectToCpf}
+                    accountForBonus={accountForBonus}
+                    setAccountForBonus={setAccountForBonus}
+                    bonusGroups={bonusGroups}
+                    setBonusGroups={setBonusGroups}
+                    notes={notes}
+                    setNotes={setNotes}
+                    familyMemberAge={familyMemberAge}
+                  />
+                </TabsContent>
 
-              <TabsContent value="future" className="mt-0">
-                <FutureMilestonesTab
-                  futureMilestones={futureMilestones}
-                  setFutureMilestones={setFutureMilestones}
-                  currentAmount={amount}
-                  accountForFutureChange={accountForFutureChange}
-                  setAccountForFutureChange={setAccountForFutureChange}
-                />
-              </TabsContent>
-            </div>
-          </Tabs>
+                <TabsContent value="future" className="mt-0">
+                  <FutureMilestonesTab
+                    futureMilestones={futureMilestones}
+                    setFutureMilestones={setFutureMilestones}
+                    currentAmount={amount}
+                    accountForFutureChange={accountForFutureChange}
+                    setAccountForFutureChange={setAccountForFutureChange}
+                  />
+                </TabsContent>
+              </div>
+            </Tabs>
           </DialogBody>
 
           {/* Footer */}
           <DialogFooterSticky className="flex-col gap-4">
             {familyMember && <StepIndicator currentStep={2} totalSteps={3} />}
-            <div className="flex justify-between gap-3 w-full">
+            <div className="flex w-full justify-between gap-3">
               {familyMember && onBack ? (
-                <Button variant="ghost" onClick={onBack} disabled={isSubmitting}>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                <Button
+                  variant="ghost"
+                  onClick={onBack}
+                  disabled={isSubmitting}>
+                  <ChevronLeft className="mr-1 h-4 w-4" />
                   Back
                 </Button>
               ) : (
                 <div />
               )}
               <div className="flex gap-2">
-                <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleClose(false)}
+                  disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button onClick={handleSubmit} disabled={!isFormValid() || isSubmitting}>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!isFormValid() || isSubmitting}>
                   {isSubmitting
                     ? "Saving..."
                     : familyMember && subjectToCpf
@@ -499,26 +564,31 @@ export function IncomeModal({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
+      <AlertDialog
+        open={showUnsavedWarning}
+        onOpenChange={setShowUnsavedWarning}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
             <AlertDialogDescription>
-              You have unsaved changes. Are you sure you want to close? All your changes will be lost.
+              You have unsaved changes. Are you sure you want to close? All your
+              changes will be lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Continue Editing</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmClose}>Discard Changes</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmClose}>
+              Discard Changes
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }
 
 // Re-export for convenience
-export { PresentIncomeTab } from "./present-income-tab";
-export { PastIncomeTab } from "./past-income-tab";
-export { FutureMilestonesTab } from "./future-milestones-tab";
-export * from "./types";
+export { PresentIncomeTab } from "./present-income-tab"
+export { PastIncomeTab } from "./past-income-tab"
+export { FutureMilestonesTab } from "./future-milestones-tab"
+export * from "./types"

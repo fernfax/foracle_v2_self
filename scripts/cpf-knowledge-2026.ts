@@ -5,10 +5,9 @@
  * Adds comprehensive CPF wage ceiling and contribution rate information
  * based on official CPF Board updates effective 1 January 2026.
  */
+import { deleteFromKnowledgeBase, ingestToKnowledgeBase } from "../lib/vectors"
 
-require("dotenv").config({ path: ".env.local" });
-
-import { ingestToKnowledgeBase, deleteFromKnowledgeBase } from "../lib/vectors";
+require("dotenv").config({ path: ".env.local" })
 
 const CPF_DOCUMENTS = [
   {
@@ -69,8 +68,8 @@ Understanding the OW ceiling helps you:
       source: "cpf-board-official",
       category: "cpf-wages",
       lastUpdated: "2026-01-01",
-      effectiveDate: "2026-01-01",
-    },
+      effectiveDate: "2026-01-01"
+    }
   },
   {
     docId: "cpf-contribution-rates-2026",
@@ -143,8 +142,8 @@ First and second year SPRs have graduated (lower) contribution rates. There are 
       source: "cpf-board-official",
       category: "cpf-rates",
       lastUpdated: "2026-01-01",
-      effectiveDate: "2026-01-01",
-    },
+      effectiveDate: "2026-01-01"
+    }
   },
   {
     docId: "cpf-allocation-rates-2026",
@@ -241,36 +240,36 @@ When CPF contributions are made, they are allocated (split) into three accounts:
     metadata: {
       source: "cpf-board-official",
       category: "cpf-allocation",
-      lastUpdated: "2026-01-01",
-    },
-  },
-];
+      lastUpdated: "2026-01-01"
+    }
+  }
+]
 
 async function main() {
-  console.log("🏦 Updating CPF Knowledge Base with 2026 information...\n");
+  console.log("🏦 Updating CPF Knowledge Base with 2026 information...\n")
 
   // Delete old cpf-basics document (we're replacing it with more detailed docs)
-  console.log("🗑️  Removing outdated cpf-basics document...");
-  await deleteFromKnowledgeBase("cpf-basics");
+  console.log("🗑️  Removing outdated cpf-basics document...")
+  await deleteFromKnowledgeBase("cpf-basics")
 
   // Ingest new documents
   for (const doc of CPF_DOCUMENTS) {
-    console.log(`📄 Ingesting: ${doc.docId}`);
+    console.log(`📄 Ingesting: ${doc.docId}`)
     try {
-      const result = await ingestToKnowledgeBase(doc);
+      const result = await ingestToKnowledgeBase(doc)
       console.log(
         `   ✅ Created ${result.chunksCreated} chunks, ${result.embeddingsGenerated} embeddings`
-      );
+      )
     } catch (error) {
-      console.error(`   ❌ Failed:`, error);
+      console.error(`   ❌ Failed:`, error)
     }
   }
 
-  console.log("\n✨ CPF Knowledge Base updated!");
-  process.exit(0);
+  console.log("\n✨ CPF Knowledge Base updated!")
+  process.exit(0)
 }
 
 main().catch((error) => {
-  console.error("Update failed:", error);
-  process.exit(1);
-});
+  console.error("Update failed:", error)
+  process.exit(1)
+})

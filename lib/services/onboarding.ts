@@ -1,9 +1,16 @@
-import { and, eq } from "drizzle-orm";
-import { currentUser } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { currentHoldings, expenses, familyMembers, incomesBeta, users } from "@/db/schema";
-import type { AuthContext } from "@/lib/auth-context";
-import type { CreateOnboardingExpensesBody } from "@/lib/api-schemas/onboarding";
+import { db } from "@/db"
+import { currentUser } from "@clerk/nextjs/server"
+import { and, eq } from "drizzle-orm"
+
+import type { CreateOnboardingExpensesBody } from "@/lib/api-schemas/onboarding"
+import type { AuthContext } from "@/lib/auth-context"
+import {
+  currentHoldings,
+  expenses,
+  familyMembers,
+  incomesBeta,
+  users
+} from "@/db/schema"
 
 // Weighted distribution used when categoryAmounts isn't supplied for a given
 // category. Mirrors the original lib/actions/onboarding.ts mapping so the
@@ -18,14 +25,16 @@ const CATEGORY_WEIGHTS: Record<string, number> = {
   Entertainment: 5,
   Allowances: 5,
   Vehicle: 5,
-  Shopping: 5,
-};
+  Shopping: 5
+}
 
-export async function checkOnboardingStatus(ctx: AuthContext): Promise<boolean> {
+export async function checkOnboardingStatus(
+  ctx: AuthContext
+): Promise<boolean> {
   let user = await db.query.users.findFirst({
     where: eq(users.id, ctx.userId),
-    columns: { onboardingCompleted: true },
-  });
+    columns: { onboardingCompleted: true }
+  })
 
   // Handles the case where Clerk webhook didn't fire in local dev. The caller
   // passes an AuthContext, which is produced by getCurrentUserAndFamily() — so
@@ -33,8 +42,8 @@ export async function checkOnboardingStatus(ctx: AuthContext): Promise<boolean> 
   // get here. This insert is a defensive fallback only; it reuses ctx.familyId
   // because users.family_id is NOT NULL.
   if (!user) {
-    const clerk = await currentUser();
-    if (!clerk) return false;
+    const clerk = await currentUser()
+    if (!clerk) return false
     await db
       .insert(users)
       .values({
@@ -46,37 +55,41 @@ export async function checkOnboardingStatus(ctx: AuthContext): Promise<boolean> 
         onboardingCompleted: false,
         familyId: ctx.familyId,
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
     user = await db.query.users.findFirst({
       where: eq(users.id, clerk.id),
-      columns: { onboardingCompleted: true },
-    });
+      columns: { onboardingCompleted: true }
+    })
   }
-  return user?.onboardingCompleted ?? false;
+  return user?.onboardingCompleted ?? false
 }
 
 export async function completeOnboarding(ctx: AuthContext): Promise<void> {
   await db
     .update(users)
     .set({ onboardingCompleted: true, updatedAt: new Date() })
-    .where(eq(users.id, ctx.userId));
+    .where(eq(users.id, ctx.userId))
 }
 
 export async function getOnboardingData(ctx: AuthContext) {
   const [members, incomeRows, holdings] = await Promise.all([
     db.query.familyMembers.findMany({
-      where: eq(familyMembers.familyId, ctx.familyId),
+      where: eq(familyMembers.familyId, ctx.familyId)
     }),
     db.query.incomesBeta.findMany({
-      where: eq(incomesBeta.familyId, ctx.familyId),
+      where: eq(incomesBeta.familyId, ctx.familyId)
     }),
     db.query.currentHoldings.findMany({
-      where: eq(currentHoldings.familyId, ctx.familyId),
-    }),
-  ]);
-  return { familyMembers: members, incomes: incomeRows, currentHoldings: holdings };
+      where: eq(currentHoldings.familyId, ctx.familyId)
+    })
+  ])
+  return {
+    familyMembers: members,
+    incomes: incomeRows,
+    currentHoldings: holdings
+  }
 }
 
 // Deletes all existing current-recurring expenses and re-creates from the
@@ -85,31 +98,34 @@ export async function createOnboardingExpenses(
   ctx: AuthContext,
   body: CreateOnboardingExpensesBody
 ): Promise<void> {
-  const { categories, percentageOfIncome, monthlyIncome, categoryAmounts } = body;
+  const { categories, percentageOfIncome, monthlyIncome, categoryAmounts } =
+    body
 
-  await db.delete(expenses).where(
-    and(
-      eq(expenses.familyId, ctx.familyId),
-      eq(expenses.expenseCategory, "current-recurring")
+  await db
+    .delete(expenses)
+    .where(
+      and(
+        eq(expenses.familyId, ctx.familyId),
+        eq(expenses.expenseCategory, "current-recurring")
+      )
     )
-  );
 
-  if (categories.length === 0) return;
+  if (categories.length === 0) return
 
-  const totalExpenses = monthlyIncome * (percentageOfIncome / 100);
+  const totalExpenses = monthlyIncome * (percentageOfIncome / 100)
   const totalWeight = categories.reduce(
     (sum, cat) => sum + (CATEGORY_WEIGHTS[cat] ?? 5),
     0
-  );
+  )
 
   const records = categories.map((category) => {
-    let amount: number;
+    let amount: number
     if (categoryAmounts && categoryAmounts[category]) {
-      amount = parseFloat(categoryAmounts[category]) || 0;
+      amount = parseFloat(categoryAmounts[category]) || 0
     } else {
-      const weight = CATEGORY_WEIGHTS[category] ?? 5;
-      const proportion = weight / totalWeight;
-      amount = Math.round(totalExpenses * proportion * 100) / 100;
+      const weight = CATEGORY_WEIGHTS[category] ?? 5
+      const proportion = weight / totalWeight
+      amount = Math.round(totalExpenses * proportion * 100) / 100
     }
     return {
       id: `exp_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
@@ -120,11 +136,11 @@ export async function createOnboardingExpenses(
       expenseCategory: "current-recurring",
       amount: amount.toFixed(2),
       frequency: "monthly",
-      isActive: true,
-    };
-  });
+      isActive: true
+    }
+  })
 
   if (records.length > 0) {
-    await db.insert(expenses).values(records);
+    await db.insert(expenses).values(records)
   }
 }

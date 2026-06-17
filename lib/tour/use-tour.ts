@@ -1,43 +1,46 @@
-"use client";
+"use client"
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { driver, type Driver } from "driver.js";
-import "driver.js/dist/driver.css";
-import { type TourName, TOUR_CONFIGS } from "./tour-config";
-import { markTourCompleted } from "@/lib/actions/tour";
+import { useCallback, useEffect, useRef, useState } from "react"
+import { driver, type Driver } from "driver.js"
+
+import "driver.js/dist/driver.css"
+
+import { markTourCompleted } from "@/lib/actions/tour"
+
+import { TOUR_CONFIGS, type TourName } from "./tour-config"
 
 interface UseTourOptions {
-  tourName: TourName;
-  autoStart?: boolean;
-  onComplete?: () => void;
+  tourName: TourName
+  autoStart?: boolean
+  onComplete?: () => void
 }
 
 interface UseTourReturn {
-  startTour: () => void;
-  isRunning: boolean;
+  startTour: () => void
+  isRunning: boolean
 }
 
 export function useTour({
   tourName,
   autoStart = false,
-  onComplete,
+  onComplete
 }: UseTourOptions): UseTourReturn {
-  const [isRunning, setIsRunning] = useState(false);
-  const driverRef = useRef<Driver | null>(null);
-  const hasAutoStarted = useRef(false);
+  const [isRunning, setIsRunning] = useState(false)
+  const driverRef = useRef<Driver | null>(null)
+  const hasAutoStarted = useRef(false)
 
   const startTour = useCallback(() => {
-    const config = TOUR_CONFIGS[tourName];
-    if (!config) return;
+    const config = TOUR_CONFIGS[tourName]
+    if (!config) return
 
     // Filter steps to only include those with existing elements
     const validSteps = config.steps.filter((step) => {
-      if (!step.element) return true; // Non-element steps are always valid
-      const element = document.querySelector(step.element as string);
-      return element !== null;
-    });
+      if (!step.element) return true // Non-element steps are always valid
+      const element = document.querySelector(step.element as string)
+      return element !== null
+    })
 
-    if (validSteps.length === 0) return;
+    if (validSteps.length === 0) return
 
     const driverInstance = driver({
       showProgress: true,
@@ -53,56 +56,56 @@ export function useTour({
       doneBtnText: "Done",
       steps: validSteps,
       onCloseClick: () => {
-        driverInstance.destroy();
+        driverInstance.destroy()
       },
       onNextClick: () => {
         if (!driverInstance.hasNextStep()) {
-          driverInstance.destroy();
+          driverInstance.destroy()
         } else {
-          driverInstance.moveNext();
+          driverInstance.moveNext()
         }
       },
       onPrevClick: () => {
-        driverInstance.movePrevious();
+        driverInstance.movePrevious()
       },
       onDestroyStarted: () => {
-        setIsRunning(false);
-        driverRef.current = null;
+        setIsRunning(false)
+        driverRef.current = null
       },
       onDestroyed: () => {
         // Mark tour as completed when user finishes or closes
-        markTourCompleted(tourName);
-        onComplete?.();
-      },
-    });
+        markTourCompleted(tourName)
+        onComplete?.()
+      }
+    })
 
-    driverRef.current = driverInstance;
-    setIsRunning(true);
-    driverInstance.drive();
-  }, [tourName, onComplete]);
+    driverRef.current = driverInstance
+    setIsRunning(true)
+    driverInstance.drive()
+  }, [tourName, onComplete])
 
   // Auto-start the tour after a delay (if enabled)
   useEffect(() => {
     if (autoStart && !hasAutoStarted.current) {
-      hasAutoStarted.current = true;
+      hasAutoStarted.current = true
       // Delay to allow the page to render fully
       const timer = setTimeout(() => {
-        startTour();
-      }, 800);
+        startTour()
+      }, 800)
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timer)
     }
-  }, [autoStart, startTour]);
+  }, [autoStart, startTour])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (driverRef.current) {
-        driverRef.current.destroy();
-        driverRef.current = null;
+        driverRef.current.destroy()
+        driverRef.current = null
       }
-    };
-  }, []);
+    }
+  }, [])
 
-  return { startTour, isRunning };
+  return { startTour, isRunning }
 }

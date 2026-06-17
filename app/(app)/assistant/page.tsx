@@ -1,22 +1,24 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { AssistantClient } from "./client";
-import { getSinglishMode } from "@/lib/actions/singlish-mode";
+import { redirect } from "next/navigation"
+import { auth } from "@clerk/nextjs/server"
 
-export const dynamic = "force-dynamic";
+import { getSinglishMode } from "@/lib/actions/singlish-mode"
+
+import { AssistantClient } from "./client"
+
+export const dynamic = "force-dynamic"
 
 export const metadata = {
   title: "AI Assistant | Foracle",
-  description: "Your personal AI financial assistant",
-};
+  description: "Your personal AI financial assistant"
+}
 
 export default async function AssistantPage() {
-  const { userId } = await auth();
+  const { userId } = await auth()
   if (!userId) {
-    redirect("/sign-in");
+    redirect("/sign-in")
   }
 
-  const singlishMode = await getSinglishMode();
+  const singlishMode = await getSinglishMode()
 
-  return <AssistantClient initialSinglishMode={singlishMode} />;
+  return <AssistantClient initialSinglishMode={singlishMode} />
 }

@@ -1,44 +1,45 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 import {
-  TrendingUp,
   Banknote,
-  FileText,
   BarChart3,
   Bitcoin,
-  PieChart,
   Building2,
-  Trash2,
-  Pencil,
   Expand,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+  FileText,
+  Pencil,
+  PieChart,
+  Trash2,
+  TrendingUp
+} from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  DialogTitle
+} from "@/components/ui/dialog"
 
 interface Investment {
-  id: string;
-  name: string;
-  type: string;
-  currentCapital: string;
-  projectedYield: string;
-  contributionAmount: string;
-  contributionFrequency: string;
-  customMonths: string | null;
-  isActive: boolean | null;
+  id: string
+  name: string
+  type: string
+  currentCapital: string
+  projectedYield: string
+  contributionAmount: string
+  contributionFrequency: string
+  customMonths: string | null
+  isActive: boolean | null
 }
 
 interface InvestmentCardProps {
-  investment: Investment;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  investment: Investment
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
 const INVESTMENT_TYPE_CONFIG: Record<
@@ -49,71 +50,74 @@ const INVESTMENT_TYPE_CONFIG: Record<
     icon: TrendingUp,
     color: "text-[#7A3A0A]",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
-    label: "Stock",
+    label: "Stock"
   },
   cash: {
     icon: Banknote,
     color: "text-[#007A68]",
     bgColor: "bg-[rgba(0,196,170,0.12)]",
-    label: "Cash",
+    label: "Cash"
   },
   bonds: {
     icon: FileText,
     color: "text-[#7A5A00]",
     bgColor: "bg-[rgba(212,168,67,0.15)]",
-    label: "Bonds",
+    label: "Bonds"
   },
   etf: {
     icon: BarChart3,
     color: "text-[#7A3A0A]",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
-    label: "ETF",
+    label: "ETF"
   },
   crypto: {
     icon: Bitcoin,
     color: "text-[#7A3A0A]",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
-    label: "Crypto",
+    label: "Crypto"
   },
   mutual_fund: {
     icon: PieChart,
     color: "text-[#7A3A0A]",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
-    label: "Mutual Fund",
+    label: "Mutual Fund"
   },
   reit: {
     icon: Building2,
     color: "text-foreground",
     bgColor: "bg-muted",
-    label: "REIT",
-  },
-};
+    label: "REIT"
+  }
+}
 
 export function InvestmentCard({
   investment,
   onEdit,
-  onDelete,
+  onDelete
 }: InvestmentCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const config = INVESTMENT_TYPE_CONFIG[investment.type] || {
     icon: TrendingUp,
     color: "text-foreground",
     bgColor: "bg-muted",
-    label: investment.type,
-  };
-  const Icon = config.icon;
+    label: investment.type
+  }
+  const Icon = config.icon
 
-  const capital = parseFloat(investment.currentCapital);
-  const yield_ = parseFloat(investment.projectedYield);
-  const contribution = parseFloat(investment.contributionAmount);
+  const capital = parseFloat(investment.currentCapital)
+  const yield_ = parseFloat(investment.projectedYield)
+  const contribution = parseFloat(investment.contributionAmount)
 
   // Calculate monthly contribution for display
-  let monthlyContribution = contribution;
-  if (investment.contributionFrequency === "custom" && investment.customMonths) {
+  let monthlyContribution = contribution
+  if (
+    investment.contributionFrequency === "custom" &&
+    investment.customMonths
+  ) {
     try {
-      const months = JSON.parse(investment.customMonths) as number[];
-      monthlyContribution = (contribution * months.length) / 12;
+      const months = JSON.parse(investment.customMonths) as number[]
+      monthlyContribution = (contribution * months.length) / 12
     } catch {
       // Keep original if parsing fails
     }
@@ -122,25 +126,23 @@ export function InvestmentCard({
   return (
     <>
       <div
-        className="bg-card rounded-lg border border-border p-4 hover:shadow-md transition-shadow relative cursor-pointer"
-        onClick={() => setIsModalOpen(true)}
-      >
+        className="bg-card border-border relative cursor-pointer rounded-lg border p-4 transition-shadow hover:shadow-md"
+        onClick={() => setIsModalOpen(true)}>
         {/* Expand Icon */}
-        <Expand className="h-3.5 w-3.5 text-muted-foreground absolute top-3 right-3" />
+        <Expand className="text-muted-foreground absolute top-3 right-3 h-3.5 w-3.5" />
 
         {/* Header with Icon */}
-        <div className="flex items-start gap-3 mb-3 pr-6">
-          <div className={`p-2.5 rounded-lg ${config.bgColor}`}>
+        <div className="mb-3 flex items-start gap-3 pr-6">
+          <div className={`rounded-lg p-2.5 ${config.bgColor}`}>
             <Icon className={`h-5 w-5 ${config.color}`} />
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground truncate">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-foreground truncate font-semibold">
               {investment.name}
             </h3>
             <Badge
               variant="outline"
-              className={`text-xs font-medium ${config.color} border-current mt-1`}
-            >
+              className={`text-xs font-medium ${config.color} mt-1 border-current`}>
               {config.label}
             </Badge>
           </div>
@@ -149,19 +151,33 @@ export function InvestmentCard({
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-2 text-sm">
           <div>
-            <p className="text-foreground/400 text-xs uppercase tracking-wide">Capital</p>
-            <p className="font-semibold text-foreground">
-              ${capital.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            <p className="text-foreground/400 text-xs tracking-wide uppercase">
+              Capital
+            </p>
+            <p className="text-foreground font-semibold">
+              $
+              {capital.toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              })}
             </p>
           </div>
           <div>
-            <p className="text-foreground/400 text-xs uppercase tracking-wide">Yield</p>
+            <p className="text-foreground/400 text-xs tracking-wide uppercase">
+              Yield
+            </p>
             <p className="font-semibold text-[#007A68]">{yield_.toFixed(1)}%</p>
           </div>
           <div>
-            <p className="text-foreground/400 text-xs uppercase tracking-wide">Monthly</p>
-            <p className="font-semibold text-foreground">
-              ${monthlyContribution.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            <p className="text-foreground/400 text-xs tracking-wide uppercase">
+              Monthly
+            </p>
+            <p className="text-foreground font-semibold">
+              $
+              {monthlyContribution.toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              })}
             </p>
           </div>
         </div>
@@ -171,8 +187,8 @@ export function InvestmentCard({
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${config.bgColor}`}>
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className={`rounded-lg p-2 ${config.bgColor}`}>
                 <Icon className={`h-5 w-5 ${config.color}`} />
               </div>
               {investment.name}
@@ -180,21 +196,24 @@ export function InvestmentCard({
             <DialogDescription>Investment details</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 mt-4">
+          <div className="mt-4 space-y-6">
             {/* Type Badge */}
             <div className="flex items-center gap-2">
               <Badge
                 variant="outline"
-                className={`${config.color} border-current`}
-              >
+                className={`${config.color} border-current`}>
                 {config.label}
               </Badge>
               {investment.isActive ? (
-                <Badge variant="outline" className="text-[#007A68] border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
+                <Badge
+                  variant="outline"
+                  className="border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)] text-[#007A68]">
                   Active
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-muted-foreground border-border">
+                <Badge
+                  variant="outline"
+                  className="text-muted-foreground border-border">
                   Inactive
                 </Badge>
               )}
@@ -203,15 +222,19 @@ export function InvestmentCard({
             {/* Financial Details */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-muted rounded-lg p-3">
-                <p className="text-xs text-foreground/400 uppercase tracking-wide mb-1">
+                <p className="text-foreground/400 mb-1 text-xs tracking-wide uppercase">
                   Current Capital
                 </p>
-                <p className="text-xl font-bold text-foreground">
-                  ${capital.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <p className="text-foreground text-xl font-bold">
+                  $
+                  {capital.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
                 </p>
               </div>
-              <div className="bg-[rgba(0,196,170,0.12)] rounded-lg p-3">
-                <p className="text-xs text-foreground/400 uppercase tracking-wide mb-1">
+              <div className="rounded-lg bg-[rgba(0,196,170,0.12)] p-3">
+                <p className="text-foreground/400 mb-1 text-xs tracking-wide uppercase">
                   Projected Yield
                 </p>
                 <p className="text-xl font-bold text-[#007A68]">
@@ -222,31 +245,41 @@ export function InvestmentCard({
 
             {/* Contribution Details */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Contributions</p>
+              <p className="text-foreground text-sm font-medium">
+                Contributions
+              </p>
               <div className="bg-muted rounded-lg p-3">
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span className="text-foreground">Amount</span>
                   <span className="font-semibold">
-                    ${contribution.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    $
+                    {contribution.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
                   </span>
                 </div>
-                <div className="flex justify-between items-center mt-2">
+                <div className="mt-2 flex items-center justify-between">
                   <span className="text-foreground">Frequency</span>
                   <span className="font-semibold capitalize">
                     {investment.contributionFrequency}
                     {investment.contributionFrequency === "custom" &&
                       investment.customMonths && (
-                        <span className="text-foreground/400 font-normal ml-1">
+                        <span className="text-foreground/400 ml-1 font-normal">
                           ({JSON.parse(investment.customMonths).length}x/year)
                         </span>
                       )}
                   </span>
                 </div>
                 {investment.contributionFrequency === "custom" && (
-                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-border">
+                  <div className="border-border mt-2 flex items-center justify-between border-t pt-2">
                     <span className="text-foreground">Avg. Monthly</span>
                     <span className="font-semibold">
-                      ${monthlyContribution.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      $
+                      {monthlyContribution.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}
                     </span>
                   </div>
                 )}
@@ -254,27 +287,25 @@ export function InvestmentCard({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-4 border-t">
+            <div className="flex gap-2 border-t pt-4">
               <Button
                 variant="outline"
                 className="flex-1"
                 onClick={() => {
-                  setIsModalOpen(false);
-                  onEdit?.();
-                }}
-              >
-                <Pencil className="h-4 w-4 mr-2" />
+                  setIsModalOpen(false)
+                  onEdit?.()
+                }}>
+                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
+                className="flex-1 text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] hover:text-[#8B0000]"
                 onClick={() => {
-                  setIsModalOpen(false);
-                  onDelete?.();
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
+                  setIsModalOpen(false)
+                  onDelete?.()
+                }}>
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>
             </div>
@@ -282,5 +313,5 @@ export function InvestmentCard({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

@@ -1,38 +1,47 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { WizardNavigation } from "../WizardNavigation";
-import { completeOnboarding } from "@/lib/actions/onboarding";
-import { getCurrentHoldings } from "@/lib/actions/current-holdings";
-import { getExpenses } from "@/lib/actions/expenses";
-import type { OnboardingData, HoldingData } from "@/app/onboarding/OnboardingWizard";
+import { useEffect, useState } from "react"
 import {
-  User,
+  Building2,
+  CheckCircle2,
   DollarSign,
   PiggyBank,
-  Building2,
   Receipt,
-  CheckCircle2,
   Sparkles,
-} from "lucide-react";
+  User
+} from "lucide-react"
+
+import { getCurrentHoldings } from "@/lib/actions/current-holdings"
+import { getExpenses } from "@/lib/actions/expenses"
+import { completeOnboarding } from "@/lib/actions/onboarding"
+import type {
+  HoldingData,
+  OnboardingData
+} from "@/app/onboarding/OnboardingWizard"
+
+import { WizardNavigation } from "../WizardNavigation"
 
 interface ConfirmationStepProps {
-  data: OnboardingData;
-  onComplete: () => void;
-  onBack: () => void;
+  data: OnboardingData
+  onComplete: () => void
+  onBack: () => void
 }
 
 interface ExpenseData {
-  id: string;
-  name: string;
-  category: string;
-  amount: string;
+  id: string
+  name: string
+  category: string
+  amount: string
 }
 
-export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dbHoldings, setDbHoldings] = useState<HoldingData[]>([]);
-  const [dbExpenses, setDbExpenses] = useState<ExpenseData[]>([]);
+export function ConfirmationStep({
+  data,
+  onComplete,
+  onBack
+}: ConfirmationStepProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [dbHoldings, setDbHoldings] = useState<HoldingData[]>([])
+  const [dbExpenses, setDbExpenses] = useState<ExpenseData[]>([])
 
   // Fetch holdings and expenses from database to ensure accurate display
   useEffect(() => {
@@ -40,43 +49,43 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
       try {
         const [holdings, expenses] = await Promise.all([
           getCurrentHoldings(),
-          getExpenses(),
-        ]);
+          getExpenses()
+        ])
         setDbHoldings(
           holdings.map((h) => ({
             id: h.id,
             bankName: h.bankName,
-            holdingAmount: h.holdingAmount,
+            holdingAmount: h.holdingAmount
           }))
-        );
+        )
         setDbExpenses(
           expenses.map((e) => ({
             id: e.id,
             name: e.name,
             category: e.category,
-            amount: e.amount,
+            amount: e.amount
           }))
-        );
+        )
       } catch (error) {
-        console.error("Failed to fetch data:", error);
+        console.error("Failed to fetch data:", error)
       }
     }
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
   const handleComplete = async () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await completeOnboarding();
+      await completeOnboarding()
       // Set flag to trigger app overview tour after redirect to dashboard
-      sessionStorage.setItem("foracle_new_user_tour", "true");
-      onComplete();
+      sessionStorage.setItem("foracle_new_user_tour", "true")
+      onComplete()
     } catch (error) {
-      console.error("Failed to complete onboarding:", error);
+      console.error("Failed to complete onboarding:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const summaryItems = [
     {
@@ -86,7 +95,7 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
       subValue: data.familyMember?.relationship,
       isSet: !!data.familyMember,
       bgColor: "bg-[rgba(184,98,42,0.10)]",
-      iconColor: "text-[#7A3A0A]",
+      iconColor: "text-[#7A3A0A]"
     },
     {
       icon: DollarSign,
@@ -97,7 +106,7 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
         : undefined,
       isSet: !!data.income,
       bgColor: "bg-[rgba(0,196,170,0.12)]",
-      iconColor: "text-[#007A68]",
+      iconColor: "text-[#007A68]"
     },
     {
       icon: PiggyBank,
@@ -108,7 +117,7 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
         : undefined,
       isSet: !!data.cpf && parseFloat(data.cpf.cpfOrdinaryAccount) > 0,
       bgColor: "bg-[rgba(184,98,42,0.10)]",
-      iconColor: "text-[#7A3A0A]",
+      iconColor: "text-[#7A3A0A]"
     },
     {
       icon: Building2,
@@ -125,7 +134,7 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
           : undefined,
       isSet: dbHoldings.length > 0,
       bgColor: "bg-[rgba(212,168,67,0.15)]",
-      iconColor: "text-[#7A5A00]",
+      iconColor: "text-[#7A5A00]"
     },
     {
       icon: Receipt,
@@ -142,19 +151,19 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
           : undefined,
       isSet: dbExpenses.length > 0,
       bgColor: "bg-[rgba(224,85,85,0.12)]",
-      iconColor: "text-[#8B0000]",
-    },
-  ];
+      iconColor: "text-[#8B0000]"
+    }
+  ]
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-1 flex-col">
       <div className="flex-1 space-y-8">
         {/* Success Header */}
-        <div className="text-center py-6">
-          <div className="w-16 h-16 rounded-full bg-[rgba(0,196,170,0.12)] flex items-center justify-center mx-auto mb-4">
+        <div className="py-6 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)]">
             <Sparkles className="h-8 w-8 text-[#007A68]" />
           </div>
-          <h2 className="text-2xl font-semibold mb-2">Great job!</h2>
+          <h2 className="mb-2 text-2xl font-semibold">Great job!</h2>
           <p className="text-muted-foreground">
             Here's a summary of what you've set up. You can always update these
             from your dashboard.
@@ -166,39 +175,37 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
           {summaryItems.map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-4 p-4 rounded-xl border border-border/60 bg-card"
-            >
+              className="border-border/60 bg-card flex items-center gap-4 rounded-xl border p-4">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                className={`flex h-12 w-12 items-center justify-center rounded-xl ${
                   item.isSet ? item.bgColor : "bg-muted"
-                }`}
-              >
+                }`}>
                 <item.icon
                   className={`h-6 w-6 ${
                     item.isSet ? item.iconColor : "text-muted-foreground"
                   }`}
                 />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <p className="font-medium truncate">{item.value}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-sm">{item.label}</p>
+                <p className="truncate font-medium">{item.value}</p>
                 {item.subValue && (
-                  <p className="text-sm text-muted-foreground truncate">
+                  <p className="text-muted-foreground truncate text-sm">
                     {item.subValue}
                   </p>
                 )}
               </div>
               {item.isSet && (
-                <CheckCircle2 className="h-5 w-5 text-[#007A68] shrink-0" />
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-[#007A68]" />
               )}
             </div>
           ))}
         </div>
 
         {/* Next Steps */}
-        <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
-          <h3 className="font-medium mb-2">What's next?</h3>
-          <ul className="text-sm text-muted-foreground space-y-1">
+        <div className="border-border/60 bg-muted/30 rounded-xl border p-4">
+          <h3 className="mb-2 font-medium">What's next?</h3>
+          <ul className="text-muted-foreground space-y-1 text-sm">
             <li>• View your financial dashboard with projections</li>
             <li>• Add more income sources and family members</li>
             <li>• Set up your financial goals</li>
@@ -216,5 +223,5 @@ export function ConfirmationStep({ data, onComplete, onBack }: ConfirmationStepP
         nextLabel="Complete Setup"
       />
     </div>
-  );
+  )
 }

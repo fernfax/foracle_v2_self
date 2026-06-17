@@ -18,12 +18,14 @@
  *   });
  */
 
-import { db } from "@/db";
-import { kbChunks, userChunks } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
-import { getEmbeddingsClient } from "./embeddings";
-import { TextChunker, type ChunkerConfig } from "./chunker";
-import { nanoid } from "nanoid";
+import { db } from "@/db"
+import { and, eq } from "drizzle-orm"
+import { nanoid } from "nanoid"
+
+import { kbChunks, userChunks } from "@/db/schema"
+
+import { TextChunker, type ChunkerConfig } from "./chunker"
+import { getEmbeddingsClient } from "./embeddings"
 
 // =============================================================================
 // Types
@@ -31,26 +33,26 @@ import { nanoid } from "nanoid";
 
 export interface DocumentInput {
   /** Unique identifier for the document */
-  docId: string;
+  docId: string
   /** Text content to ingest */
-  content: string;
+  content: string
   /** Optional metadata to store with chunks */
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown>
 }
 
 export interface IngestOptions {
   /** Chunking configuration */
-  chunkerConfig?: ChunkerConfig;
+  chunkerConfig?: ChunkerConfig
   /** Replace existing chunks for this docId (default: true) */
-  replaceExisting?: boolean;
+  replaceExisting?: boolean
   /** Skip embedding generation (for testing) */
-  skipEmbeddings?: boolean;
+  skipEmbeddings?: boolean
 }
 
 export interface IngestResult {
-  docId: string;
-  chunksCreated: number;
-  embeddingsGenerated: number;
+  docId: string
+  chunksCreated: number
+  embeddingsGenerated: number
 }
 
 // =============================================================================
@@ -65,29 +67,33 @@ export async function ingestToKnowledgeBase(
   document: DocumentInput,
   options: IngestOptions = {}
 ): Promise<IngestResult> {
-  const { chunkerConfig, replaceExisting = true, skipEmbeddings = false } = options;
+  const {
+    chunkerConfig,
+    replaceExisting = true,
+    skipEmbeddings = false
+  } = options
 
   // Delete existing chunks if replacing
   if (replaceExisting) {
-    await db.delete(kbChunks).where(eq(kbChunks.docId, document.docId));
+    await db.delete(kbChunks).where(eq(kbChunks.docId, document.docId))
   }
 
   // Chunk the document
   const chunker = new TextChunker({
     ...chunkerConfig,
-    baseMetadata: document.metadata,
-  });
-  const chunks = chunker.chunk(document.content);
+    baseMetadata: document.metadata
+  })
+  const chunks = chunker.chunk(document.content)
 
   if (chunks.length === 0) {
-    return { docId: document.docId, chunksCreated: 0, embeddingsGenerated: 0 };
+    return { docId: document.docId, chunksCreated: 0, embeddingsGenerated: 0 }
   }
 
   // Generate embeddings
-  let embeddings: number[][] = [];
+  let embeddings: number[][] = []
   if (!skipEmbeddings) {
-    const client = getEmbeddingsClient();
-    embeddings = await client.embedBatch(chunks.map((c) => c.content));
+    const client = getEmbeddingsClient()
+    embeddings = await client.embedBatch(chunks.map((c) => c.content))
   }
 
   // Insert chunks
@@ -99,16 +105,16 @@ export async function ingestToKnowledgeBase(
     embedding: skipEmbeddings ? null : embeddings[idx],
     metadata: chunk.metadata,
     createdAt: new Date(),
-    updatedAt: new Date(),
-  }));
+    updatedAt: new Date()
+  }))
 
-  await db.insert(kbChunks).values(records);
+  await db.insert(kbChunks).values(records)
 
   return {
     docId: document.docId,
     chunksCreated: chunks.length,
-    embeddingsGenerated: skipEmbeddings ? 0 : embeddings.length,
-  };
+    embeddingsGenerated: skipEmbeddings ? 0 : embeddings.length
+  }
 }
 
 /**
@@ -118,12 +124,12 @@ export async function ingestBatchToKnowledgeBase(
   documents: DocumentInput[],
   options: IngestOptions = {}
 ): Promise<IngestResult[]> {
-  const results: IngestResult[] = [];
+  const results: IngestResult[] = []
   for (const doc of documents) {
-    const result = await ingestToKnowledgeBase(doc, options);
-    results.push(result);
+    const result = await ingestToKnowledgeBase(doc, options)
+    results.push(result)
   }
-  return results;
+  return results
 }
 
 // =============================================================================
@@ -140,34 +146,40 @@ export async function ingestToUserStore(
   options: IngestOptions = {}
 ): Promise<IngestResult> {
   if (!userId) {
-    throw new Error("userId is required for user store ingestion");
+    throw new Error("userId is required for user store ingestion")
   }
 
-  const { chunkerConfig, replaceExisting = true, skipEmbeddings = false } = options;
+  const {
+    chunkerConfig,
+    replaceExisting = true,
+    skipEmbeddings = false
+  } = options
 
   // Delete existing chunks for this user and docId if replacing
   if (replaceExisting) {
     await db
       .delete(userChunks)
-      .where(and(eq(userChunks.userId, userId), eq(userChunks.docId, document.docId)));
+      .where(
+        and(eq(userChunks.userId, userId), eq(userChunks.docId, document.docId))
+      )
   }
 
   // Chunk the document
   const chunker = new TextChunker({
     ...chunkerConfig,
-    baseMetadata: { ...document.metadata, userId },
-  });
-  const chunks = chunker.chunk(document.content);
+    baseMetadata: { ...document.metadata, userId }
+  })
+  const chunks = chunker.chunk(document.content)
 
   if (chunks.length === 0) {
-    return { docId: document.docId, chunksCreated: 0, embeddingsGenerated: 0 };
+    return { docId: document.docId, chunksCreated: 0, embeddingsGenerated: 0 }
   }
 
   // Generate embeddings
-  let embeddings: number[][] = [];
+  let embeddings: number[][] = []
   if (!skipEmbeddings) {
-    const client = getEmbeddingsClient();
-    embeddings = await client.embedBatch(chunks.map((c) => c.content));
+    const client = getEmbeddingsClient()
+    embeddings = await client.embedBatch(chunks.map((c) => c.content))
   }
 
   // Insert chunks with userId
@@ -180,16 +192,16 @@ export async function ingestToUserStore(
     embedding: skipEmbeddings ? null : embeddings[idx],
     metadata: chunk.metadata,
     createdAt: new Date(),
-    updatedAt: new Date(),
-  }));
+    updatedAt: new Date()
+  }))
 
-  await db.insert(userChunks).values(records);
+  await db.insert(userChunks).values(records)
 
   return {
     docId: document.docId,
     chunksCreated: chunks.length,
-    embeddingsGenerated: skipEmbeddings ? 0 : embeddings.length,
-  };
+    embeddingsGenerated: skipEmbeddings ? 0 : embeddings.length
+  }
 }
 
 /**
@@ -200,12 +212,12 @@ export async function ingestBatchToUserStore(
   documents: DocumentInput[],
   options: IngestOptions = {}
 ): Promise<IngestResult[]> {
-  const results: IngestResult[] = [];
+  const results: IngestResult[] = []
   for (const doc of documents) {
-    const result = await ingestToUserStore(userId, doc, options);
-    results.push(result);
+    const result = await ingestToUserStore(userId, doc, options)
+    results.push(result)
   }
-  return results;
+  return results
 }
 
 // =============================================================================
@@ -216,7 +228,7 @@ export async function ingestBatchToUserStore(
  * Delete a document from the knowledge base
  */
 export async function deleteFromKnowledgeBase(docId: string): Promise<void> {
-  await db.delete(kbChunks).where(eq(kbChunks.docId, docId));
+  await db.delete(kbChunks).where(eq(kbChunks.docId, docId))
 }
 
 /**
@@ -228,12 +240,12 @@ export async function deleteFromUserStore(
   docId: string
 ): Promise<void> {
   if (!userId) {
-    throw new Error("userId is required for user store deletion");
+    throw new Error("userId is required for user store deletion")
   }
 
   await db
     .delete(userChunks)
-    .where(and(eq(userChunks.userId, userId), eq(userChunks.docId, docId)));
+    .where(and(eq(userChunks.userId, userId), eq(userChunks.docId, docId)))
 }
 
 /**
@@ -244,10 +256,10 @@ export async function listKnowledgeBaseDocs(): Promise<
 > {
   const results = await db
     .select({
-      docId: kbChunks.docId,
+      docId: kbChunks.docId
     })
     .from(kbChunks)
-    .groupBy(kbChunks.docId);
+    .groupBy(kbChunks.docId)
 
   // Get chunk counts
   const docs = await Promise.all(
@@ -255,12 +267,12 @@ export async function listKnowledgeBaseDocs(): Promise<
       const chunks = await db
         .select({ id: kbChunks.id })
         .from(kbChunks)
-        .where(eq(kbChunks.docId, docId));
-      return { docId, chunkCount: chunks.length };
+        .where(eq(kbChunks.docId, docId))
+      return { docId, chunkCount: chunks.length }
     })
-  );
+  )
 
-  return docs;
+  return docs
 }
 
 /**
@@ -271,16 +283,16 @@ export async function listUserStoreDocs(
   userId: string
 ): Promise<Array<{ docId: string; chunkCount: number }>> {
   if (!userId) {
-    throw new Error("userId is required for listing user store documents");
+    throw new Error("userId is required for listing user store documents")
   }
 
   const results = await db
     .select({
-      docId: userChunks.docId,
+      docId: userChunks.docId
     })
     .from(userChunks)
     .where(eq(userChunks.userId, userId))
-    .groupBy(userChunks.docId);
+    .groupBy(userChunks.docId)
 
   // Get chunk counts
   const docs = await Promise.all(
@@ -288,10 +300,10 @@ export async function listUserStoreDocs(
       const chunks = await db
         .select({ id: userChunks.id })
         .from(userChunks)
-        .where(and(eq(userChunks.userId, userId), eq(userChunks.docId, docId)));
-      return { docId, chunkCount: chunks.length };
+        .where(and(eq(userChunks.userId, userId), eq(userChunks.docId, docId)))
+      return { docId, chunkCount: chunks.length }
     })
-  );
+  )
 
-  return docs;
+  return docs
 }

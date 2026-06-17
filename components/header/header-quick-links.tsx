@@ -1,57 +1,59 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useCallback } from "react";
-import { QuickLinksModal } from "./quick-links-modal";
-import { QuickLinksDisplay } from "./quick-links-display";
+import { useCallback, useEffect, useState } from "react"
+
 import {
   getQuickLinks,
   syncQuickLinks,
   updateQuickLinksOrder,
-  type QuickLink,
-} from "@/lib/actions/quick-links";
-import { QUICK_LINK_OPTIONS } from "@/lib/quick-links-config";
+  type QuickLink
+} from "@/lib/actions/quick-links"
+import { QUICK_LINK_OPTIONS } from "@/lib/quick-links-config"
+
+import { QuickLinksDisplay } from "./quick-links-display"
+import { QuickLinksModal } from "./quick-links-modal"
 
 export function HeaderQuickLinks() {
-  const [links, setLinks] = useState<QuickLink[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [links, setLinks] = useState<QuickLink[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Fetch quick links on mount
   useEffect(() => {
     const fetchLinks = async () => {
       try {
-        const fetchedLinks = await getQuickLinks();
-        setLinks(fetchedLinks);
+        const fetchedLinks = await getQuickLinks()
+        setLinks(fetchedLinks)
       } catch (error) {
-        console.error("Error fetching quick links:", error);
+        console.error("Error fetching quick links:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-    fetchLinks();
-  }, []);
+    }
+    fetchLinks()
+  }, [])
 
   // Handle reorder with optimistic update
   const handleReorder = useCallback(async (newLinks: QuickLink[]) => {
     // Optimistic update
-    setLinks(newLinks);
+    setLinks(newLinks)
 
     try {
       await updateQuickLinksOrder(
         newLinks.map((link) => ({ id: link.id, sortOrder: link.sortOrder }))
-      );
+      )
     } catch (error) {
-      console.error("Error updating quick links order:", error);
+      console.error("Error updating quick links order:", error)
       // Revert on error by refetching
-      const fetchedLinks = await getQuickLinks();
-      setLinks(fetchedLinks);
+      const fetchedLinks = await getQuickLinks()
+      setLinks(fetchedLinks)
     }
-  }, []);
+  }, [])
 
   // Handle save from modal
   const handleSave = useCallback(async (selectedKeys: string[]) => {
-    setIsSaving(true);
+    setIsSaving(true)
     try {
       const updatedLinks = await syncQuickLinks(
         selectedKeys,
@@ -59,26 +61,26 @@ export function HeaderQuickLinks() {
           key: o.key,
           label: o.label,
           href: o.href,
-          icon: o.icon,
+          icon: o.icon
         }))
-      );
-      setLinks(updatedLinks);
-      setIsModalOpen(false);
+      )
+      setLinks(updatedLinks)
+      setIsModalOpen(false)
     } catch (error) {
-      console.error("Error saving quick links:", error);
+      console.error("Error saving quick links:", error)
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  }, []);
+  }, [])
 
-  const selectedKeys = links.map((link) => link.linkKey);
+  const selectedKeys = links.map((link) => link.linkKey)
 
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <div className="h-8 w-24 bg-muted/50 animate-pulse rounded-md" />
+        <div className="bg-muted/50 h-8 w-24 animate-pulse rounded-md" />
       </div>
-    );
+    )
   }
 
   return (
@@ -96,5 +98,5 @@ export function HeaderQuickLinks() {
         isSaving={isSaving}
       />
     </div>
-  );
+  )
 }

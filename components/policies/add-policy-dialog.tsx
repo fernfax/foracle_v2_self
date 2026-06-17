@@ -1,17 +1,19 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { toast } from "sonner"
+
+import { createExpenseFromPolicy } from "@/lib/actions/expenses"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogBody,
-  DialogFooterSticky,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  getInsuranceProviders,
+  type InsuranceProvider
+} from "@/lib/actions/insurance-providers"
+import { createPolicy, updatePolicy } from "@/lib/actions/policies"
+import { getUserFamilyMembers } from "@/lib/actions/user"
+import { cn, policyFrequencyToExpenseFrequency } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,43 +22,50 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooterSticky,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn, policyFrequencyToExpenseFrequency } from "@/lib/utils";
-import { createPolicy, updatePolicy } from "@/lib/actions/policies";
-import { getUserFamilyMembers } from "@/lib/actions/user";
-import { getInsuranceProviders, type InsuranceProvider } from "@/lib/actions/insurance-providers";
-import { ProviderManagerPopover } from "./provider-manager-popover";
-import { createExpenseFromPolicy } from "@/lib/actions/expenses";
-import { toast } from "sonner";
+  SelectValue
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+
+import { ProviderManagerPopover } from "./provider-manager-popover"
 
 interface FamilyMember {
-  id: string;
-  name: string;
-  dateOfBirth: string | null;
+  id: string
+  name: string
+  dateOfBirth: string | null
 }
 
 interface AddPolicyDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  userId: string;
-  preselectedFamilyMemberId?: string;
-  onPolicyAdded?: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  userId: string
+  preselectedFamilyMemberId?: string
+  onPolicyAdded?: () => void
 }
 
 const POLICY_TYPES = [
@@ -67,20 +76,12 @@ const POLICY_TYPES = [
   "Endowment",
   "Investment-Linked",
   "Hospitalisation Plan",
-  "Other",
-];
+  "Other"
+]
 
-const POLICY_STATUSES = [
-  "Active",
-  "Lapsed",
-  "Cancelled",
-  "Matured",
-];
+const POLICY_STATUSES = ["Active", "Lapsed", "Cancelled", "Matured"]
 
-const PREMIUM_FREQUENCIES = [
-  "Monthly",
-  "Custom",
-];
+const PREMIUM_FREQUENCIES = ["Monthly", "Custom"]
 
 const MONTHS = [
   { value: 1, label: "Jan" },
@@ -94,180 +95,229 @@ const MONTHS = [
   { value: 9, label: "Sep" },
   { value: 10, label: "Oct" },
   { value: 11, label: "Nov" },
-  { value: 12, label: "Dec" },
-];
+  { value: 12, label: "Dec" }
+]
 
-export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyMemberId, onPolicyAdded }: AddPolicyDialogProps) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
-  const [providers, setProviders] = useState<InsuranceProvider[]>([]);
+export function AddPolicyDialog({
+  open,
+  onOpenChange,
+  userId,
+  preselectedFamilyMemberId,
+  onPolicyAdded
+}: AddPolicyDialogProps) {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
+  const [providers, setProviders] = useState<InsuranceProvider[]>([])
 
   // Policy Holder
-  const [selectedFamilyMember, setSelectedFamilyMember] = useState("");
-  const [memberAge, setMemberAge] = useState<number | null>(null);
+  const [selectedFamilyMember, setSelectedFamilyMember] = useState("")
+  const [memberAge, setMemberAge] = useState<number | null>(null)
 
   // Set preselected family member when dialog opens
   useEffect(() => {
     if (open && preselectedFamilyMemberId) {
-      setSelectedFamilyMember(preselectedFamilyMemberId);
+      setSelectedFamilyMember(preselectedFamilyMemberId)
     }
-  }, [open, preselectedFamilyMemberId]);
+  }, [open, preselectedFamilyMemberId])
 
   // Policy Information
-  const [provider, setProvider] = useState("");
-  const [planName, setPlanName] = useState("");
-  const [policyNumber, setPolicyNumber] = useState("");
-  const [policyType, setPolicyType] = useState("");
-  const [status, setStatus] = useState("Active");
+  const [provider, setProvider] = useState("")
+  const [planName, setPlanName] = useState("")
+  const [policyNumber, setPolicyNumber] = useState("")
+  const [policyType, setPolicyType] = useState("")
+  const [status, setStatus] = useState("Active")
 
   // Policy Dates
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [coverageUntilAge, setCoverageUntilAge] = useState("");
-  const [maturityDate, setMaturityDate] = useState<Date | undefined>(undefined);
-  const [startDateOpen, setStartDateOpen] = useState(false);
-  const [maturityDateOpen, setMaturityDateOpen] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [coverageUntilAge, setCoverageUntilAge] = useState("")
+  const [maturityDate, setMaturityDate] = useState<Date | undefined>(undefined)
+  const [startDateOpen, setStartDateOpen] = useState(false)
+  const [maturityDateOpen, setMaturityDateOpen] = useState(false)
 
   // Premium Details
-  const [premiumAmount, setPremiumAmount] = useState("");
-  const [premiumAmountCPF, setPremiumAmountCPF] = useState("");
-  const [premiumFrequency, setPremiumFrequency] = useState("");
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [totalPremiumDuration, setTotalPremiumDuration] = useState("");
+  const [premiumAmount, setPremiumAmount] = useState("")
+  const [premiumAmountCPF, setPremiumAmountCPF] = useState("")
+  const [premiumFrequency, setPremiumFrequency] = useState("")
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([])
+  const [totalPremiumDuration, setTotalPremiumDuration] = useState("")
 
   // Coverage Options
-  const [deathCoverage, setDeathCoverage] = useState({ enabled: false, amount: "" });
-  const [tpdCoverage, setTpdCoverage] = useState({ enabled: false, amount: "" });
-  const [criticalIllness, setCriticalIllness] = useState({ enabled: false, amount: "" });
-  const [earlyCriticalIllness, setEarlyCriticalIllness] = useState({ enabled: false, amount: "" });
-  const [hospitalisationPlan, setHospitalisationPlan] = useState({ enabled: false, amount: "" });
+  const [deathCoverage, setDeathCoverage] = useState({
+    enabled: false,
+    amount: ""
+  })
+  const [tpdCoverage, setTpdCoverage] = useState({ enabled: false, amount: "" })
+  const [criticalIllness, setCriticalIllness] = useState({
+    enabled: false,
+    amount: ""
+  })
+  const [earlyCriticalIllness, setEarlyCriticalIllness] = useState({
+    enabled: false,
+    amount: ""
+  })
+  const [hospitalisationPlan, setHospitalisationPlan] = useState({
+    enabled: false,
+    amount: ""
+  })
 
   // Cash value (whole life / endowment)
-  const [cashValue, setCashValue] = useState("");
-  const [cashValueDate, setCashValueDate] = useState("");
+  const [cashValue, setCashValue] = useState("")
+  const [cashValueDate, setCashValueDate] = useState("")
 
   // Add to Expenditures
-  const [addToExpenditures, setAddToExpenditures] = useState(false);
-  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-  const [validationError, setValidationError] = useState("");
-  const [expenseName, setExpenseName] = useState("");
+  const [addToExpenditures, setAddToExpenditures] = useState(false)
+  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false)
+  const [validationError, setValidationError] = useState("")
+  const [expenseName, setExpenseName] = useState("")
 
   // Load family members and providers
   useEffect(() => {
     const loadData = async () => {
-      const members = await getUserFamilyMembers();
-      setFamilyMembers(members);
-      const providersList = await getInsuranceProviders();
-      setProviders(providersList);
-    };
-    if (open) {
-      loadData();
+      const members = await getUserFamilyMembers()
+      setFamilyMembers(members)
+      const providersList = await getInsuranceProviders()
+      setProviders(providersList)
     }
-  }, [userId, open]);
+    if (open) {
+      loadData()
+    }
+  }, [userId, open])
 
   // Reload providers after changes
   const loadProviders = async () => {
-    const providersList = await getInsuranceProviders();
-    setProviders(providersList);
-  };
+    const providersList = await getInsuranceProviders()
+    setProviders(providersList)
+  }
 
   // Toggle month selection for custom frequency
   const toggleMonth = (month: number) => {
     setSelectedMonths((prev) =>
-      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month].sort((a, b) => a - b)
-    );
-  };
+      prev.includes(month)
+        ? prev.filter((m) => m !== month)
+        : [...prev, month].sort((a, b) => a - b)
+    )
+  }
 
   // Calculate age when family member is selected
   useEffect(() => {
-    const member = familyMembers.find((m) => m.id === selectedFamilyMember);
+    const member = familyMembers.find((m) => m.id === selectedFamilyMember)
     if (member?.dateOfBirth) {
-      const birthDate = new Date(member.dateOfBirth);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
+      const birthDate = new Date(member.dateOfBirth)
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--
       }
-      setMemberAge(age);
+      setMemberAge(age)
     } else {
-      setMemberAge(null);
+      setMemberAge(null)
     }
-  }, [selectedFamilyMember, familyMembers]);
+  }, [selectedFamilyMember, familyMembers])
 
   // Auto-calculate maturity date based on coverage until age
   useEffect(() => {
     if (coverageUntilAge && memberAge !== null && startDate) {
-      const yearsUntilMaturity = parseInt(coverageUntilAge) - memberAge;
+      const yearsUntilMaturity = parseInt(coverageUntilAge) - memberAge
       if (yearsUntilMaturity > 0) {
-        const maturity = new Date(startDate);
-        maturity.setFullYear(startDate.getFullYear() + yearsUntilMaturity);
-        setMaturityDate(maturity);
+        const maturity = new Date(startDate)
+        maturity.setFullYear(startDate.getFullYear() + yearsUntilMaturity)
+        setMaturityDate(maturity)
       }
     }
-  }, [coverageUntilAge, memberAge, startDate]);
+  }, [coverageUntilAge, memberAge, startDate])
 
   const handleToggleChange = (checked: boolean) => {
     if (checked) {
       // Validate required fields
       if (!startDate || !premiumAmount || !premiumFrequency) {
-        setValidationError("Please fill in Start Date, Premium Amount, and Premium Frequency before adding to expenses.");
-        return;
+        setValidationError(
+          "Please fill in Start Date, Premium Amount, and Premium Frequency before adding to expenses."
+        )
+        return
       }
       // Validate custom months if Custom frequency is selected
       if (premiumFrequency === "Custom" && selectedMonths.length === 0) {
-        setValidationError("Please select at least one month for custom premium frequency.");
-        return;
+        setValidationError(
+          "Please select at least one month for custom premium frequency."
+        )
+        return
       }
-      setValidationError("");
+      setValidationError("")
       // Initialize expense name with family member's first name
-      const memberName = familyMembers.find(m => m.id === selectedFamilyMember)?.name || "";
-      const firstName = memberName.split(" ")[0];
-      setExpenseName(firstName ? `${firstName}'s ${policyType} - ${provider}` : `${policyType} - ${provider}`);
-      setConfirmationModalOpen(true);
+      const memberName =
+        familyMembers.find((m) => m.id === selectedFamilyMember)?.name || ""
+      const firstName = memberName.split(" ")[0]
+      setExpenseName(
+        firstName
+          ? `${firstName}'s ${policyType} - ${provider}`
+          : `${policyType} - ${provider}`
+      )
+      setConfirmationModalOpen(true)
     } else {
-      setAddToExpenditures(false);
+      setAddToExpenditures(false)
     }
-  };
+  }
 
   const confirmAddToExpenditures = async () => {
-    setAddToExpenditures(true);
-    setConfirmationModalOpen(false);
+    setAddToExpenditures(true)
+    setConfirmationModalOpen(false)
     // Note: The form submission happens when user clicks "Add Policy" button
     // This just confirms they want to add to expenditures
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     // Required-field validation. Start Date is a Popover (not a native input),
     // so nothing else gates it — without this guard an empty start_date reaches
     // the server and trips the NOT NULL column with a silent 500.
-    if (!provider || !policyType || !startDate || !premiumAmount || !premiumFrequency) {
+    if (
+      !provider ||
+      !policyType ||
+      !startDate ||
+      !premiumAmount ||
+      !premiumFrequency
+    ) {
       toast.error(
         "Please fill in all required fields: Provider, Policy Type, Start Date, Premium Amount, and Premium Frequency."
-      );
-      return;
+      )
+      return
     }
     if (premiumFrequency === "Custom" && selectedMonths.length === 0) {
-      toast.error("Please select at least one month for the custom premium frequency.");
-      return;
+      toast.error(
+        "Please select at least one month for the custom premium frequency."
+      )
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const coverageOptions = {
-        death: deathCoverage.enabled ? parseFloat(deathCoverage.amount) || 0 : 0,
+        death: deathCoverage.enabled
+          ? parseFloat(deathCoverage.amount) || 0
+          : 0,
         tpd: tpdCoverage.enabled ? parseFloat(tpdCoverage.amount) || 0 : 0,
-        criticalIllness: criticalIllness.enabled ? parseFloat(criticalIllness.amount) || 0 : 0,
-        earlyCriticalIllness: earlyCriticalIllness.enabled ? parseFloat(earlyCriticalIllness.amount) || 0 : 0,
-        hospitalisationPlan: hospitalisationPlan.enabled ? parseFloat(hospitalisationPlan.amount) || 0 : 0,
-      };
+        criticalIllness: criticalIllness.enabled
+          ? parseFloat(criticalIllness.amount) || 0
+          : 0,
+        earlyCriticalIllness: earlyCriticalIllness.enabled
+          ? parseFloat(earlyCriticalIllness.amount) || 0
+          : 0,
+        hospitalisationPlan: hospitalisationPlan.enabled
+          ? parseFloat(hospitalisationPlan.amount) || 0
+          : 0
+      }
 
       // Create the policy first
-      const customMonthsJson = premiumFrequency === "Custom" && selectedMonths.length > 0
-        ? JSON.stringify(selectedMonths)
-        : undefined;
+      const customMonthsJson =
+        premiumFrequency === "Custom" && selectedMonths.length > 0
+          ? JSON.stringify(selectedMonths)
+          : undefined
 
       const newPolicy = await createPolicy({
         familyMemberId: selectedFamilyMember || undefined,
@@ -277,17 +327,23 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
         policyType,
         status,
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : "",
-        maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
-        coverageUntilAge: coverageUntilAge ? parseInt(coverageUntilAge) : undefined,
+        maturityDate: maturityDate
+          ? format(maturityDate, "yyyy-MM-dd")
+          : undefined,
+        coverageUntilAge: coverageUntilAge
+          ? parseInt(coverageUntilAge)
+          : undefined,
         premiumAmount,
         premiumAmountCPF: premiumAmountCPF || undefined,
         premiumFrequency,
         customMonths: customMonthsJson,
-        totalPremiumDuration: totalPremiumDuration ? parseInt(totalPremiumDuration) : undefined,
+        totalPremiumDuration: totalPremiumDuration
+          ? parseInt(totalPremiumDuration)
+          : undefined,
         coverageOptions: JSON.stringify(coverageOptions),
         cashValue: cashValue || undefined,
-        cashValueDate: cashValueDate || undefined,
-      });
+        cashValueDate: cashValueDate || undefined
+      })
 
       // If toggle is on, create expense and update policy with linkedExpenseId
       if (addToExpenditures && newPolicy) {
@@ -300,57 +356,59 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
           premiumFrequency: policyFrequencyToExpenseFrequency(premiumFrequency),
           customMonths: customMonthsJson,
           startDate: format(startDate!, "yyyy-MM-dd"),
-          maturityDate: maturityDate ? format(maturityDate, "yyyy-MM-dd") : undefined,
-        });
+          maturityDate: maturityDate
+            ? format(maturityDate, "yyyy-MM-dd")
+            : undefined
+        })
 
         // Update the policy with the linkedExpenseId
         await updatePolicy(newPolicy.id, {
-          linkedExpenseId: expense.id,
-        });
+          linkedExpenseId: expense.id
+        })
       }
 
-      onOpenChange(false);
-      resetForm();
-      onPolicyAdded?.();
-      toast.success("Policy added");
-      router.refresh();
+      onOpenChange(false)
+      resetForm()
+      onPolicyAdded?.()
+      toast.success("Policy added")
+      router.refresh()
     } catch (error) {
-      console.error("Failed to create policy:", error);
-      toast.error("Could not save the policy. Please try again.");
+      console.error("Failed to create policy:", error)
+      toast.error("Could not save the policy. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const resetForm = () => {
-    setSelectedFamilyMember("");
-    setProvider("");
-    setPlanName("");
-    setPolicyNumber("");
-    setPolicyType("");
-    setStatus("Active");
-    setStartDate(undefined);
-    setCoverageUntilAge("");
-    setMaturityDate(undefined);
-    setPremiumAmount("");
-    setPremiumAmountCPF("");
-    setPremiumFrequency("");
-    setSelectedMonths([]);
-    setTotalPremiumDuration("");
-    setDeathCoverage({ enabled: false, amount: "" });
-    setTpdCoverage({ enabled: false, amount: "" });
-    setCriticalIllness({ enabled: false, amount: "" });
-    setEarlyCriticalIllness({ enabled: false, amount: "" });
-    setHospitalisationPlan({ enabled: false, amount: "" });
-    setCashValue("");
-    setCashValueDate("");
-    setAddToExpenditures(false);
-    setValidationError("");
-  };
+    setSelectedFamilyMember("")
+    setProvider("")
+    setPlanName("")
+    setPolicyNumber("")
+    setPolicyType("")
+    setStatus("Active")
+    setStartDate(undefined)
+    setCoverageUntilAge("")
+    setMaturityDate(undefined)
+    setPremiumAmount("")
+    setPremiumAmountCPF("")
+    setPremiumFrequency("")
+    setSelectedMonths([])
+    setTotalPremiumDuration("")
+    setDeathCoverage({ enabled: false, amount: "" })
+    setTpdCoverage({ enabled: false, amount: "" })
+    setCriticalIllness({ enabled: false, amount: "" })
+    setEarlyCriticalIllness({ enabled: false, amount: "" })
+    setHospitalisationPlan({ enabled: false, amount: "" })
+    setCashValue("")
+    setCashValueDate("")
+    setAddToExpenditures(false)
+    setValidationError("")
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-h-[90vh] max-w-4xl">
         <DialogHeader>
           <DialogTitle>Add Insurance Policy</DialogTitle>
           <DialogDescription>
@@ -359,21 +417,32 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
         </DialogHeader>
 
         <DialogBody>
-        <form id="add-policy-form" onSubmit={handleSubmit} className="space-y-6">
-          {/* Policy Holder */}
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Policy Holder</h3>
-              <p className="text-xs text-foreground/400 mt-1">Select which family member this policy covers</p>
-            </div>
-            <div>
+          <form
+            id="add-policy-form"
+            onSubmit={handleSubmit}
+            className="space-y-6">
+            {/* Policy Holder */}
+            <div className="bg-muted space-y-4 rounded-lg p-4">
+              <div className="border-border border-b pb-3">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Policy Holder
+                </h3>
+                <p className="text-foreground/400 mt-1 text-xs">
+                  Select which family member this policy covers
+                </p>
+              </div>
+              <div>
                 <Label htmlFor="familyMember">
                   Family Member <span className="text-[#8B0000]">*</span>
                   {memberAge !== null && (
-                    <span className="ml-2 text-sm text-muted-foreground">Age: {memberAge}</span>
+                    <span className="text-muted-foreground ml-2 text-sm">
+                      Age: {memberAge}
+                    </span>
                   )}
                 </Label>
-                <Select value={selectedFamilyMember} onValueChange={setSelectedFamilyMember}>
+                <Select
+                  value={selectedFamilyMember}
+                  onValueChange={setSelectedFamilyMember}>
                   <SelectTrigger id="familyMember">
                     <SelectValue placeholder="Select family member" />
                   </SelectTrigger>
@@ -386,317 +455,361 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                   </SelectContent>
                 </Select>
               </div>
-          </div>
-
-          {/* Policy Information */}
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Policy Information</h3>
-              <p className="text-xs text-foreground/400 mt-1">Details about the insurance provider, policy type, and status</p>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="provider">
-                  Insurance Provider <span className="text-[#8B0000]">*</span>
-                </Label>
-                <Select value={provider} onValueChange={setProvider} required>
-                  <SelectTrigger id="provider">
-                    <SelectValue placeholder="Select insurance provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {providers.map((p) => (
-                      <SelectItem key={p.id} value={p.name}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <ProviderManagerPopover providers={providers} onProvidersChanged={loadProviders} />
-              </div>
 
-              <div>
-                <Label htmlFor="planName">Plan Name (Optional)</Label>
-                <Input
-                  id="planName"
-                  placeholder="e.g., Supreme Early Multiplier 20"
-                  value={planName}
-                  onChange={(e) => setPlanName(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="policyNumber">Policy Number (Optional)</Label>
-                <Input
-                  id="policyNumber"
-                  placeholder="e.g., POL-2024-001"
-                  value={policyNumber}
-                  onChange={(e) => setPolicyNumber(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="policyType">
-                  Policy Type <span className="text-[#8B0000]">*</span>
-                </Label>
-                <Select value={policyType} onValueChange={setPolicyType} required>
-                  <SelectTrigger id="policyType">
-                    <SelectValue placeholder="Select policy type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {POLICY_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {POLICY_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Policy Dates */}
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Policy Dates</h3>
-              <p className="text-xs text-foreground/400 mt-1">Start date, coverage duration, and maturity information</p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="startDate">
-                  Start Date <span className="text-[#8B0000]">*</span>
-                </Label>
-                <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        setStartDate(date);
-                        setStartDateOpen(false);
-                      }}
-                      initialFocus
-                      fixedWeeks
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div>
-                <Label htmlFor="coverageUntilAge">Coverage Until Age</Label>
-                <Input
-                  id="coverageUntilAge"
-                  type="number"
-                  placeholder="e.g., 65"
-                  value={coverageUntilAge}
-                  onChange={(e) => setCoverageUntilAge(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Age when coverage ends
+            {/* Policy Information */}
+            <div className="bg-muted space-y-4 rounded-lg p-4">
+              <div className="border-border border-b pb-3">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Policy Information
+                </h3>
+                <p className="text-foreground/400 mt-1 text-xs">
+                  Details about the insurance provider, policy type, and status
                 </p>
               </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="maturityDate">Maturity Date</Label>
-                <Popover open={maturityDateOpen} onOpenChange={setMaturityDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !maturityDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {maturityDate ? format(maturityDate, "MMMM do, yyyy") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={maturityDate}
-                      onSelect={(date) => {
-                        setMaturityDate(date);
-                        setMaturityDateOpen(false);
-                      }}
-                      initialFocus
-                      fixedWeeks
-                    />
-                  </PopoverContent>
-                </Popover>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Autopopulated based on age and coverage duration
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Premium Details */}
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Premium Details</h3>
-              <p className="text-xs text-foreground/400 mt-1">Premium amount, payment frequency, and total duration</p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="premiumAmount">
-                  Premium Amount <span className="text-[#8B0000]">*</span>
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    $
-                  </span>
-                  <Input
-                    id="premiumAmount"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    className="pl-7"
-                    value={premiumAmount}
-                    onChange={(e) => setPremiumAmount(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="premiumAmountCPF">CPF Premium (Optional)</Label>
-                <p className="text-xs text-muted-foreground mb-1">CPF-funded portion of the premium (same frequency as above)</p>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                  <Input
-                    id="premiumAmountCPF"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    className="pl-7"
-                    value={premiumAmountCPF}
-                    onChange={(e) => setPremiumAmountCPF(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="premiumFrequency">
-                  Premium Frequency <span className="text-[#8B0000]">*</span>
-                </Label>
-                <Select value={premiumFrequency} onValueChange={(value) => {
-                  setPremiumFrequency(value);
-                  if (value !== "Custom") {
-                    setSelectedMonths([]);
-                  }
-                }} required>
-                  <SelectTrigger id="premiumFrequency">
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PREMIUM_FREQUENCIES.map((freq) => (
-                      <SelectItem key={freq} value={freq}>
-                        {freq}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Month Picker for Custom Frequency */}
-              {premiumFrequency === "Custom" && (
-                <div className="md:col-span-2 space-y-2">
-                  <Label>
-                    Select Months <span className="text-[#8B0000]">*</span>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="provider">
+                    Insurance Provider <span className="text-[#8B0000]">*</span>
                   </Label>
-                  <div className="grid grid-cols-6 gap-2">
-                    {MONTHS.map((month) => (
-                      <Button
-                        key={month.value}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleMonth(month.value)}
-                        className={cn(
-                          "h-10 font-medium",
-                          selectedMonths.includes(month.value)
-                            ? "bg-black text-white hover:bg-black/90 border-black"
-                            : "bg-card hover:bg-muted"
-                        )}
-                      >
-                        {month.label}
-                      </Button>
-                    ))}
-                  </div>
-                  {selectedMonths.length === 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Select the months when premium is due
-                    </p>
-                  )}
-                  {selectedMonths.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Premium due in: {selectedMonths.map(m => MONTHS.find(month => month.value === m)?.label).join(", ")}
-                    </p>
-                  )}
+                  <Select value={provider} onValueChange={setProvider} required>
+                    <SelectTrigger id="provider">
+                      <SelectValue placeholder="Select insurance provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {providers.map((p) => (
+                        <SelectItem key={p.id} value={p.name}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <ProviderManagerPopover
+                    providers={providers}
+                    onProvidersChanged={loadProviders}
+                  />
                 </div>
-              )}
 
-              <div className="md:col-span-2">
-                <Label htmlFor="totalPremiumDuration">
-                  Total Premium Duration (Optional)
-                </Label>
-                <Input
-                  id="totalPremiumDuration"
-                  type="number"
-                  placeholder="e.g., 20"
-                  value={totalPremiumDuration}
-                  onChange={(e) => setTotalPremiumDuration(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Total number of years to pay premiums
-                </p>
+                <div>
+                  <Label htmlFor="planName">Plan Name (Optional)</Label>
+                  <Input
+                    id="planName"
+                    placeholder="e.g., Supreme Early Multiplier 20"
+                    value={planName}
+                    onChange={(e) => setPlanName(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="policyNumber">Policy Number (Optional)</Label>
+                  <Input
+                    id="policyNumber"
+                    placeholder="e.g., POL-2024-001"
+                    value={policyNumber}
+                    onChange={(e) => setPolicyNumber(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="policyType">
+                    Policy Type <span className="text-[#8B0000]">*</span>
+                  </Label>
+                  <Select
+                    value={policyType}
+                    onValueChange={setPolicyType}
+                    required>
+                    <SelectTrigger id="policyType">
+                      <SelectValue placeholder="Select policy type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {POLICY_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {POLICY_STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Coverage & Benefits */}
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <div className="pb-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Coverage & Benefits</h3>
-              <p className="text-xs text-foreground/400 mt-1">Optional coverage amounts for death, TPD, critical illness, and hospitalisation</p>
+            {/* Policy Dates */}
+            <div className="bg-muted space-y-4 rounded-lg p-4">
+              <div className="border-border border-b pb-3">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Policy Dates
+                </h3>
+                <p className="text-foreground/400 mt-1 text-xs">
+                  Start date, coverage duration, and maturity information
+                </p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="startDate">
+                    Start Date <span className="text-[#8B0000]">*</span>
+                  </Label>
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate
+                          ? format(startDate, "MMMM do, yyyy")
+                          : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={(date) => {
+                          setStartDate(date)
+                          setStartDateOpen(false)
+                        }}
+                        initialFocus
+                        fixedWeeks
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label htmlFor="coverageUntilAge">Coverage Until Age</Label>
+                  <Input
+                    id="coverageUntilAge"
+                    type="number"
+                    placeholder="e.g., 65"
+                    value={coverageUntilAge}
+                    onChange={(e) => setCoverageUntilAge(e.target.value)}
+                  />
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Age when coverage ends
+                  </p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="maturityDate">Maturity Date</Label>
+                  <Popover
+                    open={maturityDateOpen}
+                    onOpenChange={setMaturityDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !maturityDate && "text-muted-foreground"
+                        )}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {maturityDate
+                          ? format(maturityDate, "MMMM do, yyyy")
+                          : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={maturityDate}
+                        onSelect={(date) => {
+                          setMaturityDate(date)
+                          setMaturityDateOpen(false)
+                        }}
+                        initialFocus
+                        fixedWeeks
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Autopopulated based on age and coverage duration
+                  </p>
+                </div>
+              </div>
             </div>
+
+            {/* Premium Details */}
+            <div className="bg-muted space-y-4 rounded-lg p-4">
+              <div className="border-border border-b pb-3">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Premium Details
+                </h3>
+                <p className="text-foreground/400 mt-1 text-xs">
+                  Premium amount, payment frequency, and total duration
+                </p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="premiumAmount">
+                    Premium Amount <span className="text-[#8B0000]">*</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
+                      $
+                    </span>
+                    <Input
+                      id="premiumAmount"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="pl-7"
+                      value={premiumAmount}
+                      onChange={(e) => setPremiumAmount(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="premiumAmountCPF">
+                    CPF Premium (Optional)
+                  </Label>
+                  <p className="text-muted-foreground mb-1 text-xs">
+                    CPF-funded portion of the premium (same frequency as above)
+                  </p>
+                  <div className="relative">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 text-sm">
+                      $
+                    </span>
+                    <Input
+                      id="premiumAmountCPF"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="pl-7"
+                      value={premiumAmountCPF}
+                      onChange={(e) => setPremiumAmountCPF(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="premiumFrequency">
+                    Premium Frequency <span className="text-[#8B0000]">*</span>
+                  </Label>
+                  <Select
+                    value={premiumFrequency}
+                    onValueChange={(value) => {
+                      setPremiumFrequency(value)
+                      if (value !== "Custom") {
+                        setSelectedMonths([])
+                      }
+                    }}
+                    required>
+                    <SelectTrigger id="premiumFrequency">
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PREMIUM_FREQUENCIES.map((freq) => (
+                        <SelectItem key={freq} value={freq}>
+                          {freq}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Month Picker for Custom Frequency */}
+                {premiumFrequency === "Custom" && (
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>
+                      Select Months <span className="text-[#8B0000]">*</span>
+                    </Label>
+                    <div className="grid grid-cols-6 gap-2">
+                      {MONTHS.map((month) => (
+                        <Button
+                          key={month.value}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleMonth(month.value)}
+                          className={cn(
+                            "h-10 font-medium",
+                            selectedMonths.includes(month.value)
+                              ? "border-black bg-black text-white hover:bg-black/90"
+                              : "bg-card hover:bg-muted"
+                          )}>
+                          {month.label}
+                        </Button>
+                      ))}
+                    </div>
+                    {selectedMonths.length === 0 && (
+                      <p className="text-muted-foreground text-xs">
+                        Select the months when premium is due
+                      </p>
+                    )}
+                    {selectedMonths.length > 0 && (
+                      <p className="text-muted-foreground text-xs">
+                        Premium due in:{" "}
+                        {selectedMonths
+                          .map(
+                            (m) =>
+                              MONTHS.find((month) => month.value === m)?.label
+                          )
+                          .join(", ")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="totalPremiumDuration">
+                    Total Premium Duration (Optional)
+                  </Label>
+                  <Input
+                    id="totalPremiumDuration"
+                    type="number"
+                    placeholder="e.g., 20"
+                    value={totalPremiumDuration}
+                    onChange={(e) => setTotalPremiumDuration(e.target.value)}
+                  />
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Total number of years to pay premiums
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Coverage & Benefits */}
+            <div className="bg-muted space-y-4 rounded-lg p-4">
+              <div className="border-border border-b pb-3">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Coverage & Benefits
+                </h3>
+                <p className="text-foreground/400 mt-1 text-xs">
+                  Optional coverage amounts for death, TPD, critical illness,
+                  and hospitalisation
+                </p>
+              </div>
 
               {/* Death Coverage */}
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex flex-1 items-center gap-2">
                   <Checkbox
                     id="death"
                     checked={deathCoverage.enabled}
                     onCheckedChange={(checked) =>
-                      setDeathCoverage({ ...deathCoverage, enabled: checked as boolean })
+                      setDeathCoverage({
+                        ...deathCoverage,
+                        enabled: checked as boolean
+                      })
                     }
                   />
                   <Label htmlFor="death" className="cursor-pointer font-normal">
@@ -704,9 +817,11 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                   </Label>
                 </div>
                 <div className="w-48">
-                  <Label className="text-xs text-muted-foreground">Sum Assured</Label>
+                  <Label className="text-muted-foreground text-xs">
+                    Sum Assured
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                       $
                     </span>
                     <Input
@@ -717,7 +832,10 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                       disabled={!deathCoverage.enabled}
                       value={deathCoverage.amount}
                       onChange={(e) =>
-                        setDeathCoverage({ ...deathCoverage, amount: e.target.value })
+                        setDeathCoverage({
+                          ...deathCoverage,
+                          amount: e.target.value
+                        })
                       }
                     />
                   </div>
@@ -726,12 +844,15 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
 
               {/* TPD Coverage */}
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex flex-1 items-center gap-2">
                   <Checkbox
                     id="tpd"
                     checked={tpdCoverage.enabled}
                     onCheckedChange={(checked) =>
-                      setTpdCoverage({ ...tpdCoverage, enabled: checked as boolean })
+                      setTpdCoverage({
+                        ...tpdCoverage,
+                        enabled: checked as boolean
+                      })
                     }
                   />
                   <Label htmlFor="tpd" className="cursor-pointer font-normal">
@@ -739,9 +860,11 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                   </Label>
                 </div>
                 <div className="w-48">
-                  <Label className="text-xs text-muted-foreground">Sum Assured</Label>
+                  <Label className="text-muted-foreground text-xs">
+                    Sum Assured
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                       $
                     </span>
                     <Input
@@ -752,7 +875,10 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                       disabled={!tpdCoverage.enabled}
                       value={tpdCoverage.amount}
                       onChange={(e) =>
-                        setTpdCoverage({ ...tpdCoverage, amount: e.target.value })
+                        setTpdCoverage({
+                          ...tpdCoverage,
+                          amount: e.target.value
+                        })
                       }
                     />
                   </div>
@@ -761,22 +887,29 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
 
               {/* Critical Illness */}
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex flex-1 items-center gap-2">
                   <Checkbox
                     id="criticalIllness"
                     checked={criticalIllness.enabled}
                     onCheckedChange={(checked) =>
-                      setCriticalIllness({ ...criticalIllness, enabled: checked as boolean })
+                      setCriticalIllness({
+                        ...criticalIllness,
+                        enabled: checked as boolean
+                      })
                     }
                   />
-                  <Label htmlFor="criticalIllness" className="cursor-pointer font-normal">
+                  <Label
+                    htmlFor="criticalIllness"
+                    className="cursor-pointer font-normal">
                     Critical Illness
                   </Label>
                 </div>
                 <div className="w-48">
-                  <Label className="text-xs text-muted-foreground">Sum Assured</Label>
+                  <Label className="text-muted-foreground text-xs">
+                    Sum Assured
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                       $
                     </span>
                     <Input
@@ -787,7 +920,10 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                       disabled={!criticalIllness.enabled}
                       value={criticalIllness.amount}
                       onChange={(e) =>
-                        setCriticalIllness({ ...criticalIllness, amount: e.target.value })
+                        setCriticalIllness({
+                          ...criticalIllness,
+                          amount: e.target.value
+                        })
                       }
                     />
                   </div>
@@ -796,25 +932,29 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
 
               {/* Early Critical Illness */}
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex flex-1 items-center gap-2">
                   <Checkbox
                     id="earlyCriticalIllness"
                     checked={earlyCriticalIllness.enabled}
                     onCheckedChange={(checked) =>
                       setEarlyCriticalIllness({
                         ...earlyCriticalIllness,
-                        enabled: checked as boolean,
+                        enabled: checked as boolean
                       })
                     }
                   />
-                  <Label htmlFor="earlyCriticalIllness" className="cursor-pointer font-normal">
+                  <Label
+                    htmlFor="earlyCriticalIllness"
+                    className="cursor-pointer font-normal">
                     Early Critical Illness
                   </Label>
                 </div>
                 <div className="w-48">
-                  <Label className="text-xs text-muted-foreground">Sum Assured</Label>
+                  <Label className="text-muted-foreground text-xs">
+                    Sum Assured
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                       $
                     </span>
                     <Input
@@ -827,7 +967,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                       onChange={(e) =>
                         setEarlyCriticalIllness({
                           ...earlyCriticalIllness,
-                          amount: e.target.value,
+                          amount: e.target.value
                         })
                       }
                     />
@@ -837,25 +977,29 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
 
               {/* Hospitalisation Plan */}
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex flex-1 items-center gap-2">
                   <Checkbox
                     id="hospitalisationPlan"
                     checked={hospitalisationPlan.enabled}
                     onCheckedChange={(checked) =>
                       setHospitalisationPlan({
                         ...hospitalisationPlan,
-                        enabled: checked as boolean,
+                        enabled: checked as boolean
                       })
                     }
                   />
-                  <Label htmlFor="hospitalisationPlan" className="cursor-pointer font-normal">
+                  <Label
+                    htmlFor="hospitalisationPlan"
+                    className="cursor-pointer font-normal">
                     Hospitalisation Plan
                   </Label>
                 </div>
                 <div className="w-48">
-                  <Label className="text-xs text-muted-foreground">Claimable Amount</Label>
+                  <Label className="text-muted-foreground text-xs">
+                    Claimable Amount
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                       $
                     </span>
                     <Input
@@ -868,73 +1012,81 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                       onChange={(e) =>
                         setHospitalisationPlan({
                           ...hospitalisationPlan,
-                          amount: e.target.value,
+                          amount: e.target.value
                         })
                       }
                     />
                   </div>
                 </div>
               </div>
-          </div>
-
-          {/* Cash Value */}
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Cash / Surrender Value (Optional)</p>
-              <p className="text-xs text-muted-foreground mt-1">For whole life or endowment policies with a surrender value</p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+
+            {/* Cash Value */}
+            <div className="space-y-3">
               <div>
-                <Label htmlFor="cashValue">Cash Value ($)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <p className="text-foreground text-sm font-semibold">
+                  Cash / Surrender Value (Optional)
+                </p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  For whole life or endowment policies with a surrender value
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="cashValue">Cash Value ($)</Label>
+                  <div className="relative">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 text-sm">
+                      $
+                    </span>
+                    <Input
+                      id="cashValue"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="pl-7"
+                      value={cashValue}
+                      onChange={(e) => setCashValue(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="cashValueDate">As of Date</Label>
                   <Input
-                    id="cashValue"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    className="pl-7"
-                    value={cashValue}
-                    onChange={(e) => setCashValue(e.target.value)}
+                    id="cashValueDate"
+                    type="date"
+                    value={cashValueDate}
+                    onChange={(e) => setCashValueDate(e.target.value)}
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="cashValueDate">As of Date</Label>
-                <Input
-                  id="cashValueDate"
-                  type="date"
-                  value={cashValueDate}
-                  onChange={(e) => setCashValueDate(e.target.value)}
+            </div>
+
+            {/* Add to Expenses Toggle */}
+            <div className="bg-muted space-y-4 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="addToExpenditures"
+                    className="text-foreground text-sm font-semibold">
+                    Add to Expenses
+                  </Label>
+                  <p className="text-foreground/400 mt-1 text-xs">
+                    Automatically track this policy's premium in your expenses
+                  </p>
+                </div>
+                <Switch
+                  id="addToExpenditures"
+                  checked={addToExpenditures}
+                  onCheckedChange={handleToggleChange}
                 />
               </div>
+              {validationError && (
+                <div className="rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm text-[#8B0000]">
+                  {validationError}
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Add to Expenses Toggle */}
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="addToExpenditures" className="text-sm font-semibold text-foreground">
-                  Add to Expenses
-                </Label>
-                <p className="text-xs text-foreground/400 mt-1">
-                  Automatically track this policy's premium in your expenses
-                </p>
-              </div>
-              <Switch
-                id="addToExpenditures"
-                checked={addToExpenditures}
-                onCheckedChange={handleToggleChange}
-              />
-            </div>
-            {validationError && (
-              <div className="text-sm text-[#8B0000] bg-[rgba(224,85,85,0.12)] p-2 rounded">
-                {validationError}
-              </div>
-            )}
-          </div>
-        </form>
+          </form>
         </DialogBody>
 
         {/* Actions */}
@@ -943,8 +1095,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
+            disabled={isLoading}>
             Cancel
           </Button>
           <Button type="submit" form="add-policy-form" disabled={isLoading}>
@@ -954,7 +1105,9 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
       </DialogContent>
 
       {/* Confirmation Modal */}
-      <AlertDialog open={confirmationModalOpen} onOpenChange={setConfirmationModalOpen}>
+      <AlertDialog
+        open={confirmationModalOpen}
+        onOpenChange={setConfirmationModalOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Add to Expenses</AlertDialogTitle>
@@ -963,7 +1116,7 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="space-y-4 my-4">
+          <div className="my-4 space-y-4">
             {/* Expense Name Input */}
             <div className="space-y-2">
               <Label htmlFor="expenseName" className="text-sm font-medium">
@@ -981,7 +1134,9 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
             {/* Other Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-foreground">Policy Type & Provider:</div>
-              <div className="font-medium">{policyType} - {provider}</div>
+              <div className="font-medium">
+                {policyType} - {provider}
+              </div>
 
               <div className="text-foreground">Premium Amount:</div>
               <div className="font-medium">${premiumAmount}</div>
@@ -995,7 +1150,9 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
                   <div className="font-medium">
                     {selectedMonths
                       .sort((a, b) => a - b)
-                      .map(m => MONTHS.find(month => month.value === m)?.label)
+                      .map(
+                        (m) => MONTHS.find((month) => month.value === m)?.label
+                      )
                       .join(", ")}
                   </div>
                 </>
@@ -1017,5 +1174,5 @@ export function AddPolicyDialog({ open, onOpenChange, userId, preselectedFamilyM
         </AlertDialogContent>
       </AlertDialog>
     </Dialog>
-  );
+  )
 }

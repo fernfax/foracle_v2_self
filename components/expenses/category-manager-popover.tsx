@@ -1,9 +1,16 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useState } from "react"
+import { AlertTriangle, Pencil, Plus, Settings2, Trash2, X } from "lucide-react"
+
+import {
+  addExpenseCategory,
+  deleteExpenseCategory,
+  getExpensesByCategory,
+  updateExpenseCategory,
+  type ExpenseCategory
+} from "@/lib/actions/expense-categories"
+import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,187 +19,191 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Settings2, Plus, Pencil, Trash2, X, AlertTriangle } from "lucide-react";
-import { cn } from "@/lib/utils";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
-  addExpenseCategory,
-  updateExpenseCategory,
-  deleteExpenseCategory,
-  getExpensesByCategory,
-  type ExpenseCategory,
-} from "@/lib/actions/expense-categories";
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover"
 
 interface CategoryManagerPopoverProps {
-  categories: ExpenseCategory[];
-  onCategoriesChanged: () => Promise<void>;
+  categories: ExpenseCategory[]
+  onCategoriesChanged: () => Promise<void>
 }
 
 export function CategoryManagerPopover({
   categories,
-  onCategoriesChanged,
+  onCategoriesChanged
 }: CategoryManagerPopoverProps) {
-  const [open, setOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
+  const [open, setOpen] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState("")
+  const [isAdding, setIsAdding] = useState(false)
 
   // Delete confirmation state
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<ExpenseCategory | null>(null);
-  const [linkedExpenses, setLinkedExpenses] = useState<{ id: string; name: string; amount: string }[]>([]);
-  const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] =
+    useState<ExpenseCategory | null>(null)
+  const [linkedExpenses, setLinkedExpenses] = useState<
+    { id: string; name: string; amount: string }[]
+  >([])
+  const [isLoadingExpenses, setIsLoadingExpenses] = useState(false)
 
   const handleAdd = async () => {
-    if (!newCategoryName.trim()) return;
+    if (!newCategoryName.trim()) return
 
-    setIsAdding(true);
+    setIsAdding(true)
     try {
-      await addExpenseCategory(newCategoryName.trim());
-      setNewCategoryName("");
-      await onCategoriesChanged();
+      await addExpenseCategory(newCategoryName.trim())
+      setNewCategoryName("")
+      await onCategoriesChanged()
     } catch (error) {
-      console.error("Failed to add category:", error);
+      console.error("Failed to add category:", error)
     } finally {
-      setIsAdding(false);
+      setIsAdding(false)
     }
-  };
+  }
 
   const handleUpdate = async (id: string) => {
-    if (!editingName.trim()) return;
+    if (!editingName.trim()) return
 
     try {
-      await updateExpenseCategory(id, editingName.trim());
-      setEditingId(null);
-      setEditingName("");
-      await onCategoriesChanged();
+      await updateExpenseCategory(id, editingName.trim())
+      setEditingId(null)
+      setEditingName("")
+      await onCategoriesChanged()
     } catch (error) {
-      console.error("Failed to update category:", error);
+      console.error("Failed to update category:", error)
     }
-  };
+  }
 
   const handleDeleteClick = async (category: ExpenseCategory) => {
-    setCategoryToDelete(category);
-    setIsLoadingExpenses(true);
-    setDeleteDialogOpen(true);
+    setCategoryToDelete(category)
+    setIsLoadingExpenses(true)
+    setDeleteDialogOpen(true)
 
     try {
-      const expenses = await getExpensesByCategory(category.name);
-      setLinkedExpenses(expenses);
+      const expenses = await getExpensesByCategory(category.name)
+      setLinkedExpenses(expenses)
     } catch (error) {
-      console.error("Failed to fetch linked expenses:", error);
-      setLinkedExpenses([]);
+      console.error("Failed to fetch linked expenses:", error)
+      setLinkedExpenses([])
     } finally {
-      setIsLoadingExpenses(false);
+      setIsLoadingExpenses(false)
     }
-  };
+  }
 
   const handleDeleteConfirm = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault()
+    e.stopPropagation()
 
-    if (!categoryToDelete || linkedExpenses.length > 0) return;
+    if (!categoryToDelete || linkedExpenses.length > 0) return
 
     try {
-      await deleteExpenseCategory(categoryToDelete.id);
-      setDeleteDialogOpen(false);
-      setCategoryToDelete(null);
-      setLinkedExpenses([]);
-      await onCategoriesChanged();
+      await deleteExpenseCategory(categoryToDelete.id)
+      setDeleteDialogOpen(false)
+      setCategoryToDelete(null)
+      setLinkedExpenses([])
+      await onCategoriesChanged()
       // Keep the popover open after deletion
-      setTimeout(() => setOpen(true), 0);
+      setTimeout(() => setOpen(true), 0)
     } catch (error) {
-      console.error("Failed to delete category:", error);
-      setDeleteDialogOpen(false);
-      setCategoryToDelete(null);
-      setLinkedExpenses([]);
+      console.error("Failed to delete category:", error)
+      setDeleteDialogOpen(false)
+      setCategoryToDelete(null)
+      setLinkedExpenses([])
     }
-  };
+  }
 
   const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setCategoryToDelete(null);
-    setLinkedExpenses([]);
+    setDeleteDialogOpen(false)
+    setCategoryToDelete(null)
+    setLinkedExpenses([])
     // Keep the popover open after closing the dialog
-    setTimeout(() => setOpen(true), 0);
-  };
+    setTimeout(() => setOpen(true), 0)
+  }
 
   const startEdit = (category: ExpenseCategory) => {
-    setEditingId(category.id);
-    setEditingName(category.name);
-  };
+    setEditingId(category.id)
+    setEditingName(category.name)
+  }
 
   const cancelEdit = () => {
-    setEditingId(null);
-    setEditingName("");
-  };
+    setEditingId(null)
+    setEditingName("")
+  }
 
   return (
     <>
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground">
-          <Settings2 className="h-3 w-3 mr-1" />
-          Manage Categories
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
-        <div className="p-4 space-y-4">
-          {/* Header */}
-          <div>
-            <h4 className="font-semibold text-sm">Manage Categories</h4>
-            <p className="text-xs text-muted-foreground">Add, edit, or delete expense categories</p>
-          </div>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground h-auto p-0 text-xs">
+            <Settings2 className="mr-1 h-3 w-3" />
+            Manage Categories
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[400px] p-0" align="start">
+          <div className="space-y-4 p-4">
+            {/* Header */}
+            <div>
+              <h4 className="text-sm font-semibold">Manage Categories</h4>
+              <p className="text-muted-foreground text-xs">
+                Add, edit, or delete expense categories
+              </p>
+            </div>
 
-          {/* Add New Category */}
-          <div className="border border-dashed rounded-lg p-3">
-            <div className="flex gap-2">
-              <Input
-                placeholder="New category name..."
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAdd();
-                }}
-                className="flex-1 h-8 text-sm"
-              />
-              <Button
-                onClick={handleAdd}
-                disabled={!newCategoryName.trim() || isAdding}
-                size="sm"
-                className="h-8"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Add
-              </Button>
+            {/* Add New Category */}
+            <div className="rounded-lg border border-dashed p-3">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="New category name..."
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAdd()
+                  }}
+                  className="h-8 flex-1 text-sm"
+                />
+                <Button
+                  onClick={handleAdd}
+                  disabled={!newCategoryName.trim() || isAdding}
+                  size="sm"
+                  className="h-8">
+                  <Plus className="mr-1 h-3 w-3" />
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            {/* Categories List */}
+            <div>
+              <div className="text-muted-foreground mb-2 text-xs">
+                Your Categories ({categories.length})
+              </div>
             </div>
           </div>
 
-          {/* Categories List */}
-          <div>
-            <div className="text-xs text-muted-foreground mb-2">
-              Your Categories ({categories.length})
-            </div>
-          </div>
-        </div>
-
-        {/* Scrollable area outside padding */}
-        <div className="px-4 pb-4">
-          <div
-            className="overflow-y-auto border rounded-md p-2 bg-muted/20"
-            style={{
-              maxHeight: '300px',
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(28,43,42,0.35) #F0EBE0'
-            }}
-            onWheel={(e) => {
-              e.stopPropagation();
-            }}
-          >
+          {/* Scrollable area outside padding */}
+          <div className="px-4 pb-4">
+            <div
+              className="bg-muted/20 overflow-y-auto rounded-md border p-2"
+              style={{
+                maxHeight: "300px",
+                scrollbarWidth: "thin",
+                scrollbarColor: "rgba(28,43,42,0.35) #F0EBE0"
+              }}
+              onWheel={(e) => {
+                e.stopPropagation()
+              }}>
               {categories.length === 0 ? (
-                <div className="text-center py-6 text-xs text-muted-foreground">
+                <div className="text-muted-foreground py-6 text-center text-xs">
                   No categories yet
                 </div>
               ) : (
@@ -200,20 +211,19 @@ export function CategoryManagerPopover({
                   <div
                     key={category.id}
                     className={cn(
-                      "flex items-center gap-2 p-2 rounded-md border bg-card hover:bg-accent/50 transition-colors",
+                      "bg-card hover:bg-accent/50 flex items-center gap-2 rounded-md border p-2 transition-colors",
                       index > 0 && "mt-2"
-                    )}
-                  >
+                    )}>
                     {editingId === category.id ? (
                       <>
                         <Input
                           value={editingName}
                           onChange={(e) => setEditingName(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") handleUpdate(category.id);
-                            if (e.key === "Escape") cancelEdit();
+                            if (e.key === "Enter") handleUpdate(category.id)
+                            if (e.key === "Escape") cancelEdit()
                           }}
-                          className="flex-1 h-7 text-sm"
+                          className="h-7 flex-1 text-sm"
                           autoFocus
                         />
                         <Button
@@ -221,31 +231,34 @@ export function CategoryManagerPopover({
                           variant="ghost"
                           onClick={() => handleUpdate(category.id)}
                           disabled={!editingName.trim()}
-                          className="h-7 px-2"
-                        >
+                          className="h-7 px-2">
                           Save
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 px-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={cancelEdit}
+                          className="h-7 px-2">
                           <X className="h-3 w-3" />
                         </Button>
                       </>
                     ) : (
                       <>
-                        <span className="flex-1 text-sm font-medium">{category.name}</span>
+                        <span className="flex-1 text-sm font-medium">
+                          {category.name}
+                        </span>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => startEdit(category)}
-                          className="h-7 px-2"
-                        >
+                          className="h-7 px-2">
                           <Pencil className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteClick(category)}
-                          className="h-7 px-2 text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
-                        >
+                          className="h-7 px-2 text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] hover:text-[#8B0000]">
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </>
@@ -253,75 +266,79 @@ export function CategoryManagerPopover({
                   </div>
                 ))
               )}
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-
-    {/* Delete Confirmation Dialog */}
-    <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => !open && handleDeleteCancel()}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {linkedExpenses.length > 0 ? (
-              <span className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-[#7A5A00]" />
-                Cannot Delete Category
-              </span>
-            ) : (
-              "Delete Category"
-            )}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {isLoadingExpenses ? (
-              "Checking for linked expenses..."
-            ) : linkedExpenses.length > 0 ? (
-              <span>
-                This category has <strong>{linkedExpenses.length}</strong> expense{linkedExpenses.length > 1 ? "s" : ""} linked to it.
-                Please reassign or delete these expenses before removing the category.
-              </span>
-            ) : (
-              `Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`
-            )}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        {/* Show linked expenses if any */}
-        {!isLoadingExpenses && linkedExpenses.length > 0 && (
-          <div className="my-4">
-            <div className="text-sm font-medium mb-2">Linked Expenses:</div>
-            <div className="max-h-[200px] overflow-y-auto space-y-2">
-              {linkedExpenses.map((expense) => (
-                <div
-                  key={expense.id}
-                  className="flex items-center justify-between p-2 rounded-md bg-muted text-sm"
-                >
-                  <span className="font-medium truncate flex-1 mr-2">{expense.name}</span>
-                  <span className="text-muted-foreground flex-shrink-0">
-                    ${parseFloat(expense.amount).toLocaleString()}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
-        )}
+        </PopoverContent>
+      </Popover>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleDeleteCancel}>
-            {linkedExpenses.length > 0 ? "Close" : "Cancel"}
-          </AlertDialogCancel>
-          {linkedExpenses.length === 0 && !isLoadingExpenses && (
-            <Button
-              type="button"
-              onClick={(e) => handleDeleteConfirm(e)}
-              className="bg-[#E05555] hover:bg-[#E05555]"
-            >
-              Delete
-            </Button>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => !open && handleDeleteCancel()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {linkedExpenses.length > 0 ? (
+                <span className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-[#7A5A00]" />
+                  Cannot Delete Category
+                </span>
+              ) : (
+                "Delete Category"
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isLoadingExpenses ? (
+                "Checking for linked expenses..."
+              ) : linkedExpenses.length > 0 ? (
+                <span>
+                  This category has <strong>{linkedExpenses.length}</strong>{" "}
+                  expense{linkedExpenses.length > 1 ? "s" : ""} linked to it.
+                  Please reassign or delete these expenses before removing the
+                  category.
+                </span>
+              ) : (
+                `Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {/* Show linked expenses if any */}
+          {!isLoadingExpenses && linkedExpenses.length > 0 && (
+            <div className="my-4">
+              <div className="mb-2 text-sm font-medium">Linked Expenses:</div>
+              <div className="max-h-[200px] space-y-2 overflow-y-auto">
+                {linkedExpenses.map((expense) => (
+                  <div
+                    key={expense.id}
+                    className="bg-muted flex items-center justify-between rounded-md p-2 text-sm">
+                    <span className="mr-2 flex-1 truncate font-medium">
+                      {expense.name}
+                    </span>
+                    <span className="text-muted-foreground flex-shrink-0">
+                      ${parseFloat(expense.amount).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel}>
+              {linkedExpenses.length > 0 ? "Close" : "Cancel"}
+            </AlertDialogCancel>
+            {linkedExpenses.length === 0 && !isLoadingExpenses && (
+              <Button
+                type="button"
+                onClick={(e) => handleDeleteConfirm(e)}
+                className="bg-[#E05555] hover:bg-[#E05555]">
+                Delete
+              </Button>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
-  );
+  )
 }

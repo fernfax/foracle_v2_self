@@ -1,21 +1,29 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { WizardNavigation } from "../WizardNavigation";
-import { addCurrentHolding, getCurrentHoldings } from "@/lib/actions/current-holdings";
-import type { FamilyMemberData, HoldingData } from "@/app/onboarding/OnboardingWizard";
-import { Plus, Trash2, Building2, Lightbulb } from "lucide-react";
+import { useEffect, useState } from "react"
+import { Building2, Lightbulb, Plus, Trash2 } from "lucide-react"
+
+import {
+  addCurrentHolding,
+  getCurrentHoldings
+} from "@/lib/actions/current-holdings"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import type {
+  FamilyMemberData,
+  HoldingData
+} from "@/app/onboarding/OnboardingWizard"
+
+import { WizardNavigation } from "../WizardNavigation"
 
 interface HoldingsStepProps {
-  familyMember: FamilyMemberData | null;
-  holdings: HoldingData[];
-  onAdd: (data: HoldingData) => void;
-  onNext: () => void;
-  onBack: () => void;
-  onSkip: () => void;
+  familyMember: FamilyMemberData | null
+  holdings: HoldingData[]
+  onAdd: (data: HoldingData) => void
+  onNext: () => void
+  onBack: () => void
+  onSkip: () => void
 }
 
 export function HoldingsStep({
@@ -24,76 +32,76 @@ export function HoldingsStep({
   onAdd,
   onNext,
   onBack,
-  onSkip,
+  onSkip
 }: HoldingsStepProps) {
-  const [bankName, setBankName] = useState("");
-  const [holdingAmount, setHoldingAmount] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localHoldings, setLocalHoldings] = useState<HoldingData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [bankName, setBankName] = useState("")
+  const [holdingAmount, setHoldingAmount] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [localHoldings, setLocalHoldings] = useState<HoldingData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // Fetch holdings from database on mount (ensures data persists across navigation)
   useEffect(() => {
     async function fetchHoldings() {
       try {
-        const dbHoldings = await getCurrentHoldings();
+        const dbHoldings = await getCurrentHoldings()
         setLocalHoldings(
           dbHoldings.map((h) => ({
             id: h.id,
             bankName: h.bankName,
-            holdingAmount: h.holdingAmount,
+            holdingAmount: h.holdingAmount
           }))
-        );
+        )
       } catch (error) {
-        console.error("Failed to fetch holdings:", error);
+        console.error("Failed to fetch holdings:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
-    fetchHoldings();
-  }, []);
+    fetchHoldings()
+  }, [])
 
-  const isFormValid = bankName && holdingAmount && parseFloat(holdingAmount) > 0;
+  const isFormValid = bankName && holdingAmount && parseFloat(holdingAmount) > 0
 
   const handleAddHolding = async () => {
-    if (!isFormValid) return;
+    if (!isFormValid) return
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
       const savedHolding = await addCurrentHolding({
         bankName,
         holdingAmount: parseFloat(holdingAmount),
-        familyMemberId: familyMember?.id || null,
-      });
+        familyMemberId: familyMember?.id || null
+      })
 
       const newHolding: HoldingData = {
         id: savedHolding.id,
         bankName,
-        holdingAmount,
-      };
+        holdingAmount
+      }
 
-      setLocalHoldings((prev) => [...prev, newHolding]);
-      onAdd(newHolding);
+      setLocalHoldings((prev) => [...prev, newHolding])
+      onAdd(newHolding)
 
       // Reset form
-      setBankName("");
-      setHoldingAmount("");
+      setBankName("")
+      setHoldingAmount("")
     } catch (error) {
-      console.error("Failed to add holding:", error);
+      console.error("Failed to add holding:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const totalHoldings = localHoldings.reduce(
     (sum, h) => sum + (parseFloat(h.holdingAmount) || 0),
     0
-  );
+  )
 
   if (isLoading) {
     return (
-      <div className="flex flex-col flex-1">
-        <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 items-center justify-center">
           <p className="text-muted-foreground">Loading holdings...</p>
         </div>
         <WizardNavigation
@@ -104,12 +112,12 @@ export function HoldingsStep({
           canProceed={true}
         />
       </div>
-    );
+    )
   }
 
   return (
-    <div className="flex flex-col flex-1">
-      <div className="space-y-6 flex-1">
+    <div className="flex flex-1 flex-col">
+      <div className="flex-1 space-y-6">
         {/* Added Holdings List */}
         {localHoldings.length > 0 && (
           <div className="space-y-3">
@@ -118,20 +126,22 @@ export function HoldingsStep({
               {localHoldings.map((holding, index) => (
                 <div
                   key={holding.id || index}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-card"
-                >
+                  className="border-border/60 bg-card flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-muted-foreground" />
+                    <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
+                      <Building2 className="text-muted-foreground h-5 w-5" />
                     </div>
                     <div>
                       <p className="font-medium">{holding.bankName}</p>
-                      <p className="text-sm text-muted-foreground">Bank Account</p>
+                      <p className="text-muted-foreground text-sm">
+                        Bank Account
+                      </p>
                     </div>
                   </div>
                   <p className="font-semibold">
-                    ${parseFloat(holding.holdingAmount).toLocaleString("en-SG", {
-                      minimumFractionDigits: 2,
+                    $
+                    {parseFloat(holding.holdingAmount).toLocaleString("en-SG", {
+                      minimumFractionDigits: 2
                     })}
                   </p>
                 </div>
@@ -139,18 +149,21 @@ export function HoldingsStep({
             </div>
 
             {/* Total */}
-            <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+            <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
               <span className="font-medium">Total Holdings</span>
               <span className="text-lg font-semibold">
-                ${totalHoldings.toLocaleString("en-SG", { minimumFractionDigits: 2 })}
+                $
+                {totalHoldings.toLocaleString("en-SG", {
+                  minimumFractionDigits: 2
+                })}
               </span>
             </div>
           </div>
         )}
 
         {/* Add New Holding Form */}
-        <div className="space-y-4 rounded-lg border border-border/60 p-4">
-          <h3 className="font-medium flex items-center gap-2">
+        <div className="border-border/60 space-y-4 rounded-lg border p-4">
+          <h3 className="flex items-center gap-2 font-medium">
             <Plus className="h-4 w-4" />
             Add Bank Account
           </h3>
@@ -170,7 +183,7 @@ export function HoldingsStep({
             <div className="space-y-2">
               <Label htmlFor="amount">Amount (SGD)</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                   $
                 </span>
                 <Input
@@ -179,7 +192,7 @@ export function HoldingsStep({
                   placeholder="0.00"
                   value={holdingAmount}
                   onChange={(e) => setHoldingAmount(e.target.value)}
-                  className="pl-7 bg-background"
+                  className="bg-background pl-7"
                   min="0"
                   step="0.01"
                 />
@@ -192,30 +205,30 @@ export function HoldingsStep({
             variant="outline"
             onClick={handleAddHolding}
             disabled={!isFormValid || isSubmitting}
-            className="w-full"
-          >
+            className="w-full">
             {isSubmitting ? "Adding..." : "Add Account"}
           </Button>
         </div>
 
         {localHoldings.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Add your bank accounts and savings to track your total holdings.
-            You can skip this step and add them later.
+          <p className="text-muted-foreground py-4 text-center text-sm">
+            Add your bank accounts and savings to track your total holdings. You
+            can skip this step and add them later.
           </p>
         )}
 
         {/* Add More Later Info Box */}
-        <div className="flex gap-3 p-4 rounded-xl bg-[rgba(184,98,42,0.06)] border border-[rgba(184,98,42,0.25)]">
-          <div className="w-8 h-8 rounded-full bg-[rgba(184,98,42,0.10)] flex items-center justify-center shrink-0">
+        <div className="flex gap-3 rounded-xl border border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.06)] p-4">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(184,98,42,0.10)]">
             <Lightbulb className="h-4 w-4 text-[#7A5A00]" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">
+            <p className="text-foreground text-sm font-medium">
               Add More Later
             </p>
-            <p className="text-sm text-muted-foreground">
-              You can add more holdings and holdings for other family members from your dashboard.
+            <p className="text-muted-foreground text-sm">
+              You can add more holdings and holdings for other family members
+              from your dashboard.
             </p>
           </div>
         </div>
@@ -229,5 +242,5 @@ export function HoldingsStep({
         canProceed={true}
       />
     </div>
-  );
+  )
 }

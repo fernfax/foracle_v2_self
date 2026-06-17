@@ -1,79 +1,85 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { SlidingTabs } from "@/components/ui/sliding-tabs";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Home, Car, Package } from "lucide-react";
-import { PropertyList } from "@/components/assets/property-list";
-import { VehicleList } from "@/components/assets/vehicle-list";
+import { useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Car, Home, Package } from "lucide-react"
+
+import { EmptyState } from "@/components/ui/empty-state"
+import { PageHeader } from "@/components/ui/page-header"
+import { SlidingTabs } from "@/components/ui/sliding-tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
+import { PropertyList } from "@/components/assets/property-list"
+import { VehicleList } from "@/components/assets/vehicle-list"
 
 interface PropertyAsset {
-  id: string;
-  propertyName: string;
-  purchaseDate: string;
-  originalPurchasePrice: string;
-  loanAmountTaken: string | null;
-  outstandingLoan: string;
-  monthlyLoanPayment: string;
-  interestRate: string;
-  principalCpfWithdrawn: string | null;
-  housingGrantTaken: string | null;
-  accruedInterestToDate: string | null;
-  linkedExpenseId: string | null;
-  paidByCpf: boolean | null;
-  isActive: boolean | null;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  propertyName: string
+  purchaseDate: string
+  originalPurchasePrice: string
+  loanAmountTaken: string | null
+  outstandingLoan: string
+  monthlyLoanPayment: string
+  interestRate: string
+  principalCpfWithdrawn: string | null
+  housingGrantTaken: string | null
+  accruedInterestToDate: string | null
+  linkedExpenseId: string | null
+  paidByCpf: boolean | null
+  isActive: boolean | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 interface VehicleAsset {
-  id: string;
-  vehicleName: string;
-  purchaseDate: string;
-  coeExpiryDate: string | null;
-  originalPurchasePrice: string;
-  loanAmountTaken: string | null;
-  loanInterestRate: string | null;
-  loanTenureYears: number | null;
-  loanTenureMonths: number | null;
-  loanAmountRepaid: string | null;
-  monthlyLoanPayment: string | null;
-  linkedExpenseId: string | null;
-  isActive: boolean | null;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  vehicleName: string
+  purchaseDate: string
+  coeExpiryDate: string | null
+  originalPurchasePrice: string
+  loanAmountTaken: string | null
+  loanInterestRate: string | null
+  loanTenureYears: number | null
+  loanTenureMonths: number | null
+  loanAmountRepaid: string | null
+  monthlyLoanPayment: string | null
+  linkedExpenseId: string | null
+  isActive: boolean | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 interface AssetsClientProps {
-  initialPropertyAssets: PropertyAsset[];
-  initialVehicleAssets: VehicleAsset[];
+  initialPropertyAssets: PropertyAsset[]
+  initialVehicleAssets: VehicleAsset[]
 }
 
-export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: AssetsClientProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "property");
+export function AssetsClient({
+  initialPropertyAssets,
+  initialVehicleAssets
+}: AssetsClientProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [mounted, setMounted] = useState(false)
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "property"
+  )
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   // Sync activeTab with URL search params when they change
   useEffect(() => {
-    const tabFromUrl = searchParams.get("tab") || "property";
+    const tabFromUrl = searchParams.get("tab") || "property"
     if (tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
+      setActiveTab(tabFromUrl)
     }
-  }, [searchParams]);
+  }, [searchParams])
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    router.push(`/assets?tab=${value}`, { scroll: false });
-  };
+    setActiveTab(value)
+    router.push(`/assets?tab=${value}`, { scroll: false })
+  }
 
   return (
     <div className="space-y-4">
@@ -85,7 +91,7 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
               tabs={[
                 { value: "property", label: "Property", icon: Home },
                 { value: "vehicle", label: "Vehicle", icon: Car },
-                { value: "others", label: "Others", icon: Package },
+                { value: "others", label: "Others", icon: Package }
               ]}
               value={activeTab}
               onValueChange={handleTabChange}
@@ -95,9 +101,12 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
       />
 
       {!mounted ? (
-        <div className="h-[500px] animate-pulse bg-muted rounded-lg" />
+        <div className="bg-muted h-[500px] animate-pulse rounded-lg" />
       ) : (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full">
           <TabsContent value="property" className="mt-4">
             <PropertyList initialProperties={initialPropertyAssets} />
           </TabsContent>
@@ -116,5 +125,5 @@ export function AssetsClient({ initialPropertyAssets, initialVehicleAssets }: As
         </Tabs>
       )}
     </div>
-  );
+  )
 }

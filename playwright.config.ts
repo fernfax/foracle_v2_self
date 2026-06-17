@@ -1,7 +1,7 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test"
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
-const isCI = Boolean(process.env.CI);
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000"
+const isCI = Boolean(process.env.CI)
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -13,27 +13,27 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
-    screenshot: "only-on-failure",
+    screenshot: "only-on-failure"
   },
   projects: [
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       // Desktop project skips the mobile-emulation specs (see mobile.*.spec.ts).
-      testIgnore: /mobile\..*\.spec\.ts/,
+      testIgnore: /mobile\..*\.spec\.ts/
     },
     // Mobile-emulation projects — real device viewports, touch, DPR, mobile UA.
     // They run ONLY the mobile.*.spec.ts files. Added by the PWA/mobile audit.
     {
       name: "Mobile Safari (iPhone 13)",
       use: { ...devices["iPhone 13"] },
-      testMatch: /mobile\..*\.spec\.ts/,
+      testMatch: /mobile\..*\.spec\.ts/
     },
     {
       name: "Mobile Chrome (Pixel 5)",
       use: { ...devices["Pixel 5"] },
-      testMatch: /mobile\..*\.spec\.ts/,
-    },
+      testMatch: /mobile\..*\.spec\.ts/
+    }
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
@@ -41,6 +41,6 @@ export default defineConfig({
         command: "npm run dev",
         url: "http://localhost:3000",
         reuseExistingServer: !isCI,
-        timeout: 120000,
-      },
-});
+        timeout: 120000
+      }
+})

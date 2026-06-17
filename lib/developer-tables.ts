@@ -1,14 +1,14 @@
 export type DeveloperTableScope =
-  | "self"            // users.id = currentUserId
-  | "primaryFamily"   // families.id = currentUser.familyId
-  | "familyId"        // table.familyId = currentUser.familyId  (family-shared rows)
-  | "userId"          // table.userId = currentUserId           (per-user rows)
-  | "global";         // no scoping
+  | "self" // users.id = currentUserId
+  | "primaryFamily" // families.id = currentUser.familyId
+  | "familyId" // table.familyId = currentUser.familyId  (family-shared rows)
+  | "userId" // table.userId = currentUserId           (per-user rows)
+  | "global" // no scoping
 
 export type DeveloperTableMeta = {
-  name: string;
-  scope: DeveloperTableScope;
-};
+  name: string
+  scope: DeveloperTableScope
+}
 
 export const DEVELOPER_TABLES: ReadonlyArray<DeveloperTableMeta> = [
   { name: "users", scope: "self" },
@@ -32,14 +32,14 @@ export const DEVELOPER_TABLES: ReadonlyArray<DeveloperTableMeta> = [
   { name: "goals", scope: "familyId" },
   { name: "quick_links", scope: "userId" },
   { name: "user_chunks", scope: "userId" },
-  { name: "kb_chunks", scope: "global" },
-];
+  { name: "kb_chunks", scope: "global" }
+]
 
 export type TableRowsResult = {
-  scope: DeveloperTableScope;
-  columns: string[];
-  rows: Array<Record<string, unknown>>;
-  returned: number;
-  totalForScope: number;
-  truncated: boolean;
-};
+  scope: DeveloperTableScope
+  columns: string[]
+  rows: Array<Record<string, unknown>>
+  returned: number
+  totalForScope: number
+  truncated: boolean
+}

@@ -1,22 +1,22 @@
-import { z } from "zod";
+import { z } from "zod"
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 // Non-negative decimal string (the leading "-?" was a bug — it accepted
 // negative income/CPF amounts). CPF account balances may legitimately be "0".
-const moneyString = z.string().regex(/^\d+(\.\d{1,2})?$/);
+const moneyString = z.string().regex(/^\d+(\.\d{1,2})?$/)
 // Income amount must be strictly positive — "0", "-5", "abc", "" all rejected.
 const positiveMoneyString = moneyString.refine(
   (s) => {
-    const n = Number(s);
-    return Number.isFinite(n) && n > 0;
+    const n = Number(s)
+    return Number.isFinite(n) && n > 0
   },
   { message: "Amount must be greater than 0" }
-);
+)
 
 // Beta taxonomy: past / current / future. The action layer still receives the
 // legacy "current-recurring" / "future-recurring" values from the existing UI
 // and normalizes them. For the v1 API we expose only the new taxonomy.
-const incomeCategoryEnum = z.enum(["past", "current", "future"]);
+const incomeCategoryEnum = z.enum(["past", "current", "future"])
 
 // Amount and CPF fields are sent as decimal strings on the wire to preserve
 // precision (Drizzle returns them as strings; never quietly coerce).
@@ -42,9 +42,9 @@ export const createIncomeBodySchema = z.object({
   // employee/employer contributions + net take-home from subjectToCpf + age.
   cpfOrdinaryAccount: moneyString.nullish(),
   cpfSpecialAccount: moneyString.nullish(),
-  cpfMedisaveAccount: moneyString.nullish(),
-});
-export type CreateIncomeBody = z.infer<typeof createIncomeBodySchema>;
+  cpfMedisaveAccount: moneyString.nullish()
+})
+export type CreateIncomeBody = z.infer<typeof createIncomeBodySchema>
 
 export const updateIncomeBodySchema = z
   .object({
@@ -66,9 +66,9 @@ export const updateIncomeBodySchema = z
     accountForFutureChange: z.boolean().optional(),
     cpfOrdinaryAccount: moneyString.nullish(),
     cpfSpecialAccount: moneyString.nullish(),
-    cpfMedisaveAccount: moneyString.nullish(),
+    cpfMedisaveAccount: moneyString.nullish()
   })
   .refine((v) => Object.keys(v).length > 0, {
-    message: "At least one field must be provided",
-  });
-export type UpdateIncomeBody = z.infer<typeof updateIncomeBodySchema>;
+    message: "At least one field must be provided"
+  })
+export type UpdateIncomeBody = z.infer<typeof updateIncomeBodySchema>

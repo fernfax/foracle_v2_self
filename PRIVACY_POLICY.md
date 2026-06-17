@@ -32,11 +32,13 @@ Foracle is a personal finance tool, so much of the data you enter is sensitive
 financial information. We collect:
 
 ### 2.1 Account and identity data
+
 - Name and email address (via our authentication provider, Clerk)
 - Profile image (if you provide one)
 - Account and onboarding status
 
 ### 2.2 Financial data you enter
+
 - **Income** — sources, amounts, employment details, CPF contributions
   (employee/employer, Ordinary/Special/MediSave allocations), bonuses, take-home
   pay, and income history
@@ -50,20 +52,24 @@ financial information. We collect:
 - **Goals** — financial targets, amounts, and timelines
 
 ### 2.3 Household / family member data
+
 - Names, relationship, date of birth, and contribution status of household or
   family members you add, and any income, expenses, or holdings you associate
   with them. **You provide this on the basis that you are authorised to do so**
   (see Section 6).
 
 ### 2.4 AI assistant interactions
+
 - The messages you send to the AI assistant and the account data drawn upon to
   answer them.
 
 ### 2.5 Documents you upload
+
 - Any files or documents you upload, and text/embeddings derived from them for
   search and assistant features.
 
 ### 2.6 Technical and usage data
+
 - Authentication tokens and session data, device/browser information, IP
   address, log data, and basic usage information needed to operate and secure
   the Service.
@@ -111,12 +117,12 @@ Service.
 We do not sell your personal data. We share it only as needed to run the Service,
 with the following categories of recipients:
 
-| Recipient | Purpose | Notes |
-|-----------|---------|-------|
-| **Clerk** | Authentication and account management | Holds name, email, login credentials |
-| **OpenAI** (and/or other AI/embedding providers, e.g. **Voyage AI**) | Powering the AI assistant and search | Receives the data needed to answer your prompts |
-| **Cloud hosting & database providers** | Hosting the application and storing your data | Store your account and financial data |
-| **Professional advisers / authorities** | Legal, audit, or regulatory compliance | Only where required or permitted by law |
+| Recipient                                                            | Purpose                                       | Notes                                           |
+| -------------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| **Clerk**                                                            | Authentication and account management         | Holds name, email, login credentials            |
+| **OpenAI** (and/or other AI/embedding providers, e.g. **Voyage AI**) | Powering the AI assistant and search          | Receives the data needed to answer your prompts |
+| **Cloud hosting & database providers**                               | Hosting the application and storing your data | Store your account and financial data           |
+| **Professional advisers / authorities**                              | Legal, audit, or regulatory compliance        | Only where required or permitted by law         |
 
 A current list of sub-processors is available on request from our DPO. We require
 our processors, by contract, to protect personal data and to use it only for the

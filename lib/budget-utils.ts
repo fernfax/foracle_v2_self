@@ -28,21 +28,21 @@ export const CATEGORY_COLORS: Record<string, { bg: string; icon: string }> = {
   Gifts: { bg: "bg-fuchsia-100", icon: "text-fuchsia-600" },
   Pets: { bg: "bg-amber-100", icon: "text-amber-600" },
   Subscriptions: { bg: "bg-slate-100", icon: "text-slate-600" },
-  Helper: { bg: "bg-orange-100", icon: "text-orange-600" },
-};
+  Helper: { bg: "bg-orange-100", icon: "text-orange-600" }
+}
 
 /**
  * Get background color for a category
  */
 export function getCategoryBgColor(categoryName: string): string {
-  return CATEGORY_COLORS[categoryName]?.bg || "bg-gray-100";
+  return CATEGORY_COLORS[categoryName]?.bg || "bg-gray-100"
 }
 
 /**
  * Get icon color for a category
  */
 export function getCategoryIconColor(categoryName: string): string {
-  return CATEGORY_COLORS[categoryName]?.icon || "text-gray-600";
+  return CATEGORY_COLORS[categoryName]?.icon || "text-gray-600"
 }
 
 // Default icons for expense categories (lucide icon names)
@@ -71,8 +71,8 @@ export const DEFAULT_CATEGORY_ICONS: Record<string, string> = {
   Subscriptions: "repeat",
   "Bills & Subscriptions": "file-text",
   "Healthcare & Fitness": "activity",
-  Helper: "hand-helping",
-};
+  Helper: "hand-helping"
+}
 
 /**
  * Get default icon for a category name
@@ -80,14 +80,14 @@ export const DEFAULT_CATEGORY_ICONS: Record<string, string> = {
 export function getDefaultCategoryIcon(categoryName: string): string {
   // Try exact match first
   if (DEFAULT_CATEGORY_ICONS[categoryName]) {
-    return DEFAULT_CATEGORY_ICONS[categoryName];
+    return DEFAULT_CATEGORY_ICONS[categoryName]
   }
 
   // Try case-insensitive match
-  const lowerName = categoryName.toLowerCase();
+  const lowerName = categoryName.toLowerCase()
   for (const [key, icon] of Object.entries(DEFAULT_CATEGORY_ICONS)) {
     if (key.toLowerCase() === lowerName) {
-      return icon;
+      return icon
     }
   }
 
@@ -97,19 +97,19 @@ export function getDefaultCategoryIcon(categoryName: string): string {
       lowerName.includes(key.toLowerCase()) ||
       key.toLowerCase().includes(lowerName)
     ) {
-      return icon;
+      return icon
     }
   }
 
   // Default fallback
-  return "circle-dollar-sign";
+  return "circle-dollar-sign"
 }
 
 /**
  * Get days in a specific month
  */
 export function getDaysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
+  return new Date(year, month, 0).getDate()
 }
 
 /**
@@ -119,7 +119,7 @@ export function calculateDailyBudget(
   monthlyBudget: number,
   daysInMonth: number
 ): number {
-  return monthlyBudget / daysInMonth;
+  return monthlyBudget / daysInMonth
 }
 
 /**
@@ -130,7 +130,7 @@ export function calculateExpectedSpendingByDay(
   dayOfMonth: number,
   daysInMonth: number
 ): number {
-  return (monthlyBudget / daysInMonth) * dayOfMonth;
+  return (monthlyBudget / daysInMonth) * dayOfMonth
 }
 
 /**
@@ -140,12 +140,12 @@ export function getSpendingPaceStatus(
   actualSpent: number,
   expectedSpent: number
 ): "under" | "on-track" | "over" {
-  if (expectedSpent === 0) return "on-track";
+  if (expectedSpent === 0) return "on-track"
 
-  const ratio = actualSpent / expectedSpent;
-  if (ratio < 0.9) return "under";
-  if (ratio <= 1.1) return "on-track";
-  return "over";
+  const ratio = actualSpent / expectedSpent
+  if (ratio < 0.9) return "under"
+  if (ratio <= 1.1) return "on-track"
+  return "over"
 }
 
 /**
@@ -154,9 +154,9 @@ export function getSpendingPaceStatus(
 export function getBudgetUsageStatus(
   percentUsed: number
 ): "safe" | "warning" | "danger" {
-  if (percentUsed < 75) return "safe";
-  if (percentUsed < 90) return "warning";
-  return "danger";
+  if (percentUsed < 75) return "safe"
+  if (percentUsed < 90) return "warning"
+  return "danger"
 }
 
 /**
@@ -170,8 +170,8 @@ export function formatBudgetCurrency(
     style: "currency",
     currency,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+    maximumFractionDigits: 2
+  }).format(amount)
 }
 
 /**
@@ -187,58 +187,61 @@ export function formatCompactCurrency(
       currency,
       notation: "compact",
       minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(amount);
+      maximumFractionDigits: 1
+    }).format(amount)
   }
-  return formatBudgetCurrency(amount, currency);
+  return formatBudgetCurrency(amount, currency)
 }
 
 /**
  * Get month name from month number (1-12)
  */
-export function getMonthName(month: number, format: "long" | "short" = "long"): string {
-  const date = new Date(2000, month - 1, 1);
-  return date.toLocaleString("en-US", { month: format });
+export function getMonthName(
+  month: number,
+  format: "long" | "short" = "long"
+): string {
+  const date = new Date(2000, month - 1, 1)
+  return date.toLocaleString("en-US", { month: format })
 }
 
 /**
  * Format date range for display
  */
 export function formatDateRange(year: number, month: number): string {
-  const daysInMonth = getDaysInMonth(year, month);
-  const monthName = getMonthName(month, "short");
-  const shortYear = String(year).slice(-2);
-  return `1st ${monthName} ${shortYear} - ${daysInMonth}${getOrdinalSuffix(daysInMonth)} ${monthName} ${shortYear}`;
+  const daysInMonth = getDaysInMonth(year, month)
+  const monthName = getMonthName(month, "short")
+  const shortYear = String(year).slice(-2)
+  return `1st ${monthName} ${shortYear} - ${daysInMonth}${getOrdinalSuffix(daysInMonth)} ${monthName} ${shortYear}`
 }
 
 /**
  * Get ordinal suffix for a number (1st, 2nd, 3rd, etc.)
  */
 export function getOrdinalSuffix(n: number): string {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return s[(v - 20) % 10] || s[v] || s[0];
+  const s = ["th", "st", "nd", "rd"]
+  const v = n % 100
+  return s[(v - 20) % 10] || s[v] || s[0]
 }
 
 /**
  * Check if a month/year is in the past
  */
 export function isPastMonth(year: number, month: number): boolean {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
 
-  if (year < currentYear) return true;
-  if (year === currentYear && month < currentMonth) return true;
-  return false;
+  if (year < currentYear) return true
+  if (year === currentYear && month < currentMonth) return true
+  return false
 }
 
 /**
  * Check if a month/year is the current month
  */
 export function isCurrentMonth(year: number, month: number): boolean {
-  const now = new Date();
-  return year === now.getFullYear() && month === now.getMonth() + 1;
+  const now = new Date()
+  return year === now.getFullYear() && month === now.getMonth() + 1
 }
 
 /**
@@ -249,9 +252,9 @@ export function getPreviousMonth(
   month: number
 ): { year: number; month: number } {
   if (month === 1) {
-    return { year: year - 1, month: 12 };
+    return { year: year - 1, month: 12 }
   }
-  return { year, month: month - 1 };
+  return { year, month: month - 1 }
 }
 
 /**
@@ -261,17 +264,18 @@ export function getNextMonth(
   year: number,
   month: number
 ): { year: number; month: number } | null {
-  const next = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
+  const next =
+    month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 }
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
 
   // Don't allow navigating to future months
-  if (next.year > currentYear) return null;
-  if (next.year === currentYear && next.month > currentMonth) return null;
+  if (next.year > currentYear) return null
+  if (next.year === currentYear && next.month > currentMonth) return null
 
-  return next;
+  return next
 }
 
 /**
@@ -284,7 +288,10 @@ export function formatFrequency(frequency: string): string {
     weekly: "Weekly",
     "bi-weekly": "Bi-weekly",
     "one-time": "One-time",
-    custom: "Custom",
-  };
-  return frequencyMap[frequency] || frequency.charAt(0).toUpperCase() + frequency.slice(1);
+    custom: "Custom"
+  }
+  return (
+    frequencyMap[frequency] ||
+    frequency.charAt(0).toUpperCase() + frequency.slice(1)
+  )
 }

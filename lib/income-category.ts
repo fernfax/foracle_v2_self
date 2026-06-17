@@ -17,12 +17,12 @@ export function effectiveIncomeCategory(
   startDate: string | null | undefined,
   now: Date = new Date()
 ): string | null {
-  const stored = incomeCategory ?? null;
-  if ((stored ?? "").toLowerCase() !== "future" || !startDate) return stored;
+  const stored = incomeCategory ?? null
+  if ((stored ?? "").toLowerCase() !== "future" || !startDate) return stored
 
   const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
     now.getDate()
-  ).padStart(2, "0")}`;
+  ).padStart(2, "0")}`
   // startDate is "YYYY-MM-DD" (possibly with a time suffix) — compare the date part.
-  return startDate.slice(0, 10) <= todayKey ? "current" : stored;
+  return startDate.slice(0, 10) <= todayKey ? "current" : stored
 }

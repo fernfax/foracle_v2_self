@@ -1,106 +1,111 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { LineChart, DollarSign, Percent, TrendingUp } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatBand } from "@/components/portfolio/stat-band";
-import { Toolbar } from "@/components/ui/toolbar";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ConfirmDialog } from "@/components/portfolio/confirm-dialog";
-import { HoldingsTable } from "@/components/investments/holdings-table";
-import {
-  AddInvestmentModal,
-  WealthProjectionChart,
-} from "@/components/investments";
-import { formatBudgetCurrency } from "@/lib/budget-utils";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { DollarSign, LineChart, Percent, TrendingUp } from "lucide-react"
+import { toast } from "sonner"
+
 import {
   createInvestment,
-  updateInvestment,
   deleteInvestment,
+  updateInvestment,
   type Investment,
-  type InvestmentsSummary,
-} from "@/lib/actions/investments";
+  type InvestmentsSummary
+} from "@/lib/actions/investments"
+import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { EmptyState } from "@/components/ui/empty-state"
+import { PageHeader } from "@/components/ui/page-header"
+import { Toolbar } from "@/components/ui/toolbar"
+import {
+  AddInvestmentModal,
+  WealthProjectionChart
+} from "@/components/investments"
+import { HoldingsTable } from "@/components/investments/holdings-table"
+import { ConfirmDialog } from "@/components/portfolio/confirm-dialog"
+import { StatBand } from "@/components/portfolio/stat-band"
 
 interface InvestmentsClientProps {
-  initialInvestments: Investment[];
-  initialSummary: InvestmentsSummary;
+  initialInvestments: Investment[]
+  initialSummary: InvestmentsSummary
 }
 
 export function InvestmentsClient({
   initialInvestments,
-  initialSummary,
+  initialSummary
 }: InvestmentsClientProps) {
-  const router = useRouter();
-  const [investments, setInvestments] = useState<Investment[]>(initialInvestments);
-  const [summary, setSummary] = useState<InvestmentsSummary>(initialSummary);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editingInvestment, setEditingInvestment] = useState<Investment | null>(null);
-  const [deletingInvestment, setDeletingInvestment] = useState<Investment | null>(null);
+  const router = useRouter()
+  const [investments, setInvestments] =
+    useState<Investment[]>(initialInvestments)
+  const [summary, setSummary] = useState<InvestmentsSummary>(initialSummary)
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const [editingInvestment, setEditingInvestment] = useState<Investment | null>(
+    null
+  )
+  const [deletingInvestment, setDeletingInvestment] =
+    useState<Investment | null>(null)
 
   // Update state when props change
   useEffect(() => {
-    setInvestments(initialInvestments);
-    setSummary(initialSummary);
-  }, [initialInvestments, initialSummary]);
+    setInvestments(initialInvestments)
+    setSummary(initialSummary)
+  }, [initialInvestments, initialSummary])
 
   const handleAddInvestment = async (data: {
-    name: string;
-    type: string;
-    currentCapital: string;
-    projectedYield: string;
-    contributionAmount: string;
-    contributionFrequency: string;
-    customMonths?: string;
+    name: string
+    type: string
+    currentCapital: string
+    projectedYield: string
+    contributionAmount: string
+    contributionFrequency: string
+    customMonths?: string
   }) => {
     try {
-      await createInvestment(data);
-      toast.success("Holding added");
-      router.refresh();
+      await createInvestment(data)
+      toast.success("Holding added")
+      router.refresh()
     } catch (error) {
-      console.error("Failed to add investment:", error);
-      toast.error("Could not add holding. Please try again.");
-      throw error;
+      console.error("Failed to add investment:", error)
+      toast.error("Could not add holding. Please try again.")
+      throw error
     }
-  };
+  }
 
   const handleEditInvestment = async (data: {
-    name: string;
-    type: string;
-    currentCapital: string;
-    projectedYield: string;
-    contributionAmount: string;
-    contributionFrequency: string;
-    customMonths?: string;
+    name: string
+    type: string
+    currentCapital: string
+    projectedYield: string
+    contributionAmount: string
+    contributionFrequency: string
+    customMonths?: string
   }) => {
-    if (!editingInvestment) return;
+    if (!editingInvestment) return
     try {
-      await updateInvestment(editingInvestment.id, data);
-      toast.success("Holding updated");
-      setEditingInvestment(null);
-      router.refresh();
+      await updateInvestment(editingInvestment.id, data)
+      toast.success("Holding updated")
+      setEditingInvestment(null)
+      router.refresh()
     } catch (error) {
-      console.error("Failed to update investment:", error);
-      toast.error("Could not update holding. Please try again.");
-      throw error;
+      console.error("Failed to update investment:", error)
+      toast.error("Could not update holding. Please try again.")
+      throw error
     }
-  };
+  }
 
   const handleDeleteInvestment = async () => {
-    if (!deletingInvestment) return;
-    const target = deletingInvestment;
+    if (!deletingInvestment) return
+    const target = deletingInvestment
     try {
-      await deleteInvestment(target.id);
-      setInvestments((prev) => prev.filter((i) => i.id !== target.id));
-      toast.success("Holding deleted");
-      setDeletingInvestment(null);
-      router.refresh();
+      await deleteInvestment(target.id)
+      setInvestments((prev) => prev.filter((i) => i.id !== target.id))
+      toast.success("Holding deleted")
+      setDeletingInvestment(null)
+      router.refresh()
     } catch (error) {
-      console.error("Failed to delete investment:", error);
-      toast.error("Could not delete holding. Please try again.");
+      console.error("Failed to delete investment:", error)
+      toast.error("Could not delete holding. Please try again.")
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
@@ -113,27 +118,30 @@ export function InvestmentsClient({
             label: "Portfolio value",
             value: formatBudgetCurrency(summary.totalPortfolioValue),
             icon: DollarSign,
-            accent: "brand",
+            accent: "brand"
           },
           {
             label: "Avg yield",
             value: `${summary.averageYield.toFixed(1)}%`,
             icon: Percent,
-            accent: "teal",
+            accent: "teal"
           },
           {
             label: "Monthly contribution",
             value: formatBudgetCurrency(summary.totalMonthlyContribution),
             icon: TrendingUp,
-            accent: "jungle",
-          },
+            accent: "jungle"
+          }
         ]}
       />
 
       {/* Toolbar — count + the single primary add action */}
       <Toolbar
         count={{ value: investments.length, label: "holdings" }}
-        primaryAction={{ label: "Add holding", onClick: () => setAddModalOpen(true) }}
+        primaryAction={{
+          label: "Add holding",
+          onClick: () => setAddModalOpen(true)
+        }}
       />
 
       {/* Holdings table */}
@@ -142,7 +150,10 @@ export function InvestmentsClient({
           icon={LineChart}
           title="No holdings yet"
           description="Start tracking your investment portfolio by adding your first holding."
-          action={{ label: "Add holding", onClick: () => setAddModalOpen(true) }}
+          action={{
+            label: "Add holding",
+            onClick: () => setAddModalOpen(true)
+          }}
         />
       ) : (
         <HoldingsTable
@@ -177,13 +188,13 @@ export function InvestmentsClient({
         title="Delete this holding?"
         description={
           <>
-            &ldquo;{deletingInvestment?.name}&rdquo; will be removed. This can&rsquo;t
-            be undone.
+            &ldquo;{deletingInvestment?.name}&rdquo; will be removed. This
+            can&rsquo;t be undone.
           </>
         }
         confirmLabel="Delete holding"
         onConfirm={handleDeleteInvestment}
       />
     </div>
-  );
+  )
 }

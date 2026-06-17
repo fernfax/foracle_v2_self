@@ -1,32 +1,34 @@
-import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, DM_Sans, Lora } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "sonner";
-import { ThemeProvider } from "@/components/theme-provider";
-import { RegisterSW } from "@/components/pwa/register-sw";
-import "./globals.css";
+import type { Metadata, Viewport } from "next"
+import { DM_Sans, Lora, Space_Grotesk } from "next/font/google"
+import { ClerkProvider } from "@clerk/nextjs"
+import { Toaster } from "sonner"
+
+import { RegisterSW } from "@/components/pwa/register-sw"
+import { ThemeProvider } from "@/components/theme-provider"
+
+import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-space-grotesk",
-  display: "swap",
-});
+  display: "swap"
+})
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500"],
   variable: "--font-dm-sans",
-  display: "swap",
-});
+  display: "swap"
+})
 
 const lora = Lora({
   subsets: ["latin"],
   weight: ["400", "600"],
   style: ["italic"],
   variable: "--font-lora",
-  display: "swap",
-});
+  display: "swap"
+})
 
 export const metadata: Metadata = {
   title: "Foracle - Personal Finance Management",
@@ -39,18 +41,18 @@ export const metadata: Metadata = {
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/logo-72.png", sizes: "72x72", type: "image/png" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }
     ],
     // iOS uses apple-touch-icon (opaque, 180x180); it rounds the corners itself.
-    apple: [{ url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" }]
   },
   // iOS "Add to Home Screen" launches standalone (full-screen, no Safari chrome).
   appleWebApp: {
     capable: true,
     title: "Foracle",
-    statusBarStyle: "default",
-  },
-};
+    statusBarStyle: "default"
+  }
+}
 
 export const viewport: Viewport = {
   // Opt into the safe-area insets the bottom nav already references via
@@ -58,14 +60,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FBF7F1" },
-    { media: "(prefers-color-scheme: dark)", color: "#1C2B2A" },
-  ],
-};
+    { media: "(prefers-color-scheme: dark)", color: "#1C2B2A" }
+  ]
+}
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <ClerkProvider
@@ -78,7 +80,7 @@ export default function RootLayout({
           colorInputBackground: "#FFFFFF",
           colorInputText: "#1C2B2A",
           fontFamily: '"Space Grotesk", system-ui, sans-serif',
-          borderRadius: "10px",
+          borderRadius: "10px"
         },
         elements: {
           formButtonPrimary:
@@ -87,22 +89,19 @@ export default function RootLayout({
           headerTitle: "text-[#1C2B2A]",
           headerSubtitle: "text-[rgba(28,43,42,0.55)]",
           socialButtonsBlockButton:
-            "border-[rgba(28,43,42,0.20)] hover:bg-[#F0EBE0]",
-        },
+            "border-[rgba(28,43,42,0.20)] hover:bg-[#F0EBE0]"
+        }
       }}
       signInFallbackRedirectUrl="/overview"
-      signUpFallbackRedirectUrl="/overview"
-    >
+      signUpFallbackRedirectUrl="/overview">
       <html lang="en" suppressHydrationWarning>
         <body
-          className={`${dmSans.className} ${dmSans.variable} ${spaceGrotesk.variable} ${lora.variable} antialiased`}
-        >
+          className={`${dmSans.className} ${dmSans.variable} ${spaceGrotesk.variable} ${lora.variable} antialiased`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
             enableSystem
-            disableTransitionOnChange
-          >
+            disableTransitionOnChange>
             {children}
             <RegisterSW />
             <Toaster
@@ -112,13 +111,13 @@ export default function RootLayout({
                   background: "#FBF7F1",
                   border: "1px solid rgba(28,43,42,0.10)",
                   color: "#1C2B2A",
-                  fontFamily: '"Space Grotesk", system-ui, sans-serif',
-                },
+                  fontFamily: '"Space Grotesk", system-ui, sans-serif'
+                }
               }}
             />
           </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
-  );
+  )
 }

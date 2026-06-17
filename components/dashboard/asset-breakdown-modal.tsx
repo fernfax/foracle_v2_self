@@ -1,13 +1,9 @@
-"use client";
+"use client"
 
-import React, { useMemo, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import React, { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import { Car, ChevronRight, Home, TrendingUp } from "lucide-react"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,104 +12,130 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Home, Car, TrendingUp, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
 
 interface PropertyAsset {
-  id: string;
-  propertyName: string;
-  originalPurchasePrice: string;
-  outstandingLoan: string;
-  monthlyLoanPayment: string | null;
-  isActive: boolean | null;
+  id: string
+  propertyName: string
+  originalPurchasePrice: string
+  outstandingLoan: string
+  monthlyLoanPayment: string | null
+  isActive: boolean | null
 }
 
 interface VehicleAsset {
-  id: string;
-  vehicleName: string;
-  originalPurchasePrice: string;
-  loanAmountTaken: string | null;
-  loanAmountRepaid: string | null;
-  monthlyLoanPayment: string | null;
-  isActive: boolean | null;
+  id: string
+  vehicleName: string
+  originalPurchasePrice: string
+  loanAmountTaken: string | null
+  loanAmountRepaid: string | null
+  monthlyLoanPayment: string | null
+  isActive: boolean | null
 }
 
 interface AssetBreakdownModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  propertyAssets: PropertyAsset[];
-  vehicleAssets: VehicleAsset[];
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  propertyAssets: PropertyAsset[]
+  vehicleAssets: VehicleAsset[]
 }
 
 export function AssetBreakdownModal({
   open,
   onOpenChange,
   propertyAssets,
-  vehicleAssets,
+  vehicleAssets
 }: AssetBreakdownModalProps) {
-  const router = useRouter();
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<{ type: "property" | "vehicle"; name: string } | null>(null);
+  const router = useRouter()
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    type: "property" | "vehicle"
+    name: string
+  } | null>(null)
 
   // Calculate property equity
   const calculatePropertyEquity = (property: PropertyAsset) => {
-    const purchasePrice = parseFloat(property.originalPurchasePrice);
-    const outstandingLoan = parseFloat(property.outstandingLoan);
-    return purchasePrice - outstandingLoan;
-  };
+    const purchasePrice = parseFloat(property.originalPurchasePrice)
+    const outstandingLoan = parseFloat(property.outstandingLoan)
+    return purchasePrice - outstandingLoan
+  }
 
   // Calculate vehicle equity
   const calculateVehicleEquity = (vehicle: VehicleAsset) => {
-    const purchasePrice = parseFloat(vehicle.originalPurchasePrice);
-    const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
-    const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
-    const remainingLoan = loanTaken - loanRepaid;
-    return purchasePrice - remainingLoan;
-  };
+    const purchasePrice = parseFloat(vehicle.originalPurchasePrice)
+    const loanTaken = parseFloat(vehicle.loanAmountTaken || "0")
+    const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0")
+    const remainingLoan = loanTaken - loanRepaid
+    return purchasePrice - remainingLoan
+  }
 
   // Calculate loan progress percentage
-  const calculateLoanProgress = (asset: PropertyAsset | VehicleAsset, type: "property" | "vehicle") => {
+  const calculateLoanProgress = (
+    asset: PropertyAsset | VehicleAsset,
+    type: "property" | "vehicle"
+  ) => {
     if (type === "property") {
-      const property = asset as PropertyAsset;
-      const purchasePrice = parseFloat(property.originalPurchasePrice);
-      const outstandingLoan = parseFloat(property.outstandingLoan);
-      const paidOff = purchasePrice - outstandingLoan;
-      return purchasePrice > 0 ? (paidOff / purchasePrice) * 100 : 0;
+      const property = asset as PropertyAsset
+      const purchasePrice = parseFloat(property.originalPurchasePrice)
+      const outstandingLoan = parseFloat(property.outstandingLoan)
+      const paidOff = purchasePrice - outstandingLoan
+      return purchasePrice > 0 ? (paidOff / purchasePrice) * 100 : 0
     } else {
-      const vehicle = asset as VehicleAsset;
-      const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
-      const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
-      if (loanTaken === 0) return 100; // No loan = fully paid
-      return (loanRepaid / loanTaken) * 100;
+      const vehicle = asset as VehicleAsset
+      const loanTaken = parseFloat(vehicle.loanAmountTaken || "0")
+      const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0")
+      if (loanTaken === 0) return 100 // No loan = fully paid
+      return (loanRepaid / loanTaken) * 100
     }
-  };
+  }
 
   // Calculate breakdown details
   const breakdownDetails = useMemo(() => {
-    const activeProperties = propertyAssets.filter(p => p.isActive !== false);
-    const activeVehicles = vehicleAssets.filter(v => v.isActive !== false);
+    const activeProperties = propertyAssets.filter((p) => p.isActive !== false)
+    const activeVehicles = vehicleAssets.filter((v) => v.isActive !== false)
 
-    const propertyEquity = activeProperties.reduce((sum, p) => sum + calculatePropertyEquity(p), 0);
-    const vehicleEquity = activeVehicles.reduce((sum, v) => sum + calculateVehicleEquity(v), 0);
-    const totalEquity = propertyEquity + vehicleEquity;
+    const propertyEquity = activeProperties.reduce(
+      (sum, p) => sum + calculatePropertyEquity(p),
+      0
+    )
+    const vehicleEquity = activeVehicles.reduce(
+      (sum, v) => sum + calculateVehicleEquity(v),
+      0
+    )
+    const totalEquity = propertyEquity + vehicleEquity
 
-    const propertyValue = activeProperties.reduce((sum, p) => sum + parseFloat(p.originalPurchasePrice), 0);
-    const vehicleValue = activeVehicles.reduce((sum, v) => sum + parseFloat(v.originalPurchasePrice), 0);
-    const totalValue = propertyValue + vehicleValue;
+    const propertyValue = activeProperties.reduce(
+      (sum, p) => sum + parseFloat(p.originalPurchasePrice),
+      0
+    )
+    const vehicleValue = activeVehicles.reduce(
+      (sum, v) => sum + parseFloat(v.originalPurchasePrice),
+      0
+    )
+    const totalValue = propertyValue + vehicleValue
 
-    const propertyLoan = activeProperties.reduce((sum, p) => sum + parseFloat(p.outstandingLoan), 0);
+    const propertyLoan = activeProperties.reduce(
+      (sum, p) => sum + parseFloat(p.outstandingLoan),
+      0
+    )
     const vehicleLoan = activeVehicles.reduce((sum, v) => {
-      const loanTaken = parseFloat(v.loanAmountTaken || "0");
-      const loanRepaid = parseFloat(v.loanAmountRepaid || "0");
-      return sum + (loanTaken - loanRepaid);
-    }, 0);
-    const totalLoan = propertyLoan + vehicleLoan;
+      const loanTaken = parseFloat(v.loanAmountTaken || "0")
+      const loanRepaid = parseFloat(v.loanAmountRepaid || "0")
+      return sum + (loanTaken - loanRepaid)
+    }, 0)
+    const totalLoan = propertyLoan + vehicleLoan
 
     // Build all assets list
     const allAssets = [
-      ...activeProperties.map(p => ({
+      ...activeProperties.map((p) => ({
         id: p.id,
         name: p.propertyName,
         type: "property" as const,
@@ -121,19 +143,25 @@ export function AssetBreakdownModal({
         remainingLoan: parseFloat(p.outstandingLoan),
         equity: calculatePropertyEquity(p),
         progress: calculateLoanProgress(p, "property"),
-        monthlyPayment: p.monthlyLoanPayment ? parseFloat(p.monthlyLoanPayment) : null,
+        monthlyPayment: p.monthlyLoanPayment
+          ? parseFloat(p.monthlyLoanPayment)
+          : null
       })),
-      ...activeVehicles.map(v => ({
+      ...activeVehicles.map((v) => ({
         id: v.id,
         name: v.vehicleName,
         type: "vehicle" as const,
         purchasePrice: parseFloat(v.originalPurchasePrice),
-        remainingLoan: parseFloat(v.loanAmountTaken || "0") - parseFloat(v.loanAmountRepaid || "0"),
+        remainingLoan:
+          parseFloat(v.loanAmountTaken || "0") -
+          parseFloat(v.loanAmountRepaid || "0"),
         equity: calculateVehicleEquity(v),
         progress: calculateLoanProgress(v, "vehicle"),
-        monthlyPayment: v.monthlyLoanPayment ? parseFloat(v.monthlyLoanPayment) : null,
-      })),
-    ].sort((a, b) => b.equity - a.equity);
+        monthlyPayment: v.monthlyLoanPayment
+          ? parseFloat(v.monthlyLoanPayment)
+          : null
+      }))
+    ].sort((a, b) => b.equity - a.equity)
 
     return {
       properties: activeProperties,
@@ -147,39 +175,39 @@ export function AssetBreakdownModal({
       propertyLoan,
       vehicleLoan,
       totalLoan,
-      allAssets,
-    };
-  }, [propertyAssets, vehicleAssets]);
+      allAssets
+    }
+  }, [propertyAssets, vehicleAssets])
 
   const handleAssetClick = (type: "property" | "vehicle", name: string) => {
-    setPendingNavigation({ type, name });
-    setConfirmDialogOpen(true);
-  };
+    setPendingNavigation({ type, name })
+    setConfirmDialogOpen(true)
+  }
 
   const handleConfirmNavigation = () => {
     if (pendingNavigation) {
-      onOpenChange(false);
-      setConfirmDialogOpen(false);
-      router.push(`/dashboard/user/assets?tab=${pendingNavigation.type}`);
-      setPendingNavigation(null);
+      onOpenChange(false)
+      setConfirmDialogOpen(false)
+      router.push(`/dashboard/user/assets?tab=${pendingNavigation.type}`)
+      setPendingNavigation(null)
     }
-  };
+  }
 
   const handleCancelNavigation = () => {
-    setConfirmDialogOpen(false);
-    setPendingNavigation(null);
-  };
+    setConfirmDialogOpen(false)
+    setPendingNavigation(null)
+  }
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 75) return "bg-[#00C4AA]";
-    if (progress >= 50) return "bg-[#B8622A]";
-    if (progress >= 25) return "bg-[#D4A843]";
-    return "bg-muted";
-  };
+    if (progress >= 75) return "bg-[#00C4AA]"
+    if (progress >= 50) return "bg-[#B8622A]"
+    if (progress >= 25) return "bg-[#D4A843]"
+    return "bg-muted"
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-[#7A3A0A]" />
@@ -192,18 +220,24 @@ export function AssetBreakdownModal({
 
         <div className="space-y-6">
           {/* Summary Stats */}
-          <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
+          <div className="bg-muted/30 grid grid-cols-3 gap-4 rounded-lg p-4">
             <div>
-              <p className="text-sm text-muted-foreground">Total Asset Value</p>
-              <p className="text-2xl font-semibold">${breakdownDetails.totalValue.toLocaleString()}</p>
+              <p className="text-muted-foreground text-sm">Total Asset Value</p>
+              <p className="text-2xl font-semibold">
+                ${breakdownDetails.totalValue.toLocaleString()}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Outstanding Loans</p>
-              <p className="text-2xl font-semibold text-[#7A5A00]">${breakdownDetails.totalLoan.toLocaleString()}</p>
+              <p className="text-muted-foreground text-sm">Outstanding Loans</p>
+              <p className="text-2xl font-semibold text-[#7A5A00]">
+                ${breakdownDetails.totalLoan.toLocaleString()}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Net Equity</p>
-              <p className="text-2xl font-semibold text-[#007A68]">${breakdownDetails.totalEquity.toLocaleString()}</p>
+              <p className="text-muted-foreground text-sm">Net Equity</p>
+              <p className="text-2xl font-semibold text-[#007A68]">
+                ${breakdownDetails.totalEquity.toLocaleString()}
+              </p>
             </div>
           </div>
 
@@ -211,166 +245,214 @@ export function AssetBreakdownModal({
           <div className="space-y-6">
             {/* Properties Section */}
             <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[rgba(0,196,170,0.12)]">
-                      <Home className="h-4 w-4 text-[#007A68]" />
-                    </div>
-                    <h3 className="text-lg font-semibold">Properties</h3>
-                    <span className="text-sm text-muted-foreground">({breakdownDetails.properties.length})</span>
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(0,196,170,0.12)]">
+                    <Home className="h-4 w-4 text-[#007A68]" />
                   </div>
-                  <p className="text-lg font-semibold text-[#007A68]">
-                    ${breakdownDetails.propertyEquity.toLocaleString()}
-                  </p>
+                  <h3 className="text-lg font-semibold">Properties</h3>
+                  <span className="text-muted-foreground text-sm">
+                    ({breakdownDetails.properties.length})
+                  </span>
                 </div>
+                <p className="text-lg font-semibold text-[#007A68]">
+                  ${breakdownDetails.propertyEquity.toLocaleString()}
+                </p>
+              </div>
 
-                {breakdownDetails.properties.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground border rounded-lg">
-                    No property assets found
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {breakdownDetails.properties.map((property) => {
-                      const equity = calculatePropertyEquity(property);
-                      const progress = calculateLoanProgress(property, "property");
-                      const purchasePrice = parseFloat(property.originalPurchasePrice);
-                      const outstandingLoan = parseFloat(property.outstandingLoan);
+              {breakdownDetails.properties.length === 0 ? (
+                <div className="text-muted-foreground rounded-lg border py-6 text-center">
+                  No property assets found
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {breakdownDetails.properties.map((property) => {
+                    const equity = calculatePropertyEquity(property)
+                    const progress = calculateLoanProgress(property, "property")
+                    const purchasePrice = parseFloat(
+                      property.originalPurchasePrice
+                    )
+                    const outstandingLoan = parseFloat(property.outstandingLoan)
 
-                      return (
-                        <div
-                          key={property.id}
-                          className="border rounded-lg p-4 bg-background hover:bg-muted/30 cursor-pointer transition-colors"
-                          onClick={() => handleAssetClick("property", property.propertyName)}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <Home className="h-5 w-5 text-[#007A68]" />
-                              <div>
-                                <h4 className="font-semibold">{property.propertyName}</h4>
-                                <p className="text-xs text-muted-foreground">
-                                  Purchase: ${purchasePrice.toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="text-right">
-                                <p className="text-lg font-bold text-[#007A68]">${equity.toLocaleString()}</p>
-                                <p className="text-xs text-muted-foreground">Equity</p>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    return (
+                      <div
+                        key={property.id}
+                        className="bg-background hover:bg-muted/30 cursor-pointer rounded-lg border p-4 transition-colors"
+                        onClick={() =>
+                          handleAssetClick("property", property.propertyName)
+                        }>
+                        <div className="mb-3 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Home className="h-5 w-5 text-[#007A68]" />
+                            <div>
+                              <h4 className="font-semibold">
+                                {property.propertyName}
+                              </h4>
+                              <p className="text-muted-foreground text-xs">
+                                Purchase: ${purchasePrice.toLocaleString()}
+                              </p>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-[#007A68]">
+                                ${equity.toLocaleString()}
+                              </p>
+                              <p className="text-muted-foreground text-xs">
+                                Equity
+                              </p>
+                            </div>
+                            <ChevronRight className="text-muted-foreground h-4 w-4" />
+                          </div>
+                        </div>
 
-                          {/* Loan Progress Bar */}
+                        {/* Loan Progress Bar */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              Loan Progress
+                            </span>
+                            <span className="font-medium">
+                              {progress.toFixed(1)}% paid off
+                            </span>
+                          </div>
+                          <div className="bg-muted h-2 overflow-hidden rounded-full">
+                            <div
+                              className={`h-full rounded-full transition-all ${getProgressColor(progress)}`}
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <div className="text-muted-foreground flex justify-between text-xs">
+                            <span>
+                              Outstanding: ${outstandingLoan.toLocaleString()}
+                            </span>
+                            {property.monthlyLoanPayment && (
+                              <span>
+                                Monthly: $
+                                {parseFloat(
+                                  property.monthlyLoanPayment
+                                ).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Vehicles Section */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(212,168,67,0.15)]">
+                    <Car className="h-4 w-4 text-[#7A5A00]" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Vehicles</h3>
+                  <span className="text-muted-foreground text-sm">
+                    ({breakdownDetails.vehicles.length})
+                  </span>
+                </div>
+                <p className="text-lg font-semibold text-[#7A5A00]">
+                  ${breakdownDetails.vehicleEquity.toLocaleString()}
+                </p>
+              </div>
+
+              {breakdownDetails.vehicles.length === 0 ? (
+                <div className="text-muted-foreground rounded-lg border py-6 text-center">
+                  No vehicle assets found
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {breakdownDetails.vehicles.map((vehicle) => {
+                    const equity = calculateVehicleEquity(vehicle)
+                    const progress = calculateLoanProgress(vehicle, "vehicle")
+                    const purchasePrice = parseFloat(
+                      vehicle.originalPurchasePrice
+                    )
+                    const loanTaken = parseFloat(vehicle.loanAmountTaken || "0")
+                    const loanRepaid = parseFloat(
+                      vehicle.loanAmountRepaid || "0"
+                    )
+                    const remainingLoan = loanTaken - loanRepaid
+
+                    return (
+                      <div
+                        key={vehicle.id}
+                        className="bg-background hover:bg-muted/30 cursor-pointer rounded-lg border p-4 transition-colors"
+                        onClick={() =>
+                          handleAssetClick("vehicle", vehicle.vehicleName)
+                        }>
+                        <div className="mb-3 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Car className="h-5 w-5 text-[#7A5A00]" />
+                            <div>
+                              <h4 className="font-semibold">
+                                {vehicle.vehicleName}
+                              </h4>
+                              <p className="text-muted-foreground text-xs">
+                                Purchase: ${purchasePrice.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-[#7A5A00]">
+                                ${equity.toLocaleString()}
+                              </p>
+                              <p className="text-muted-foreground text-xs">
+                                Equity
+                              </p>
+                            </div>
+                            <ChevronRight className="text-muted-foreground h-4 w-4" />
+                          </div>
+                        </div>
+
+                        {/* Loan Progress Bar */}
+                        {loanTaken > 0 && (
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Loan Progress</span>
-                              <span className="font-medium">{progress.toFixed(1)}% paid off</span>
+                              <span className="text-muted-foreground">
+                                Loan Progress
+                              </span>
+                              <span className="font-medium">
+                                {progress.toFixed(1)}% paid off
+                              </span>
                             </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div className="bg-muted h-2 overflow-hidden rounded-full">
                               <div
                                 className={`h-full rounded-full transition-all ${getProgressColor(progress)}`}
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                              <span>Outstanding: ${outstandingLoan.toLocaleString()}</span>
-                              {property.monthlyLoanPayment && (
-                                <span>Monthly: ${parseFloat(property.monthlyLoanPayment).toLocaleString()}</span>
+                            <div className="text-muted-foreground flex justify-between text-xs">
+                              <span>
+                                Remaining: ${remainingLoan.toLocaleString()}
+                              </span>
+                              {vehicle.monthlyLoanPayment && (
+                                <span>
+                                  Monthly: $
+                                  {parseFloat(
+                                    vehicle.monthlyLoanPayment
+                                  ).toLocaleString()}
+                                </span>
                               )}
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Vehicles Section */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[rgba(212,168,67,0.15)]">
-                      <Car className="h-4 w-4 text-[#7A5A00]" />
-                    </div>
-                    <h3 className="text-lg font-semibold">Vehicles</h3>
-                    <span className="text-sm text-muted-foreground">({breakdownDetails.vehicles.length})</span>
-                  </div>
-                  <p className="text-lg font-semibold text-[#7A5A00]">
-                    ${breakdownDetails.vehicleEquity.toLocaleString()}
-                  </p>
+                        )}
+                        {loanTaken === 0 && (
+                          <p className="text-sm text-[#007A68]">
+                            Fully paid - No outstanding loan
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-
-                {breakdownDetails.vehicles.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground border rounded-lg">
-                    No vehicle assets found
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {breakdownDetails.vehicles.map((vehicle) => {
-                      const equity = calculateVehicleEquity(vehicle);
-                      const progress = calculateLoanProgress(vehicle, "vehicle");
-                      const purchasePrice = parseFloat(vehicle.originalPurchasePrice);
-                      const loanTaken = parseFloat(vehicle.loanAmountTaken || "0");
-                      const loanRepaid = parseFloat(vehicle.loanAmountRepaid || "0");
-                      const remainingLoan = loanTaken - loanRepaid;
-
-                      return (
-                        <div
-                          key={vehicle.id}
-                          className="border rounded-lg p-4 bg-background hover:bg-muted/30 cursor-pointer transition-colors"
-                          onClick={() => handleAssetClick("vehicle", vehicle.vehicleName)}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <Car className="h-5 w-5 text-[#7A5A00]" />
-                              <div>
-                                <h4 className="font-semibold">{vehicle.vehicleName}</h4>
-                                <p className="text-xs text-muted-foreground">
-                                  Purchase: ${purchasePrice.toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="text-right">
-                                <p className="text-lg font-bold text-[#7A5A00]">${equity.toLocaleString()}</p>
-                                <p className="text-xs text-muted-foreground">Equity</p>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          </div>
-
-                          {/* Loan Progress Bar */}
-                          {loanTaken > 0 && (
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Loan Progress</span>
-                                <span className="font-medium">{progress.toFixed(1)}% paid off</span>
-                              </div>
-                              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full transition-all ${getProgressColor(progress)}`}
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </div>
-                              <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>Remaining: ${remainingLoan.toLocaleString()}</span>
-                                {vehicle.monthlyLoanPayment && (
-                                  <span>Monthly: ${parseFloat(vehicle.monthlyLoanPayment).toLocaleString()}</span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          {loanTaken === 0 && (
-                            <p className="text-sm text-[#007A68]">Fully paid - No outstanding loan</p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -381,18 +463,26 @@ export function AssetBreakdownModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Navigate to Assets</AlertDialogTitle>
             <AlertDialogDescription>
-              You are about to navigate to the {pendingNavigation?.type === "property" ? "Properties" : "Vehicles"} page
-              to view "{pendingNavigation?.name}". Do you want to continue?
+              You are about to navigate to the{" "}
+              {pendingNavigation?.type === "property"
+                ? "Properties"
+                : "Vehicles"}{" "}
+              page to view "{pendingNavigation?.name}". Do you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelNavigation}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancelNavigation}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmNavigation}>
-              Go to {pendingNavigation?.type === "property" ? "Properties" : "Vehicles"}
+              Go to{" "}
+              {pendingNavigation?.type === "property"
+                ? "Properties"
+                : "Vehicles"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </Dialog>
-  );
+  )
 }

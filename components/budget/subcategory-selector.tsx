@@ -1,16 +1,17 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { ExpenseSubcategory } from "@/lib/actions/expense-subcategories";
+import { Plus } from "lucide-react"
+
+import type { ExpenseSubcategory } from "@/lib/actions/expense-subcategories"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 interface SubcategorySelectorProps {
-  subcategories: ExpenseSubcategory[];
-  selectedSubcategory: ExpenseSubcategory | null;
-  onSelect: (subcategory: ExpenseSubcategory | null) => void;
-  onManageClick: () => void;
-  disabled?: boolean;
+  subcategories: ExpenseSubcategory[]
+  selectedSubcategory: ExpenseSubcategory | null
+  onSelect: (subcategory: ExpenseSubcategory | null) => void
+  onManageClick: () => void
+  disabled?: boolean
 }
 
 export function SubcategorySelector({
@@ -18,26 +19,25 @@ export function SubcategorySelector({
   selectedSubcategory,
   onSelect,
   onManageClick,
-  disabled = false,
+  disabled = false
 }: SubcategorySelectorProps) {
   return (
-    <div className="flex flex-wrap gap-2 items-center">
+    <div className="flex flex-wrap items-center gap-2">
       {/* Add/Manage button - always first */}
       <Button
         type="button"
         variant="outline"
         size="sm"
-        className="rounded-full h-8 px-3 text-xs gap-1"
+        className="h-8 gap-1 rounded-full px-3 text-xs"
         onClick={onManageClick}
-        disabled={disabled}
-      >
+        disabled={disabled}>
         <Plus className="h-3 w-3" />
         Add
       </Button>
 
       {/* Existing subcategories as pill buttons */}
       {subcategories.map((subcategory) => {
-        const isSelected = selectedSubcategory?.id === subcategory.id;
+        const isSelected = selectedSubcategory?.id === subcategory.id
 
         return (
           <Button
@@ -46,7 +46,7 @@ export function SubcategorySelector({
             variant={isSelected ? "default" : "outline"}
             size="sm"
             className={cn(
-              "rounded-full h-8 px-3 text-xs",
+              "h-8 rounded-full px-3 text-xs",
               isSelected
                 ? "bg-primary hover:bg-primary text-primary-foreground"
                 : "bg-muted/50"
@@ -54,17 +54,16 @@ export function SubcategorySelector({
             onClick={() => {
               // Toggle selection - click to select, click again to deselect
               if (isSelected) {
-                onSelect(null);
+                onSelect(null)
               } else {
-                onSelect(subcategory);
+                onSelect(subcategory)
               }
             }}
-            disabled={disabled}
-          >
+            disabled={disabled}>
             {subcategory.name}
           </Button>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

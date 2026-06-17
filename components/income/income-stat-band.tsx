@@ -1,51 +1,60 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
-import { Coins, Crown, Layers, Wallet } from "lucide-react";
+import { useMemo } from "react"
+import { Coins, Crown, Layers, Wallet } from "lucide-react"
 
-import { StatCard } from "@/components/ui/stat-card";
-import { formatBudgetCurrency } from "@/lib/budget-utils";
+import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { StatCard } from "@/components/ui/stat-card"
 
 interface IncomeRow {
-  name: string;
-  amount: string;
-  isActive: boolean | null;
-  familyMember?: { name: string } | null;
+  name: string
+  amount: string
+  isActive: boolean | null
+  familyMember?: { name: string } | null
 }
 
 interface IncomeStatBandProps {
   /** Gross monthly income — reuse the value the household summary already computed. */
-  grossIncome: number;
+  grossIncome: number
   /** Take-home (gross − employee CPF). */
-  netIncome: number;
-  incomes: IncomeRow[];
+  netIncome: number
+  incomes: IncomeRow[]
 }
 
 const toNum = (s: string | null | undefined): number => {
-  const n = parseFloat(s ?? "");
-  return Number.isFinite(n) ? n : 0;
-};
+  const n = parseFloat(s ?? "")
+  return Number.isFinite(n) ? n : 0
+}
 
 /**
  * The 4-up stat band that sits above the income timeline — the same stat-band
  * frame the other tabs use. Purely additive: it reads income data, it does not
  * touch the timeline studio below it.
  */
-export function IncomeStatBand({ grossIncome, netIncome, incomes }: IncomeStatBandProps) {
+export function IncomeStatBand({
+  grossIncome,
+  netIncome,
+  incomes
+}: IncomeStatBandProps) {
   const { activeStreams, largest } = useMemo(() => {
-    const active = incomes.filter((i) => i.isActive !== false);
-    let largest: { label: string; amount: number } | null = null;
+    const active = incomes.filter((i) => i.isActive !== false)
+    let largest: { label: string; amount: number } | null = null
     for (const inc of active) {
-      const amt = toNum(inc.amount);
+      const amt = toNum(inc.amount)
       if (!largest || amt > largest.amount) {
-        largest = { label: inc.name || inc.familyMember?.name || "—", amount: amt };
+        largest = {
+          label: inc.name || inc.familyMember?.name || "—",
+          amount: amt
+        }
       }
     }
-    return { activeStreams: active.length, largest };
-  }, [incomes]);
+    return { activeStreams: active.length, largest }
+  }, [incomes])
 
   return (
-    <div data-tour="income-stat-band" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div
+      data-tour="income-stat-band"
+      className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <StatCard
         label="Gross income"
         value={`${formatBudgetCurrency(grossIncome)}`}
@@ -75,5 +84,5 @@ export function IncomeStatBand({ grossIncome, netIncome, incomes }: IncomeStatBa
         delta={largest?.label ?? "No income yet"}
       />
     </div>
-  );
+  )
 }

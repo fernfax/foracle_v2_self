@@ -1,24 +1,25 @@
-import { getPropertyAssets } from "@/lib/actions/property-assets";
-import { getVehicleAssets } from "@/lib/actions/vehicle-assets";
-import { AssetsClient } from "./client";
+import { getPropertyAssets } from "@/lib/actions/property-assets"
+import { getVehicleAssets } from "@/lib/actions/vehicle-assets"
 
-export const dynamic = 'force-dynamic';
+import { AssetsClient } from "./client"
+
+export const dynamic = "force-dynamic"
 
 export const metadata = {
   title: "Assets | Foracle",
-  description: "Manage your property, vehicle, and other assets",
-};
+  description: "Manage your property, vehicle, and other assets"
+}
 
 export default async function AssetsPage() {
   const [propertyAssets, vehicleAssets] = await Promise.all([
     getPropertyAssets(),
-    getVehicleAssets(),
-  ]);
+    getVehicleAssets()
+  ])
 
   return (
     <AssetsClient
       initialPropertyAssets={propertyAssets}
       initialVehicleAssets={vehicleAssets}
     />
-  );
+  )
 }

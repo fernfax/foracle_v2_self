@@ -1,59 +1,60 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react"
+import { HelpCircle } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogBody,
+  DialogContent,
   DialogFooterSticky,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+  SelectValue
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { HelpCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+  TooltipTrigger
+} from "@/components/ui/tooltip"
 
 interface Investment {
-  id: string;
-  name: string;
-  type: string;
-  currentCapital: string;
-  projectedYield: string;
-  contributionAmount: string;
-  contributionFrequency: string;
-  customMonths: string | null;
-  isActive: boolean | null;
+  id: string
+  name: string
+  type: string
+  currentCapital: string
+  projectedYield: string
+  contributionAmount: string
+  contributionFrequency: string
+  customMonths: string | null
+  isActive: boolean | null
 }
 
 interface AddInvestmentModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  investment?: Investment | null;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  investment?: Investment | null
   onSubmit: (data: {
-    name: string;
-    type: string;
-    currentCapital: string;
-    projectedYield: string;
-    contributionAmount: string;
-    contributionFrequency: string;
-    customMonths?: string;
-  }) => Promise<void>;
+    name: string
+    type: string
+    currentCapital: string
+    projectedYield: string
+    contributionAmount: string
+    contributionFrequency: string
+    customMonths?: string
+  }) => Promise<void>
 }
 
 const INVESTMENT_TYPES = [
@@ -63,8 +64,8 @@ const INVESTMENT_TYPES = [
   { value: "etf", label: "ETF" },
   { value: "crypto", label: "Crypto" },
   { value: "mutual_fund", label: "Mutual Fund" },
-  { value: "reit", label: "REIT" },
-];
+  { value: "reit", label: "REIT" }
+]
 
 const MONTHS = [
   { value: 1, label: "Jan" },
@@ -78,84 +79,84 @@ const MONTHS = [
   { value: 9, label: "Sep" },
   { value: 10, label: "Oct" },
   { value: 11, label: "Nov" },
-  { value: 12, label: "Dec" },
-];
+  { value: 12, label: "Dec" }
+]
 
 export function AddInvestmentModal({
   open,
   onOpenChange,
   investment,
-  onSubmit,
+  onSubmit
 }: AddInvestmentModalProps) {
-  const [name, setName] = useState("");
-  const [type, setType] = useState("stock");
-  const [currentCapital, setCurrentCapital] = useState("");
-  const [projectedYield, setProjectedYield] = useState("");
-  const [contributionAmount, setContributionAmount] = useState("");
-  const [contributionFrequency, setContributionFrequency] = useState("monthly");
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [name, setName] = useState("")
+  const [type, setType] = useState("stock")
+  const [currentCapital, setCurrentCapital] = useState("")
+  const [projectedYield, setProjectedYield] = useState("")
+  const [contributionAmount, setContributionAmount] = useState("")
+  const [contributionFrequency, setContributionFrequency] = useState("monthly")
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Reset form when modal opens/closes or investment changes
   useEffect(() => {
     if (open) {
       if (investment) {
-        setName(investment.name);
-        setType(investment.type);
-        setCurrentCapital(investment.currentCapital);
-        setProjectedYield(investment.projectedYield);
-        setContributionAmount(investment.contributionAmount);
-        setContributionFrequency(investment.contributionFrequency);
+        setName(investment.name)
+        setType(investment.type)
+        setCurrentCapital(investment.currentCapital)
+        setProjectedYield(investment.projectedYield)
+        setContributionAmount(investment.contributionAmount)
+        setContributionFrequency(investment.contributionFrequency)
         if (investment.customMonths) {
           try {
-            setSelectedMonths(JSON.parse(investment.customMonths));
+            setSelectedMonths(JSON.parse(investment.customMonths))
           } catch {
-            setSelectedMonths([]);
+            setSelectedMonths([])
           }
         } else {
-          setSelectedMonths([]);
+          setSelectedMonths([])
         }
       } else {
-        resetForm();
+        resetForm()
       }
     }
-  }, [open, investment]);
+  }, [open, investment])
 
   const resetForm = () => {
-    setName("");
-    setType("stock");
-    setCurrentCapital("");
-    setProjectedYield("");
-    setContributionAmount("");
-    setContributionFrequency("monthly");
-    setSelectedMonths([]);
-  };
+    setName("")
+    setType("stock")
+    setCurrentCapital("")
+    setProjectedYield("")
+    setContributionAmount("")
+    setContributionFrequency("monthly")
+    setSelectedMonths([])
+  }
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
-      resetForm();
+      resetForm()
     }
-    onOpenChange(isOpen);
-  };
+    onOpenChange(isOpen)
+  }
 
   const toggleMonth = (month: number) => {
     setSelectedMonths((prev) =>
       prev.includes(month)
         ? prev.filter((m) => m !== month)
         : [...prev, month].sort((a, b) => a - b)
-    );
-  };
+    )
+  }
 
   const handleSubmit = async () => {
     if (!name || !currentCapital || !projectedYield || !contributionAmount) {
-      return;
+      return
     }
 
     if (contributionFrequency === "custom" && selectedMonths.length === 0) {
-      return;
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       await onSubmit({
@@ -168,26 +169,26 @@ export function AddInvestmentModal({
         customMonths:
           contributionFrequency === "custom"
             ? JSON.stringify(selectedMonths)
-            : undefined,
-      });
-      handleClose(false);
+            : undefined
+      })
+      handleClose(false)
     } catch (error) {
-      console.error("Failed to save investment:", error);
+      console.error("Failed to save investment:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const isFormValid =
     name &&
     currentCapital &&
     projectedYield &&
     contributionAmount &&
-    (contributionFrequency !== "custom" || selectedMonths.length > 0);
+    (contributionFrequency !== "custom" || selectedMonths.length > 0)
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-h-[90vh] max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {investment ? "Edit Investment" : "Add Investment"}
@@ -198,12 +199,12 @@ export function AddInvestmentModal({
           <div className="space-y-6 py-4">
             {/* Basic Details */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-border">
-                <h3 className="text-sm font-semibold text-foreground">
+              <div className="border-border border-b pb-3">
+                <h3 className="text-foreground text-sm font-semibold">
                   Investment Details
                 </h3>
               </div>
-              <div className="bg-muted rounded-lg p-4 space-y-4">
+              <div className="bg-muted space-y-4 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">
@@ -240,12 +241,12 @@ export function AddInvestmentModal({
 
             {/* Financial Details */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-border">
-                <h3 className="text-sm font-semibold text-foreground">
+              <div className="border-border border-b pb-3">
+                <h3 className="text-foreground text-sm font-semibold">
                   Financial Details
                 </h3>
               </div>
-              <div className="bg-muted rounded-lg p-4 space-y-4">
+              <div className="bg-muted space-y-4 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentCapital">
@@ -253,7 +254,7 @@ export function AddInvestmentModal({
                       <span className="text-[#8B0000]">*</span>
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">
+                      <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
                         $
                       </span>
                       <Input
@@ -279,23 +280,21 @@ export function AddInvestmentModal({
                           <TooltipTrigger asChild>
                             <button
                               type="button"
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
+                              className="text-muted-foreground hover:text-foreground transition-colors">
                               <HelpCircle className="h-3.5 w-3.5" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent
                             side="top"
-                            className="max-w-[320px] text-xs bg-card border shadow-lg p-3"
-                          >
-                            <p className="font-semibold mb-2">
+                            className="bg-card max-w-[320px] border p-3 text-xs shadow-lg">
+                            <p className="mb-2 font-semibold">
                               Wealth Projection Formula
                             </p>
                             <p className="mb-2">
                               <strong>With Contributions:</strong>
                               <br />
-                              FV = C × (1 + r/12)<sup>n</sup> + PMT ×
-                              ((1 + r/12)<sup>n</sup> - 1) / (r/12)
+                              FV = C × (1 + r/12)<sup>n</sup> + PMT × ((1 +
+                              r/12)<sup>n</sup> - 1) / (r/12)
                             </p>
                             <p className="mb-2">
                               <strong>Without Contributions:</strong>
@@ -322,7 +321,7 @@ export function AddInvestmentModal({
                         step="0.01"
                         className="bg-card pr-8"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/400">
+                      <span className="text-foreground/400 absolute top-1/2 right-3 -translate-y-1/2">
                         %
                       </span>
                     </div>
@@ -333,12 +332,12 @@ export function AddInvestmentModal({
 
             {/* Contribution Details */}
             <div className="space-y-4">
-              <div className="pb-3 border-b border-border">
-                <h3 className="text-sm font-semibold text-foreground">
+              <div className="border-border border-b pb-3">
+                <h3 className="text-foreground text-sm font-semibold">
                   Contribution Details
                 </h3>
               </div>
-              <div className="bg-muted rounded-lg p-4 space-y-4">
+              <div className="bg-muted space-y-4 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="contributionAmount">
@@ -346,7 +345,7 @@ export function AddInvestmentModal({
                       <span className="text-[#8B0000]">*</span>
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">
+                      <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
                         $
                       </span>
                       <Input
@@ -363,7 +362,7 @@ export function AddInvestmentModal({
                   </div>
                   <div className="space-y-2">
                     <Label>Contribution Frequency</Label>
-                    <div className="flex items-center gap-4 h-10">
+                    <div className="flex h-10 items-center gap-4">
                       <div className="flex items-center gap-2">
                         <Switch
                           id="frequency"
@@ -376,8 +375,7 @@ export function AddInvestmentModal({
                         />
                         <Label
                           htmlFor="frequency"
-                          className="text-sm font-normal cursor-pointer"
-                        >
+                          className="cursor-pointer text-sm font-normal">
                           {contributionFrequency === "monthly"
                             ? "Monthly"
                             : "Custom"}
@@ -400,18 +398,17 @@ export function AddInvestmentModal({
                           type="button"
                           onClick={() => toggleMonth(month.value)}
                           className={cn(
-                            "px-3 py-2 text-sm rounded-md border transition-colors",
+                            "rounded-md border px-3 py-2 text-sm transition-colors",
                             selectedMonths.includes(month.value)
-                              ? "bg-[#B8622A] text-white border-[rgba(184,98,42,0.25)]"
+                              ? "border-[rgba(184,98,42,0.25)] bg-[#B8622A] text-white"
                               : "bg-card text-foreground border-border hover:border-border"
-                          )}
-                        >
+                          )}>
                           {month.label}
                         </button>
                       ))}
                     </div>
                     {selectedMonths.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {selectedMonths.length} contribution
                         {selectedMonths.length > 1 ? "s" : ""} per year
                       </p>
@@ -427,19 +424,20 @@ export function AddInvestmentModal({
           <Button
             variant="ghost"
             onClick={() => handleClose(false)}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!isFormValid || isSubmitting}>
+          <Button
+            onClick={handleSubmit}
+            disabled={!isFormValid || isSubmitting}>
             {isSubmitting
               ? "Saving..."
               : investment
-              ? "Update Investment"
-              : "Add Investment"}
+                ? "Update Investment"
+                : "Add Investment"}
           </Button>
         </DialogFooterSticky>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

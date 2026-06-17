@@ -1,28 +1,33 @@
-"use server";
+"use server"
 
-import { db } from "@/db";
-import { currentHoldings, familyMembers, holdingAmountHistory } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
-import { randomUUID } from "crypto";
-import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import { randomUUID } from "crypto"
+import { db } from "@/db"
+import { and, desc, eq } from "drizzle-orm"
+
+import { getCurrentUserAndFamily } from "@/lib/auth-context"
+import {
+  currentHoldings,
+  familyMembers,
+  holdingAmountHistory
+} from "@/db/schema"
 
 export type CurrentHolding = {
-  id: string;
-  userId: string;
-  familyMemberId: string | null;
-  bankName: string;
-  holdingAmount: string;
-  createdAt: Date;
-  updatedAt: Date;
-  familyMemberName?: string | null;
-};
+  id: string
+  userId: string
+  familyMemberId: string | null
+  bankName: string
+  holdingAmount: string
+  createdAt: Date
+  updatedAt: Date
+  familyMemberName?: string | null
+}
 
 /**
  * Get all current holdings for the authenticated user
  */
 export async function getCurrentHoldings(): Promise<CurrentHolding[]> {
   try {
-    const { familyId } = await getCurrentUserAndFamily();
+    const { familyId } = await getCurrentUserAndFamily()
 
     const holdings = await db
       .select({
@@ -33,17 +38,20 @@ export async function getCurrentHoldings(): Promise<CurrentHolding[]> {
         holdingAmount: currentHoldings.holdingAmount,
         createdAt: currentHoldings.createdAt,
         updatedAt: currentHoldings.updatedAt,
-        familyMemberName: familyMembers.name,
+        familyMemberName: familyMembers.name
       })
       .from(currentHoldings)
-      .leftJoin(familyMembers, eq(currentHoldings.familyMemberId, familyMembers.id))
+      .leftJoin(
+        familyMembers,
+        eq(currentHoldings.familyMemberId, familyMembers.id)
+      )
       .where(eq(currentHoldings.familyId, familyId))
-      .orderBy(desc(currentHoldings.createdAt));
+      .orderBy(desc(currentHoldings.createdAt))
 
-    return holdings;
+    return holdings
   } catch (error) {
-    console.error("Error fetching current holdings:", error);
-    return [];
+    console.error("Error fetching current holdings:", error)
+    return []
   }
 }
 
@@ -51,13 +59,13 @@ export async function getCurrentHoldings(): Promise<CurrentHolding[]> {
  * Add a new current holding
  */
 export async function addCurrentHolding(data: {
-  familyMemberId: string | null;
-  bankName: string;
-  holdingAmount: number;
+  familyMemberId: string | null
+  bankName: string
+  holdingAmount: number
 }): Promise<CurrentHolding> {
-  const { userId, familyId } = await getCurrentUserAndFamily();
+  const { userId, familyId } = await getCurrentUserAndFamily()
 
-  const id = randomUUID();
+  const id = randomUUID()
 
   const [newHolding] = await db
     .insert(currentHoldings)
@@ -67,9 +75,9 @@ export async function addCurrentHolding(data: {
       familyId,
       familyMemberId: data.familyMemberId,
       bankName: data.bankName,
-      holdingAmount: data.holdingAmount.toString(),
+      holdingAmount: data.holdingAmount.toString()
     })
-    .returning();
+    .returning()
 
   // Record initial amount in history
   await db.insert(holdingAmountHistory).values({
@@ -77,26 +85,26 @@ export async function addCurrentHolding(data: {
     holdingId: id,
     userId,
     familyId,
-    amount: data.holdingAmount.toString(),
-  });
+    amount: data.holdingAmount.toString()
+  })
 
   // Fetch family member name if linked (scoped to family)
-  let familyMemberName: string | null = null;
+  let familyMemberName: string | null = null
   if (data.familyMemberId) {
     const familyMember = await db.query.familyMembers.findFirst({
       where: and(
         eq(familyMembers.id, data.familyMemberId),
         eq(familyMembers.familyId, familyId)
-      ),
-    });
-    familyMemberName = familyMember?.name || null;
+      )
+    })
+    familyMemberName = familyMember?.name || null
   }
 
   return {
     ...newHolding,
     holdingAmount: newHolding.holdingAmount || "0",
-    familyMemberName,
-  };
+    familyMemberName
+  }
 }
 
 /**
@@ -105,41 +113,46 @@ export async function addCurrentHolding(data: {
 export async function updateCurrentHolding(
   id: string,
   data: {
-    familyMemberId?: string | null;
-    bankName?: string;
-    holdingAmount?: number;
+    familyMemberId?: string | null
+    bankName?: string
+    holdingAmount?: number
   }
 ): Promise<CurrentHolding> {
-  const { userId, familyId } = await getCurrentUserAndFamily();
+  const { userId, familyId } = await getCurrentUserAndFamily()
 
   // Verify the holding belongs to caller's family
   const existing = await db.query.currentHoldings.findFirst({
-    where: and(eq(currentHoldings.id, id), eq(currentHoldings.familyId, familyId)),
-  });
+    where: and(
+      eq(currentHoldings.id, id),
+      eq(currentHoldings.familyId, familyId)
+    )
+  })
 
   if (!existing) {
-    throw new Error("Current holding not found");
+    throw new Error("Current holding not found")
   }
 
   const updateData: any = {
-    updatedAt: new Date(),
-  };
+    updatedAt: new Date()
+  }
 
   if (data.familyMemberId !== undefined) {
-    updateData.familyMemberId = data.familyMemberId;
+    updateData.familyMemberId = data.familyMemberId
   }
   if (data.bankName !== undefined) {
-    updateData.bankName = data.bankName;
+    updateData.bankName = data.bankName
   }
   if (data.holdingAmount !== undefined) {
-    updateData.holdingAmount = data.holdingAmount.toString();
+    updateData.holdingAmount = data.holdingAmount.toString()
   }
 
   const [updatedHolding] = await db
     .update(currentHoldings)
     .set(updateData)
-    .where(and(eq(currentHoldings.id, id), eq(currentHoldings.familyId, familyId)))
-    .returning();
+    .where(
+      and(eq(currentHoldings.id, id), eq(currentHoldings.familyId, familyId))
+    )
+    .returning()
 
   // Record amount snapshot in history if amount changed
   if (data.holdingAmount !== undefined) {
@@ -148,36 +161,38 @@ export async function updateCurrentHolding(
       holdingId: id,
       userId,
       familyId,
-      amount: data.holdingAmount.toString(),
-    });
+      amount: data.holdingAmount.toString()
+    })
   }
 
   // Fetch family member name if linked (scoped to family)
-  let familyMemberName: string | null = null;
+  let familyMemberName: string | null = null
   if (updatedHolding.familyMemberId) {
     const familyMember = await db.query.familyMembers.findFirst({
       where: and(
         eq(familyMembers.id, updatedHolding.familyMemberId),
         eq(familyMembers.familyId, familyId)
-      ),
-    });
-    familyMemberName = familyMember?.name || null;
+      )
+    })
+    familyMemberName = familyMember?.name || null
   }
 
   return {
     ...updatedHolding,
     holdingAmount: updatedHolding.holdingAmount || "0",
-    familyMemberName,
-  };
+    familyMemberName
+  }
 }
 
 /**
  * Delete a current holding
  */
 export async function deleteCurrentHolding(id: string): Promise<void> {
-  const { familyId } = await getCurrentUserAndFamily();
+  const { familyId } = await getCurrentUserAndFamily()
 
   await db
     .delete(currentHoldings)
-    .where(and(eq(currentHoldings.id, id), eq(currentHoldings.familyId, familyId)));
+    .where(
+      and(eq(currentHoldings.id, id), eq(currentHoldings.familyId, familyId))
+    )
 }

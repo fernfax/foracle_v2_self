@@ -5,10 +5,9 @@
  * Explains the difference between OW and AW, and how to calculate
  * the Additional Wage ceiling for CPF contributions.
  */
+import { ingestToKnowledgeBase } from "../lib/vectors"
 
-require("dotenv").config({ path: ".env.local" });
-
-import { ingestToKnowledgeBase } from "../lib/vectors";
+require("dotenv").config({ path: ".env.local" })
 
 const OW_AW_DOCUMENT = {
   docId: "cpf-ow-aw-ceiling",
@@ -112,28 +111,28 @@ If you work for multiple employers in the same year:
   metadata: {
     source: "cpf-board-official",
     category: "cpf-wages",
-    lastUpdated: "2026-01-01",
-  },
-};
+    lastUpdated: "2026-01-01"
+  }
+}
 
 async function main() {
-  console.log("📊 Adding OW vs AW Knowledge to CPF Knowledge Base...\n");
+  console.log("📊 Adding OW vs AW Knowledge to CPF Knowledge Base...\n")
 
-  console.log(`📄 Ingesting: ${OW_AW_DOCUMENT.docId}`);
+  console.log(`📄 Ingesting: ${OW_AW_DOCUMENT.docId}`)
   try {
-    const result = await ingestToKnowledgeBase(OW_AW_DOCUMENT);
+    const result = await ingestToKnowledgeBase(OW_AW_DOCUMENT)
     console.log(
       `   ✅ Created ${result.chunksCreated} chunks, ${result.embeddingsGenerated} embeddings`
-    );
+    )
   } catch (error) {
-    console.error(`   ❌ Failed:`, error);
+    console.error(`   ❌ Failed:`, error)
   }
 
-  console.log("\n✨ Done!");
-  process.exit(0);
+  console.log("\n✨ Done!")
+  process.exit(0)
 }
 
 main().catch((error) => {
-  console.error("Update failed:", error);
-  process.exit(1);
-});
+  console.error("Update failed:", error)
+  process.exit(1)
+})

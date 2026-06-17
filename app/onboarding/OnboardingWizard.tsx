@@ -1,91 +1,142 @@
-"use client";
+"use client"
 
-import { useState, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { WizardContainer } from "@/components/onboarding/WizardContainer";
-import { WelcomeStep } from "@/components/onboarding/steps/WelcomeStep";
-import { UserDetailsStep } from "@/components/onboarding/steps/UserDetailsStep";
-import { IncomeStep } from "@/components/onboarding/steps/IncomeStep";
-import { CpfStep } from "@/components/onboarding/steps/CpfStep";
-import { HoldingsStep } from "@/components/onboarding/steps/HoldingsStep";
-import { ExpensesStep } from "@/components/onboarding/steps/ExpensesStep";
-import { ConfirmationStep } from "@/components/onboarding/steps/ConfirmationStep";
-import { User, DollarSign, PiggyBank, Building2, Wallet, CheckCircle2, LucideIcon } from "lucide-react";
+import { useCallback, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import {
+  Building2,
+  CheckCircle2,
+  DollarSign,
+  LucideIcon,
+  PiggyBank,
+  User,
+  Wallet
+} from "lucide-react"
+
+import { ConfirmationStep } from "@/components/onboarding/steps/ConfirmationStep"
+import { CpfStep } from "@/components/onboarding/steps/CpfStep"
+import { ExpensesStep } from "@/components/onboarding/steps/ExpensesStep"
+import { HoldingsStep } from "@/components/onboarding/steps/HoldingsStep"
+import { IncomeStep } from "@/components/onboarding/steps/IncomeStep"
+import { UserDetailsStep } from "@/components/onboarding/steps/UserDetailsStep"
+import { WelcomeStep } from "@/components/onboarding/steps/WelcomeStep"
+import { WizardContainer } from "@/components/onboarding/WizardContainer"
 
 // Type definitions for wizard data
 export interface FamilyMemberData {
-  id?: string;
-  name: string;
-  relationship: string;
-  dateOfBirth: string;
-  isContributing: boolean;
-  notes?: string;
+  id?: string
+  name: string
+  relationship: string
+  dateOfBirth: string
+  isContributing: boolean
+  notes?: string
 }
 
 export interface BonusGroup {
-  month: number;
-  amount: string;
+  month: number
+  amount: string
 }
 
 export interface IncomeData {
-  id?: string;
-  name: string;
-  category: string;
-  amount: string;
-  frequency: string;
-  subjectToCpf: boolean;
-  startDate: string;
-  accountForBonus?: boolean;
-  bonusGroups?: BonusGroup[];
+  id?: string
+  name: string
+  category: string
+  amount: string
+  frequency: string
+  subjectToCpf: boolean
+  startDate: string
+  accountForBonus?: boolean
+  bonusGroups?: BonusGroup[]
 }
 
 export interface CpfData {
-  cpfOrdinaryAccount: string;
-  cpfSpecialAccount: string;
-  cpfMedisaveAccount: string;
+  cpfOrdinaryAccount: string
+  cpfSpecialAccount: string
+  cpfMedisaveAccount: string
 }
 
 export interface HoldingData {
-  id?: string;
-  bankName: string;
-  holdingAmount: string;
+  id?: string
+  bankName: string
+  holdingAmount: string
 }
 
 export interface ExpenseSetupData {
-  categories: string[];
-  percentageOfIncome: number;
+  categories: string[]
+  percentageOfIncome: number
 }
 
 export interface OnboardingData {
-  familyMember: FamilyMemberData | null;
-  income: IncomeData | null;
-  cpf: CpfData | null;
-  holdings: HoldingData[];
-  expenses: ExpenseSetupData | null;
+  familyMember: FamilyMemberData | null
+  income: IncomeData | null
+  cpf: CpfData | null
+  holdings: HoldingData[]
+  expenses: ExpenseSetupData | null
 }
 
-const TOTAL_STEPS = 7;
-const DISPLAYED_STEPS = 6; // Excludes welcome page
+const TOTAL_STEPS = 7
+const DISPLAYED_STEPS = 6 // Excludes welcome page
 
 interface StepConfig {
-  title: string;
-  subtitle: string;
-  showProgress?: boolean;
-  displayStep: number;
-  icon?: LucideIcon;
-  iconBgColor?: string;
-  iconColor?: string;
+  title: string
+  subtitle: string
+  showProgress?: boolean
+  displayStep: number
+  icon?: LucideIcon
+  iconBgColor?: string
+  iconColor?: string
 }
 
 const STEP_CONFIG: StepConfig[] = [
   { title: "", subtitle: "", showProgress: false, displayStep: 0 }, // Welcome - no step number
-  { title: "Tell us about yourself", subtitle: "Let's start with your basic information", displayStep: 1, icon: User, iconBgColor: "bg-[rgba(58,107,82,0.12)]", iconColor: "text-[#3A6B52]" },
-  { title: "Your Income", subtitle: "Add your primary source of income", displayStep: 2, icon: DollarSign, iconBgColor: "bg-[rgba(0,196,170,0.12)]", iconColor: "text-[#007A68]" },
-  { title: "CPF Allocation", subtitle: "Add your CPF Holdings (Optional)", displayStep: 3, icon: PiggyBank, iconBgColor: "bg-[rgba(184,98,42,0.12)]", iconColor: "text-[#B8622A]" },
-  { title: "Current Holdings", subtitle: "Add your bank accounts and savings (Optional)", displayStep: 4, icon: Building2, iconBgColor: "bg-[rgba(212,168,67,0.15)]", iconColor: "text-[#7A5A00]" },
-  { title: "Your Expenses", subtitle: "Choose the categories where you typically spend money", displayStep: 5, icon: Wallet, iconBgColor: "bg-[rgba(212,132,90,0.12)]", iconColor: "text-[#B8622A]" },
-  { title: "You're all set!", subtitle: "Review your information and complete setup", displayStep: 6, icon: CheckCircle2, iconBgColor: "bg-[rgba(0,196,170,0.15)]", iconColor: "text-[#007A68]" },
-];
+  {
+    title: "Tell us about yourself",
+    subtitle: "Let's start with your basic information",
+    displayStep: 1,
+    icon: User,
+    iconBgColor: "bg-[rgba(58,107,82,0.12)]",
+    iconColor: "text-[#3A6B52]"
+  },
+  {
+    title: "Your Income",
+    subtitle: "Add your primary source of income",
+    displayStep: 2,
+    icon: DollarSign,
+    iconBgColor: "bg-[rgba(0,196,170,0.12)]",
+    iconColor: "text-[#007A68]"
+  },
+  {
+    title: "CPF Allocation",
+    subtitle: "Add your CPF Holdings (Optional)",
+    displayStep: 3,
+    icon: PiggyBank,
+    iconBgColor: "bg-[rgba(184,98,42,0.12)]",
+    iconColor: "text-[#B8622A]"
+  },
+  {
+    title: "Current Holdings",
+    subtitle: "Add your bank accounts and savings (Optional)",
+    displayStep: 4,
+    icon: Building2,
+    iconBgColor: "bg-[rgba(212,168,67,0.15)]",
+    iconColor: "text-[#7A5A00]"
+  },
+  {
+    title: "Your Expenses",
+    subtitle: "Choose the categories where you typically spend money",
+    displayStep: 5,
+    icon: Wallet,
+    iconBgColor: "bg-[rgba(212,132,90,0.12)]",
+    iconColor: "text-[#B8622A]"
+  },
+  {
+    title: "You're all set!",
+    subtitle: "Review your information and complete setup",
+    displayStep: 6,
+    icon: CheckCircle2,
+    iconBgColor: "bg-[rgba(0,196,170,0.15)]",
+    iconColor: "text-[#007A68]"
+  }
+]
 
 interface OnboardingWizardProps {
   // When true, the wizard runs in a sandboxed walkthrough mode used by
@@ -95,17 +146,21 @@ interface OnboardingWizardProps {
   // never fire. The whole wizard tree (including step components) is shared
   // between real onboarding and preview to guarantee they stay in sync —
   // when the real flow changes, the preview reflects it automatically.
-  previewMode?: boolean;
+  previewMode?: boolean
 }
 
-export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps = {}) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialStep = parseInt(searchParams.get("step") || "1", 10);
+export function OnboardingWizard({
+  previewMode = false
+}: OnboardingWizardProps = {}) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const initialStep = parseInt(searchParams.get("step") || "1", 10)
 
   const [currentStep, setCurrentStep] = useState(
-    isNaN(initialStep) || initialStep < 1 || initialStep > TOTAL_STEPS ? 1 : initialStep
-  );
+    isNaN(initialStep) || initialStep < 1 || initialStep > TOTAL_STEPS
+      ? 1
+      : initialStep
+  )
 
   // Wizard data state
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
@@ -113,74 +168,77 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
     income: null,
     cpf: null,
     holdings: [],
-    expenses: null,
-  });
+    expenses: null
+  })
 
   // Navigation handlers — in preview mode the URL is never updated so the
   // user can leave the preview cleanly, and we don't accidentally interact
   // with the real onboarding-status routing logic.
-  const goToStep = useCallback((step: number) => {
-    setCurrentStep(step);
-    if (!previewMode) {
-      router.push(`/onboarding?step=${step}`, { scroll: false });
-    }
-  }, [router, previewMode]);
+  const goToStep = useCallback(
+    (step: number) => {
+      setCurrentStep(step)
+      if (!previewMode) {
+        router.push(`/onboarding?step=${step}`, { scroll: false })
+      }
+    },
+    [router, previewMode]
+  )
 
   const handleNext = useCallback(() => {
     if (currentStep < TOTAL_STEPS) {
-      goToStep(currentStep + 1);
+      goToStep(currentStep + 1)
     }
-  }, [currentStep, goToStep]);
+  }, [currentStep, goToStep])
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) {
-      goToStep(currentStep - 1);
+      goToStep(currentStep - 1)
     }
-  }, [currentStep, goToStep]);
+  }, [currentStep, goToStep])
 
   const handleSkip = useCallback(() => {
-    handleNext();
-  }, [handleNext]);
+    handleNext()
+  }, [handleNext])
 
   // Data update handlers
   const updateFamilyMember = useCallback((data: FamilyMemberData) => {
-    setOnboardingData((prev) => ({ ...prev, familyMember: data }));
-  }, []);
+    setOnboardingData((prev) => ({ ...prev, familyMember: data }))
+  }, [])
 
   const updateIncome = useCallback((data: IncomeData) => {
-    setOnboardingData((prev) => ({ ...prev, income: data }));
-  }, []);
+    setOnboardingData((prev) => ({ ...prev, income: data }))
+  }, [])
 
   const updateCpf = useCallback((data: CpfData) => {
-    setOnboardingData((prev) => ({ ...prev, cpf: data }));
-  }, []);
+    setOnboardingData((prev) => ({ ...prev, cpf: data }))
+  }, [])
 
   const addHolding = useCallback((data: HoldingData) => {
     setOnboardingData((prev) => ({
       ...prev,
-      holdings: [...prev.holdings, data],
-    }));
-  }, []);
+      holdings: [...prev.holdings, data]
+    }))
+  }, [])
 
   const updateExpenses = useCallback((data: ExpenseSetupData) => {
-    setOnboardingData((prev) => ({ ...prev, expenses: data }));
-  }, []);
+    setOnboardingData((prev) => ({ ...prev, expenses: data }))
+  }, [])
 
   const handleComplete = useCallback(() => {
     if (previewMode) {
       // Loop back to the start so the previewer can step through repeatedly.
-      goToStep(1);
-      return;
+      goToStep(1)
+      return
     }
-    router.push("/overview");
-  }, [router, previewMode, goToStep]);
+    router.push("/overview")
+  }, [router, previewMode, goToStep])
 
-  const config = STEP_CONFIG[currentStep - 1];
+  const config = STEP_CONFIG[currentStep - 1]
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <WelcomeStep onNext={handleNext} />;
+        return <WelcomeStep onNext={handleNext} />
       case 2:
         return (
           <UserDetailsStep
@@ -189,7 +247,7 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
             onNext={handleNext}
             onBack={handleBack}
           />
-        );
+        )
       case 3:
         return (
           <IncomeStep
@@ -199,7 +257,7 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
             onNext={handleNext}
             onBack={handleBack}
           />
-        );
+        )
       case 4:
         return (
           <CpfStep
@@ -210,7 +268,7 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
             onBack={handleBack}
             onSkip={handleSkip}
           />
-        );
+        )
       case 5:
         return (
           <HoldingsStep
@@ -221,7 +279,7 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
             onBack={handleBack}
             onSkip={handleSkip}
           />
-        );
+        )
       case 6:
         return (
           <ExpensesStep
@@ -232,7 +290,7 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
             onBack={handleBack}
             onSkip={handleSkip}
           />
-        );
+        )
       case 7:
         return (
           <ConfirmationStep
@@ -240,17 +298,17 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
             onComplete={handleComplete}
             onBack={handleBack}
           />
-        );
+        )
       default:
-        return <WelcomeStep onNext={handleNext} />;
+        return <WelcomeStep onNext={handleNext} />
     }
-  };
+  }
 
   if (previewMode) {
     return (
       <div className="relative">
         {/* Top banner reminding the user this is a sandboxed walkthrough. */}
-        <div className="fixed inset-x-0 top-0 z-50 bg-brand-terracotta text-white text-xs font-semibold uppercase tracking-[0.18em] py-2 text-center shadow-md">
+        <div className="bg-brand-terracotta fixed inset-x-0 top-0 z-50 py-2 text-center text-xs font-semibold tracking-[0.18em] text-white uppercase shadow-md">
           Preview · no data is saved
         </div>
         {/* Visual wizard, completely inert. The real Continue / Save buttons
@@ -267,37 +325,34 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
               showProgress={config.showProgress !== false}
               icon={config.icon}
               iconBgColor={config.iconBgColor}
-              iconColor={config.iconColor}
-            >
+              iconColor={config.iconColor}>
               {renderStep()}
             </WizardContainer>
           </div>
         </div>
         {/* External navigation — sole interactive surface in preview mode. */}
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border/40 bg-background/95 backdrop-blur-sm">
+        <div className="border-border/40 bg-background/95 fixed inset-x-0 bottom-0 z-50 border-t backdrop-blur-sm">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-3">
             <button
               type="button"
               onClick={handleBack}
               disabled={currentStep <= 1}
-              className="rounded-md px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+              className="text-foreground hover:bg-muted rounded-md px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40">
               ← Back
             </button>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            <span className="text-muted-foreground text-xs font-semibold tracking-[0.2em] uppercase">
               Step {currentStep} of {TOTAL_STEPS}
             </span>
             <button
               type="button"
               onClick={currentStep < TOTAL_STEPS ? handleNext : handleComplete}
-              className="rounded-md bg-brand-terracotta px-4 py-2 text-sm font-semibold text-white hover:bg-brand-terracotta/90"
-            >
+              className="bg-brand-terracotta hover:bg-brand-terracotta/90 rounded-md px-4 py-2 text-sm font-semibold text-white">
               {currentStep < TOTAL_STEPS ? "Next →" : "Restart preview"}
             </button>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -309,9 +364,8 @@ export function OnboardingWizard({ previewMode = false }: OnboardingWizardProps 
       showProgress={config.showProgress !== false}
       icon={config.icon}
       iconBgColor={config.iconBgColor}
-      iconColor={config.iconColor}
-    >
+      iconColor={config.iconColor}>
       {renderStep()}
     </WizardContainer>
-  );
+  )
 }

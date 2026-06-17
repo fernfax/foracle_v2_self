@@ -19,9 +19,9 @@ export type AssetClassKey =
   | "vehicle"
   | "investments"
   | "insurance"
-  | "cpf";
-export type LiabilityClassKey = "propertyLoan" | "vehicleLoan";
-export type ClassKey = AssetClassKey | LiabilityClassKey;
+  | "cpf"
+export type LiabilityClassKey = "propertyLoan" | "vehicleLoan"
+export type ClassKey = AssetClassKey | LiabilityClassKey
 
 const CLASS_META: Record<ClassKey, { label: string; color: string }> = {
   cash: { label: "Cash & Deposits", color: "#00C4AA" },
@@ -31,92 +31,97 @@ const CLASS_META: Record<ClassKey, { label: string; color: string }> = {
   insurance: { label: "Insurance Cash Value", color: "#D4A843" },
   cpf: { label: "CPF Balances", color: "#5A9470" },
   propertyLoan: { label: "Home Loan", color: "#E05555" },
-  vehicleLoan: { label: "Car Loan", color: "#8B0000" },
-};
+  vehicleLoan: { label: "Car Loan", color: "#8B0000" }
+}
 
 /** A per-class aggregate (powers the composition bar and asset-class chips). */
 export interface NetWorthLine {
-  key: ClassKey;
-  label: string;
-  amount: number;
-  color: string;
-  count: number;
+  key: ClassKey
+  label: string
+  amount: number
+  color: string
+  count: number
 }
 
 /** A per-item row (powers the Assets / Liabilities tables). */
 export interface NetWorthRow {
-  id: string;
-  classKey: ClassKey;
-  classLabel: string;
-  label: string;
-  sublabel?: string;
-  value: number;
-  color: string;
+  id: string
+  classKey: ClassKey
+  classLabel: string
+  label: string
+  sublabel?: string
+  value: number
+  color: string
   /** Only cash is managed on this page; everything else links out. */
-  editable: boolean;
-  manageHref?: string;
+  editable: boolean
+  manageHref?: string
 }
 
 export interface CompositionSegment {
-  key: ClassKey;
-  label: string;
-  amount: number;
-  color: string;
-  pct: number;
+  key: ClassKey
+  label: string
+  amount: number
+  color: string
+  pct: number
 }
 
 export interface NetWorthSummary {
-  totalAssets: number;
-  totalLiabilities: number;
-  netWorth: number;
-  assetClasses: NetWorthLine[];
-  liabilityClasses: NetWorthLine[];
-  composition: CompositionSegment[];
-  assetRows: NetWorthRow[];
-  liabilityRows: NetWorthRow[];
+  totalAssets: number
+  totalLiabilities: number
+  netWorth: number
+  assetClasses: NetWorthLine[]
+  liabilityClasses: NetWorthLine[]
+  composition: CompositionSegment[]
+  assetRows: NetWorthRow[]
+  liabilityRows: NetWorthRow[]
 }
 
 // ---- minimal input shapes (callers pass full DB rows) ----------------------
 
 export interface NetWorthInput {
-  holdings: { id: string; bankName: string; holdingAmount: string }[];
+  holdings: { id: string; bankName: string; holdingAmount: string }[]
   properties: {
-    id: string;
-    propertyName: string;
-    originalPurchasePrice: string;
-    outstandingLoan: string;
-    isActive: boolean | null;
-  }[];
+    id: string
+    propertyName: string
+    originalPurchasePrice: string
+    outstandingLoan: string
+    isActive: boolean | null
+  }[]
   vehicles: {
-    id: string;
-    vehicleName: string;
-    originalPurchasePrice: string;
-    loanAmountTaken: string | null;
-    loanAmountRepaid: string | null;
-    isActive: boolean | null;
-  }[];
-  investments: { id: string; name: string; currentCapital: string; isActive: boolean | null }[];
+    id: string
+    vehicleName: string
+    originalPurchasePrice: string
+    loanAmountTaken: string | null
+    loanAmountRepaid: string | null
+    isActive: boolean | null
+  }[]
+  investments: {
+    id: string
+    name: string
+    currentCapital: string
+    isActive: boolean | null
+  }[]
   policies: {
-    id: string;
-    provider: string;
-    planName: string | null;
-    cashValue: string | null;
-    isActive: boolean | null;
-  }[];
+    id: string
+    provider: string
+    planName: string | null
+    cashValue: string | null
+    isActive: boolean | null
+  }[]
   /** Per-member CPF balances, precomputed via lib/cpf-balances.ts. */
-  cpf: { id: string; name: string; balance: number }[];
+  cpf: { id: string; name: string; balance: number }[]
 }
 
 const toNum = (s: string | null | undefined): number => {
-  const n = parseFloat(s ?? "");
-  return Number.isFinite(n) ? n : 0;
-};
+  const n = parseFloat(s ?? "")
+  return Number.isFinite(n) ? n : 0
+}
 
-const isActive = (a: boolean | null): boolean => a !== false;
+const isActive = (a: boolean | null): boolean => a !== false
 
 export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
-  const assetRows: NetWorthRow[] = [];
-  const liabilityRows: NetWorthRow[] = [];
+  const assetRows: NetWorthRow[] = []
+  const liabilityRows: NetWorthRow[] = []
 
   // Cash — the only class managed in-place on this page.
   for (const h of input.holdings) {
@@ -128,8 +133,8 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
       sublabel: "Bank account",
       value: toNum(h.holdingAmount),
       color: CLASS_META.cash.color,
-      editable: true,
-    });
+      editable: true
+    })
   }
 
   // Property — asset at purchase price, loan as a liability.
@@ -143,9 +148,9 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
       value: toNum(p.originalPurchasePrice),
       color: CLASS_META.property.color,
       editable: false,
-      manageHref: "/assets",
-    });
-    const loan = toNum(p.outstandingLoan);
+      manageHref: "/assets"
+    })
+    const loan = toNum(p.outstandingLoan)
     if (loan > 0) {
       liabilityRows.push({
         id: p.id,
@@ -155,8 +160,8 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
         value: loan,
         color: CLASS_META.propertyLoan.color,
         editable: false,
-        manageHref: "/assets",
-      });
+        manageHref: "/assets"
+      })
     }
   }
 
@@ -171,9 +176,12 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
       value: toNum(v.originalPurchasePrice),
       color: CLASS_META.vehicle.color,
       editable: false,
-      manageHref: "/assets",
-    });
-    const loan = Math.max(0, toNum(v.loanAmountTaken) - toNum(v.loanAmountRepaid));
+      manageHref: "/assets"
+    })
+    const loan = Math.max(
+      0,
+      toNum(v.loanAmountTaken) - toNum(v.loanAmountRepaid)
+    )
     if (loan > 0) {
       liabilityRows.push({
         id: v.id,
@@ -183,8 +191,8 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
         value: loan,
         color: CLASS_META.vehicleLoan.color,
         editable: false,
-        manageHref: "/assets",
-      });
+        manageHref: "/assets"
+      })
     }
   }
 
@@ -199,14 +207,14 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
       value: toNum(inv.currentCapital),
       color: CLASS_META.investments.color,
       editable: false,
-      manageHref: "/investments",
-    });
+      manageHref: "/investments"
+    })
   }
 
   // Insurance cash value — only policies that carry one.
   for (const pol of input.policies.filter((p) => isActive(p.isActive))) {
-    const cv = toNum(pol.cashValue);
-    if (cv <= 0) continue;
+    const cv = toNum(pol.cashValue)
+    if (cv <= 0) continue
     assetRows.push({
       id: pol.id,
       classKey: "insurance",
@@ -216,13 +224,13 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
       value: cv,
       color: CLASS_META.insurance.color,
       editable: false,
-      manageHref: "/policies",
-    });
+      manageHref: "/policies"
+    })
   }
 
   // CPF balances — read-only (computed), one row per member with a balance.
   for (const m of input.cpf) {
-    if (m.balance <= 0) continue;
+    if (m.balance <= 0) continue
     assetRows.push({
       id: m.id,
       classKey: "cpf",
@@ -231,44 +239,44 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
       sublabel: "OA + SA + MediSave",
       value: m.balance,
       color: CLASS_META.cpf.color,
-      editable: false,
-    });
+      editable: false
+    })
   }
 
   const classify = (rows: NetWorthRow[]): NetWorthLine[] => {
-    const map = new Map<ClassKey, NetWorthLine>();
+    const map = new Map<ClassKey, NetWorthLine>()
     for (const r of rows) {
-      const existing = map.get(r.classKey);
+      const existing = map.get(r.classKey)
       if (existing) {
-        existing.amount += r.value;
-        existing.count += 1;
+        existing.amount += r.value
+        existing.count += 1
       } else {
         map.set(r.classKey, {
           key: r.classKey,
           label: r.classLabel,
           amount: r.value,
           color: r.color,
-          count: 1,
-        });
+          count: 1
+        })
       }
     }
-    return [...map.values()].sort((a, b) => b.amount - a.amount);
-  };
+    return [...map.values()].sort((a, b) => b.amount - a.amount)
+  }
 
-  const assetClasses = classify(assetRows);
-  const liabilityClasses = classify(liabilityRows);
+  const assetClasses = classify(assetRows)
+  const liabilityClasses = classify(liabilityRows)
 
-  const totalAssets = assetClasses.reduce((s, c) => s + c.amount, 0);
-  const totalLiabilities = liabilityClasses.reduce((s, c) => s + c.amount, 0);
-  const netWorth = totalAssets - totalLiabilities;
+  const totalAssets = assetClasses.reduce((s, c) => s + c.amount, 0)
+  const totalLiabilities = liabilityClasses.reduce((s, c) => s + c.amount, 0)
+  const netWorth = totalAssets - totalLiabilities
 
   const composition: CompositionSegment[] = assetClasses.map((c) => ({
     key: c.key,
     label: c.label,
     amount: c.amount,
     color: c.color,
-    pct: totalAssets > 0 ? c.amount / totalAssets : 0,
-  }));
+    pct: totalAssets > 0 ? c.amount / totalAssets : 0
+  }))
 
   return {
     totalAssets,
@@ -278,6 +286,6 @@ export function computeNetWorth(input: NetWorthInput): NetWorthSummary {
     liabilityClasses,
     composition,
     assetRows,
-    liabilityRows,
-  };
+    liabilityRows
+  }
 }

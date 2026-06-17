@@ -7,22 +7,22 @@
  * user prefers reduced motion.
  */
 type ViewTransitionDocument = Document & {
-  startViewTransition?: (callback: () => void) => { finished: Promise<void> };
-};
+  startViewTransition?: (callback: () => void) => { finished: Promise<void> }
+}
 
 export function applyThemeWithTransition(apply: () => void) {
   if (typeof document === "undefined") {
-    apply();
-    return;
+    apply()
+    return
   }
-  const doc = document as ViewTransitionDocument;
+  const doc = document as ViewTransitionDocument
   const reduceMotion =
     typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
 
   if (!doc.startViewTransition || reduceMotion) {
-    apply();
-    return;
+    apply()
+    return
   }
-  doc.startViewTransition(apply);
+  doc.startViewTransition(apply)
 }

@@ -28,10 +28,9 @@ const buttonVariants = cva(
         ghost:
           "border border-border/30 bg-background text-foreground/70 hover:bg-muted/60 hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline px-0 h-auto",
-        teal:
-          "bg-[#00C4AA] text-[#1C2B2A] shadow-[0_2px_8px_rgba(0,196,170,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#33D4BC] hover:shadow-[0_4px_12px_rgba(0,196,170,0.24)] active:translate-y-px",
+        teal: "bg-[#00C4AA] text-[#1C2B2A] shadow-[0_2px_8px_rgba(0,196,170,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#33D4BC] hover:shadow-[0_4px_12px_rgba(0,196,170,0.24)] active:translate-y-px",
         warning:
-          "bg-[#D4A843] text-[#1C2B2A] shadow-[0_2px_8px_rgba(212,168,67,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#D4A843]/90 active:translate-y-px",
+          "bg-[#D4A843] text-[#1C2B2A] shadow-[0_2px_8px_rgba(212,168,67,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#D4A843]/90 active:translate-y-px"
       },
       size: {
         default: "h-9 px-[22px] py-[10px] has-[>svg]:px-4",
@@ -39,13 +38,13 @@ const buttonVariants = cva(
         lg: "h-11 px-7 py-[13px] text-[15px] has-[>svg]:px-5",
         icon: "size-9",
         "icon-sm": "size-8",
-        "icon-lg": "size-10",
-      },
+        "icon-lg": "size-10"
+      }
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
-    },
+      size: "default"
+    }
   }
 )
 

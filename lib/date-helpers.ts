@@ -1,4 +1,4 @@
-import { format, startOfToday } from "date-fns";
+import { format, startOfToday } from "date-fns"
 
 /**
  * Midnight today (local time). Reuse this for "no future dates" calendar
@@ -7,12 +7,12 @@ import { format, startOfToday } from "date-fns";
  * `new Date()` around.
  */
 export function today(): Date {
-  return startOfToday();
+  return startOfToday()
 }
 
 /** Today as a `yyyy-MM-dd` string, matching the ISO dates we persist. */
 export function todayIso(): string {
-  return format(startOfToday(), "yyyy-MM-dd");
+  return format(startOfToday(), "yyyy-MM-dd")
 }
 
 /**
@@ -21,5 +21,5 @@ export function todayIso(): string {
  * format is zero-padded and fixed-width.
  */
 export function isFutureIsoDate(iso: string): boolean {
-  return iso > todayIso();
+  return iso > todayIso()
 }

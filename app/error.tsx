@@ -1,21 +1,20 @@
-"use client";
+"use client"
 
 export default function Error({
   error,
-  reset,
+  reset
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
-      <h2 className="text-2xl font-semibold mb-4">Something went wrong!</h2>
+      <h2 className="mb-4 text-2xl font-semibold">Something went wrong!</h2>
       <button
         onClick={() => reset()}
-        className="px-4 py-2 bg-foreground text-background rounded-md"
-      >
+        className="bg-foreground text-background rounded-md px-4 py-2">
         Try again
       </button>
     </div>
-  );
+  )
 }

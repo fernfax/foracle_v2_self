@@ -1,18 +1,23 @@
-"use client";
+"use client"
 
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { ReactNode, useEffect, useRef, useState } from "react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover"
 
 interface EditablePillProps {
-  className?: string;
-  ariaLabel: string;
-  children: ReactNode;
-  renderEditor: (close: () => void) => ReactNode;
-  align?: "start" | "center" | "end";
-  disabled?: boolean;
+  className?: string
+  ariaLabel: string
+  children: ReactNode
+  renderEditor: (close: () => void) => ReactNode
+  align?: "start" | "center" | "end"
+  disabled?: boolean
 }
 
 export function EditablePill({
@@ -21,42 +26,43 @@ export function EditablePill({
   children,
   renderEditor,
   align = "center",
-  disabled = false,
+  disabled = false
 }: EditablePillProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
   return (
-    <Popover open={open && !disabled} onOpenChange={(v) => !disabled && setOpen(v)}>
+    <Popover
+      open={open && !disabled}
+      onOpenChange={(v) => !disabled && setOpen(v)}>
       <PopoverTrigger asChild>
         <button
           type="button"
           aria-label={ariaLabel}
           disabled={disabled}
           className={cn(
-            "mx-0.5 inline-flex items-center rounded-md border px-2 py-0.5 font-display text-sm font-semibold transition-all",
-            "hover:shadow-sm hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-            disabled && "cursor-not-allowed opacity-70 hover:scale-100 hover:shadow-none",
+            "font-display mx-0.5 inline-flex items-center rounded-md border px-2 py-0.5 text-sm font-semibold transition-all",
+            "focus-visible:ring-ring hover:scale-[1.02] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
+            disabled &&
+              "cursor-not-allowed opacity-70 hover:scale-100 hover:shadow-none",
             className
-          )}
-        >
+          )}>
           {children}
         </button>
       </PopoverTrigger>
       <PopoverContent
         align={align}
-        className="p-0 border-0 bg-transparent shadow-none w-auto"
-      >
+        className="w-auto border-0 bg-transparent p-0 shadow-none">
         {renderEditor(() => setOpen(false))}
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 interface TextPillEditorProps {
-  initial: string;
-  onCommit: (next: string) => void;
-  onCancel: () => void;
-  placeholder?: string;
-  minWidth?: number;
+  initial: string
+  onCommit: (next: string) => void
+  onCancel: () => void
+  placeholder?: string
+  minWidth?: number
 }
 
 export function TextPillEditor({
@@ -64,26 +70,25 @@ export function TextPillEditor({
   onCommit,
   onCancel,
   placeholder,
-  minWidth = 200,
+  minWidth = 200
 }: TextPillEditorProps) {
-  const [value, setValue] = useState(initial);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [value, setValue] = useState(initial)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    inputRef.current?.select();
-  }, []);
+    inputRef.current?.select()
+  }, [])
 
   const commit = () => {
-    const trimmed = value.trim();
-    if (trimmed && trimmed !== initial) onCommit(trimmed);
-    else onCancel();
-  };
+    const trimmed = value.trim()
+    if (trimmed && trimmed !== initial) onCommit(trimmed)
+    else onCancel()
+  }
 
   return (
     <div
-      className="rounded-xl border border-border/40 bg-popover text-popover-foreground p-2 shadow-xl"
-      style={{ minWidth }}
-    >
+      className="border-border/40 bg-popover text-popover-foreground rounded-xl border p-2 shadow-xl"
+      style={{ minWidth }}>
       <input
         ref={inputRef}
         type="text"
@@ -92,40 +97,40 @@ export function TextPillEditor({
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            e.preventDefault();
-            commit();
+            e.preventDefault()
+            commit()
           } else if (e.key === "Escape") {
-            e.preventDefault();
-            onCancel();
+            e.preventDefault()
+            onCancel()
           }
         }}
         onBlur={commit}
-        className="w-full bg-transparent px-2 py-1 font-display text-sm font-semibold focus:outline-none"
+        className="font-display w-full bg-transparent px-2 py-1 text-sm font-semibold focus:outline-none"
       />
     </div>
-  );
+  )
 }
 
 interface DatePillEditorProps {
-  initial: Date;
-  onCommit: (next: Date) => void;
-  onClear?: () => void;
-  clearLabel?: string;
+  initial: Date
+  onCommit: (next: Date) => void
+  onClear?: () => void
+  clearLabel?: string
 }
 
 export function DatePillEditor({
   initial,
   onCommit,
   onClear,
-  clearLabel = "No end date",
+  clearLabel = "No end date"
 }: DatePillEditorProps) {
   return (
-    <div className="rounded-xl border border-border/40 bg-popover text-popover-foreground p-2 shadow-xl">
+    <div className="border-border/40 bg-popover text-popover-foreground rounded-xl border p-2 shadow-xl">
       <Calendar
         mode="single"
         selected={initial}
         onSelect={(d) => {
-          if (d) onCommit(d);
+          if (d) onCommit(d)
         }}
         initialFocus
       />
@@ -137,5 +142,5 @@ export function DatePillEditor({
         </div>
       )}
     </div>
-  );
+  )
 }

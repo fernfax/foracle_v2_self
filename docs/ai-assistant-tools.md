@@ -8,18 +8,18 @@ This document describes the tools available to the Foracle AI Assistant. These t
 
 The AI Assistant has access to **10 tools** that help it understand and analyze your financial situation:
 
-| Tool | Purpose | Data Source |
-|------|---------|-------------|
-| `get_income_summary` | Detailed income and CPF breakdown | `incomes`, `family_members` |
-| `get_expenses_summary` | Detailed recurring expense breakdown | `expenses`, `expense_categories` |
-| `get_daily_expense_summary` | Actual daily spending history | `daily_expenses`, `expense_subcategories` |
-| `get_family_summary` | Household structure and income inclusion | `family_members`, `incomes` |
-| `get_balance_summary` | Projected savings over a date range | `current_holdings`, `incomes`, `expenses` |
-| `get_holdings_summary` | Current cash and liquid assets | `current_holdings`, `family_members` |
-| `get_property_assets_summary` | Property assets and mortgages | `property_assets` |
-| `get_vehicle_assets_summary` | Vehicle assets and loans | `vehicle_assets` |
-| `get_other_assets_summary` | Other assets (investments, etc.) | `assets` |
-| `get_insurance_summary` | Insurance policies and coverage | `policies` |
+| Tool                          | Purpose                                  | Data Source                               |
+| ----------------------------- | ---------------------------------------- | ----------------------------------------- |
+| `get_income_summary`          | Detailed income and CPF breakdown        | `incomes`, `family_members`               |
+| `get_expenses_summary`        | Detailed recurring expense breakdown     | `expenses`, `expense_categories`          |
+| `get_daily_expense_summary`   | Actual daily spending history            | `daily_expenses`, `expense_subcategories` |
+| `get_family_summary`          | Household structure and income inclusion | `family_members`, `incomes`               |
+| `get_balance_summary`         | Projected savings over a date range      | `current_holdings`, `incomes`, `expenses` |
+| `get_holdings_summary`        | Current cash and liquid assets           | `current_holdings`, `family_members`      |
+| `get_property_assets_summary` | Property assets and mortgages            | `property_assets`                         |
+| `get_vehicle_assets_summary`  | Vehicle assets and loans                 | `vehicle_assets`                          |
+| `get_other_assets_summary`    | Other assets (investments, etc.)         | `assets`                                  |
+| `get_insurance_summary`       | Insurance policies and coverage          | `policies`                                |
 
 ---
 
@@ -31,12 +31,14 @@ The AI Assistant has access to **10 tools** that help it understand and analyze 
 Gives a detailed breakdown of all your income for a specific month. In Singapore, this includes CPF (Central Provident Fund) calculations — how much goes to your retirement accounts.
 
 **When the assistant uses it:**
+
 - "What's my take-home pay this month?"
 - "How much CPF am I contributing?"
 - "Break down my income sources"
 - "What's my gross vs net salary?"
 
 **What it returns:**
+
 - Total gross income (before deductions)
 - Total net income (take-home pay)
 - CPF breakdown:
@@ -65,12 +67,14 @@ Gives a detailed breakdown of all your income for a specific month. In Singapore
 Provides a detailed breakdown of all your recurring expenses for a specific month. Shows what you're spending money on and which categories cost the most.
 
 **When the assistant uses it:**
+
 - "What are my monthly expenses?"
 - "Break down my spending by category"
 - "What are my biggest recurring costs?"
 - "How much do I spend on insurance?"
 
 **What it returns:**
+
 - Total monthly expenses
 - Number of expense items
 - Category breakdown (sorted by amount):
@@ -104,6 +108,7 @@ Provides a detailed breakdown of all your recurring expenses for a specific mont
 Shows your actual daily spending over a date range. Unlike `get_expenses_summary` which shows planned recurring expenses, this tool shows real money you've spent, tracked day by day. Perfect for understanding your actual spending habits.
 
 **When the assistant uses it:**
+
 - "How much did I spend on food this month?"
 - "What were my transport costs last week?"
 - "Show my spending for February"
@@ -111,6 +116,7 @@ Shows your actual daily spending over a date range. Unlike `get_expenses_summary
 - "What's my daily average spending?"
 
 **What it returns:**
+
 - Date range and days covered
 - Total amount spent
 - Average spending per day
@@ -152,12 +158,14 @@ Shows your actual daily spending over a date range. Unlike `get_expenses_summary
 Shows your household structure — who's in your family and whose income counts toward your household total. This is important for understanding combined household income.
 
 **When the assistant uses it:**
+
 - "What's our household income?"
 - "How much does my spouse earn?"
 - "Who's included in our family finances?"
 - "Why did our household income change?"
 
 **What it returns:**
+
 - List of family members with:
   - Name
   - Relationship (spouse, child, etc.)
@@ -186,6 +194,7 @@ Shows your household structure — who's in your family and whose income counts 
 Projects your cumulative savings/balance over a date range. Shows month-by-month income, expenses, net savings, and running balance. Starting balance comes from your current bank holdings. Supports "what-if" scenarios to see how hypothetical expenses or income would affect your balance.
 
 **When the assistant uses it:**
+
 - "How much will I have saved by December?"
 - "What will my balance be in 3 months?"
 - "How much will I save this year?"
@@ -193,6 +202,7 @@ Projects your cumulative savings/balance over a date range. Shows month-by-month
 - "Can I afford a $3,000 purchase next month?"
 
 **What it returns:**
+
 - Starting balance (from current holdings)
 - Monthly projections with:
   - Income for the month
@@ -235,6 +245,7 @@ Projects your cumulative savings/balance over a date range. Shows month-by-month
 Shows your current cash holdings and liquid assets — how much money you have in your bank accounts right now. This is separate from income (which is recurring) and gives a snapshot of your current financial position.
 
 **When the assistant uses it:**
+
 - "How much money do I have?"
 - "What's my current savings?"
 - "What's my bank balance?"
@@ -242,6 +253,7 @@ Shows your current cash holdings and liquid assets — how much money you have i
 - "What's in my accounts?"
 
 **What it returns:**
+
 - Total holdings (sum across all accounts)
 - Number of accounts
 - Individual holdings with:
@@ -271,6 +283,7 @@ Shows your current cash holdings and liquid assets — how much money you have i
 Shows details about all property assets you own — houses, HDB flats, condos, etc. Includes purchase price, loan details, CPF usage, and equity calculations.
 
 **When the assistant uses it:**
+
 - "What properties do I own?"
 - "How much do I owe on my mortgage?"
 - "What's my home equity?"
@@ -278,6 +291,7 @@ Shows details about all property assets you own — houses, HDB flats, condos, e
 - "What are my monthly mortgage payments?"
 
 **What it returns:**
+
 - Total property value (sum of purchase prices)
 - Total outstanding loans
 - Total equity owned
@@ -306,6 +320,7 @@ Shows details about all property assets you own — houses, HDB flats, condos, e
 Shows details about all vehicles you own — cars, motorcycles, etc. Includes purchase price, loan status, and COE expiry (Singapore-specific).
 
 **When the assistant uses it:**
+
 - "What cars do I own?"
 - "How much do I owe on my car loan?"
 - "When does my COE expire?"
@@ -313,6 +328,7 @@ Shows details about all vehicles you own — cars, motorcycles, etc. Includes pu
 - "What are my car loan payments?"
 
 **What it returns:**
+
 - Total vehicle value
 - Total outstanding loans
 - Total monthly payments
@@ -339,6 +355,7 @@ Shows details about all vehicles you own — cars, motorcycles, etc. Includes pu
 Shows details about other assets you track — investments, savings, collectibles, etc. Can be filtered by asset type.
 
 **When the assistant uses it:**
+
 - "What other assets do I have?"
 - "What are my investments worth?"
 - "Show me my asset portfolio"
@@ -346,6 +363,7 @@ Shows details about other assets you track — investments, savings, collectible
 - "What's my total net worth from assets?"
 
 **What it returns:**
+
 - Total current value
 - Total purchase value
 - Overall gain/loss
@@ -376,6 +394,7 @@ Shows details about other assets you track — investments, savings, collectible
 Shows details about all your insurance policies — life, health, auto, home, etc. Includes provider, premium amounts, coverage details, and policy status.
 
 **When the assistant uses it:**
+
 - "What insurance do I have?"
 - "How much am I paying for insurance?"
 - "What's my life insurance coverage?"
@@ -383,6 +402,7 @@ Shows details about all your insurance policies — life, health, auto, home, et
 - "How much death coverage do I have?"
 
 **What it returns:**
+
 - Total annual and monthly premiums
 - Total death and critical illness coverage
 - Breakdown by policy type
@@ -413,19 +433,19 @@ Shows details about all your insurance policies — life, health, auto, home, et
 
 ## Database Tables Reference
 
-| Table | Description | Key Fields |
-|-------|-------------|------------|
-| `incomes` | All income sources | `name`, `amount`, `frequency`, `family_member_id`, `subject_to_cpf`, `future_milestones` |
-| `expenses` | Recurring expenses | `name`, `amount`, `frequency`, `category`, `is_active` |
-| `daily_expenses` | Actual daily spending | `date`, `category_name`, `subcategory_name`, `amount`, `note`, `original_currency` |
-| `expense_categories` | Expense categories | `name`, `icon`, `is_default`, `tracked_in_budget` |
-| `expense_subcategories` | Expense subcategories | `name`, `category_id` |
-| `family_members` | Household members | `name`, `relationship`, `is_contributing`, `date_of_birth` |
-| `current_holdings` | Bank account balances | `bank_name`, `holding_amount`, `family_member_id` |
-| `property_assets` | Property/real estate | `property_name`, `original_purchase_price`, `outstanding_loan`, `monthly_loan_payment`, `interest_rate` |
-| `vehicle_assets` | Vehicles | `vehicle_name`, `original_purchase_price`, `coe_expiry_date`, `loan_amount_taken`, `loan_amount_repaid` |
-| `assets` | Other assets | `name`, `type`, `current_value`, `purchase_value`, `purchase_date` |
-| `policies` | Insurance policies | `provider`, `policy_type`, `premium_amount`, `premium_frequency`, `coverage_options`, `status` |
+| Table                   | Description           | Key Fields                                                                                              |
+| ----------------------- | --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `incomes`               | All income sources    | `name`, `amount`, `frequency`, `family_member_id`, `subject_to_cpf`, `future_milestones`                |
+| `expenses`              | Recurring expenses    | `name`, `amount`, `frequency`, `category`, `is_active`                                                  |
+| `daily_expenses`        | Actual daily spending | `date`, `category_name`, `subcategory_name`, `amount`, `note`, `original_currency`                      |
+| `expense_categories`    | Expense categories    | `name`, `icon`, `is_default`, `tracked_in_budget`                                                       |
+| `expense_subcategories` | Expense subcategories | `name`, `category_id`                                                                                   |
+| `family_members`        | Household members     | `name`, `relationship`, `is_contributing`, `date_of_birth`                                              |
+| `current_holdings`      | Bank account balances | `bank_name`, `holding_amount`, `family_member_id`                                                       |
+| `property_assets`       | Property/real estate  | `property_name`, `original_purchase_price`, `outstanding_loan`, `monthly_loan_payment`, `interest_rate` |
+| `vehicle_assets`        | Vehicles              | `vehicle_name`, `original_purchase_price`, `coe_expiry_date`, `loan_amount_taken`, `loan_amount_repaid` |
+| `assets`                | Other assets          | `name`, `type`, `current_value`, `purchase_value`, `purchase_date`                                      |
+| `policies`              | Insurance policies    | `provider`, `policy_type`, `premium_amount`, `premium_frequency`, `coverage_options`, `status`          |
 
 ---
 
@@ -434,30 +454,36 @@ Shows details about all your insurance policies — life, health, auto, home, et
 The assistant often combines multiple tools to answer complex questions:
 
 **Example: "What's our household income this month?"**
+
 1. First calls `get_family_summary` to understand who's in the household
 2. Then calls `get_income_summary` to get the actual income numbers
 3. Combines the information to explain total household income and who contributes
 
 **Example: "How much will I save this year?"**
+
 1. Calls `get_balance_summary` with the date range for the year
 2. Returns the projected final balance and total net savings
 
 **Example: "Can I afford a $5,000 trip to Japan in June?"**
+
 1. Calls `get_balance_summary` with hypothetical expense of $5,000 in June
 2. Shows the impact on savings and whether the balance stays positive
 3. Provides the percentage of monthly balance the trip would consume
 
 **Example: "What's my monthly cash flow?"**
+
 1. Calls `get_income_summary` to understand monthly income
 2. Calls `get_expenses_summary` to understand fixed costs
 3. Calculates the difference to show disposable income
 
 **Example: "How much do I have in the bank?"**
+
 1. Calls `get_holdings_summary` to get all current holdings
 2. Returns total across all accounts with individual breakdown
 3. Shows which accounts belong to which family members
 
 **Example: "What's my net worth?"**
+
 1. Calls `get_holdings_summary` for liquid assets
 2. Calls `get_property_assets_summary` for property equity
 3. Calls `get_vehicle_assets_summary` for vehicle values
@@ -465,20 +491,24 @@ The assistant often combines multiple tools to answer complex questions:
 5. Combines all to calculate total net worth
 
 **Example: "How much do I owe across all loans?"**
+
 1. Calls `get_property_assets_summary` for mortgage balances
 2. Calls `get_vehicle_assets_summary` for car loan balances
 3. Sums up all outstanding loans
 
 **Example: "Am I adequately insured?"**
+
 1. Calls `get_insurance_summary` to get all active policies
 2. Calls `get_income_summary` to understand annual income
 3. Compares death/CI coverage against typical recommendations (e.g., 10x annual income)
 
 **Example: "How much did I spend on food this month?"**
+
 1. Calls `get_daily_expense_summary` with current month and category filter "Food"
 2. Returns total spent on food with subcategory breakdown (Groceries, Dining Out, etc.)
 
 **Example: "Am I overspending compared to my budget?"**
+
 1. Calls `get_expenses_summary` to get planned/budgeted expenses
 2. Calls `get_daily_expense_summary` to get actual spending for the same period
 3. Compares actual vs budgeted amounts by category

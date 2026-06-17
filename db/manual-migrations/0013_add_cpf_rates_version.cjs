@@ -8,29 +8,29 @@
  *
  *   node db/manual-migrations/0013_add_cpf_rates_version.cjs
  */
-"use strict";
-const postgres = require("postgres");
+"use strict"
+const postgres = require("postgres")
 
 async function main() {
-  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set");
-  const sql = postgres(process.env.DATABASE_URL, { max: 1 });
+  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set")
+  const sql = postgres(process.env.DATABASE_URL, { max: 1 })
   try {
-    await sql`ALTER TABLE incomes_beta ADD COLUMN IF NOT EXISTS cpf_rates_version varchar(20)`;
+    await sql`ALTER TABLE incomes_beta ADD COLUMN IF NOT EXISTS cpf_rates_version varchar(20)`
     const [{ exists }] = await sql`
       select count(*) > 0 as exists
       from information_schema.columns
       where table_name = 'incomes_beta' and column_name = 'cpf_rates_version'
-    `;
+    `
     console.log(
       exists
         ? "OK — incomes_beta.cpf_rates_version is present."
         : "ERROR — column still missing after ALTER."
-    );
+    )
   } finally {
-    await sql.end();
+    await sql.end()
   }
 }
 main().catch((e) => {
-  console.error("Migration aborted:", e.message);
-  process.exit(1);
-});
+  console.error("Migration aborted:", e.message)
+  process.exit(1)
+})

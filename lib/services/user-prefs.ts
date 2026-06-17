@@ -1,17 +1,23 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import type { AuthContext } from "@/lib/auth-context";
-import { TOUR_NAMES, emptyTourStatus, type TourName, type TourStatus } from "@/lib/api-schemas/user-prefs";
+import { db } from "@/db"
+import { eq } from "drizzle-orm"
 
-const EMPTY_TOUR_STATUS: TourStatus = emptyTourStatus();
+import {
+  emptyTourStatus,
+  TOUR_NAMES,
+  type TourName,
+  type TourStatus
+} from "@/lib/api-schemas/user-prefs"
+import type { AuthContext } from "@/lib/auth-context"
+import { users } from "@/db/schema"
+
+const EMPTY_TOUR_STATUS: TourStatus = emptyTourStatus()
 
 export async function getSinglishMode(ctx: AuthContext): Promise<boolean> {
   const user = await db.query.users.findFirst({
     where: eq(users.id, ctx.userId),
-    columns: { singlishMode: true },
-  });
-  return user?.singlishMode ?? false;
+    columns: { singlishMode: true }
+  })
+  return user?.singlishMode ?? false
 }
 
 export async function setSinglishMode(
@@ -21,25 +27,25 @@ export async function setSinglishMode(
   await db
     .update(users)
     .set({ singlishMode: enabled, updatedAt: new Date() })
-    .where(eq(users.id, ctx.userId));
-  return enabled;
+    .where(eq(users.id, ctx.userId))
+  return enabled
 }
 
-export type BackgroundDecor = "radial" | "peranakan" | "none";
+export type BackgroundDecor = "radial" | "peranakan" | "none"
 
-const VALID_DECORS: BackgroundDecor[] = ["radial", "peranakan", "none"];
+const VALID_DECORS: BackgroundDecor[] = ["radial", "peranakan", "none"]
 
 export async function getBackgroundDecor(
   ctx: AuthContext
 ): Promise<BackgroundDecor> {
   const user = await db.query.users.findFirst({
     where: eq(users.id, ctx.userId),
-    columns: { backgroundDecor: true },
-  });
-  const value = user?.backgroundDecor;
+    columns: { backgroundDecor: true }
+  })
+  const value = user?.backgroundDecor
   return VALID_DECORS.includes(value as BackgroundDecor)
     ? (value as BackgroundDecor)
-    : "radial";
+    : "radial"
 }
 
 export async function setBackgroundDecor(
@@ -47,13 +53,13 @@ export async function setBackgroundDecor(
   decor: BackgroundDecor
 ): Promise<BackgroundDecor> {
   if (!VALID_DECORS.includes(decor)) {
-    throw new Error(`Invalid background decor: ${decor}`);
+    throw new Error(`Invalid background decor: ${decor}`)
   }
   await db
     .update(users)
     .set({ backgroundDecor: decor, updatedAt: new Date() })
-    .where(eq(users.id, ctx.userId));
-  return decor;
+    .where(eq(users.id, ctx.userId))
+  return decor
 }
 
 // Tour status is persisted as a JSON-stringified Record on users.tourCompletedAt.
@@ -62,20 +68,20 @@ export async function setBackgroundDecor(
 export async function getTourStatus(ctx: AuthContext): Promise<TourStatus> {
   const user = await db.query.users.findFirst({
     where: eq(users.id, ctx.userId),
-    columns: { tourCompletedAt: true },
-  });
-  if (!user?.tourCompletedAt) return { ...EMPTY_TOUR_STATUS };
+    columns: { tourCompletedAt: true }
+  })
+  if (!user?.tourCompletedAt) return { ...EMPTY_TOUR_STATUS }
   try {
-    const parsed = JSON.parse(user.tourCompletedAt) as Partial<TourStatus>;
+    const parsed = JSON.parse(user.tourCompletedAt) as Partial<TourStatus>
     // Start from the full set of tour keys so newly-added tours always resolve
     // to null rather than undefined, then overlay whatever was persisted.
-    const result = { ...EMPTY_TOUR_STATUS };
+    const result = { ...EMPTY_TOUR_STATUS }
     for (const name of TOUR_NAMES) {
-      result[name] = parsed[name] ?? null;
+      result[name] = parsed[name] ?? null
     }
-    return result;
+    return result
   } catch {
-    return { ...EMPTY_TOUR_STATUS };
+    return { ...EMPTY_TOUR_STATUS }
   }
 }
 
@@ -87,36 +93,36 @@ async function writeTourStatus(
     .update(users)
     .set({
       tourCompletedAt: JSON.stringify(status),
-      updatedAt: new Date(),
+      updatedAt: new Date()
     })
-    .where(eq(users.id, ctx.userId));
-  return status;
+    .where(eq(users.id, ctx.userId))
+  return status
 }
 
 export async function markTourCompleted(
   ctx: AuthContext,
   tour: TourName
 ): Promise<TourStatus> {
-  const current = await getTourStatus(ctx);
-  current[tour] = new Date().toISOString();
-  return writeTourStatus(ctx, current);
+  const current = await getTourStatus(ctx)
+  current[tour] = new Date().toISOString()
+  return writeTourStatus(ctx, current)
 }
 
 export async function resetTourStatus(
   ctx: AuthContext,
   tour: TourName
 ): Promise<TourStatus> {
-  const current = await getTourStatus(ctx);
-  current[tour] = null;
-  return writeTourStatus(ctx, current);
+  const current = await getTourStatus(ctx)
+  current[tour] = null
+  return writeTourStatus(ctx, current)
 }
 
 export async function isTourCompleted(
   ctx: AuthContext,
   tour: TourName
 ): Promise<boolean> {
-  const status = await getTourStatus(ctx);
-  return status[tour] !== null;
+  const status = await getTourStatus(ctx)
+  return status[tour] !== null
 }
 
-export { TOUR_NAMES };
+export { TOUR_NAMES }

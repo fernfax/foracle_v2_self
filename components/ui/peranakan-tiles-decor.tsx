@@ -23,13 +23,8 @@ export function PeranakanTilesDecor() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 opacity-[0.22] dark:opacity-[0.20]"
-    >
-      <svg
-        width="100%"
-        height="100%"
-        xmlns="http://www.w3.org/2000/svg"
-      >
+      className="pointer-events-none fixed inset-0 -z-10 opacity-[0.22] dark:opacity-[0.20]">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
           {/* One repeating tile = 4 motifs in a 2×2 grid = 400×400 box */}
           <pattern
@@ -39,8 +34,7 @@ export function PeranakanTilesDecor() {
             width="400"
             height="400"
             patternUnits="userSpaceOnUse"
-            patternTransform="scale(0.5)"
-          >
+            patternTransform="scale(0.5)">
             {/* ──── Cell 1 (0,0): 8-petal floral, terracotta ──── */}
             <g transform="translate(0 0)">
               <rect
@@ -85,9 +79,15 @@ export function PeranakanTilesDecor() {
                 [22, 22],
                 [178, 22],
                 [22, 178],
-                [178, 178],
+                [178, 178]
               ].map(([x, y]) => (
-                <circle key={`f-${x}-${y}`} cx={x} cy={y} r="3" fill="#5A9470" />
+                <circle
+                  key={`f-${x}-${y}`}
+                  cx={x}
+                  cy={y}
+                  r="3"
+                  fill="#5A9470"
+                />
               ))}
             </g>
 
@@ -245,7 +245,7 @@ export function PeranakanTilesDecor() {
                 [22, 22, 0],
                 [178, 22, 90],
                 [178, 178, 180],
-                [22, 178, 270],
+                [22, 178, 270]
               ].map(([x, y, rot]) => (
                 <polygon
                   key={`tri-${x}-${y}`}
@@ -260,5 +260,5 @@ export function PeranakanTilesDecor() {
         <rect width="100%" height="100%" fill="url(#peranakan-pattern)" />
       </svg>
     </div>
-  );
+  )
 }

@@ -1,49 +1,53 @@
-"use server";
+"use server"
 
-import { db } from "@/db";
-import { budgetShifts } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-import { randomUUID } from "crypto";
-import { getCurrentUserAndFamily } from "@/lib/auth-context";
+import { randomUUID } from "crypto"
+import { revalidatePath } from "next/cache"
+import { db } from "@/db"
+import { and, eq } from "drizzle-orm"
+
+import { getCurrentUserAndFamily } from "@/lib/auth-context"
+import { budgetShifts } from "@/db/schema"
 
 export interface BudgetShift {
-  id: string;
-  userId: string;
-  year: number;
-  month: number;
-  fromCategoryName: string;
-  toCategoryName: string;
-  amount: string;
-  note: string | null;
-  createdAt: Date;
+  id: string
+  userId: string
+  year: number
+  month: number
+  fromCategoryName: string
+  toCategoryName: string
+  amount: string
+  note: string | null
+  createdAt: Date
 }
 
 /**
  * Create a new budget shift between categories
  */
 export async function createBudgetShift(data: {
-  year: number;
-  month: number;
-  fromCategoryName: string;
-  toCategoryName: string;
-  amount: number;
-  note?: string;
+  year: number
+  month: number
+  fromCategoryName: string
+  toCategoryName: string
+  amount: number
+  note?: string
 }): Promise<{ success: boolean; error?: string; shift?: BudgetShift }> {
   try {
-    const { userId, familyId } = await getCurrentUserAndFamily();
+    const { userId, familyId } = await getCurrentUserAndFamily()
 
     // Validate amount
     if (data.amount <= 0) {
-      return { success: false, error: "Amount must be greater than 0" };
+      return { success: false, error: "Amount must be greater than 0" }
     }
 
     // Validate categories are different
     if (data.fromCategoryName === data.toCategoryName) {
-      return { success: false, error: "Source and destination categories must be different" };
+      return {
+        success: false,
+        error: "Source and destination categories must be different"
+      }
     }
 
-    const id = randomUUID();
+    const id = randomUUID()
     const [shift] = await db
       .insert(budgetShifts)
       .values({
@@ -55,16 +59,16 @@ export async function createBudgetShift(data: {
         fromCategoryName: data.fromCategoryName,
         toCategoryName: data.toCategoryName,
         amount: data.amount.toFixed(2),
-        note: data.note || null,
+        note: data.note || null
       })
-      .returning();
+      .returning()
 
-    revalidatePath("/budget");
+    revalidatePath("/budget")
 
-    return { success: true, shift: shift as BudgetShift };
+    return { success: true, shift: shift as BudgetShift }
   } catch (error) {
-    console.error("Error creating budget shift:", error);
-    return { success: false, error: "Failed to create budget shift" };
+    console.error("Error creating budget shift:", error)
+    return { success: false, error: "Failed to create budget shift" }
   }
 }
 
@@ -76,7 +80,7 @@ export async function getBudgetShiftsForMonth(
   month: number
 ): Promise<BudgetShift[]> {
   try {
-    const { familyId } = await getCurrentUserAndFamily();
+    const { familyId } = await getCurrentUserAndFamily()
 
     const shifts = await db
       .select()
@@ -88,12 +92,12 @@ export async function getBudgetShiftsForMonth(
           eq(budgetShifts.month, month)
         )
       )
-      .orderBy(budgetShifts.createdAt);
+      .orderBy(budgetShifts.createdAt)
 
-    return shifts as BudgetShift[];
+    return shifts as BudgetShift[]
   } catch (error) {
-    console.error("Error fetching budget shifts:", error);
-    return [];
+    console.error("Error fetching budget shifts:", error)
+    return []
   }
 }
 
@@ -104,23 +108,20 @@ export async function deleteBudgetShift(
   shiftId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { familyId } = await getCurrentUserAndFamily();
+    const { familyId } = await getCurrentUserAndFamily()
 
     await db
       .delete(budgetShifts)
       .where(
-        and(
-          eq(budgetShifts.id, shiftId),
-          eq(budgetShifts.familyId, familyId)
-        )
-      );
+        and(eq(budgetShifts.id, shiftId), eq(budgetShifts.familyId, familyId))
+      )
 
-    revalidatePath("/budget");
+    revalidatePath("/budget")
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Error deleting budget shift:", error);
-    return { success: false, error: "Failed to delete budget shift" };
+    console.error("Error deleting budget shift:", error)
+    return { success: false, error: "Failed to delete budget shift" }
   }
 }
 
@@ -133,30 +134,30 @@ export async function getBudgetAdjustmentsForMonth(
   month: number
 ): Promise<Record<string, number>> {
   try {
-    const shifts = await getBudgetShiftsForMonth(year, month);
+    const shifts = await getBudgetShiftsForMonth(year, month)
 
-    const adjustments: Record<string, number> = {};
+    const adjustments: Record<string, number> = {}
 
     for (const shift of shifts) {
-      const amount = parseFloat(shift.amount);
+      const amount = parseFloat(shift.amount)
 
       // Decrease source category budget
       if (!adjustments[shift.fromCategoryName]) {
-        adjustments[shift.fromCategoryName] = 0;
+        adjustments[shift.fromCategoryName] = 0
       }
-      adjustments[shift.fromCategoryName] -= amount;
+      adjustments[shift.fromCategoryName] -= amount
 
       // Increase destination category budget
       if (!adjustments[shift.toCategoryName]) {
-        adjustments[shift.toCategoryName] = 0;
+        adjustments[shift.toCategoryName] = 0
       }
-      adjustments[shift.toCategoryName] += amount;
+      adjustments[shift.toCategoryName] += amount
     }
 
-    return adjustments;
+    return adjustments
   } catch (error) {
-    console.error("Error calculating budget adjustments:", error);
-    return {};
+    console.error("Error calculating budget adjustments:", error)
+    return {}
   }
 }
 
@@ -172,15 +173,15 @@ export async function getShiftableAmount(
   spent: number
 ): Promise<number> {
   try {
-    const adjustments = await getBudgetAdjustmentsForMonth(year, month);
-    const adjustment = adjustments[categoryName] || 0;
-    const adjustedBudget = originalBudget + adjustment;
-    const remaining = adjustedBudget - spent;
+    const adjustments = await getBudgetAdjustmentsForMonth(year, month)
+    const adjustment = adjustments[categoryName] || 0
+    const adjustedBudget = originalBudget + adjustment
+    const remaining = adjustedBudget - spent
 
     // Can only shift positive remaining amount
-    return Math.max(0, remaining);
+    return Math.max(0, remaining)
   } catch (error) {
-    console.error("Error calculating shiftable amount:", error);
-    return 0;
+    console.error("Error calculating shiftable amount:", error)
+    return 0
   }
 }

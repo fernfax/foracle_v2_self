@@ -1,9 +1,17 @@
 "use client"
 
 import * as React from "react"
+import {
+  addMonths,
+  addYears,
+  format,
+  setMonth,
+  setYear,
+  subMonths,
+  subYears
+} from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
-import { format, setMonth, setYear, addYears, subYears, addMonths, subMonths } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -19,12 +27,25 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const [view, setView] = React.useState<ViewMode>("days")
-  const selectedDate = ('selected' in props && props.selected instanceof Date) ? props.selected : new Date()
+  const selectedDate =
+    "selected" in props && props.selected instanceof Date
+      ? props.selected
+      : new Date()
   const [displayDate, setDisplayDate] = React.useState(selectedDate)
 
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
   ]
 
   const currentYear = displayDate.getFullYear()
@@ -82,26 +103,23 @@ function Calendar({
   // Months view
   if (view === "months") {
     return (
-      <div className={cn("p-3 w-[280px]", className)}>
-        <div className="flex justify-center pt-1 relative items-center mb-4">
+      <div className={cn("w-[280px] p-3", className)}>
+        <div className="relative mb-4 flex items-center justify-center pt-1">
           <Button
             variant="outline"
-            className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1"
-            onClick={handlePrev}
-          >
+            className="absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            onClick={handlePrev}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <button
             onClick={handleHeaderClick}
-            className="text-sm font-medium bg-muted hover:bg-muted/70 text-foreground px-4 py-1.5 rounded-full transition-colors"
-          >
+            className="bg-muted hover:bg-muted/70 text-foreground rounded-full px-4 py-1.5 text-sm font-medium transition-colors">
             {getHeaderLabel()}
           </button>
           <Button
             variant="outline"
-            className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
-            onClick={handleNext}
-          >
+            className="absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            onClick={handleNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -111,12 +129,11 @@ function Calendar({
               key={month}
               onClick={() => handleMonthClick(index)}
               className={cn(
-                "h-9 w-full rounded-md font-display text-[13px] font-normal text-foreground transition-colors",
-                "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                "font-display text-foreground h-9 w-full rounded-md text-[13px] font-normal transition-colors",
+                "hover:bg-muted/60 focus-visible:ring-primary/40 focus-visible:ring-2 focus-visible:outline-none",
                 displayDate.getMonth() === index &&
                   "bg-primary text-primary-foreground hover:bg-primary"
-              )}
-            >
+              )}>
               {month}
             </button>
           ))}
@@ -128,21 +145,21 @@ function Calendar({
   // Years view
   if (view === "years") {
     return (
-      <div className={cn("p-3 w-[280px]", className)}>
-        <div className="flex justify-center pt-1 relative items-center mb-4">
+      <div className={cn("w-[280px] p-3", className)}>
+        <div className="relative mb-4 flex items-center justify-center pt-1">
           <Button
             variant="outline"
-            className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1"
-            onClick={handlePrev}
-          >
+            className="absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            onClick={handlePrev}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-medium bg-muted px-4 py-1.5 rounded-full">{getHeaderLabel()}</span>
+          <span className="bg-muted rounded-full px-4 py-1.5 text-sm font-medium">
+            {getHeaderLabel()}
+          </span>
           <Button
             variant="outline"
-            className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
-            onClick={handleNext}
-          >
+            className="absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            onClick={handleNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -152,12 +169,11 @@ function Calendar({
               key={year}
               onClick={() => handleYearClick(year)}
               className={cn(
-                "h-9 w-full rounded-md font-display text-[13px] font-normal text-foreground transition-colors tabular-nums",
-                "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                "font-display text-foreground h-9 w-full rounded-md text-[13px] font-normal tabular-nums transition-colors",
+                "hover:bg-muted/60 focus-visible:ring-primary/40 focus-visible:ring-2 focus-visible:outline-none",
                 displayDate.getFullYear() === year &&
                   "bg-primary text-primary-foreground hover:bg-primary"
-              )}
-            >
+              )}>
               {year}
             </button>
           ))}
@@ -168,26 +184,23 @@ function Calendar({
 
   // Days view (default)
   return (
-    <div className={cn("p-3 w-[280px]", className)}>
-      <div className="flex justify-center pt-1 relative items-center mb-4">
+    <div className={cn("w-[280px] p-3", className)}>
+      <div className="relative mb-4 flex items-center justify-center pt-1">
         <Button
           variant="outline"
-          className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1"
-          onClick={handlePrev}
-        >
+          className="absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          onClick={handlePrev}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <button
           onClick={handleHeaderClick}
-          className="text-sm font-medium bg-muted hover:bg-muted/70 text-foreground px-4 py-1.5 rounded-full transition-colors"
-        >
+          className="bg-muted hover:bg-muted/70 text-foreground rounded-full px-4 py-1.5 text-sm font-medium transition-colors">
           {getHeaderLabel()}
         </button>
         <Button
           variant="outline"
-          className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
-          onClick={handleNext}
-        >
+          className="absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          onClick={handleNext}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
@@ -198,7 +211,8 @@ function Calendar({
         className=""
         {...(props as any)}
         classNames={{
-          months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+          months:
+            "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
           month: "space-y-4",
           caption: "hidden",
           caption_label: "hidden",
@@ -221,13 +235,14 @@ function Calendar({
           day_outside:
             "day-outside text-muted-foreground/50 aria-selected:bg-primary/30 aria-selected:text-muted-foreground",
           day_disabled: "text-muted-foreground/50",
-          day_range_middle: "aria-selected:bg-muted aria-selected:text-foreground rounded-none",
+          day_range_middle:
+            "aria-selected:bg-muted aria-selected:text-foreground rounded-none",
           day_hidden: "invisible",
-          ...classNames,
+          ...classNames
         }}
         components={{
           IconLeft: ({ ...iconProps }) => <ChevronLeft className="h-4 w-4" />,
-          IconRight: ({ ...iconProps }) => <ChevronRight className="h-4 w-4" />,
+          IconRight: ({ ...iconProps }) => <ChevronRight className="h-4 w-4" />
         }}
         {...props}
       />

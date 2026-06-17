@@ -1,6 +1,6 @@
-import { OnboardingWizard } from "@/app/onboarding/OnboardingWizard";
+import { OnboardingWizard } from "@/app/onboarding/OnboardingWizard"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 // Read-only walkthrough of the onboarding flow. Reuses the same
 // OnboardingWizard component as the real flow (single source of truth so
@@ -9,5 +9,5 @@ export const dynamic = "force-dynamic";
 //   - wraps the step UI in pointer-events-none so submit buttons can't fire
 //   - replaces the wizard's exit with a "restart" loop
 export default function OnboardingPreviewPage() {
-  return <OnboardingWizard previewMode />;
+  return <OnboardingWizard previewMode />
 }

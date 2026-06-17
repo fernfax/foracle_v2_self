@@ -46,18 +46,18 @@ including:
 > the legal period prevails. Where data is no longer needed sooner, we delete or
 > anonymise it sooner.
 
-| Data category | Retention period | Action on expiry |
-|---------------|------------------|------------------|
-| **Active account data** (identity + financial data) | For the life of the account | — |
-| **Financial & household data after account deletion** | Deleted/anonymised within **30 days** of account deletion | Delete from primary store |
-| **Authentication / account records (Clerk)** | Deleted on account deletion, per provider's process | Delete |
-| **AI assistant conversations** | Up to **90 days** from creation, or until account deletion (whichever is earlier) | Delete or anonymise |
-| **Uploaded documents & derived embeddings** | Until the user deletes them or deletes their account | Delete |
-| **Application & security logs** (incl. IP, access logs) | Up to **12 months** | Delete or anonymise |
-| **Backups** | Rolling backups retained up to **35 days**, then overwritten/purged | Purge on cycle |
+| Data category                                                                                | Retention period                                                                    | Action on expiry              |
+| -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------- |
+| **Active account data** (identity + financial data)                                          | For the life of the account                                                         | —                             |
+| **Financial & household data after account deletion**                                        | Deleted/anonymised within **30 days** of account deletion                           | Delete from primary store     |
+| **Authentication / account records (Clerk)**                                                 | Deleted on account deletion, per provider's process                                 | Delete                        |
+| **AI assistant conversations**                                                               | Up to **90 days** from creation, or until account deletion (whichever is earlier)   | Delete or anonymise           |
+| **Uploaded documents & derived embeddings**                                                  | Until the user deletes them or deletes their account                                | Delete                        |
+| **Application & security logs** (incl. IP, access logs)                                      | Up to **12 months**                                                                 | Delete or anonymise           |
+| **Backups**                                                                                  | Rolling backups retained up to **35 days**, then overwritten/purged                 | Purge on cycle                |
 | **Records needed for legal/tax/accounting** (e.g. transaction or compliance records, if any) | As required by law — typically up to **5 years** (or longer where the law requires) | Delete after statutory period |
-| **Records relating to a dispute, claim, or investigation** | Until the matter is fully resolved + any applicable limitation period | Then delete |
-| **Data breach records** | Retained as needed for compliance and PDPC reporting | Per legal requirement |
+| **Records relating to a dispute, claim, or investigation**                                   | Until the matter is fully resolved + any applicable limitation period               | Then delete                   |
+| **Data breach records**                                                                      | Retained as needed for compliance and PDPC reporting                                | Per legal requirement         |
 
 ---
 

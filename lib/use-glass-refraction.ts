@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
 /**
  * Gate for the Liquid Glass nav's Chromium-only edge refraction.
@@ -21,25 +21,25 @@ import { useEffect, useState } from "react";
  * is added after mount. Also bails for users with Reduce Transparency on.
  */
 export function useGlassRefraction(): boolean {
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.CSS?.supports) return;
+    if (typeof window === "undefined" || !window.CSS?.supports) return
 
     const hasBackdrop =
       CSS.supports("backdrop-filter", "blur(1px)") ||
-      CSS.supports("-webkit-backdrop-filter", "blur(1px)");
-    if (!hasBackdrop) return;
+      CSS.supports("-webkit-backdrop-filter", "blur(1px)")
+    if (!hasBackdrop) return
 
     if (window.matchMedia("(prefers-reduced-transparency: reduce)").matches) {
-      return;
+      return
     }
 
-    const ua = navigator.userAgent;
+    const ua = navigator.userAgent
     const isWebKit =
-      /AppleWebKit/.test(ua) && !/Chrome|Chromium|CriOS|Edg/.test(ua);
-    if (!isWebKit) setEnabled(true);
-  }, []);
+      /AppleWebKit/.test(ua) && !/Chrome|Chromium|CriOS|Edg/.test(ua)
+    if (!isWebKit) setEnabled(true)
+  }, [])
 
-  return enabled;
+  return enabled
 }

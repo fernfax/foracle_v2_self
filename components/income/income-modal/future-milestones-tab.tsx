@@ -1,16 +1,9 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import React, { useState } from "react"
+import { Info, Plus, Sparkles, Trash2, TrendingUp } from "lucide-react"
+import { nanoid } from "nanoid"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,25 +12,34 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Switch } from "@/components/ui/switch";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Trash2, Plus, TrendingUp, Sparkles, Info } from "lucide-react";
-import { FutureMilestone, MILESTONE_REASONS, MONTHS } from "./types";
-import { nanoid } from "nanoid";
+  TooltipTrigger
+} from "@/components/ui/tooltip"
+
+import { FutureMilestone, MILESTONE_REASONS, MONTHS } from "./types"
 
 interface FutureMilestonesTabProps {
-  futureMilestones: FutureMilestone[];
-  setFutureMilestones: (value: FutureMilestone[]) => void;
-  currentAmount: string; // Current income amount for projection
-  accountForFutureChange: boolean;
-  setAccountForFutureChange: (value: boolean) => void;
+  futureMilestones: FutureMilestone[]
+  setFutureMilestones: (value: FutureMilestone[]) => void
+  currentAmount: string // Current income amount for projection
+  accountForFutureChange: boolean
+  setAccountForFutureChange: (value: boolean) => void
 }
 
 export function FutureMilestonesTab({
@@ -45,53 +47,53 @@ export function FutureMilestonesTab({
   setFutureMilestones,
   currentAmount,
   accountForFutureChange,
-  setAccountForFutureChange,
+  setAccountForFutureChange
 }: FutureMilestonesTabProps) {
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [showFutureChangeConfirm, setShowFutureChangeConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isAddingNew, setIsAddingNew] = useState(false)
+  const [showFutureChangeConfirm, setShowFutureChangeConfirm] = useState(false)
 
   const handleToggleFutureChange = (checked: boolean) => {
     if (checked) {
-      setShowFutureChangeConfirm(true);
+      setShowFutureChangeConfirm(true)
     } else {
-      setAccountForFutureChange(false);
+      setAccountForFutureChange(false)
     }
-  };
+  }
 
   const confirmFutureChange = () => {
-    setAccountForFutureChange(true);
-    setShowFutureChangeConfirm(false);
-  };
+    setAccountForFutureChange(true)
+    setShowFutureChangeConfirm(false)
+  }
   const [newMilestone, setNewMilestone] = useState<FutureMilestone>({
     id: "",
     targetMonth: "",
     amount: parseFloat(currentAmount) || 0,
     reason: "",
-    notes: "",
-  });
+    notes: ""
+  })
 
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear()
+  const currentMonth = new Date().getMonth() + 1
 
   // Generate future months for the next 10 years
   const getAvailableMonths = () => {
-    const months: { value: string; label: string }[] = [];
+    const months: { value: string; label: string }[] = []
     for (let year = currentYear; year <= currentYear + 10; year++) {
       for (let month = 1; month <= 12; month++) {
         // Skip past months for current year
-        if (year === currentYear && month <= currentMonth) continue;
+        if (year === currentYear && month <= currentMonth) continue
 
-        const period = `${year}-${String(month).padStart(2, "0")}`;
-        const monthName = MONTHS.find(m => m.value === month)?.label || "";
+        const period = `${year}-${String(month).padStart(2, "0")}`
+        const monthName = MONTHS.find((m) => m.value === month)?.label || ""
         months.push({
           value: period,
-          label: `${monthName} ${year}`,
-        });
+          label: `${monthName} ${year}`
+        })
       }
     }
-    return months;
-  };
+    return months
+  }
 
   const startAddMilestone = () => {
     setNewMilestone({
@@ -99,99 +101,116 @@ export function FutureMilestonesTab({
       targetMonth: "",
       amount: parseFloat(currentAmount) || 0,
       reason: "",
-      notes: "",
-    });
-    setIsAddingNew(true);
-  };
+      notes: ""
+    })
+    setIsAddingNew(true)
+  }
 
   const saveNewMilestone = () => {
-    if (!newMilestone.targetMonth) return;
-    setFutureMilestones([...futureMilestones, newMilestone]);
-    setIsAddingNew(false);
+    if (!newMilestone.targetMonth) return
+    setFutureMilestones([...futureMilestones, newMilestone])
+    setIsAddingNew(false)
     setNewMilestone({
       id: "",
       targetMonth: "",
       amount: parseFloat(currentAmount) || 0,
       reason: "",
-      notes: "",
-    });
-  };
+      notes: ""
+    })
+  }
 
   const cancelAddMilestone = () => {
-    setIsAddingNew(false);
+    setIsAddingNew(false)
     setNewMilestone({
       id: "",
       targetMonth: "",
       amount: parseFloat(currentAmount) || 0,
       reason: "",
-      notes: "",
-    });
-  };
+      notes: ""
+    })
+  }
 
   const confirmRemoveMilestone = (id: string) => {
-    setDeleteId(id);
-  };
+    setDeleteId(id)
+  }
 
   const removeMilestone = () => {
     if (deleteId !== null) {
-      setFutureMilestones(futureMilestones.filter((m) => m.id !== deleteId));
-      setDeleteId(null);
+      setFutureMilestones(futureMilestones.filter((m) => m.id !== deleteId))
+      setDeleteId(null)
     }
-  };
+  }
 
-  const updateMilestone = (id: string, field: keyof FutureMilestone, value: string | number) => {
+  const updateMilestone = (
+    id: string,
+    field: keyof FutureMilestone,
+    value: string | number
+  ) => {
     const updated = futureMilestones.map((m) => {
-      if (m.id !== id) return m;
+      if (m.id !== id) return m
       if (field === "amount") {
-        return { ...m, amount: parseFloat(value as string) || 0 };
+        return { ...m, amount: parseFloat(value as string) || 0 }
       }
-      return { ...m, [field]: value };
-    });
-    setFutureMilestones(updated);
-  };
+      return { ...m, [field]: value }
+    })
+    setFutureMilestones(updated)
+  }
 
   // Sort milestones by target month
   const sortedMilestones = [...futureMilestones].sort((a, b) =>
     a.targetMonth.localeCompare(b.targetMonth)
-  );
+  )
 
   // Check if a period is already used
   const isUsedPeriod = (period: string, currentId?: string) => {
-    return futureMilestones.some((m) => (currentId === undefined || m.id !== currentId) && m.targetMonth === period);
-  };
+    return futureMilestones.some(
+      (m) =>
+        (currentId === undefined || m.id !== currentId) &&
+        m.targetMonth === period
+    )
+  }
 
   // Format month for display
   const formatMonth = (period: string) => {
-    const [year, month] = period.split("-");
-    const monthName = MONTHS.find((m) => m.value === parseInt(month))?.label || "";
-    return `${monthName} ${year}`;
-  };
+    const [year, month] = period.split("-")
+    const monthName =
+      MONTHS.find((m) => m.value === parseInt(month))?.label || ""
+    return `${monthName} ${year}`
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 pb-4 border-b">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(184,98,42,0.10)]">
+      <div className="flex items-center gap-3 border-b pb-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[rgba(184,98,42,0.10)]">
           <TrendingUp className="h-5 w-5 text-[#7A3A0A]" />
         </div>
         <div>
-          <h3 className="font-semibold text-foreground">Future Income Milestones</h3>
-          <p className="text-sm text-foreground/400">Plan for expected income changes and growth</p>
+          <h3 className="text-foreground font-semibold">
+            Future Income Milestones
+          </h3>
+          <p className="text-foreground/400 text-sm">
+            Plan for expected income changes and growth
+          </p>
         </div>
       </div>
 
       {/* Account for Future Change Toggle */}
-      <div className="flex items-center justify-between py-3 px-4 bg-[rgba(184,98,42,0.10)] rounded-lg border border-[rgba(184,98,42,0.25)]">
+      <div className="flex items-center justify-between rounded-lg border border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)] px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">Account for Future Change</span>
+          <span className="text-foreground text-sm font-medium">
+            Account for Future Change
+          </span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-[#7A3A0A] cursor-help" />
+                <Info className="h-4 w-4 cursor-help text-[#7A3A0A]" />
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-[280px]">
                 <p className="text-sm">
-                  When enabled, your planned future income milestones will be included in the monthly balance projection graph on the dashboard.
+                  When enabled, your planned future income milestones will be
+                  included in the monthly balance projection graph on the
+                  dashboard.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -205,16 +224,21 @@ export function FutureMilestonesTab({
 
       {/* New Milestone Form */}
       {isAddingNew && (
-        <div className="bg-[rgba(184,98,42,0.10)] border border-[rgba(184,98,42,0.25)] rounded-lg p-4 space-y-3">
-          <div className="text-sm font-medium text-[#7A3A0A] mb-2">New Milestone</div>
+        <div className="space-y-3 rounded-lg border border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)] p-4">
+          <div className="mb-2 text-sm font-medium text-[#7A3A0A]">
+            New Milestone
+          </div>
           <div className="flex gap-3">
             {/* Target Month */}
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-foreground/400">Target Month</Label>
+              <Label className="text-foreground/400 text-xs">
+                Target Month
+              </Label>
               <Select
                 value={newMilestone.targetMonth}
-                onValueChange={(value) => setNewMilestone({ ...newMilestone, targetMonth: value })}
-              >
+                onValueChange={(value) =>
+                  setNewMilestone({ ...newMilestone, targetMonth: value })
+                }>
                 <SelectTrigger className="bg-card">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
@@ -223,8 +247,7 @@ export function FutureMilestonesTab({
                     <SelectItem
                       key={month.value}
                       value={month.value}
-                      disabled={isUsedPeriod(month.value)}
-                    >
+                      disabled={isUsedPeriod(month.value)}>
                       {month.label}
                     </SelectItem>
                   ))}
@@ -234,14 +257,21 @@ export function FutureMilestonesTab({
 
             {/* New Amount */}
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-foreground/400">New Amount</Label>
+              <Label className="text-foreground/400 text-xs">New Amount</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
+                <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                  $
+                </span>
                 <Input
                   type="number"
                   placeholder="0.00"
                   value={newMilestone.amount || ""}
-                  onChange={(e) => setNewMilestone({ ...newMilestone, amount: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setNewMilestone({
+                      ...newMilestone,
+                      amount: parseFloat(e.target.value) || 0
+                    })
+                  }
                   min="0"
                   step="0.01"
                   className="bg-card pl-7"
@@ -253,11 +283,12 @@ export function FutureMilestonesTab({
           {/* Reason Selector */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs text-foreground/400">Reason</Label>
+              <Label className="text-foreground/400 text-xs">Reason</Label>
               <Select
                 value={newMilestone.reason || ""}
-                onValueChange={(value) => setNewMilestone({ ...newMilestone, reason: value })}
-              >
+                onValueChange={(value) =>
+                  setNewMilestone({ ...newMilestone, reason: value })
+                }>
                 <SelectTrigger className="bg-card">
                   <SelectValue placeholder="Select reason" />
                 </SelectTrigger>
@@ -273,11 +304,15 @@ export function FutureMilestonesTab({
 
             {/* Notes */}
             <div className="space-y-1">
-              <Label className="text-xs text-foreground/400">Notes (Optional)</Label>
+              <Label className="text-foreground/400 text-xs">
+                Notes (Optional)
+              </Label>
               <Input
                 placeholder="Additional details..."
                 value={newMilestone.notes || ""}
-                onChange={(e) => setNewMilestone({ ...newMilestone, notes: e.target.value })}
+                onChange={(e) =>
+                  setNewMilestone({ ...newMilestone, notes: e.target.value })
+                }
                 className="bg-card text-sm"
               />
             </div>
@@ -290,8 +325,7 @@ export function FutureMilestonesTab({
               variant="outline"
               size="sm"
               onClick={cancelAddMilestone}
-              className="flex-1"
-            >
+              className="flex-1">
               Cancel
             </Button>
             <Button
@@ -299,8 +333,7 @@ export function FutureMilestonesTab({
               size="sm"
               onClick={saveNewMilestone}
               disabled={!newMilestone.targetMonth}
-              className="flex-1 bg-[#B8622A] hover:bg-[#B8622A]"
-            >
+              className="flex-1 bg-[#B8622A] hover:bg-[#B8622A]">
               Save Milestone
             </Button>
           </div>
@@ -309,26 +342,30 @@ export function FutureMilestonesTab({
 
       {/* Milestones List */}
       {sortedMilestones.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground border rounded-lg bg-muted">
-          <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+        <div className="text-muted-foreground bg-muted rounded-lg border py-8 text-center">
+          <Sparkles className="mx-auto mb-2 h-8 w-8 opacity-50" />
           <p>No milestones planned</p>
-          <p className="text-sm">Add milestones to plan for future income changes</p>
+          <p className="text-sm">
+            Add milestones to plan for future income changes
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
           {sortedMilestones.map((milestone) => (
             <div
               key={milestone.id}
-              className="bg-muted rounded-lg p-4 space-y-3"
-            >
+              className="bg-muted space-y-3 rounded-lg p-4">
               <div className="flex gap-3">
                 {/* Target Month */}
                 <div className="flex-1 space-y-1">
-                  <Label className="text-xs text-foreground/400">Target Month</Label>
+                  <Label className="text-foreground/400 text-xs">
+                    Target Month
+                  </Label>
                   <Select
                     value={milestone.targetMonth}
-                    onValueChange={(value) => updateMilestone(milestone.id, "targetMonth", value)}
-                  >
+                    onValueChange={(value) =>
+                      updateMilestone(milestone.id, "targetMonth", value)
+                    }>
                     <SelectTrigger className="bg-card">
                       <SelectValue />
                     </SelectTrigger>
@@ -337,8 +374,7 @@ export function FutureMilestonesTab({
                         <SelectItem
                           key={month.value}
                           value={month.value}
-                          disabled={isUsedPeriod(month.value, milestone.id)}
-                        >
+                          disabled={isUsedPeriod(month.value, milestone.id)}>
                           {month.label}
                         </SelectItem>
                       ))}
@@ -348,14 +384,20 @@ export function FutureMilestonesTab({
 
                 {/* New Amount */}
                 <div className="flex-1 space-y-1">
-                  <Label className="text-xs text-foreground/400">New Amount</Label>
+                  <Label className="text-foreground/400 text-xs">
+                    New Amount
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/400">$</span>
+                    <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
+                      $
+                    </span>
                     <Input
                       type="number"
                       placeholder="0.00"
                       value={milestone.amount || ""}
-                      onChange={(e) => updateMilestone(milestone.id, "amount", e.target.value)}
+                      onChange={(e) =>
+                        updateMilestone(milestone.id, "amount", e.target.value)
+                      }
                       min="0"
                       step="0.01"
                       className="bg-card pl-7"
@@ -370,8 +412,7 @@ export function FutureMilestonesTab({
                     variant="ghost"
                     size="icon"
                     onClick={() => confirmRemoveMilestone(milestone.id)}
-                    className="h-10 w-10 text-[#8B0000] hover:text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)]"
-                  >
+                    className="h-10 w-10 text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] hover:text-[#8B0000]">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -380,11 +421,12 @@ export function FutureMilestonesTab({
               {/* Reason Selector */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-foreground/400">Reason</Label>
+                  <Label className="text-foreground/400 text-xs">Reason</Label>
                   <Select
                     value={milestone.reason || ""}
-                    onValueChange={(value) => updateMilestone(milestone.id, "reason", value)}
-                  >
+                    onValueChange={(value) =>
+                      updateMilestone(milestone.id, "reason", value)
+                    }>
                     <SelectTrigger className="bg-card">
                       <SelectValue placeholder="Select reason" />
                     </SelectTrigger>
@@ -400,11 +442,15 @@ export function FutureMilestonesTab({
 
                 {/* Notes */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-foreground/400">Notes (Optional)</Label>
+                  <Label className="text-foreground/400 text-xs">
+                    Notes (Optional)
+                  </Label>
                   <Input
                     placeholder="Additional details..."
                     value={milestone.notes || ""}
-                    onChange={(e) => updateMilestone(milestone.id, "notes", e.target.value)}
+                    onChange={(e) =>
+                      updateMilestone(milestone.id, "notes", e.target.value)
+                    }
                     className="bg-card text-sm"
                   />
                 </div>
@@ -412,16 +458,36 @@ export function FutureMilestonesTab({
 
               {/* Change Summary */}
               {currentAmount && (
-                <div className="text-xs text-foreground/400 pt-2 border-t border-border">
+                <div className="text-foreground/400 border-border border-t pt-2 text-xs">
                   {parseFloat(currentAmount) > 0 && (
                     <>
-                      Change from current: {" "}
-                      <span className={milestone.amount > parseFloat(currentAmount) ? "text-[#007A68] font-medium" : "text-[#8B0000] font-medium"}>
-                        {milestone.amount > parseFloat(currentAmount) ? "+" : ""}
-                        ${(milestone.amount - parseFloat(currentAmount)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        {" "}
-                        ({milestone.amount > parseFloat(currentAmount) ? "+" : ""}
-                        {(((milestone.amount - parseFloat(currentAmount)) / parseFloat(currentAmount)) * 100).toFixed(1)}%)
+                      Change from current:{" "}
+                      <span
+                        className={
+                          milestone.amount > parseFloat(currentAmount)
+                            ? "font-medium text-[#007A68]"
+                            : "font-medium text-[#8B0000]"
+                        }>
+                        {milestone.amount > parseFloat(currentAmount)
+                          ? "+"
+                          : ""}
+                        $
+                        {(
+                          milestone.amount - parseFloat(currentAmount)
+                        ).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}{" "}
+                        (
+                        {milestone.amount > parseFloat(currentAmount)
+                          ? "+"
+                          : ""}
+                        {(
+                          ((milestone.amount - parseFloat(currentAmount)) /
+                            parseFloat(currentAmount)) *
+                          100
+                        ).toFixed(1)}
+                        %)
                       </span>
                     </>
                   )}
@@ -438,33 +504,43 @@ export function FutureMilestonesTab({
         variant="outline"
         onClick={startAddMilestone}
         disabled={isAddingNew}
-        className="w-full"
-      >
-        <Plus className="h-4 w-4 mr-2" />
+        className="w-full">
+        <Plus className="mr-2 h-4 w-4" />
         Add Milestone
       </Button>
 
       {/* Milestones Timeline Preview */}
       {sortedMilestones.length > 0 && (
         <div className="bg-muted rounded-lg p-4">
-          <div className="text-sm font-medium text-foreground mb-3">Income Timeline</div>
+          <div className="text-foreground mb-3 text-sm font-medium">
+            Income Timeline
+          </div>
           <div className="space-y-2">
             {/* Current */}
             <div className="flex items-center gap-3 text-sm">
-              <div className="w-3 h-3 rounded-full bg-muted"></div>
+              <div className="bg-muted h-3 w-3 rounded-full"></div>
               <span className="text-foreground">Now</span>
-              <span className="font-medium">${parseFloat(currentAmount || "0").toLocaleString()}</span>
+              <span className="font-medium">
+                ${parseFloat(currentAmount || "0").toLocaleString()}
+              </span>
             </div>
 
             {/* Milestones */}
             {sortedMilestones.map((milestone, index) => (
-              <div key={milestone.id} className="flex items-center gap-3 text-sm">
-                <div className="w-3 h-3 rounded-full bg-[#B8622A]"></div>
-                <span className="text-foreground">{formatMonth(milestone.targetMonth)}</span>
-                <span className="font-medium">${milestone.amount.toLocaleString()}</span>
+              <div
+                key={milestone.id}
+                className="flex items-center gap-3 text-sm">
+                <div className="h-3 w-3 rounded-full bg-[#B8622A]"></div>
+                <span className="text-foreground">
+                  {formatMonth(milestone.targetMonth)}
+                </span>
+                <span className="font-medium">
+                  ${milestone.amount.toLocaleString()}
+                </span>
                 {milestone.reason && (
-                  <span className="text-xs text-foreground/400 bg-muted px-2 py-0.5 rounded">
-                    {MILESTONE_REASONS.find(r => r.value === milestone.reason)?.label || milestone.reason}
+                  <span className="text-foreground/400 bg-muted rounded px-2 py-0.5 text-xs">
+                    {MILESTONE_REASONS.find((r) => r.value === milestone.reason)
+                      ?.label || milestone.reason}
                   </span>
                 )}
               </div>
@@ -474,17 +550,22 @@ export function FutureMilestonesTab({
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Milestone</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this future income milestone? This action cannot be undone.
+              Are you sure you want to delete this future income milestone? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={removeMilestone} className="bg-[#E05555] hover:bg-[#E05555]">
+            <AlertDialogAction
+              onClick={removeMilestone}
+              className="bg-[#E05555] hover:bg-[#E05555]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -492,12 +573,19 @@ export function FutureMilestonesTab({
       </AlertDialog>
 
       {/* Account for Future Change Confirmation Dialog */}
-      <AlertDialog open={showFutureChangeConfirm} onOpenChange={setShowFutureChangeConfirm}>
+      <AlertDialog
+        open={showFutureChangeConfirm}
+        onOpenChange={setShowFutureChangeConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Include Future Milestones in Projections</AlertDialogTitle>
+            <AlertDialogTitle>
+              Include Future Milestones in Projections
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              When enabled, your planned future income milestones will be included in the monthly balance projection graph on the dashboard. This helps you visualize how expected income changes will impact your financial outlook.
+              When enabled, your planned future income milestones will be
+              included in the monthly balance projection graph on the dashboard.
+              This helps you visualize how expected income changes will impact
+              your financial outlook.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -509,5 +597,5 @@ export function FutureMilestonesTab({
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }

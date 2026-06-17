@@ -28,21 +28,21 @@
 @layer base {
   :root {
     /* === Foracle brand vars (verbatim from design guide §2.1) === */
-    --brand-warm-white: #FBF7F1;     /* bg-page */
-    --brand-cream: #F0EBE0;          /* bg-muted */
-    --brand-deep-forest: #1C2B2A;    /* text-primary, sidebar surface */
+    --brand-warm-white: #fbf7f1; /* bg-page */
+    --brand-cream: #f0ebe0; /* bg-muted */
+    --brand-deep-forest: #1c2b2a; /* text-primary, sidebar surface */
     --brand-dark-surface: #243332;
-    --brand-forest-mid: #2C3E3D;
-    --brand-nightfall: #141E1D;
-    --brand-terracotta: #B8622A;     /* primary CTA, accent */
-    --brand-coral: #D4845A;          /* hover / dark-mode CTA */
-    --brand-jungle: #3A6B52;         /* secondary, charts */
-    --brand-sage: #5A9470;           /* charts dark */
-    --brand-gold: #D4A843;           /* warning */
-    --brand-teal: #00C4AA;           /* positive — locked */
-    --brand-teal-light: #33D4BC;
-    --brand-alert-red: #E05555;
-    --brand-alert-red-dark: #E07070;
+    --brand-forest-mid: #2c3e3d;
+    --brand-nightfall: #141e1d;
+    --brand-terracotta: #b8622a; /* primary CTA, accent */
+    --brand-coral: #d4845a; /* hover / dark-mode CTA */
+    --brand-jungle: #3a6b52; /* secondary, charts */
+    --brand-sage: #5a9470; /* charts dark */
+    --brand-gold: #d4a843; /* warning */
+    --brand-teal: #00c4aa; /* positive — locked */
+    --brand-teal-light: #33d4bc;
+    --brand-alert-red: #e05555;
+    --brand-alert-red-dark: #e07070;
 
     /* Verbatim aliases from brand guide */
     --p: var(--brand-terracotta);
@@ -63,10 +63,10 @@
     --err2: var(--brand-alert-red-dark);
 
     /* Inline-only colors promoted to tokens (design guide §2.6) */
-    --text-on-success: #007A68;
-    --text-on-warning: #7A5A00;
-    --text-on-danger: #8B0000;
-    --text-on-brand: #7A3A0A;
+    --text-on-success: #007a68;
+    --text-on-warning: #7a5a00;
+    --text-on-danger: #8b0000;
+    --text-on-brand: #7a3a0a;
 
     /* === Shadcn HSL tokens, re-pointed at brand palette ===
        Light mode (primary). Hex → HSL conversions kept verbatim so existing
@@ -112,25 +112,30 @@
     --radius: 0.625rem;
 
     /* Charts: jungle / terracotta / kaya gold / teal flash / sage */
-    --chart-1: 149 30% 32%;     /* #3A6B52 */
-    --chart-2: 22 63% 44%;      /* #B8622A */
-    --chart-3: 44 64% 55%;      /* #D4A843 */
-    --chart-4: 172 100% 38%;    /* #00C4AA */
-    --chart-5: 137 24% 46%;     /* #5A9470 */
+    --chart-1: 149 30% 32%; /* #3A6B52 */
+    --chart-2: 22 63% 44%; /* #B8622A */
+    --chart-3: 44 64% 55%; /* #D4A843 */
+    --chart-4: 172 100% 38%; /* #00C4AA */
+    --chart-5: 137 24% 46%; /* #5A9470 */
 
     /* Semantic surface aliases (extras the brand guide names but shadcn doesn't) */
     --bg-page: var(--brand-warm-white);
-    --bg-surface: #FFFFFF;
+    --bg-surface: #ffffff;
     --bg-muted: var(--brand-cream);
-    --bg-elevated: #FFFFFF;
+    --bg-elevated: #ffffff;
 
     /* Elevation scale — formalizes the hand-baked Card shadow (design guide §11).
        Layered + warm-tinted toward Deep Forest (#1C2B2A) so shadows never read
        as cold gray on the warm canvas. --shadow-card is byte-identical to the
        value Card previously inlined, so adopting the token is a no-op visually. */
-    --shadow-card: 0 2px 4px rgba(28,43,42,0.08), 0 12px 32px rgba(28,43,42,0.13), 0 28px 64px rgba(28,43,42,0.09);
-    --shadow-card-hover: 0 4px 8px rgba(28,43,42,0.10), 0 18px 44px rgba(28,43,42,0.16), 0 36px 80px rgba(28,43,42,0.12);
-    --shadow-pop: 0 8px 16px rgba(28,43,42,0.10), 0 24px 56px rgba(28,43,42,0.18);
+    --shadow-card:
+      0 2px 4px rgba(28, 43, 42, 0.08), 0 12px 32px rgba(28, 43, 42, 0.13),
+      0 28px 64px rgba(28, 43, 42, 0.09);
+    --shadow-card-hover:
+      0 4px 8px rgba(28, 43, 42, 0.1), 0 18px 44px rgba(28, 43, 42, 0.16),
+      0 36px 80px rgba(28, 43, 42, 0.12);
+    --shadow-pop:
+      0 8px 16px rgba(28, 43, 42, 0.1), 0 24px 56px rgba(28, 43, 42, 0.18);
   }
 
   .dark {
@@ -142,9 +147,9 @@
     --foreground: 38 36% 91%;
 
     /* Surfaces */
-    --card: 178 21% 14%;            /* #1C2B2A */
+    --card: 178 21% 14%; /* #1C2B2A */
     --card-foreground: 38 36% 91%;
-    --popover: 178 16% 17%;         /* #243332 */
+    --popover: 178 16% 17%; /* #243332 */
     --popover-foreground: 38 36% 91%;
 
     /* Primary = prawn coral #D4845A (lightened terracotta for dark) */
@@ -168,18 +173,18 @@
     /* Negative/over-budget text reads far brighter on the near-black nightfall
        canvas than the light-mode maroon (#8B0000). See the dark-mode red remap
        at the end of this file for the hardcoded utility overrides. */
-    --text-on-danger: #EE8585;
+    --text-on-danger: #ee8585;
 
     --border: 38 36% 91%;
     --input: 38 36% 91%;
     --ring: 20 58% 59%;
 
     /* Charts shift to lighter variants for dark canvas */
-    --chart-1: 137 24% 46%;     /* sage */
-    --chart-2: 20 58% 59%;      /* coral */
-    --chart-3: 44 64% 55%;      /* gold */
-    --chart-4: 172 100% 38%;    /* teal */
-    --chart-5: 149 30% 32%;     /* jungle */
+    --chart-1: 137 24% 46%; /* sage */
+    --chart-2: 20 58% 59%; /* coral */
+    --chart-3: 44 64% 55%; /* gold */
+    --chart-4: 172 100% 38%; /* teal */
+    --chart-5: 149 30% 32%; /* jungle */
 
     --bg-page: var(--brand-nightfall);
     --bg-surface: var(--brand-deep-forest);
@@ -189,9 +194,9 @@
     /* Dark mode leans on borders, not shadows (design guide §11). Near-transparent
        cream rings give the faintest lift; components still pass dark:shadow-none
        where they want strictly flat surfaces. */
-    --shadow-card: 0 0 0 1px rgba(240,235,224,0.06);
-    --shadow-card-hover: 0 0 0 1px rgba(240,235,224,0.10);
-    --shadow-pop: 0 0 0 1px rgba(240,235,224,0.12);
+    --shadow-card: 0 0 0 1px rgba(240, 235, 224, 0.06);
+    --shadow-card-hover: 0 0 0 1px rgba(240, 235, 224, 0.1);
+    --shadow-pop: 0 0 0 1px rgba(240, 235, 224, 0.12);
   }
 }
 
@@ -219,15 +224,23 @@
     font-family: var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
     font-size: 15px;
     line-height: 1.6;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
     scrollbar-gutter: stable;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   /* Headings, data, and UI elements use Space Grotesk */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
     color: hsl(var(--foreground));
     letter-spacing: -0.01em;
   }
@@ -281,7 +294,7 @@
     font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.20em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--brand-terracotta);
   }
@@ -295,19 +308,23 @@
      Token-driven (--background / --foreground / --border / --shadow-pop); the
      white highlights are the glass glare (mode-independent specular). */
   .glass-pill {
-    background-color: hsl(var(--background) / 0.5);   /* fallback when no backdrop-filter */
+    background-color: hsl(
+      var(--background) / 0.5
+    ); /* fallback when no backdrop-filter */
     box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.8),             /* crisp lit top edge */
-      inset 0 7px 14px -8px rgba(255, 255, 255, 0.4),        /* soft inner top glow */
-      inset 0 -1px 0 0 hsla(var(--border) / 0.12),           /* thin bottom edge */
-      inset 0 -12px 18px -12px hsla(var(--border) / 0.18),   /* bottom inner shade = thickness */
-      var(--shadow-pop);
-    border: 1px solid hsla(var(--border) / 0.10);
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+      /* crisp lit top edge */ inset 0 7px 14px -8px rgba(255, 255, 255, 0.4),
+      /* soft inner top glow */ inset 0 -1px 0 0 hsla(var(--border) / 0.12),
+      /* thin bottom edge */ inset 0 -12px 18px -12px hsla(var(--border) / 0.18),
+      /* bottom inner shade = thickness */ var(--shadow-pop);
+    border: 1px solid hsla(var(--border) / 0.1);
   }
 
   /* Clear, LIT glass — low blur so you see THROUGH it (not frost), with a strong
      saturation + brightness lift so colours behind read vivid (Apple "vibrancy"). */
-  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  @supports (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
     .glass-pill {
       background-color: hsl(var(--background) / 0.28);
       -webkit-backdrop-filter: blur(12px) saturate(1.9) brightness(1.06);
@@ -320,8 +337,10 @@
      Absent on SSR/first paint → no flash; added after mount only where the engine
      actually paints it (see lib/use-glass-refraction.ts). */
   .glass-pill[data-glass-refract="true"] {
-    -webkit-backdrop-filter: blur(12px) saturate(1.9) brightness(1.06) url(#glass-refraction);
-    backdrop-filter: blur(12px) saturate(1.9) brightness(1.06) url(#glass-refraction);
+    -webkit-backdrop-filter: blur(12px) saturate(1.9) brightness(1.06)
+      url(#glass-refraction);
+    backdrop-filter: blur(12px) saturate(1.9) brightness(1.06)
+      url(#glass-refraction);
   }
 
   /* Bright top-edge rim — crisp "wet glass" highlight catching light along the top. */
@@ -366,11 +385,12 @@
   .dark .glass-pill {
     background-color: hsl(var(--background) / 0.42);
     box-shadow:
-      inset 0 1px 0 0 hsla(var(--foreground) / 0.22),        /* cream lit top edge */
-      inset 0 7px 14px -8px hsla(var(--foreground) / 0.10),   /* soft inner top glow */
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.3),                    /* thin bottom edge */
-      inset 0 -12px 18px -12px rgba(0, 0, 0, 0.5),            /* bottom inner shade */
-      var(--shadow-pop);
+      inset 0 1px 0 0 hsla(var(--foreground) / 0.22),
+      /* cream lit top edge */ inset 0 7px 14px -8px
+        hsla(var(--foreground) / 0.1),
+      /* soft inner top glow */ inset 0 -1px 0 0 rgba(0, 0, 0, 0.3),
+      /* thin bottom edge */ inset 0 -12px 18px -12px rgba(0, 0, 0, 0.5),
+      /* bottom inner shade */ var(--shadow-pop);
     border-color: hsla(var(--foreground) / 0.14);
   }
 
@@ -394,7 +414,7 @@
 
   /* Active item — a brighter glass "lozenge" that catches its own highlight. */
   .glass-active {
-    background: hsla(var(--foreground) / 0.10);
+    background: hsla(var(--foreground) / 0.1);
     box-shadow:
       inset 0 1px 0.5px 0 rgba(255, 255, 255, 0.4),
       inset 0 -1px 1px 0 hsla(var(--border) / 0.08);
@@ -433,7 +453,7 @@
     background-color: hsl(var(--background) / 0.55);
     -webkit-backdrop-filter: blur(16px) saturate(1.4);
     backdrop-filter: blur(16px) saturate(1.4);
-    border: 1px solid hsla(var(--border) / 0.10);
+    border: 1px solid hsla(var(--border) / 0.1);
     box-shadow:
       inset 0 1px 0.5px 0 hsla(var(--foreground) / 0.04),
       inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.5),
@@ -468,7 +488,7 @@
     background-color: hsl(var(--background) / 0.74);
     -webkit-backdrop-filter: blur(22px) saturate(1.5);
     backdrop-filter: blur(22px) saturate(1.5);
-    border: 1px solid hsla(var(--border) / 0.10);
+    border: 1px solid hsla(var(--border) / 0.1);
     box-shadow:
       inset 0 1px 0.5px 0 hsla(var(--foreground) / 0.05),
       inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.6),
@@ -477,7 +497,7 @@
 
   .dark .glass-panel,
   .dark .glass-strong {
-    border-color: hsla(var(--foreground) / 0.10);
+    border-color: hsla(var(--foreground) / 0.1);
   }
   .dark .glass-panel {
     box-shadow:
@@ -490,7 +510,7 @@
   .dark .glass-strong::before {
     background: linear-gradient(
       180deg,
-      hsla(var(--foreground) / 0.20) 0%,
+      hsla(var(--foreground) / 0.2) 0%,
       hsla(var(--foreground) / 0.05) 25%,
       transparent 55%
     );
@@ -522,7 +542,7 @@
   .dark .glass-bar {
     border-bottom-color: hsla(var(--foreground) / 0.08);
     box-shadow:
-      inset 0 1px 0 0 hsla(var(--foreground) / 0.10),
+      inset 0 1px 0 0 hsla(var(--foreground) / 0.1),
       0 1px 12px rgba(0, 0, 0, 0.25);
   }
 
@@ -537,10 +557,18 @@
     }
   }
   /* No backdrop-filter at all → fall back to a more opaque solid so text stays legible. */
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .glass-panel { background-color: hsl(var(--background) / 0.92); }
-    .glass-strong { background-color: hsl(var(--background) / 0.96); }
-    .glass-bar { background-color: hsl(var(--background) / 0.94); }
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    .glass-panel {
+      background-color: hsl(var(--background) / 0.92);
+    }
+    .glass-strong {
+      background-color: hsl(var(--background) / 0.96);
+    }
+    .glass-bar {
+      background-color: hsl(var(--background) / 0.94);
+    }
   }
 }
 
@@ -702,20 +730,39 @@
      the final/visible state, so under reduced-motion (animation: none) everything
      simply renders fully drawn. */
   @keyframes hpDraw {
-    from { stroke-dashoffset: 1; }
-    to { stroke-dashoffset: 0; }
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
   }
   @keyframes hpFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   @keyframes hpBarGrow {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
   }
   @keyframes hpHalo {
-    0% { transform: scale(0.5); opacity: 0.55; }
-    70%, 100% { transform: scale(2.2); opacity: 0; }
+    0% {
+      transform: scale(0.5);
+      opacity: 0.55;
+    }
+    70%,
+    100% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
   }
 
   .hp-line {
@@ -755,16 +802,28 @@
 
   /* Life-stages focused node — gentle breathing ring (no scale, so it never clips). */
   @keyframes lsPulse {
-    0%, 100% { opacity: 0.12; }
-    50% { opacity: 0.4; }
+    0%,
+    100% {
+      opacity: 0.12;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
   .ls-pulse {
     animation: lsPulse 2.6s ease-in-out infinite;
   }
   /* Focused icon breathes — gently pulses in size and brightness. */
   @keyframes lsIconPulse {
-    0%, 100% { transform: scale(1); filter: brightness(1); }
-    50% { transform: scale(1.07); filter: brightness(1.14); }
+    0%,
+    100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    50% {
+      transform: scale(1.07);
+      filter: brightness(1.14);
+    }
   }
   .ls-icon-pulse {
     animation: lsIconPulse 2.4s ease-in-out infinite;
@@ -782,9 +841,15 @@
   /* Route-change overlay — indeterminate top progress bar. Only rendered under
      motion-safe (the bar element is hidden for prefers-reduced-motion). */
   @keyframes navProgress {
-    0% { transform: translateX(-100%) scaleX(0.35); }
-    50% { transform: translateX(20%) scaleX(0.6); }
-    100% { transform: translateX(100%) scaleX(0.35); }
+    0% {
+      transform: translateX(-100%) scaleX(0.35);
+    }
+    50% {
+      transform: translateX(20%) scaleX(0.6);
+    }
+    100% {
+      transform: translateX(100%) scaleX(0.35);
+    }
   }
 }
 

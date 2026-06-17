@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
 /**
  * SSR-safe media-query hook. Returns `false` on the server and first client
@@ -9,15 +9,15 @@ import { useEffect, useState } from "react";
  * vs. stacked LifeStages layout without a hydration mismatch.
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  const [matches, setMatches] = useState(false)
 
   useEffect(() => {
-    const mql = window.matchMedia(query);
-    setMatches(mql.matches);
-    const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, [query]);
+    const mql = window.matchMedia(query)
+    setMatches(mql.matches)
+    const onChange = (e: MediaQueryListEvent) => setMatches(e.matches)
+    mql.addEventListener("change", onChange)
+    return () => mql.removeEventListener("change", onChange)
+  }, [query])
 
-  return matches;
+  return matches
 }

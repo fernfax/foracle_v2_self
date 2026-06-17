@@ -1,15 +1,15 @@
-import * as React from "react";
-import { Plus, type LucideIcon } from "lucide-react";
+import * as React from "react"
+import { Plus, type LucideIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 export interface EmptyStateProps {
-  icon: LucideIcon;
-  title: string;
-  description?: string;
-  action?: { label: string; onClick: () => void; icon?: LucideIcon };
-  className?: string;
+  icon: LucideIcon
+  title: string
+  description?: string
+  action?: { label: string; onClick: () => void; icon?: LucideIcon }
+  className?: string
 }
 
 /**
@@ -21,22 +21,25 @@ export function EmptyState({
   title,
   description,
   action,
-  className,
+  className
 }: EmptyStateProps) {
-  const ActionIcon = action?.icon ?? Plus;
+  const ActionIcon = action?.icon ?? Plus
   return (
     <div
       className={cn(
         "flex flex-col items-center justify-center px-6 py-14 text-center",
         className
-      )}
-    >
-      <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+      )}>
+      <span className="bg-muted text-muted-foreground inline-flex size-14 items-center justify-center rounded-2xl">
         <Icon className="size-6" />
       </span>
-      <h3 className="mt-4 font-display text-base font-semibold tracking-tight">{title}</h3>
+      <h3 className="font-display mt-4 text-base font-semibold tracking-tight">
+        {title}
+      </h3>
       {description && (
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
+        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+          {description}
+        </p>
       )}
       {action && (
         <Button onClick={action.onClick} className="mt-5">
@@ -45,5 +48,5 @@ export function EmptyState({
         </Button>
       )}
     </div>
-  );
+  )
 }

@@ -1,64 +1,83 @@
-import { ForacleAIClient, getAIClient, type AIResponse, type ToolCall } from "./openai-client";
-import { getToolRegistry, executeTool, type ToolExecutionResult } from "./tools";
+import {
+  ForacleAIClient,
+  getAIClient,
+  type AIResponse,
+  type ToolCall
+} from "./openai-client"
+import { executeTool, getToolRegistry, type ToolExecutionResult } from "./tools"
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type MessageRole = "user" | "assistant" | "system" | "tool";
+export type MessageRole = "user" | "assistant" | "system" | "tool"
 
 export interface Message {
-  id: string;
-  role: MessageRole;
-  content: string;
-  toolCallId?: string;
-  toolName?: string;
-  timestamp: Date;
+  id: string
+  role: MessageRole
+  content: string
+  toolCallId?: string
+  toolName?: string
+  timestamp: Date
 }
 
 export interface ConversationState {
-  id: string;
-  messages: Message[];
-  lastResponseId?: string;
-  toolsUsed: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  messages: Message[]
+  lastResponseId?: string
+  toolsUsed: string[]
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface OrchestratorConfig {
-  maxToolCalls?: number;
-  systemPrompt?: string;
-  client?: ForacleAIClient;
+  maxToolCalls?: number
+  systemPrompt?: string
+  client?: ForacleAIClient
 }
 
 export interface OrchestratorResult {
-  response: string;
-  toolsUsed: string[];
-  conversationId: string;
-  responseId?: string;
+  response: string
+  toolsUsed: string[]
+  conversationId: string
+  responseId?: string
 }
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-const DEFAULT_MAX_TOOL_CALLS = 3;
+const DEFAULT_MAX_TOOL_CALLS = 3
 
 // Generate system prompt with current date
 function generateSystemPrompt(singlishMode: boolean = false): string {
   // Get current date in Singapore timezone
-  const now = new Date();
-  const sgDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Singapore" }));
-  const currentYear = sgDate.getFullYear();
-  const currentMonth = sgDate.getMonth() + 1;
-  const currentDay = sgDate.getDate();
-  const currentMonthFormatted = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
-  const currentDateFormatted = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}`;
+  const now = new Date()
+  const sgDate = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Singapore" })
+  )
+  const currentYear = sgDate.getFullYear()
+  const currentMonth = sgDate.getMonth() + 1
+  const currentDay = sgDate.getDate()
+  const currentMonthFormatted = `${currentYear}-${String(currentMonth).padStart(2, "0")}`
+  const currentDateFormatted = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}`
 
   // Get month name
-  const monthNames = ["January", "February", "March", "April", "May", "June",
-                      "July", "August", "September", "October", "November", "December"];
-  const currentMonthName = monthNames[currentMonth - 1];
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ]
+  const currentMonthName = monthNames[currentMonth - 1]
 
   let basePrompt = `You are Foracle Assistant, an AI financial companion for the Foracle personal finance app. You help users understand their finances, analyze spending patterns, and plan for financial goals.
 
@@ -245,7 +264,7 @@ Add a horizontal rule (---) between major sections to visually separate content 
 
 ---
 
-**Data used:** \`get_income_summary\`, \`get_expenses_summary\``;
+**Data used:** \`get_income_summary\`, \`get_expenses_summary\``
 
   // Append Singlish instructions when enabled
   if (singlishMode) {
@@ -285,26 +304,26 @@ You are now responding in Singlish (Singapore English).
 **Examples:**
 - "Wah, your expenses this month hit $3,500 already leh."
 - "Eh, your food budget a bit high sia. Maybe can cut down lah."
-- "Can lah! Your balance steady one, go ahead."`;
+- "Can lah! Your balance steady one, go ahead."`
   }
 
-  return basePrompt;
+  return basePrompt
 }
 
-const DEFAULT_SYSTEM_PROMPT = generateSystemPrompt(false);
+const DEFAULT_SYSTEM_PROMPT = generateSystemPrompt(false)
 
 // =============================================================================
 // Conversation Store (In-Memory)
 // =============================================================================
 
-const conversations = new Map<string, ConversationState>();
+const conversations = new Map<string, ConversationState>()
 
 function generateId(): string {
-  return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
 }
 
 function generateMessageId(): string {
-  return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
 }
 
 // =============================================================================
@@ -312,14 +331,14 @@ function generateMessageId(): string {
 // =============================================================================
 
 export class AIOrchestrator {
-  private client: ForacleAIClient;
-  private maxToolCalls: number;
-  private customSystemPrompt: string | null;
+  private client: ForacleAIClient
+  private maxToolCalls: number
+  private customSystemPrompt: string | null
 
   constructor(config: OrchestratorConfig = {}) {
-    this.client = config.client || getAIClient();
-    this.maxToolCalls = config.maxToolCalls ?? DEFAULT_MAX_TOOL_CALLS;
-    this.customSystemPrompt = config.systemPrompt ?? null;
+    this.client = config.client || getAIClient()
+    this.maxToolCalls = config.maxToolCalls ?? DEFAULT_MAX_TOOL_CALLS
+    this.customSystemPrompt = config.systemPrompt ?? null
   }
 
   /**
@@ -327,32 +346,32 @@ export class AIOrchestrator {
    */
   private getSystemPrompt(singlishMode: boolean = false): string {
     if (this.customSystemPrompt) {
-      return this.customSystemPrompt;
+      return this.customSystemPrompt
     }
-    return generateSystemPrompt(singlishMode);
+    return generateSystemPrompt(singlishMode)
   }
 
   /**
    * Start a new conversation
    */
   createConversation(): ConversationState {
-    const id = generateId();
+    const id = generateId()
     const conversation: ConversationState = {
       id,
       messages: [],
       toolsUsed: [],
       createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    conversations.set(id, conversation);
-    return conversation;
+      updatedAt: new Date()
+    }
+    conversations.set(id, conversation)
+    return conversation
   }
 
   /**
    * Get an existing conversation
    */
   getConversation(id: string): ConversationState | undefined {
-    return conversations.get(id);
+    return conversations.get(id)
   }
 
   /**
@@ -364,11 +383,11 @@ export class AIOrchestrator {
     singlishMode: boolean = false
   ): Promise<OrchestratorResult> {
     // Get or create conversation
-    let conversation: ConversationState;
+    let conversation: ConversationState
     if (conversationId && conversations.has(conversationId)) {
-      conversation = conversations.get(conversationId)!;
+      conversation = conversations.get(conversationId)!
     } else {
-      conversation = this.createConversation();
+      conversation = this.createConversation()
     }
 
     // Add user message to conversation
@@ -376,20 +395,20 @@ export class AIOrchestrator {
       id: generateMessageId(),
       role: "user",
       content: userMessage,
-      timestamp: new Date(),
-    };
-    conversation.messages.push(userMsg);
-    conversation.updatedAt = new Date();
+      timestamp: new Date()
+    }
+    conversation.messages.push(userMsg)
+    conversation.updatedAt = new Date()
 
     // Track tools used in this interaction
-    const toolsUsedThisRound: string[] = [];
+    const toolsUsedThisRound: string[] = []
 
     // Build input for OpenAI
-    const registry = getToolRegistry();
-    const tools = registry.getOpenAITools();
+    const registry = getToolRegistry()
+    const tools = registry.getOpenAITools()
 
     // Get fresh system prompt with current date (and Singlish mode if enabled)
-    const systemPrompt = this.getSystemPrompt(singlishMode);
+    const systemPrompt = this.getSystemPrompt(singlishMode)
 
     // Initial API call
     let response = await this.client.createResponse({
@@ -397,29 +416,29 @@ export class AIOrchestrator {
       instructions: systemPrompt,
       tools,
       tool_choice: "auto",
-      previous_response_id: conversation.lastResponseId,
-    });
+      previous_response_id: conversation.lastResponseId
+    })
 
     // Store response ID for conversation continuity
-    conversation.lastResponseId = response.id;
+    conversation.lastResponseId = response.id
 
     // Tool call loop
-    let toolCallCount = 0;
+    let toolCallCount = 0
     while (response.toolCalls.length > 0 && toolCallCount < this.maxToolCalls) {
       // Execute tool calls
-      const toolResults = await this.executeToolCalls(response.toolCalls);
+      const toolResults = await this.executeToolCalls(response.toolCalls)
 
       // Track which tools were used
       for (const result of toolResults) {
         if (!toolsUsedThisRound.includes(result.toolName)) {
-          toolsUsedThisRound.push(result.toolName);
+          toolsUsedThisRound.push(result.toolName)
         }
       }
 
       // Store tool messages in conversation
       for (let i = 0; i < response.toolCalls.length; i++) {
-        const toolCall = response.toolCalls[i];
-        const result = toolResults[i];
+        const toolCall = response.toolCalls[i]
+        const result = toolResults[i]
 
         // Add assistant's tool call message
         conversation.messages.push({
@@ -427,8 +446,8 @@ export class AIOrchestrator {
           role: "assistant",
           content: `Calling tool: ${toolCall.name}`,
           toolName: toolCall.name,
-          timestamp: new Date(),
-        });
+          timestamp: new Date()
+        })
 
         // Add tool result message
         conversation.messages.push({
@@ -437,16 +456,18 @@ export class AIOrchestrator {
           content: JSON.stringify(result.data ?? { error: result.error }),
           toolCallId: toolCall.id,
           toolName: toolCall.name,
-          timestamp: new Date(),
-        });
+          timestamp: new Date()
+        })
       }
 
       // Build tool results for OpenAI (using function_call_output format)
       const toolResultsInput = toolResults.map((result, idx) => ({
         type: "function_call_output" as const,
         call_id: response.toolCalls[idx].id,
-        output: JSON.stringify(result.success ? result.data : { error: result.error }),
-      }));
+        output: JSON.stringify(
+          result.success ? result.data : { error: result.error }
+        )
+      }))
 
       // Call OpenAI again with tool results
       response = await this.client.createResponse({
@@ -454,22 +475,26 @@ export class AIOrchestrator {
         instructions: systemPrompt,
         tools,
         tool_choice: "auto",
-        previous_response_id: response.id,
-      });
+        previous_response_id: response.id
+      })
 
       // Update response ID
-      conversation.lastResponseId = response.id;
-      toolCallCount++;
+      conversation.lastResponseId = response.id
+      toolCallCount++
     }
 
     // Get final assistant response
-    let finalResponse = response.text || "I apologize, but I couldn't generate a response.";
+    let finalResponse =
+      response.text || "I apologize, but I couldn't generate a response."
 
     // Append "Data used" section if tools were used
     if (toolsUsedThisRound.length > 0) {
       // Check if response already has a Data used section
-      if (!finalResponse.includes("**Data used:**") && !finalResponse.includes("Data used:")) {
-        finalResponse += `\n\n---\n\n**Data used:** \`${toolsUsedThisRound.join("`, `")}\``;
+      if (
+        !finalResponse.includes("**Data used:**") &&
+        !finalResponse.includes("Data used:")
+      ) {
+        finalResponse += `\n\n---\n\n**Data used:** \`${toolsUsedThisRound.join("`, `")}\``
       }
     }
 
@@ -478,17 +503,17 @@ export class AIOrchestrator {
       id: generateMessageId(),
       role: "assistant",
       content: finalResponse,
-      timestamp: new Date(),
-    });
+      timestamp: new Date()
+    })
 
     // Update tools used in conversation
     for (const tool of toolsUsedThisRound) {
       if (!conversation.toolsUsed.includes(tool)) {
-        conversation.toolsUsed.push(tool);
+        conversation.toolsUsed.push(tool)
       }
     }
 
-    conversation.updatedAt = new Date();
+    conversation.updatedAt = new Date()
 
     // HARD RULE: Always return toolsUsed array so the UI can display
     // the "Data sources used" section at the bottom of assistant messages.
@@ -497,8 +522,8 @@ export class AIOrchestrator {
       response: finalResponse,
       toolsUsed: toolsUsedThisRound,
       conversationId: conversation.id,
-      responseId: response.id,
-    };
+      responseId: response.id
+    }
   }
 
   /**
@@ -509,34 +534,36 @@ export class AIOrchestrator {
   ): Promise<ToolExecutionResult[]> {
     const results = await Promise.all(
       toolCalls.map((tc) => executeTool(tc.name, tc.arguments))
-    );
-    return results;
+    )
+    return results
   }
 
   /**
    * Get conversation history formatted for display
    */
   getFormattedHistory(conversationId: string): string[] {
-    const conversation = conversations.get(conversationId);
-    if (!conversation) return [];
+    const conversation = conversations.get(conversationId)
+    if (!conversation) return []
 
     return conversation.messages
-      .filter((m) => m.role === "user" || (m.role === "assistant" && !m.toolName))
-      .map((m) => `${m.role === "user" ? "You" : "Assistant"}: ${m.content}`);
+      .filter(
+        (m) => m.role === "user" || (m.role === "assistant" && !m.toolName)
+      )
+      .map((m) => `${m.role === "user" ? "You" : "Assistant"}: ${m.content}`)
   }
 
   /**
    * Clear a conversation
    */
   clearConversation(conversationId: string): void {
-    conversations.delete(conversationId);
+    conversations.delete(conversationId)
   }
 
   /**
    * Clear all conversations
    */
   clearAllConversations(): void {
-    conversations.clear();
+    conversations.clear()
   }
 }
 
@@ -544,16 +571,16 @@ export class AIOrchestrator {
 // Singleton Instance
 // =============================================================================
 
-let orchestratorInstance: AIOrchestrator | null = null;
+let orchestratorInstance: AIOrchestrator | null = null
 
 export function getOrchestrator(config?: OrchestratorConfig): AIOrchestrator {
   if (!orchestratorInstance || config) {
-    orchestratorInstance = new AIOrchestrator(config);
+    orchestratorInstance = new AIOrchestrator(config)
   }
-  return orchestratorInstance;
+  return orchestratorInstance
 }
 
 export function resetOrchestrator(): void {
-  orchestratorInstance?.clearAllConversations();
-  orchestratorInstance = null;
+  orchestratorInstance?.clearAllConversations()
+  orchestratorInstance = null
 }

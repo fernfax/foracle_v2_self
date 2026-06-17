@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test"
 
 /**
  * Mobile responsive checks — run under the iPhone 13 + Pixel 5 projects
@@ -19,30 +19,41 @@ async function expectNoSettledHorizontalOverflow(page: Page) {
     .poll(
       () =>
         page.evaluate(() => {
-          const d = document.documentElement;
-          return d.scrollWidth - d.clientWidth;
+          const d = document.documentElement
+          return d.scrollWidth - d.clientWidth
         }),
       { timeout: 4000 }
     )
-    .toBeLessThanOrEqual(1);
+    .toBeLessThanOrEqual(1)
 }
 
-test("landing page: no horizontal overflow at mobile width", async ({ page }) => {
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expectNoSettledHorizontalOverflow(page);
-});
+test("landing page: no horizontal overflow at mobile width", async ({
+  page
+}) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" })
+  await expectNoSettledHorizontalOverflow(page)
+})
 
-test("sign-in page: no horizontal overflow at mobile width", async ({ page }) => {
-  await page.goto("/sign-in", { waitUntil: "domcontentloaded" });
-  await expectNoSettledHorizontalOverflow(page);
-});
+test("sign-in page: no horizontal overflow at mobile width", async ({
+  page
+}) => {
+  await page.goto("/sign-in", { waitUntil: "domcontentloaded" })
+  await expectNoSettledHorizontalOverflow(page)
+})
 
-test("landing primary CTA is a comfortable tap target (>= 44px tall)", async ({ page }) => {
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  const cta = page.getByRole("link", { name: /sign in|get started|sign up/i }).first();
-  await expect(cta).toBeVisible();
-  const box = await cta.boundingBox();
-  expect(box, "CTA has no bounding box").not.toBeNull();
+test("landing primary CTA is a comfortable tap target (>= 44px tall)", async ({
+  page
+}) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" })
+  const cta = page
+    .getByRole("link", { name: /sign in|get started|sign up/i })
+    .first()
+  await expect(cta).toBeVisible()
+  const box = await cta.boundingBox()
+  expect(box, "CTA has no bounding box").not.toBeNull()
   // Apple HIG / WCAG 2.5.5 Target Size — 44x44 CSS px.
-  expect(box!.height, `CTA height ${Math.round(box!.height)}px < 44`).toBeGreaterThanOrEqual(44);
-});
+  expect(
+    box!.height,
+    `CTA height ${Math.round(box!.height)}px < 44`
+  ).toBeGreaterThanOrEqual(44)
+})

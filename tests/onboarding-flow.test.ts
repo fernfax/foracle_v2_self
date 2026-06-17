@@ -1,17 +1,19 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { currentHoldings, expenses } from "@/db/schema";
-import { createIncome, listIncomes } from "@/lib/services/incomes";
+import { db } from "@/db"
+import { eq } from "drizzle-orm"
+import { nanoid } from "nanoid"
+import { beforeEach, describe, expect, it } from "vitest"
+
+import type { AuthContext } from "@/lib/auth-context"
+import { computeHouseholdSummary } from "@/lib/household-summary"
+import { createIncome, listIncomes } from "@/lib/services/incomes"
 import {
   checkOnboardingStatus,
   completeOnboarding,
-  createOnboardingExpenses,
-} from "@/lib/services/onboarding";
-import { computeHouseholdSummary } from "@/lib/household-summary";
-import type { AuthContext } from "@/lib/auth-context";
-import { seedFamilyMember, seedUser, truncateAll } from "./db-helpers";
+  createOnboardingExpenses
+} from "@/lib/services/onboarding"
+import { currentHoldings, expenses } from "@/db/schema"
+
+import { seedFamilyMember, seedUser, truncateAll } from "./db-helpers"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Onboarding end-to-end (data layer).
@@ -38,10 +40,10 @@ async function summaryFor(ctx: AuthContext) {
     listIncomes(ctx),
     db.query.expenses.findMany({ where: eq(expenses.familyId, ctx.familyId) }),
     db.query.currentHoldings.findMany({
-      where: eq(currentHoldings.familyId, ctx.familyId),
+      where: eq(currentHoldings.familyId, ctx.familyId)
     }),
-    db.query.familyMembers.findMany(),
-  ]);
+    db.query.familyMembers.findMany()
+  ])
 
   // incomes_beta has neither a frequency nor a custom_months column (beta is
   // always monthly); supply both so the row matches computeHouseholdSummary's
@@ -49,14 +51,14 @@ async function summaryFor(ctx: AuthContext) {
   const incomesForSummary = incomes.map((row) => ({
     ...row,
     frequency: "monthly",
-    customMonths: null,
-  }));
+    customMonths: null
+  }))
   return computeHouseholdSummary(
     incomesForSummary,
     expenseRows,
     holdingRows,
-    members.filter((m) => m.familyId === ctx.familyId),
-  );
+    members.filter((m) => m.familyId === ctx.familyId)
+  )
 }
 
 async function addHolding(ctx: AuthContext, bankName: string, amount: string) {
@@ -65,44 +67,52 @@ async function addHolding(ctx: AuthContext, bankName: string, amount: string) {
     userId: ctx.userId,
     familyId: ctx.familyId,
     bankName,
-    holdingAmount: amount,
-  });
+    holdingAmount: amount
+  })
 }
 
 beforeEach(async () => {
-  await truncateAll();
-});
+  await truncateAll()
+})
 
 describe("onboarding flow → household summary (real DB)", () => {
   it("blank slate: complete with no financial data → zeroed summary, onboarded", async () => {
-    const ctx = await seedUser({ userId: "u-blank", familyId: "fam-blank", isMaster: true });
+    const ctx = await seedUser({
+      userId: "u-blank",
+      familyId: "fam-blank",
+      isMaster: true
+    })
     await seedFamilyMember({
       userId: ctx.userId,
       familyId: ctx.familyId,
       name: "Self",
-      dateOfBirth: "1990-06-15",
-    });
+      dateOfBirth: "1990-06-15"
+    })
 
-    await completeOnboarding(ctx);
+    await completeOnboarding(ctx)
 
-    expect(await checkOnboardingStatus(ctx)).toBe(true);
-    const s = await summaryFor(ctx);
-    expect(s.grossIncome).toBe(0);
-    expect(s.netIncome).toBe(0);
-    expect(s.monthlyExpenses).toBe(0);
-    expect(s.liquidHoldings).toBe(0);
-    expect(s.runwayMonths).toBeNull();
-    expect(s.memberCount).toBe(1);
-  });
+    expect(await checkOnboardingStatus(ctx)).toBe(true)
+    const s = await summaryFor(ctx)
+    expect(s.grossIncome).toBe(0)
+    expect(s.netIncome).toBe(0)
+    expect(s.monthlyExpenses).toBe(0)
+    expect(s.liquidHoldings).toBe(0)
+    expect(s.runwayMonths).toBeNull()
+    expect(s.memberCount).toBe(1)
+  })
 
   it("CPF salary + expenses + holdings → amounts match the inputs", async () => {
-    const ctx = await seedUser({ userId: "u-core", familyId: "fam-core", isMaster: true });
+    const ctx = await seedUser({
+      userId: "u-core",
+      familyId: "fam-core",
+      isMaster: true
+    })
     const selfId = await seedFamilyMember({
       userId: ctx.userId,
       familyId: ctx.familyId,
       name: "Self",
-      dateOfBirth: "1990-06-15", // 30s → CPF applies
-    });
+      dateOfBirth: "1990-06-15" // 30s → CPF applies
+    })
 
     // Income: $6,000/mo salary, subject to CPF, linked to the DOB'd member.
     await createIncome(ctx, {
@@ -111,48 +121,52 @@ describe("onboarding flow → household summary (real DB)", () => {
       amount: "6000",
       startDate: "2020-01-01",
       subjectToCpf: true,
-      familyMemberId: selfId,
-    });
+      familyMemberId: selfId
+    })
 
     // Holdings: $20,000 + $5,000 = $25,000 liquid.
-    await addHolding(ctx, "DBS", "20000");
-    await addHolding(ctx, "POSB", "5000");
+    await addHolding(ctx, "DBS", "20000")
+    await addHolding(ctx, "POSB", "5000")
 
     // Expenses: exact per-category amounts → $1,000 + $450 = $1,450/mo.
     await createOnboardingExpenses(ctx, {
       categories: ["Housing", "Food"],
       percentageOfIncome: 0,
       monthlyIncome: 0,
-      categoryAmounts: { Housing: "1000", Food: "450" },
-    });
+      categoryAmounts: { Housing: "1000", Food: "450" }
+    })
 
-    await completeOnboarding(ctx);
+    await completeOnboarding(ctx)
 
-    expect(await checkOnboardingStatus(ctx)).toBe(true);
+    expect(await checkOnboardingStatus(ctx)).toBe(true)
 
-    const s = await summaryFor(ctx);
-    expect(s.grossIncome).toBe(6000);
+    const s = await summaryFor(ctx)
+    expect(s.grossIncome).toBe(6000)
     // CPF was actually applied (derived from the persisted netTakeHome), not just
     // stored raw. Exact rate is intentionally not asserted so a future CPF-rate
     // change doesn't break this test — we assert the relationship instead.
-    expect(s.cpfEmployeeTotal).toBeGreaterThan(0);
-    expect(s.netIncome).toBe(s.grossIncome - s.cpfEmployeeTotal);
-    expect(s.netIncome).toBeLessThan(s.grossIncome);
-    expect(s.monthlyExpenses).toBe(1450);
-    expect(s.liquidHoldings).toBe(25000);
-    expect(s.surplus).toBe(s.netIncome - s.monthlyExpenses);
-    expect(s.runwayMonths).toBe(Math.round((25000 / 1450) * 10) / 10);
-    expect(s.memberCount).toBe(1);
-  });
+    expect(s.cpfEmployeeTotal).toBeGreaterThan(0)
+    expect(s.netIncome).toBe(s.grossIncome - s.cpfEmployeeTotal)
+    expect(s.netIncome).toBeLessThan(s.grossIncome)
+    expect(s.monthlyExpenses).toBe(1450)
+    expect(s.liquidHoldings).toBe(25000)
+    expect(s.surplus).toBe(s.netIncome - s.monthlyExpenses)
+    expect(s.runwayMonths).toBe(Math.round((25000 / 1450) * 10) / 10)
+    expect(s.memberCount).toBe(1)
+  })
 
   it("income with no DOB on the member → CPF stays off (member+DOB policy)", async () => {
-    const ctx = await seedUser({ userId: "u-nocpf", familyId: "fam-nocpf", isMaster: true });
+    const ctx = await seedUser({
+      userId: "u-nocpf",
+      familyId: "fam-nocpf",
+      isMaster: true
+    })
     const selfId = await seedFamilyMember({
       userId: ctx.userId,
       familyId: ctx.familyId,
       name: "Self",
-      dateOfBirth: null, // no DOB → CPF cannot resolve an age → stays gross
-    });
+      dateOfBirth: null // no DOB → CPF cannot resolve an age → stays gross
+    })
 
     await createIncome(ctx, {
       name: "Salary",
@@ -160,13 +174,13 @@ describe("onboarding flow → household summary (real DB)", () => {
       amount: "6000",
       startDate: "2020-01-01",
       subjectToCpf: true, // requested, but locked off because there's no DOB
-      familyMemberId: selfId,
-    });
-    await completeOnboarding(ctx);
+      familyMemberId: selfId
+    })
+    await completeOnboarding(ctx)
 
-    const s = await summaryFor(ctx);
-    expect(s.grossIncome).toBe(6000);
-    expect(s.cpfEmployeeTotal).toBe(0);
-    expect(s.netIncome).toBe(6000);
-  });
-});
+    const s = await summaryFor(ctx)
+    expect(s.grossIncome).toBe(6000)
+    expect(s.cpfEmployeeTotal).toBe(0)
+    expect(s.netIncome).toBe(6000)
+  })
+})

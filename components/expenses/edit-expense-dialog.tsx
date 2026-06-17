@@ -1,19 +1,24 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { format, parse } from "date-fns"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogBody,
-  DialogFooterSticky,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  CalendarIcon,
+  Car,
+  Home,
+  Info,
+  Lock,
+  Shield,
+  Target
+} from "lucide-react"
+
+import {
+  getExpenseCategories,
+  type ExpenseCategory
+} from "@/lib/actions/expense-categories"
+import { updateExpense } from "@/lib/actions/expenses"
+import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,57 +27,65 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooterSticky,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Info, Lock, Shield, Home, Car, Target } from "lucide-react";
-import { format, parse } from "date-fns";
-import { cn } from "@/lib/utils";
-import { updateExpense } from "@/lib/actions/expenses";
-import { getExpenseCategories, type ExpenseCategory } from "@/lib/actions/expense-categories";
-import { CategoryManagerPopover } from "./category-manager-popover";
-import Link from "next/link";
+  SelectValue
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+
+import { CategoryManagerPopover } from "./category-manager-popover"
 
 interface Expense {
-  id: string;
-  userId?: string;
-  linkedPolicyId?: string | null;
-  linkedPropertyId?: string | null;
-  linkedVehicleId?: string | null;
-  linkedGoalId?: string | null;
-  name: string;
-  category: string;
-  expenseCategory: string | null;
-  amount: string;
-  frequency: string;
-  customMonths: string | null;
-  startDate: string | null;
-  endDate: string | null;
-  description: string | null;
-  isActive: boolean | null;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  userId?: string
+  linkedPolicyId?: string | null
+  linkedPropertyId?: string | null
+  linkedVehicleId?: string | null
+  linkedGoalId?: string | null
+  name: string
+  category: string
+  expenseCategory: string | null
+  amount: string
+  frequency: string
+  customMonths: string | null
+  startDate: string | null
+  endDate: string | null
+  description: string | null
+  isActive: boolean | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Helper to get integration type info
-type IntegrationType = "policy" | "property" | "vehicle" | "goal" | null;
+type IntegrationType = "policy" | "property" | "vehicle" | "goal" | null
 
 const getIntegrationType = (expense: Expense | null): IntegrationType => {
-  if (!expense) return null;
-  if (expense.linkedPolicyId) return "policy";
-  if (expense.linkedPropertyId) return "property";
-  if (expense.linkedVehicleId) return "vehicle";
-  if (expense.linkedGoalId) return "goal";
-  return null;
-};
+  if (!expense) return null
+  if (expense.linkedPolicyId) return "policy"
+  if (expense.linkedPropertyId) return "property"
+  if (expense.linkedVehicleId) return "vehicle"
+  if (expense.linkedGoalId) return "goal"
+  return null
+}
 
 const integrationConfig = {
   policy: {
@@ -82,10 +95,12 @@ const integrationConfig = {
     borderColor: "border-[rgba(184,98,42,0.25)]",
     textColor: "text-[#7A3A0A]",
     title: "View Insurance Expense",
-    description: "This expense is linked to an insurance policy. Some fields cannot be edited here.",
+    description:
+      "This expense is linked to an insurance policy. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to an insurance policy.",
     linkText: "go to Insurance Policies",
-    linkHref: (expense: Expense) => `/dashboard/policies?edit=${expense.linkedPolicyId}`,
+    linkHref: (expense: Expense) =>
+      `/dashboard/policies?edit=${expense.linkedPolicyId}`
   },
   property: {
     icon: Home,
@@ -94,10 +109,11 @@ const integrationConfig = {
     borderColor: "border-[rgba(0,196,170,0.25)]",
     textColor: "text-[#007A68]",
     title: "View Property Expense",
-    description: "This expense is linked to a property asset. Some fields cannot be edited here.",
+    description:
+      "This expense is linked to a property asset. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a property asset.",
     linkText: "go to Assets",
-    linkHref: () => `/dashboard/user/assets?tab=property`,
+    linkHref: () => `/dashboard/user/assets?tab=property`
   },
   vehicle: {
     icon: Car,
@@ -106,10 +122,11 @@ const integrationConfig = {
     borderColor: "border-[rgba(212,168,67,0.30)]",
     textColor: "text-[#7A5A00]",
     title: "View Vehicle Expense",
-    description: "This expense is linked to a vehicle asset. Some fields cannot be edited here.",
+    description:
+      "This expense is linked to a vehicle asset. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a vehicle asset.",
     linkText: "go to Assets",
-    linkHref: () => `/dashboard/user/assets?tab=vehicle`,
+    linkHref: () => `/dashboard/user/assets?tab=vehicle`
   },
   goal: {
     icon: Target,
@@ -118,25 +135,30 @@ const integrationConfig = {
     borderColor: "border-[rgba(184,98,42,0.25)]",
     textColor: "text-[#7A3A0A]",
     title: "View Goal Contribution",
-    description: "This expense is linked to a savings goal. Some fields cannot be edited here.",
+    description:
+      "This expense is linked to a savings goal. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a savings goal.",
     linkText: "go to Goals",
-    linkHref: () => `/dashboard/goals`,
-  },
-};
+    linkHref: () => `/dashboard/goals`
+  }
+}
 
 interface EditExpenseDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  expense: Expense | null;
-  onExpenseUpdated: (expense: Expense) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  expense: Expense | null
+  onExpenseUpdated: (expense: Expense) => void
 }
 
 const FREQUENCIES = [
-  { value: "monthly", label: "Monthly", description: "Recurring every month on the same day" },
+  {
+    value: "monthly",
+    label: "Monthly",
+    description: "Recurring every month on the same day"
+  },
   { value: "custom", label: "Custom", description: "Select specific months" },
-  { value: "one-time", label: "One-time", description: "Single payment" },
-];
+  { value: "one-time", label: "One-time", description: "Single payment" }
+]
 
 const MONTHS = [
   { value: 1, label: "Jan" },
@@ -150,78 +172,89 @@ const MONTHS = [
   { value: 9, label: "Sep" },
   { value: 10, label: "Oct" },
   { value: 11, label: "Nov" },
-  { value: 12, label: "Dec" },
-];
+  { value: 12, label: "Dec" }
+]
 
-export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdated }: EditExpenseDialogProps) {
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [amount, setAmount] = useState("");
-  const [frequency, setFrequency] = useState("monthly");
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [notes, setNotes] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [startDateOpen, setStartDateOpen] = useState(false);
-  const [endDateOpen, setEndDateOpen] = useState(false);
-  const [expenseCategory, setExpenseCategory] = useState("current-recurring");
-  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+export function EditExpenseDialog({
+  open,
+  onOpenChange,
+  expense,
+  onExpenseUpdated
+}: EditExpenseDialogProps) {
+  const [name, setName] = useState("")
+  const [category, setCategory] = useState("")
+  const [amount, setAmount] = useState("")
+  const [frequency, setFrequency] = useState("monthly")
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([])
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [notes, setNotes] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [categories, setCategories] = useState<ExpenseCategory[]>([])
+  const [startDateOpen, setStartDateOpen] = useState(false)
+  const [endDateOpen, setEndDateOpen] = useState(false)
+  const [expenseCategory, setExpenseCategory] = useState("current-recurring")
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
 
   // Track initial values to detect changes
   const [initialValues, setInitialValues] = useState<{
-    name: string;
-    category: string;
-    expenseCategory: string;
-    amount: string;
-    frequency: string;
-    selectedMonths: number[];
-    startDate: Date | undefined;
-    endDate: Date | undefined;
-    notes: string;
-  } | null>(null);
+    name: string
+    category: string
+    expenseCategory: string
+    amount: string
+    frequency: string
+    selectedMonths: number[]
+    startDate: Date | undefined
+    endDate: Date | undefined
+    notes: string
+  } | null>(null)
 
   // Check if this expense is linked to any integration
-  const integrationType = getIntegrationType(expense);
-  const isLinked = integrationType !== null;
-  const config = integrationType ? integrationConfig[integrationType] : null;
+  const integrationType = getIntegrationType(expense)
+  const isLinked = integrationType !== null
+  const config = integrationType ? integrationConfig[integrationType] : null
 
   // Load categories when dialog opens
   useEffect(() => {
     if (open) {
-      loadCategories();
+      loadCategories()
     }
-  }, [open]);
+  }, [open])
 
   const loadCategories = async () => {
-    const data = await getExpenseCategories();
-    setCategories(data);
-  };
+    const data = await getExpenseCategories()
+    setCategories(data)
+  }
 
   // Populate form when dialog opens or expense changes
   useEffect(() => {
     if (open && expense) {
-      const parsedStartDate = expense.startDate ? parse(expense.startDate, "yyyy-MM-dd", new Date()) : undefined;
-      const parsedEndDate = expense.endDate ? parse(expense.endDate, "yyyy-MM-dd", new Date()) : undefined;
-      const expenseCat = expense.expenseCategory || "current-recurring";
-      const parsedMonths = expense.customMonths ? (() => {
-        try {
-          return JSON.parse(expense.customMonths);
-        } catch {
-          return [];
-        }
-      })() : [];
+      const parsedStartDate = expense.startDate
+        ? parse(expense.startDate, "yyyy-MM-dd", new Date())
+        : undefined
+      const parsedEndDate = expense.endDate
+        ? parse(expense.endDate, "yyyy-MM-dd", new Date())
+        : undefined
+      const expenseCat = expense.expenseCategory || "current-recurring"
+      const parsedMonths = expense.customMonths
+        ? (() => {
+            try {
+              return JSON.parse(expense.customMonths)
+            } catch {
+              return []
+            }
+          })()
+        : []
 
-      setName(expense.name);
-      setCategory(expense.category);
-      setExpenseCategory(expenseCat);
-      setAmount(expense.amount);
-      setFrequency(expense.frequency);
-      setStartDate(parsedStartDate);
-      setEndDate(parsedEndDate);
-      setNotes(expense.description || "");
-      setSelectedMonths(parsedMonths);
+      setName(expense.name)
+      setCategory(expense.category)
+      setExpenseCategory(expenseCat)
+      setAmount(expense.amount)
+      setFrequency(expense.frequency)
+      setStartDate(parsedStartDate)
+      setEndDate(parsedEndDate)
+      setNotes(expense.description || "")
+      setSelectedMonths(parsedMonths)
 
       // Save initial values for change detection
       setInitialValues({
@@ -233,25 +266,27 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
         selectedMonths: parsedMonths,
         startDate: parsedStartDate,
         endDate: parsedEndDate,
-        notes: expense.description || "",
-      });
+        notes: expense.description || ""
+      })
     }
-  }, [open, expense]);
+  }, [open, expense])
 
   // Auto-set frequency to "one-time" when expense type is "one-off"
   useEffect(() => {
     if (expenseCategory === "one-off") {
-      setFrequency("one-time");
+      setFrequency("one-time")
     }
-  }, [expenseCategory]);
+  }, [expenseCategory])
 
-  const selectedFrequency = FREQUENCIES.find((f) => f.value === frequency);
+  const selectedFrequency = FREQUENCIES.find((f) => f.value === frequency)
 
   const toggleMonth = (month: number) => {
     setSelectedMonths((prev) =>
-      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month].sort((a, b) => a - b)
-    );
-  };
+      prev.includes(month)
+        ? prev.filter((m) => m !== month)
+        : [...prev, month].sort((a, b) => a - b)
+    )
+  }
 
   // Check if user has made any changes from initial values
   const hasUnsavedChanges = initialValues
@@ -260,50 +295,57 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
       expenseCategory !== initialValues.expenseCategory ||
       amount !== initialValues.amount ||
       frequency !== initialValues.frequency ||
-      JSON.stringify(selectedMonths) !== JSON.stringify(initialValues.selectedMonths) ||
+      JSON.stringify(selectedMonths) !==
+        JSON.stringify(initialValues.selectedMonths) ||
       startDate?.getTime() !== initialValues.startDate?.getTime() ||
       endDate?.getTime() !== initialValues.endDate?.getTime() ||
       notes !== initialValues.notes
-    : false;
+    : false
 
   const handleClose = (openState: boolean) => {
     if (!openState && hasUnsavedChanges && !isLinked) {
-      setShowUnsavedWarning(true);
+      setShowUnsavedWarning(true)
     } else {
-      onOpenChange(openState);
+      onOpenChange(openState)
     }
-  };
+  }
 
   const handleConfirmClose = () => {
-    setShowUnsavedWarning(false);
+    setShowUnsavedWarning(false)
     // Reset form to initial values
     if (initialValues) {
-      setName(initialValues.name);
-      setCategory(initialValues.category);
-      setExpenseCategory(initialValues.expenseCategory);
-      setAmount(initialValues.amount);
-      setFrequency(initialValues.frequency);
-      setSelectedMonths(initialValues.selectedMonths);
-      setStartDate(initialValues.startDate);
-      setEndDate(initialValues.endDate);
-      setNotes(initialValues.notes);
+      setName(initialValues.name)
+      setCategory(initialValues.category)
+      setExpenseCategory(initialValues.expenseCategory)
+      setAmount(initialValues.amount)
+      setFrequency(initialValues.frequency)
+      setSelectedMonths(initialValues.selectedMonths)
+      setStartDate(initialValues.startDate)
+      setEndDate(initialValues.endDate)
+      setNotes(initialValues.notes)
     }
-    onOpenChange(false);
-  };
+    onOpenChange(false)
+  }
 
   const handleSubmit = async () => {
     // For recurring expenses, startDate is not required
-    const isRecurring = expenseCategory === "current-recurring";
-    if (!expense || !name || !category || !amount || (!isRecurring && !startDate)) {
-      return;
+    const isRecurring = expenseCategory === "current-recurring"
+    if (
+      !expense ||
+      !name ||
+      !category ||
+      !amount ||
+      (!isRecurring && !startDate)
+    ) {
+      return
     }
 
     // Validate custom frequency has months selected
     if (frequency === "custom" && selectedMonths.length === 0) {
-      return;
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
       const updatedExpense = await updateExpense(expense.id, {
         name,
@@ -311,421 +353,566 @@ export function EditExpenseDialog({ open, onOpenChange, expense, onExpenseUpdate
         expenseCategory,
         amount: parseFloat(amount),
         frequency,
-        customMonths: frequency === "custom" ? JSON.stringify(selectedMonths) : null,
-        startDate: isRecurring ? null : (startDate ? format(startDate, "yyyy-MM-dd") : null),
-        endDate: isRecurring ? null : (endDate ? format(endDate, "yyyy-MM-dd") : null),
-        description: notes || undefined,
-      });
+        customMonths:
+          frequency === "custom" ? JSON.stringify(selectedMonths) : null,
+        startDate: isRecurring
+          ? null
+          : startDate
+            ? format(startDate, "yyyy-MM-dd")
+            : null,
+        endDate: isRecurring
+          ? null
+          : endDate
+            ? format(endDate, "yyyy-MM-dd")
+            : null,
+        description: notes || undefined
+      })
 
-      onExpenseUpdated(updatedExpense);
-      onOpenChange(false);
+      onExpenseUpdated(updatedExpense)
+      onOpenChange(false)
     } catch (error) {
-      console.error("Failed to update expense:", error);
+      console.error("Failed to update expense:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <>
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {isLinked && config ? (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="max-h-[90vh] sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {isLinked && config ? (
+                <>
+                  <config.icon className={`h-5 w-5 ${config.color}`} />
+                  {config.title}
+                </>
+              ) : (
+                <>
+                  Edit Expense
+                  <Info className="text-muted-foreground h-4 w-4" />
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {isLinked && config
+                ? config.description
+                : "Update the expense details."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogBody className={!expenseCategory ? "min-h-[100px]" : ""}>
+            {/* Linked Integration Alert */}
+            {isLinked && config && expense && (
+              <div
+                className={`flex gap-3 rounded-lg p-4 ${config.bgColor} border ${config.borderColor}`}>
+                <Lock
+                  className={`h-4 w-4 ${config.color} mt-0.5 flex-shrink-0`}
+                />
+                <div className={config.textColor}>
+                  <span className="font-medium">{config.alertMessage}</span>
+                  <br />
+                  <span className="text-sm">
+                    To edit the amount, frequency, dates, or selected months,
+                    please{" "}
+                    <Link
+                      href={config.linkHref(expense)}
+                      className="font-medium underline hover:opacity-80"
+                      onClick={() => onOpenChange(false)}>
+                      {config.linkText}
+                    </Link>{" "}
+                    and edit directly.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Expense Type Selector */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="edit-expense-type"
+                className="flex items-center gap-1">
+                Expense Type <span className="text-[#8B0000]">*</span>
+                {isLinked && <Lock className="text-muted-foreground h-3 w-3" />}
+              </Label>
+              <Select
+                value={expenseCategory}
+                onValueChange={isLinked ? undefined : setExpenseCategory}
+                disabled={isLinked}>
+                <SelectTrigger
+                  className={cn(
+                    "bg-card",
+                    isLinked && "bg-muted cursor-not-allowed"
+                  )}>
+                  <SelectValue placeholder="Select expense type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="current-recurring">
+                    Recurring Expense
+                  </SelectItem>
+                  <SelectItem value="future-recurring">
+                    Recurring Expense (Future)
+                  </SelectItem>
+                  <SelectItem value="one-off">One-off Expense</SelectItem>
+                </SelectContent>
+              </Select>
+              {isLinked ? (
+                <p className="text-muted-foreground text-xs">
+                  Inherited from insurance policy
+                </p>
+              ) : (
+                <>
+                  {!expenseCategory && (
+                    <p className="text-muted-foreground text-xs">
+                      Please select an expense type to continue
+                    </p>
+                  )}
+                  {expenseCategory === "current-recurring" && (
+                    <p className="text-muted-foreground text-xs">
+                      Expense that repeats regularly (e.g., monthly rent)
+                    </p>
+                  )}
+                  {expenseCategory === "future-recurring" && (
+                    <p className="text-muted-foreground text-xs">
+                      Recurring expense that starts in the future (e.g.,
+                      upcoming subscription)
+                    </p>
+                  )}
+                  {expenseCategory === "one-off" && (
+                    <p className="text-muted-foreground text-xs">
+                      One-time expense that does not repeat (e.g., car repair,
+                      vacation)
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Show remaining fields only when expense type is selected */}
+            {expenseCategory && (
+              <div className="grid gap-6 py-4">
+                {/* Row 1: Name and Category */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="edit-name"
+                      className="flex items-center gap-1">
+                      Expense Name <span className="text-[#8B0000]">*</span>
+                      {isLinked && (
+                        <Lock className="text-muted-foreground h-3 w-3" />
+                      )}
+                    </Label>
+                    <Input
+                      id="edit-name"
+                      placeholder="e.g., Rent, Groceries"
+                      value={name}
+                      onChange={(e) => !isLinked && setName(e.target.value)}
+                      className={cn(
+                        "bg-card",
+                        isLinked && "bg-muted cursor-not-allowed"
+                      )}
+                      disabled={isLinked}
+                    />
+                    {isLinked && (
+                      <p className="text-muted-foreground text-xs">
+                        Inherited from insurance policy
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="edit-category"
+                      className="flex items-center gap-1">
+                      Category <span className="text-[#8B0000]">*</span>
+                      {isLinked && (
+                        <Lock className="text-muted-foreground h-3 w-3" />
+                      )}
+                    </Label>
+                    <Select
+                      value={category}
+                      onValueChange={isLinked ? undefined : setCategory}
+                      disabled={isLinked}>
+                      <SelectTrigger
+                        className={cn(
+                          "bg-card",
+                          isLinked && "bg-muted cursor-not-allowed"
+                        )}>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[400px] overflow-y-auto">
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.name}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {isLinked ? (
+                      <p className="text-muted-foreground text-xs">
+                        Inherited from insurance policy
+                      </p>
+                    ) : (
+                      <CategoryManagerPopover
+                        categories={categories}
+                        onCategoriesChanged={loadCategories}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Row 2: Amount and Frequency */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="edit-amount"
+                      className="flex items-center gap-1">
+                      Expense Amount <span className="text-[#8B0000]">*</span>
+                      {isLinked && (
+                        <Lock className="text-muted-foreground h-3 w-3" />
+                      )}
+                    </Label>
+                    <Input
+                      id="edit-amount"
+                      type="number"
+                      placeholder="0"
+                      value={amount}
+                      onChange={(e) => !isLinked && setAmount(e.target.value)}
+                      min="0"
+                      step="0.01"
+                      className={cn(
+                        "bg-card",
+                        isLinked && "bg-muted cursor-not-allowed"
+                      )}
+                      disabled={isLinked}
+                    />
+                    {isLinked && (
+                      <p className="text-muted-foreground text-xs">
+                        Inherited from insurance policy
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="edit-frequency"
+                      className="flex items-center gap-1">
+                      Expense Frequency{" "}
+                      <span className="text-[#8B0000]">*</span>
+                      {isLinked && (
+                        <Lock className="text-muted-foreground h-3 w-3" />
+                      )}
+                    </Label>
+                    <Select
+                      value={frequency}
+                      onValueChange={
+                        isLinked || expenseCategory === "one-off"
+                          ? undefined
+                          : setFrequency
+                      }
+                      disabled={isLinked || expenseCategory === "one-off"}>
+                      <SelectTrigger
+                        className={cn(
+                          "bg-card",
+                          (isLinked || expenseCategory === "one-off") &&
+                            "bg-muted cursor-not-allowed"
+                        )}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FREQUENCIES.map((freq) => (
+                          <SelectItem key={freq.value} value={freq.value}>
+                            {freq.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {isLinked ? (
+                      <p className="text-muted-foreground text-xs">
+                        Inherited from insurance policy
+                      </p>
+                    ) : (
+                      selectedFrequency && (
+                        <p className="text-muted-foreground text-xs">
+                          {selectedFrequency.description}
+                        </p>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* Custom Month Selector */}
+                {frequency.toLowerCase() === "custom" && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1">
+                      Select Months <span className="text-[#8B0000]">*</span>
+                      {isLinked && (
+                        <Lock className="text-muted-foreground h-3 w-3" />
+                      )}
+                    </Label>
+                    <div className="grid grid-cols-6 gap-2">
+                      {MONTHS.map((month) => (
+                        <Button
+                          key={month.value}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => !isLinked && toggleMonth(month.value)}
+                          disabled={isLinked}
+                          className={cn(
+                            "h-10 font-medium",
+                            selectedMonths.includes(month.value)
+                              ? "border-black bg-black text-white hover:bg-black/90"
+                              : "bg-card hover:bg-muted",
+                            isLinked && "cursor-not-allowed opacity-70"
+                          )}>
+                          {month.label}
+                        </Button>
+                      ))}
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      Selected:{" "}
+                      {selectedMonths.length > 0
+                        ? selectedMonths
+                            .map((m) => {
+                              const monthName = [
+                                "January",
+                                "February",
+                                "March",
+                                "April",
+                                "May",
+                                "June",
+                                "July",
+                                "August",
+                                "September",
+                                "October",
+                                "November",
+                                "December"
+                              ][m - 1]
+                              return monthName
+                            })
+                            .join(", ")
+                        : "None"}
+                    </p>
+                    {isLinked && (
+                      <p className="text-muted-foreground text-xs">
+                        Inherited from insurance policy
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Row 3: Start Date and End Date - Only show for non-recurring expenses */}
+                {expenseCategory !== "current-recurring" && (
+                  <div
+                    className={cn(
+                      "grid gap-4",
+                      expenseCategory === "one-off"
+                        ? "grid-cols-1"
+                        : "grid-cols-2"
+                    )}>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        {expenseCategory === "one-off"
+                          ? "Expense Date"
+                          : "Start Date"}{" "}
+                        <span className="text-[#8B0000]">*</span>
+                        {isLinked && (
+                          <Lock className="text-muted-foreground h-3 w-3" />
+                        )}
+                      </Label>
+                      {isLinked ? (
+                        <Button
+                          variant="outline"
+                          disabled
+                          className="bg-muted w-full cursor-not-allowed justify-start text-left font-normal">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {startDate
+                            ? format(startDate, "MMMM do, yyyy")
+                            : "Pick a date"}
+                        </Button>
+                      ) : (
+                        <Popover
+                          open={startDateOpen}
+                          onOpenChange={setStartDateOpen}>
+                          <PopoverAnchor asChild>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              onClick={() => setStartDateOpen(true)}
+                              className={cn(
+                                "w-full touch-manipulation justify-start text-left font-normal",
+                                !startDate && "text-muted-foreground"
+                              )}>
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {startDate
+                                ? format(startDate, "MMMM do, yyyy")
+                                : "Pick a date"}
+                            </Button>
+                          </PopoverAnchor>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={startDate}
+                              onSelect={(date) => {
+                                setStartDate(date)
+                                setStartDateOpen(false)
+                              }}
+                              fixedWeeks
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      {isLinked && (
+                        <p className="text-muted-foreground text-xs">
+                          Inherited from insurance policy
+                        </p>
+                      )}
+                    </div>
+                    {expenseCategory !== "one-off" && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1">
+                          End Date
+                          {isLinked && (
+                            <Lock className="text-muted-foreground h-3 w-3" />
+                          )}
+                        </Label>
+                        {isLinked ? (
+                          <Button
+                            variant="outline"
+                            disabled
+                            className="bg-muted w-full cursor-not-allowed justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {endDate
+                              ? format(endDate, "MMMM do, yyyy")
+                              : "No end date"}
+                          </Button>
+                        ) : (
+                          <Popover
+                            open={endDateOpen}
+                            onOpenChange={setEndDateOpen}>
+                            <PopoverAnchor asChild>
+                              <Button
+                                variant="outline"
+                                type="button"
+                                onClick={() => setEndDateOpen(true)}
+                                className={cn(
+                                  "w-full touch-manipulation justify-start text-left font-normal",
+                                  !endDate && "text-muted-foreground"
+                                )}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {endDate
+                                  ? format(endDate, "MMMM do, yyyy")
+                                  : "Pick a date"}
+                              </Button>
+                            </PopoverAnchor>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start">
+                              <Calendar
+                                mode="single"
+                                selected={endDate}
+                                onSelect={(date) => {
+                                  setEndDate(date)
+                                  setEndDateOpen(false)
+                                }}
+                                fixedWeeks
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                        {isLinked ? (
+                          <p className="text-muted-foreground text-xs">
+                            Inherited from insurance policy
+                          </p>
+                        ) : (
+                          <p className="text-muted-foreground text-xs">
+                            Leave empty for ongoing expense
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Row 4: Notes */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-notes">Expense Notes</Label>
+                  <Textarea
+                    id="edit-notes"
+                    placeholder="e.g., Monthly apartment rent..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                    className="bg-card"
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Add any additional details about this expense
+                  </p>
+                </div>
+              </div>
+            )}
+          </DialogBody>
+
+          {/* Footer */}
+          <DialogFooterSticky>
+            {isLinked && config && expense ? (
               <>
-                <config.icon className={`h-5 w-5 ${config.color}`} />
-                {config.title}
+                <Button asChild variant="outline">
+                  <Link
+                    href={config.linkHref(expense)}
+                    onClick={() => onOpenChange(false)}>
+                    {config.linkText.replace("go to ", "Go to ")}
+                  </Link>
+                </Button>
+                <Button onClick={() => onOpenChange(false)}>Close</Button>
               </>
             ) : (
               <>
-                Edit Expense
-                <Info className="h-4 w-4 text-muted-foreground" />
+                <Button
+                  variant="ghost"
+                  onClick={() => handleClose(false)}
+                  disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    !expenseCategory ||
+                    !name ||
+                    !category ||
+                    !amount ||
+                    (expenseCategory !== "current-recurring" && !startDate) ||
+                    (frequency.toLowerCase() === "custom" &&
+                      selectedMonths.length === 0) ||
+                    isSubmitting
+                  }>
+                  {isSubmitting ? "Saving..." : "Save Changes"}
+                </Button>
               </>
             )}
-          </DialogTitle>
-          <DialogDescription>
-            {isLinked && config
-              ? config.description
-              : "Update the expense details."}
-          </DialogDescription>
-        </DialogHeader>
+          </DialogFooterSticky>
+        </DialogContent>
+      </Dialog>
 
-        <DialogBody className={!expenseCategory ? "min-h-[100px]" : ""}>
-        {/* Linked Integration Alert */}
-        {isLinked && config && expense && (
-          <div className={`flex gap-3 p-4 rounded-lg ${config.bgColor} border ${config.borderColor}`}>
-            <Lock className={`h-4 w-4 ${config.color} mt-0.5 flex-shrink-0`} />
-            <div className={config.textColor}>
-              <span className="font-medium">{config.alertMessage}</span>
-              <br />
-              <span className="text-sm">
-                To edit the amount, frequency, dates, or selected months, please{" "}
-                <Link
-                  href={config.linkHref(expense)}
-                  className="font-medium underline hover:opacity-80"
-                  onClick={() => onOpenChange(false)}
-                >
-                  {config.linkText}
-                </Link>
-                {" "}and edit directly.
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Expense Type Selector */}
-        <div className="space-y-2">
-          <Label htmlFor="edit-expense-type" className="flex items-center gap-1">
-            Expense Type <span className="text-[#8B0000]">*</span>
-            {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-          </Label>
-          <Select value={expenseCategory} onValueChange={isLinked ? undefined : setExpenseCategory} disabled={isLinked}>
-            <SelectTrigger className={cn("bg-card", isLinked && "bg-muted cursor-not-allowed")}>
-              <SelectValue placeholder="Select expense type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="current-recurring">Recurring Expense</SelectItem>
-              <SelectItem value="future-recurring">Recurring Expense (Future)</SelectItem>
-              <SelectItem value="one-off">One-off Expense</SelectItem>
-            </SelectContent>
-          </Select>
-          {isLinked ? (
-            <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-          ) : (
-            <>
-              {!expenseCategory && (
-                <p className="text-xs text-muted-foreground">Please select an expense type to continue</p>
-              )}
-              {expenseCategory === "current-recurring" && (
-                <p className="text-xs text-muted-foreground">Expense that repeats regularly (e.g., monthly rent)</p>
-              )}
-              {expenseCategory === "future-recurring" && (
-                <p className="text-xs text-muted-foreground">Recurring expense that starts in the future (e.g., upcoming subscription)</p>
-              )}
-              {expenseCategory === "one-off" && (
-                <p className="text-xs text-muted-foreground">One-time expense that does not repeat (e.g., car repair, vacation)</p>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Show remaining fields only when expense type is selected */}
-        {expenseCategory && (
-        <div className="grid gap-6 py-4">
-          {/* Row 1: Name and Category */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name" className="flex items-center gap-1">
-                Expense Name <span className="text-[#8B0000]">*</span>
-                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-              </Label>
-              <Input
-                id="edit-name"
-                placeholder="e.g., Rent, Groceries"
-                value={name}
-                onChange={(e) => !isLinked && setName(e.target.value)}
-                className={cn("bg-card", isLinked && "bg-muted cursor-not-allowed")}
-                disabled={isLinked}
-              />
-              {isLinked && (
-                <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-category" className="flex items-center gap-1">
-                Category <span className="text-[#8B0000]">*</span>
-                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-              </Label>
-              <Select value={category} onValueChange={isLinked ? undefined : setCategory} disabled={isLinked}>
-                <SelectTrigger className={cn("bg-card", isLinked && "bg-muted cursor-not-allowed")}>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[400px] overflow-y-auto">
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {isLinked ? (
-                <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-              ) : (
-                <CategoryManagerPopover categories={categories} onCategoriesChanged={loadCategories} />
-              )}
-            </div>
-          </div>
-
-          {/* Row 2: Amount and Frequency */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-amount" className="flex items-center gap-1">
-                Expense Amount <span className="text-[#8B0000]">*</span>
-                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-              </Label>
-              <Input
-                id="edit-amount"
-                type="number"
-                placeholder="0"
-                value={amount}
-                onChange={(e) => !isLinked && setAmount(e.target.value)}
-                min="0"
-                step="0.01"
-                className={cn("bg-card", isLinked && "bg-muted cursor-not-allowed")}
-                disabled={isLinked}
-              />
-              {isLinked && (
-                <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-frequency" className="flex items-center gap-1">
-                Expense Frequency <span className="text-[#8B0000]">*</span>
-                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-              </Label>
-              <Select
-                value={frequency}
-                onValueChange={isLinked || expenseCategory === "one-off" ? undefined : setFrequency}
-                disabled={isLinked || expenseCategory === "one-off"}
-              >
-                <SelectTrigger className={cn("bg-card", (isLinked || expenseCategory === "one-off") && "bg-muted cursor-not-allowed")}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FREQUENCIES.map((freq) => (
-                    <SelectItem key={freq.value} value={freq.value}>
-                      {freq.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {isLinked ? (
-                <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-              ) : (
-                selectedFrequency && (
-                  <p className="text-xs text-muted-foreground">{selectedFrequency.description}</p>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Custom Month Selector */}
-          {frequency.toLowerCase() === "custom" && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1">
-                Select Months <span className="text-[#8B0000]">*</span>
-                {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-              </Label>
-              <div className="grid grid-cols-6 gap-2">
-                {MONTHS.map((month) => (
-                  <Button
-                    key={month.value}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => !isLinked && toggleMonth(month.value)}
-                    disabled={isLinked}
-                    className={cn(
-                      "h-10 font-medium",
-                      selectedMonths.includes(month.value)
-                        ? "bg-black text-white hover:bg-black/90 border-black"
-                        : "bg-card hover:bg-muted",
-                      isLinked && "cursor-not-allowed opacity-70"
-                    )}
-                  >
-                    {month.label}
-                  </Button>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Selected: {selectedMonths.length > 0
-                  ? selectedMonths.map((m) => {
-                      const monthName = ["January", "February", "March", "April", "May", "June",
-                                         "July", "August", "September", "October", "November", "December"][m - 1];
-                      return monthName;
-                    }).join(", ")
-                  : "None"}
-              </p>
-              {isLinked && (
-                <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-              )}
-            </div>
-          )}
-
-          {/* Row 3: Start Date and End Date - Only show for non-recurring expenses */}
-          {expenseCategory !== "current-recurring" && (
-            <div className={cn("grid gap-4", expenseCategory === "one-off" ? "grid-cols-1" : "grid-cols-2")}>
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1">
-                  {expenseCategory === "one-off" ? "Expense Date" : "Start Date"} <span className="text-[#8B0000]">*</span>
-                  {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-                </Label>
-                {isLinked ? (
-                  <Button
-                    variant="outline"
-                    disabled
-                    className="w-full justify-start text-left font-normal bg-muted cursor-not-allowed"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
-                  </Button>
-                ) : (
-                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                    <PopoverAnchor asChild>
-                      <Button
-                        variant="outline"
-                        type="button"
-                        onClick={() => setStartDateOpen(true)}
-                        className={cn(
-                          "w-full justify-start text-left font-normal touch-manipulation",
-                          !startDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, "MMMM do, yyyy") : "Pick a date"}
-                      </Button>
-                    </PopoverAnchor>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={(date) => {
-                          setStartDate(date);
-                          setStartDateOpen(false);
-                        }}
-                        fixedWeeks
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-                {isLinked && (
-                  <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-                )}
-              </div>
-              {expenseCategory !== "one-off" && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-1">
-                    End Date
-                    {isLinked && <Lock className="h-3 w-3 text-muted-foreground" />}
-                  </Label>
-                  {isLinked ? (
-                    <Button
-                      variant="outline"
-                      disabled
-                      className="w-full justify-start text-left font-normal bg-muted cursor-not-allowed"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "MMMM do, yyyy") : "No end date"}
-                    </Button>
-                  ) : (
-                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                      <PopoverAnchor asChild>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          onClick={() => setEndDateOpen(true)}
-                          className={cn(
-                            "w-full justify-start text-left font-normal touch-manipulation",
-                            !endDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? format(endDate, "MMMM do, yyyy") : "Pick a date"}
-                        </Button>
-                      </PopoverAnchor>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={endDate}
-                          onSelect={(date) => {
-                            setEndDate(date);
-                            setEndDateOpen(false);
-                          }}
-                          fixedWeeks
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                  {isLinked ? (
-                    <p className="text-xs text-muted-foreground">Inherited from insurance policy</p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Leave empty for ongoing expense</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Row 4: Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="edit-notes">Expense Notes</Label>
-            <Textarea
-              id="edit-notes"
-              placeholder="e.g., Monthly apartment rent..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="bg-card"
-            />
-            <p className="text-xs text-muted-foreground">Add any additional details about this expense</p>
-          </div>
-        </div>
-        )}
-        </DialogBody>
-
-        {/* Footer */}
-        <DialogFooterSticky>
-          {isLinked && config && expense ? (
-            <>
-              <Button asChild variant="outline">
-                <Link href={config.linkHref(expense)} onClick={() => onOpenChange(false)}>
-                  {config.linkText.replace("go to ", "Go to ")}
-                </Link>
-              </Button>
-              <Button onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" onClick={() => handleClose(false)} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  !expenseCategory ||
-                  !name ||
-                  !category ||
-                  !amount ||
-                  (expenseCategory !== "current-recurring" && !startDate) ||
-                  (frequency.toLowerCase() === "custom" && selectedMonths.length === 0) ||
-                  isSubmitting
-                }
-              >
-                {isSubmitting ? "Saving..." : "Save Changes"}
-              </Button>
-            </>
-          )}
-        </DialogFooterSticky>
-      </DialogContent>
-    </Dialog>
-
-    <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-          <AlertDialogDescription>
-            You have unsaved changes. Are you sure you want to close? All your changes will be lost.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Continue Editing</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirmClose}>Discard Changes</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <AlertDialog
+        open={showUnsavedWarning}
+        onOpenChange={setShowUnsavedWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to close? All your
+              changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continue Editing</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmClose}>
+              Discard Changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
-  );
+  )
 }

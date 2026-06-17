@@ -1,33 +1,35 @@
-"use client";
+"use client"
 
-import React, { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AreaChart, Area, XAxis, YAxis, ReferenceDot, LabelList } from "recharts";
-import { ResponsiveChart } from "@/components/ui/responsive-chart";
+import React, { useMemo, useState } from "react"
+import { format, subDays } from "date-fns"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  ArrowUpDown,
+  Briefcase,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Expand,
+  Link2,
+  MoreHorizontal,
+  Plus
+} from "lucide-react"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Area,
+  AreaChart,
+  LabelList,
+  ReferenceDot,
+  XAxis,
+  YAxis
+} from "recharts"
+
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  deleteIncome,
+  toggleIncomeStatus,
+  updateIncome
+} from "@/lib/actions/income"
+import { calculateCPF } from "@/lib/cpf-calculator"
+import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,231 +38,269 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  ChevronRight,
-  ChevronDown,
-  ArrowUpDown,
-  MoreHorizontal,
-  Plus,
-  ChevronLeft,
-  Link2,
-  DollarSign,
-  Briefcase,
-  Expand,
-} from "lucide-react";
-import { IncomeModal } from "./income-modal";
-import { AddCpfDetailsDialog } from "./add-cpf-details-dialog";
-import { IncomeBreakdownModal } from "./income-breakdown-modal";
-import { deleteIncome, toggleIncomeStatus, updateIncome } from "@/lib/actions/income";
-import { calculateCPF } from "@/lib/cpf-calculator";
-import { format, subDays } from "date-fns";
-import { cn } from "@/lib/utils";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { ResponsiveChart } from "@/components/ui/responsive-chart"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
+
+import { AddCpfDetailsDialog } from "./add-cpf-details-dialog"
+import { IncomeBreakdownModal } from "./income-breakdown-modal"
+import { IncomeModal } from "./income-modal"
 
 type Income = {
-  id: string;
-  userId: string;
-  name: string;
-  category: string;
-  incomeCategory: string | null;
-  amount: string;
-  frequency: string;
-  customMonths: string | null;
-  subjectToCpf: boolean | null;
-  accountForBonus: boolean | null;
-  bonusGroups: string | null;
-  employeeCpfContribution: string | null;
-  employerCpfContribution: string | null;
-  netTakeHome: string | null;
-  cpfOrdinaryAccount: string | null;
-  cpfSpecialAccount: string | null;
-  cpfMedisaveAccount: string | null;
-  description: string | null;
-  startDate: string;
-  endDate: string | null;
-  pastIncomeHistory: string | null;
-  futureMilestones: string | null;
-  accountForFutureChange: boolean | null;
-  isActive: boolean | null;
-  familyMemberId: string | null;
+  id: string
+  userId: string
+  name: string
+  category: string
+  incomeCategory: string | null
+  amount: string
+  frequency: string
+  customMonths: string | null
+  subjectToCpf: boolean | null
+  accountForBonus: boolean | null
+  bonusGroups: string | null
+  employeeCpfContribution: string | null
+  employerCpfContribution: string | null
+  netTakeHome: string | null
+  cpfOrdinaryAccount: string | null
+  cpfSpecialAccount: string | null
+  cpfMedisaveAccount: string | null
+  description: string | null
+  startDate: string
+  endDate: string | null
+  pastIncomeHistory: string | null
+  futureMilestones: string | null
+  accountForFutureChange: boolean | null
+  isActive: boolean | null
+  familyMemberId: string | null
   familyMember?: {
-    id: string;
-    name: string;
-    relationship: string | null;
-    dateOfBirth: string | null;
-    isContributing: boolean | null;
-  } | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+    id: string
+    name: string
+    relationship: string | null
+    dateOfBirth: string | null
+    isContributing: boolean | null
+  } | null
+  createdAt: Date
+  updatedAt: Date
+}
 
-type SortKey = "name" | "category" | "amount" | "frequency" | "startDate" | "isActive";
-type SortDirection = "asc" | "desc";
+type SortKey =
+  | "name"
+  | "category"
+  | "amount"
+  | "frequency"
+  | "startDate"
+  | "isActive"
+type SortDirection = "asc" | "desc"
 
 interface IncomeListProps {
-  initialIncomes: Income[];
+  initialIncomes: Income[]
 }
 
 export function IncomeList({ initialIncomes }: IncomeListProps) {
-  const [incomes, setIncomes] = useState<Income[]>(initialIncomes);
-  const [search, setSearch] = useState("");
-  const [selectedFrequency, setSelectedFrequency] = useState<string>("All");
-  const [sortKey, setSortKey] = useState<SortKey>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [incomeToEdit, setIncomeToEdit] = useState<Income | null>(null);
-  const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
+  const [incomes, setIncomes] = useState<Income[]>(initialIncomes)
+  const [search, setSearch] = useState("")
+  const [selectedFrequency, setSelectedFrequency] = useState<string>("All")
+  const [sortKey, setSortKey] = useState<SortKey>("name")
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(25)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [incomeToEdit, setIncomeToEdit] = useState<Income | null>(null)
+  const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null)
 
   // CPF details flow states
-  const [isCpfDetailsDialogOpen, setIsCpfDetailsDialogOpen] = useState(false);
-  const [pendingIncomeData, setPendingIncomeData] = useState<any>(null);
-  const [pendingIncomeFormData, setPendingIncomeFormData] = useState<any>(null);
-  const [pendingCpfData, setPendingCpfData] = useState<{oa?: number; sa?: number; ma?: number} | null>(null);
-  const [totalCpfForDialog, setTotalCpfForDialog] = useState(0);
-  const [cpfInitialValues, setCpfInitialValues] = useState<{oa?: number; sa?: number; ma?: number}>({});
+  const [isCpfDetailsDialogOpen, setIsCpfDetailsDialogOpen] = useState(false)
+  const [pendingIncomeData, setPendingIncomeData] = useState<any>(null)
+  const [pendingIncomeFormData, setPendingIncomeFormData] = useState<any>(null)
+  const [pendingCpfData, setPendingCpfData] = useState<{
+    oa?: number
+    sa?: number
+    ma?: number
+  } | null>(null)
+  const [totalCpfForDialog, setTotalCpfForDialog] = useState(0)
+  const [cpfInitialValues, setCpfInitialValues] = useState<{
+    oa?: number
+    sa?: number
+    ma?: number
+  }>({})
 
   // Get unique frequencies with counts
   const frequencyCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<string, number> = {}
     incomes.forEach((income) => {
-      counts[income.frequency] = (counts[income.frequency] || 0) + 1;
-    });
-    return counts;
-  }, [incomes]);
+      counts[income.frequency] = (counts[income.frequency] || 0) + 1
+    })
+    return counts
+  }, [incomes])
 
   // Filter and sort incomes
   const filteredAndSortedIncomes = useMemo(() => {
     let filtered = incomes.filter(
       (income) =>
         (income.name.toLowerCase().includes(search.toLowerCase()) ||
-        income.category.toLowerCase().includes(search.toLowerCase())) &&
+          income.category.toLowerCase().includes(search.toLowerCase())) &&
         (selectedFrequency === "All" || income.frequency === selectedFrequency)
-    );
+    )
 
     filtered.sort((a, b) => {
-      let aVal: string | number | boolean | null;
-      let bVal: string | number | boolean | null;
+      let aVal: string | number | boolean | null
+      let bVal: string | number | boolean | null
 
       switch (sortKey) {
         case "amount":
-          aVal = parseFloat(a.amount);
-          bVal = parseFloat(b.amount);
-          break;
+          aVal = parseFloat(a.amount)
+          bVal = parseFloat(b.amount)
+          break
         case "isActive":
-          aVal = a.isActive ? 1 : 0;
-          bVal = b.isActive ? 1 : 0;
-          break;
+          aVal = a.isActive ? 1 : 0
+          bVal = b.isActive ? 1 : 0
+          break
         default:
-          aVal = a[sortKey];
-          bVal = b[sortKey];
+          aVal = a[sortKey]
+          bVal = b[sortKey]
       }
 
-      if (aVal === null || aVal === undefined) return 1;
-      if (bVal === null || bVal === undefined) return -1;
+      if (aVal === null || aVal === undefined) return 1
+      if (bVal === null || bVal === undefined) return -1
 
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1
+      return 0
+    })
 
-    return filtered;
-  }, [incomes, search, sortKey, sortDirection, selectedFrequency]);
+    return filtered
+  }, [incomes, search, sortKey, sortDirection, selectedFrequency])
 
   // Calculate annual income summary stats
   const incomeSummaryStats = useMemo(() => {
-    let grossAnnualIncome = 0;
-    let netAnnualIncome = 0;
-    let totalBonuses = 0;
-    const categoryBreakdown: Record<string, { gross: number; net: number; count: number }> = {};
-    const familyMemberBreakdown: Record<string, { gross: number; net: number; count: number; name: string }> = {};
+    let grossAnnualIncome = 0
+    let netAnnualIncome = 0
+    let totalBonuses = 0
+    const categoryBreakdown: Record<
+      string,
+      { gross: number; net: number; count: number }
+    > = {}
+    const familyMemberBreakdown: Record<
+      string,
+      { gross: number; net: number; count: number; name: string }
+    > = {}
 
     incomes.forEach((income) => {
-      if (!income.isActive) return;
+      if (!income.isActive) return
 
-      const amount = parseFloat(income.amount);
-      let annualAmount = 0;
+      const amount = parseFloat(income.amount)
+      let annualAmount = 0
 
       // Calculate annual amount based on frequency
       switch (income.frequency) {
         case "monthly":
-          annualAmount = amount * 12;
-          break;
+          annualAmount = amount * 12
+          break
         case "yearly":
-          annualAmount = amount;
-          break;
+          annualAmount = amount
+          break
         case "weekly":
-          annualAmount = amount * 52;
-          break;
+          annualAmount = amount * 52
+          break
         case "bi-weekly":
-          annualAmount = amount * 26;
-          break;
+          annualAmount = amount * 26
+          break
         case "one-time":
-          annualAmount = amount;
-          break;
+          annualAmount = amount
+          break
         case "custom":
           // For custom, count months in customMonths array
           if (income.customMonths) {
             try {
-              const customMonths = JSON.parse(income.customMonths);
-              annualAmount = amount * customMonths.length;
+              const customMonths = JSON.parse(income.customMonths)
+              annualAmount = amount * customMonths.length
             } catch {
-              annualAmount = amount * 12; // Default to monthly if parse fails
+              annualAmount = amount * 12 // Default to monthly if parse fails
             }
           } else {
-            annualAmount = amount * 12;
+            annualAmount = amount * 12
           }
-          break;
+          break
         default:
-          annualAmount = amount * 12;
+          annualAmount = amount * 12
       }
 
-      grossAnnualIncome += annualAmount;
+      grossAnnualIncome += annualAmount
 
       // Calculate net (after employee CPF if applicable)
-      let netAmount = annualAmount;
+      let netAmount = annualAmount
       if (income.subjectToCpf && income.employeeCpfContribution) {
-        const employeeCpf = parseFloat(income.employeeCpfContribution.toString());
+        const employeeCpf = parseFloat(
+          income.employeeCpfContribution.toString()
+        )
         // Employee CPF is monthly, so annualize it
-        netAmount = annualAmount - (employeeCpf * 12);
+        netAmount = annualAmount - employeeCpf * 12
       }
-      netAnnualIncome += netAmount;
+      netAnnualIncome += netAmount
 
       // Add to category breakdown
       if (!categoryBreakdown[income.category]) {
-        categoryBreakdown[income.category] = { gross: 0, net: 0, count: 0 };
+        categoryBreakdown[income.category] = { gross: 0, net: 0, count: 0 }
       }
-      categoryBreakdown[income.category].gross += annualAmount;
-      categoryBreakdown[income.category].net += netAmount;
-      categoryBreakdown[income.category].count += 1;
+      categoryBreakdown[income.category].gross += annualAmount
+      categoryBreakdown[income.category].net += netAmount
+      categoryBreakdown[income.category].count += 1
 
       // Add to family member breakdown
-      const familyMemberId = income.familyMemberId || 'user';
-      const familyMemberName = income.familyMember?.name || 'You';
+      const familyMemberId = income.familyMemberId || "user"
+      const familyMemberName = income.familyMember?.name || "You"
       if (!familyMemberBreakdown[familyMemberId]) {
-        familyMemberBreakdown[familyMemberId] = { gross: 0, net: 0, count: 0, name: familyMemberName };
+        familyMemberBreakdown[familyMemberId] = {
+          gross: 0,
+          net: 0,
+          count: 0,
+          name: familyMemberName
+        }
       }
-      familyMemberBreakdown[familyMemberId].gross += annualAmount;
-      familyMemberBreakdown[familyMemberId].net += netAmount;
-      familyMemberBreakdown[familyMemberId].count += 1;
+      familyMemberBreakdown[familyMemberId].gross += annualAmount
+      familyMemberBreakdown[familyMemberId].net += netAmount
+      familyMemberBreakdown[familyMemberId].count += 1
 
       // Track bonuses separately
       if (income.accountForBonus && income.bonusGroups) {
         try {
-          const bonusGroups = JSON.parse(income.bonusGroups);
+          const bonusGroups = JSON.parse(income.bonusGroups)
           bonusGroups.forEach((bonus: { month: number; amount: string }) => {
-            const bonusAmount = parseFloat(bonus.amount) * amount;
-            totalBonuses += bonusAmount;
-          });
+            const bonusAmount = parseFloat(bonus.amount) * amount
+            totalBonuses += bonusAmount
+          })
         } catch {}
       }
-    });
+    })
 
     // Convert category breakdown to sorted array
     const categoriesArray = Object.entries(categoryBreakdown)
@@ -269,9 +309,10 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         gross: data.gross,
         net: data.net,
         count: data.count,
-        percentage: grossAnnualIncome > 0 ? (data.gross / grossAnnualIncome) * 100 : 0,
+        percentage:
+          grossAnnualIncome > 0 ? (data.gross / grossAnnualIncome) * 100 : 0
       }))
-      .sort((a, b) => b.gross - a.gross);
+      .sort((a, b) => b.gross - a.gross)
 
     // Convert family member breakdown to sorted array
     const familyMembersArray = Object.entries(familyMemberBreakdown)
@@ -281,179 +322,197 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         gross: data.gross,
         net: data.net,
         count: data.count,
-        percentage: grossAnnualIncome > 0 ? (data.gross / grossAnnualIncome) * 100 : 0,
+        percentage:
+          grossAnnualIncome > 0 ? (data.gross / grossAnnualIncome) * 100 : 0
       }))
-      .sort((a, b) => b.gross - a.gross);
+      .sort((a, b) => b.gross - a.gross)
 
     return {
       grossAnnualIncome,
       netAnnualIncome,
       totalBonuses,
-      activeIncomeCount: incomes.filter(i => i.isActive).length,
+      activeIncomeCount: incomes.filter((i) => i.isActive).length,
       categoriesArray,
-      familyMembersArray,
-    };
-  }, [incomes]);
+      familyMembersArray
+    }
+  }, [incomes])
 
   // Calculate monthly CPF contributions
   const cpfSummaryStats = useMemo(() => {
-    let monthlyEmployeeCpf = 0;
-    let monthlyEmployerCpf = 0;
-    let cpfSubjectIncomeCount = 0;
+    let monthlyEmployeeCpf = 0
+    let monthlyEmployerCpf = 0
+    let cpfSubjectIncomeCount = 0
 
     incomes.forEach((income) => {
-      if (!income.isActive || !income.subjectToCpf) return;
+      if (!income.isActive || !income.subjectToCpf) return
 
       if (income.employeeCpfContribution) {
-        monthlyEmployeeCpf += parseFloat(income.employeeCpfContribution.toString());
+        monthlyEmployeeCpf += parseFloat(
+          income.employeeCpfContribution.toString()
+        )
       }
 
       if (income.employerCpfContribution) {
-        monthlyEmployerCpf += parseFloat(income.employerCpfContribution.toString());
+        monthlyEmployerCpf += parseFloat(
+          income.employerCpfContribution.toString()
+        )
       }
 
-      cpfSubjectIncomeCount += 1;
-    });
+      cpfSubjectIncomeCount += 1
+    })
 
-    const totalMonthlyCpf = monthlyEmployeeCpf + monthlyEmployerCpf;
-    const annualCpf = totalMonthlyCpf * 12;
+    const totalMonthlyCpf = monthlyEmployeeCpf + monthlyEmployerCpf
+    const annualCpf = totalMonthlyCpf * 12
 
     return {
       monthlyEmployeeCpf,
       monthlyEmployerCpf,
       totalMonthlyCpf,
       annualCpf,
-      cpfSubjectIncomeCount,
-    };
-  }, [incomes]);
+      cpfSubjectIncomeCount
+    }
+  }, [incomes])
 
   // Pagination
-  const totalPages = Math.ceil(filteredAndSortedIncomes.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const paginatedIncomes = filteredAndSortedIncomes.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredAndSortedIncomes.length / rowsPerPage)
+  const startIndex = (currentPage - 1) * rowsPerPage
+  const endIndex = startIndex + rowsPerPage
+  const paginatedIncomes = filteredAndSortedIncomes.slice(startIndex, endIndex)
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
     } else {
-      setSortKey(key);
-      setSortDirection("asc");
+      setSortKey(key)
+      setSortDirection("asc")
     }
-  };
+  }
 
   const toggleRow = (id: string) => {
-    const newExpanded = new Set<string>();
+    const newExpanded = new Set<string>()
     if (!expandedRows.has(id)) {
       // Only open the clicked row, close all others
-      newExpanded.add(id);
+      newExpanded.add(id)
     }
     // If clicking the same row that's open, it closes (set remains empty)
-    setExpandedRows(newExpanded);
-  };
+    setExpandedRows(newExpanded)
+  }
 
   const handleDeleteClick = (id: string) => {
-    setIncomeToDelete(id);
-    setDeleteConfirmOpen(true);
-  };
+    setIncomeToDelete(id)
+    setDeleteConfirmOpen(true)
+  }
 
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const handleDeleteConfirm = async () => {
-    if (!incomeToDelete) return;
+    if (!incomeToDelete) return
     try {
-      await deleteIncome(incomeToDelete);
-      setIncomes(incomes.filter((i) => i.id !== incomeToDelete));
-      setDeleteConfirmOpen(false);
-      setIncomeToDelete(null);
-      setDeleteError(null);
+      await deleteIncome(incomeToDelete)
+      setIncomes(incomes.filter((i) => i.id !== incomeToDelete))
+      setDeleteConfirmOpen(false)
+      setIncomeToDelete(null)
+      setDeleteError(null)
     } catch (error) {
-      console.error("Failed to delete income:", error);
-      setDeleteError(error instanceof Error ? error.message : "Failed to delete income");
+      console.error("Failed to delete income:", error)
+      setDeleteError(
+        error instanceof Error ? error.message : "Failed to delete income"
+      )
     }
-  };
+  }
 
   const handleToggleStatus = async (id: string) => {
     try {
-      const updated = await toggleIncomeStatus(id);
-      setIncomes(incomes.map((i) => (i.id === id ? { ...i, isActive: updated.isActive } : i)));
+      const updated = await toggleIncomeStatus(id)
+      setIncomes(
+        incomes.map((i) =>
+          i.id === id ? { ...i, isActive: updated.isActive } : i
+        )
+      )
     } catch (error) {
-      console.error("Failed to toggle status:", error);
+      console.error("Failed to toggle status:", error)
     }
-  };
+  }
 
   const formatPeriod = (startDate: string, endDate: string | null) => {
-    const start = format(new Date(startDate), "dd MMM yyyy");
-    const end = endDate ? format(new Date(endDate), "dd MMM yyyy") : "Present";
+    const start = format(new Date(startDate), "dd MMM yyyy")
+    const end = endDate ? format(new Date(endDate), "dd MMM yyyy") : "Present"
     return (
       <div className="text-sm">
         <div>{start}</div>
         <div className="text-muted-foreground">→ {end}</div>
       </div>
-    );
-  };
+    )
+  }
 
   const handleIncomeAdded = (newIncome: Income) => {
     // Check if this is an update (income already exists) or a new add
-    const existingIndex = incomes.findIndex(i => i.id === newIncome.id);
+    const existingIndex = incomes.findIndex((i) => i.id === newIncome.id)
     if (existingIndex >= 0) {
       // Update existing income
-      setIncomes(incomes.map((i) => (i.id === newIncome.id ? newIncome : i)));
+      setIncomes(incomes.map((i) => (i.id === newIncome.id ? newIncome : i)))
     } else {
       // Add new income
-      setIncomes([newIncome, ...incomes]);
+      setIncomes([newIncome, ...incomes])
     }
-  };
+  }
 
   const handleEditClick = (income: Income) => {
-    setIncomeToEdit(income);
-    setIsEditDialogOpen(true);
-  };
+    setIncomeToEdit(income)
+    setIsEditDialogOpen(true)
+  }
 
   // CPF Details Flow Handlers
   const handleCpfDetailsNeeded = (incomeData: any) => {
     // Store the raw form data for potential back navigation
-    setPendingIncomeFormData(incomeData);
+    setPendingIncomeFormData(incomeData)
 
     // Calculate CPF contributions based on income amount and family member age
-    const cpfResult = calculateCPF(incomeData.amount, incomeData.familyMemberAge || 30);
+    const cpfResult = calculateCPF(
+      incomeData.amount,
+      incomeData.familyMemberAge || 30
+    )
 
     // Store income data with calculated CPF values
     const enrichedIncomeData = {
       ...incomeData,
       employeeCpfContribution: cpfResult.employeeCpfContribution.toString(),
       employerCpfContribution: cpfResult.employerCpfContribution.toString(),
-      netTakeHome: cpfResult.netTakeHome.toString(),
-    };
-    setPendingIncomeData(enrichedIncomeData);
+      netTakeHome: cpfResult.netTakeHome.toString()
+    }
+    setPendingIncomeData(enrichedIncomeData)
 
     // Set total CPF for the dialog
-    setTotalCpfForDialog(cpfResult.totalCpfContribution);
+    setTotalCpfForDialog(cpfResult.totalCpfContribution)
 
     // Priority 1: Use pending CPF data (from back navigation)
     if (pendingCpfData) {
-      setCpfInitialValues(pendingCpfData);
+      setCpfInitialValues(pendingCpfData)
     }
     // Priority 2: Extract existing CPF values if editing
     else if (incomeToEdit && incomeToEdit.cpfOrdinaryAccount) {
       setCpfInitialValues({
         oa: parseFloat(incomeToEdit.cpfOrdinaryAccount),
-        sa: parseFloat(incomeToEdit.cpfSpecialAccount || '0'),
-        ma: parseFloat(incomeToEdit.cpfMedisaveAccount || '0'),
-      });
+        sa: parseFloat(incomeToEdit.cpfSpecialAccount || "0"),
+        ma: parseFloat(incomeToEdit.cpfMedisaveAccount || "0")
+      })
     }
     // Priority 3: No initial values
     else {
-      setCpfInitialValues({});
+      setCpfInitialValues({})
     }
 
     // Close income dialog and open CPF dialog
-    setIsEditDialogOpen(false);
-    setIsCpfDetailsDialogOpen(true);
-  };
+    setIsEditDialogOpen(false)
+    setIsCpfDetailsDialogOpen(true)
+  }
 
-  const handleCpfComplete = async (cpfDetails: { oa: number; sa: number; ma: number }) => {
-    if (!pendingIncomeData || !incomeToEdit) return;
+  const handleCpfComplete = async (cpfDetails: {
+    oa: number
+    sa: number
+    ma: number
+  }) => {
+    if (!pendingIncomeData || !incomeToEdit) return
 
     try {
       // Update existing income with CPF details
@@ -461,37 +520,39 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         ...pendingIncomeData,
         cpfOrdinaryAccount: cpfDetails.oa,
         cpfSpecialAccount: cpfDetails.sa,
-        cpfMedisaveAccount: cpfDetails.ma,
-      });
+        cpfMedisaveAccount: cpfDetails.ma
+      })
 
       // Update local state
-      setIncomes(incomes.map((i) => (i.id === savedIncome.id ? savedIncome : i)));
+      setIncomes(
+        incomes.map((i) => (i.id === savedIncome.id ? savedIncome : i))
+      )
 
       // Close dialogs and reset state
-      setIsCpfDetailsDialogOpen(false);
-      setIsEditDialogOpen(false);
-      setPendingIncomeData(null);
-      setPendingIncomeFormData(null);
-      setPendingCpfData(null);
-      setIncomeToEdit(null);
+      setIsCpfDetailsDialogOpen(false)
+      setIsEditDialogOpen(false)
+      setPendingIncomeData(null)
+      setPendingIncomeFormData(null)
+      setPendingCpfData(null)
+      setIncomeToEdit(null)
 
       // Refresh the page to show updated CPF data
-      window.location.reload();
+      window.location.reload()
     } catch (error) {
-      console.error("Failed to save income with CPF details:", error);
+      console.error("Failed to save income with CPF details:", error)
     }
-  };
+  }
 
   const handleCpfBack = (cpfData?: { oa: number; sa: number; ma: number }) => {
     // Store CPF data for when user comes back to Step 3
     if (cpfData) {
-      setPendingCpfData(cpfData);
+      setPendingCpfData(cpfData)
     }
 
     // Return to income dialog from CPF dialog
-    setIsCpfDetailsDialogOpen(false);
-    setIsEditDialogOpen(true);
-  };
+    setIsCpfDetailsDialogOpen(false)
+    setIsEditDialogOpen(true)
+  }
 
   return (
     <div className="space-y-4">
@@ -500,16 +561,15 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         {/* Card 1: Annual Income Summary */}
         {incomes.length > 0 ? (
           <Card
-            className="cursor-pointer hover:shadow-md transition-shadow col-span-full sm:col-span-2 relative"
+            className="relative col-span-full cursor-pointer transition-shadow hover:shadow-md sm:col-span-2"
             onClick={() => setIsBreakdownModalOpen(true)}
-            data-tour="income-summary-card"
-          >
-            <Expand className="h-3.5 w-3.5 text-muted-foreground absolute top-3 right-3" />
+            data-tour="income-summary-card">
+            <Expand className="text-muted-foreground absolute top-3 right-3 h-3.5 w-3.5" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-muted-foreground text-sm font-medium">
                 Total Annual Income
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(0,196,170,0.12)]">
                 <DollarSign className="h-5 w-5 text-[#007A68]" />
               </div>
             </CardHeader>
@@ -517,26 +577,40 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <div className="text-2xl font-semibold">
                 ${incomeSummaryStats.grossAnnualIncome.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground mt-1 mb-4">
-                Net take-home: ${incomeSummaryStats.netAnnualIncome.toLocaleString()} (after CPF)
+              <p className="text-muted-foreground mt-1 mb-4 text-xs">
+                Net take-home: $
+                {incomeSummaryStats.netAnnualIncome.toLocaleString()} (after
+                CPF)
               </p>
 
               {incomeSummaryStats.categoriesArray.length > 0 && (
-                <div className="pt-3 border-t">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Quick Stats</p>
+                <div className="border-t pt-3">
+                  <p className="text-muted-foreground mb-2 text-xs font-semibold">
+                    Quick Stats
+                  </p>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Income Sources:</span>
-                      <span className="font-semibold">{incomeSummaryStats.activeIncomeCount}</span>
+                      <span className="text-muted-foreground">
+                        Income Sources:
+                      </span>
+                      <span className="font-semibold">
+                        {incomeSummaryStats.activeIncomeCount}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Categories:</span>
-                      <span className="font-semibold">{incomeSummaryStats.categoriesArray.length}</span>
+                      <span className="font-semibold">
+                        {incomeSummaryStats.categoriesArray.length}
+                      </span>
                     </div>
                     {incomeSummaryStats.totalBonuses > 0 && (
-                      <div className="flex justify-between col-span-2">
-                        <span className="text-muted-foreground">Total Bonuses:</span>
-                        <span className="font-semibold">${incomeSummaryStats.totalBonuses.toLocaleString()}</span>
+                      <div className="col-span-2 flex justify-between">
+                        <span className="text-muted-foreground">
+                          Total Bonuses:
+                        </span>
+                        <span className="font-semibold">
+                          ${incomeSummaryStats.totalBonuses.toLocaleString()}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -547,24 +621,26 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         ) : (
           <Card className="col-span-full sm:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-muted-foreground text-sm font-medium">
                 Total Annual Income
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(0,196,170,0.12)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(0,196,170,0.12)]">
                 <DollarSign className="h-5 w-5 text-[#007A68]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
-              <div className="text-2xl font-semibold text-muted-foreground">$0</div>
-              <p className="text-sm text-muted-foreground mt-3">
-                No income sources added yet. Add your first income to track your annual earnings and see detailed breakdowns.
+              <div className="text-muted-foreground text-2xl font-semibold">
+                $0
+              </div>
+              <p className="text-muted-foreground mt-3 text-sm">
+                No income sources added yet. Add your first income to track your
+                annual earnings and see detailed breakdowns.
               </p>
               <Button
                 size="sm"
                 className="mt-4"
-                onClick={() => setIsAddDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
+                onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
                 Add Your First Income
               </Button>
             </CardContent>
@@ -575,10 +651,10 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         {incomes.length > 0 ? (
           <Card data-tour="cpf-summary-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-muted-foreground text-sm font-medium">
                 Monthly CPF Contributions
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
                 <Briefcase className="h-5 w-5 text-[#7A3A0A]" />
               </div>
             </CardHeader>
@@ -586,25 +662,44 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
               <div className="text-2xl font-semibold">
                 ${cpfSummaryStats.totalMonthlyCpf.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground mt-1 mb-4">
-                Employee: ${cpfSummaryStats.monthlyEmployeeCpf.toLocaleString()} | Employer: ${cpfSummaryStats.monthlyEmployerCpf.toLocaleString()}
+              <p className="text-muted-foreground mt-1 mb-4 text-xs">
+                Employee: ${cpfSummaryStats.monthlyEmployeeCpf.toLocaleString()}{" "}
+                | Employer: $
+                {cpfSummaryStats.monthlyEmployerCpf.toLocaleString()}
               </p>
 
               {cpfSummaryStats.cpfSubjectIncomeCount > 0 && (
-                <div className="pt-3 border-t">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">CPF Details</p>
+                <div className="border-t pt-3">
+                  <p className="text-muted-foreground mb-2 text-xs font-semibold">
+                    CPF Details
+                  </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">CPF-subject incomes:</span>
-                      <span className="font-semibold">{cpfSummaryStats.cpfSubjectIncomeCount}</span>
+                      <span className="text-muted-foreground">
+                        CPF-subject incomes:
+                      </span>
+                      <span className="font-semibold">
+                        {cpfSummaryStats.cpfSubjectIncomeCount}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Annual employee CPF:</span>
-                      <span className="font-semibold">${(cpfSummaryStats.monthlyEmployeeCpf * 12).toLocaleString()}</span>
+                      <span className="text-muted-foreground">
+                        Annual employee CPF:
+                      </span>
+                      <span className="font-semibold">
+                        $
+                        {(
+                          cpfSummaryStats.monthlyEmployeeCpf * 12
+                        ).toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Annual total CPF:</span>
-                      <span className="font-semibold">${cpfSummaryStats.annualCpf.toLocaleString()}</span>
+                      <span className="text-muted-foreground">
+                        Annual total CPF:
+                      </span>
+                      <span className="font-semibold">
+                        ${cpfSummaryStats.annualCpf.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -614,17 +709,20 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         ) : (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-muted-foreground text-sm font-medium">
                 Monthly CPF Contributions
               </CardTitle>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[rgba(184,98,42,0.10)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
                 <Briefcase className="h-5 w-5 text-[#7A3A0A]" />
               </div>
             </CardHeader>
             <CardContent className="pb-6">
-              <div className="text-2xl font-semibold text-muted-foreground">$0</div>
-              <p className="text-sm text-muted-foreground mt-3">
-                CPF contributions will be calculated automatically when you add income sources with CPF enabled.
+              <div className="text-muted-foreground text-2xl font-semibold">
+                $0
+              </div>
+              <p className="text-muted-foreground mt-3 text-sm">
+                CPF contributions will be calculated automatically when you add
+                income sources with CPF enabled.
               </p>
             </CardContent>
           </Card>
@@ -632,7 +730,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
       </div>
 
       {/* Income List Header */}
-      <h2 className="text-2xl font-semibold pt-4">Income List</h2>
+      <h2 className="pt-4 text-2xl font-semibold">Income List</h2>
 
       {/* Search */}
       <div className="flex items-center">
@@ -640,8 +738,8 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           placeholder="Search income..."
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
+            setSearch(e.target.value)
+            setCurrentPage(1)
           }}
           className="max-w-sm"
         />
@@ -649,19 +747,21 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
       {/* Frequency Filters and Add Button */}
       <div className="flex items-center justify-between gap-2 pb-2">
-        <div className="flex items-center gap-2 overflow-x-auto" data-tour="income-frequency-filter">
+        <div
+          className="flex items-center gap-2 overflow-x-auto"
+          data-tour="income-frequency-filter">
           <Button
             variant={selectedFrequency === "All" ? "default" : "outline"}
             size="sm"
             onClick={() => {
-              setSelectedFrequency("All");
-              setCurrentPage(1);
+              setSelectedFrequency("All")
+              setCurrentPage(1)
             }}
             className={cn(
               "flex-shrink-0",
-              selectedFrequency === "All" && "bg-black text-white hover:bg-black/90"
-            )}
-          >
+              selectedFrequency === "All" &&
+                "bg-black text-white hover:bg-black/90"
+            )}>
             All
             <Badge variant="secondary" className="ml-2">
               {incomes.length}
@@ -672,17 +772,19 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
             .map(([frequency, count]) => (
               <Button
                 key={frequency}
-                variant={selectedFrequency === frequency ? "default" : "outline"}
+                variant={
+                  selectedFrequency === frequency ? "default" : "outline"
+                }
                 size="sm"
                 onClick={() => {
-                  setSelectedFrequency(frequency);
-                  setCurrentPage(1);
+                  setSelectedFrequency(frequency)
+                  setCurrentPage(1)
                 }}
                 className={cn(
                   "flex-shrink-0",
-                  selectedFrequency === frequency && "bg-black text-white hover:bg-black/90"
-                )}
-              >
+                  selectedFrequency === frequency &&
+                    "bg-black text-white hover:bg-black/90"
+                )}>
                 {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
                 <Badge variant="secondary" className="ml-2">
                   {count}
@@ -694,16 +796,15 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           variant="outline"
           size="sm"
           onClick={() => setIsAddDialogOpen(true)}
-          className="h-8 px-4 text-sm font-medium border-border/60 hover:bg-muted dark:hover:bg-white/10 hover:border-border rounded-full transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
-          data-tour="add-income-btn"
-        >
-          <Plus className="h-4 w-4 mr-1.5" />
+          className="border-border/60 hover:bg-muted hover:border-border h-8 rounded-full px-4 text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm dark:hover:bg-white/10"
+          data-tour="add-income-btn">
+          <Plus className="mr-1.5 h-4 w-4" />
           Add Income
         </Button>
       </div>
 
       {/* Table */}
-      <div className="rounded-md border bg-card" data-tour="income-table">
+      <div className="bg-card rounded-md border" data-tour="income-table">
         <Table>
           <TableHeader>
             <TableRow>
@@ -712,8 +813,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                 <Button
                   variant="ghost"
                   onClick={() => handleSort("name")}
-                  className="h-auto p-0 font-semibold"
-                >
+                  className="h-auto p-0 font-semibold">
                   Income Name
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -722,8 +822,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                 <Button
                   variant="ghost"
                   onClick={() => handleSort("category")}
-                  className="h-auto p-0 font-semibold"
-                >
+                  className="h-auto p-0 font-semibold">
                   Category
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -732,8 +831,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                 <Button
                   variant="ghost"
                   onClick={() => handleSort("amount")}
-                  className="h-auto p-0 font-semibold"
-                >
+                  className="h-auto p-0 font-semibold">
                   Amount
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -742,8 +840,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                 <Button
                   variant="ghost"
                   onClick={() => handleSort("frequency")}
-                  className="h-auto p-0 font-semibold"
-                >
+                  className="h-auto p-0 font-semibold">
                   Frequency
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -756,7 +853,9 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
           <TableBody>
             {paginatedIncomes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={8}
+                  className="text-muted-foreground py-8 text-center">
                   No income records found. Add your first income to get started.
                 </TableCell>
               </TableRow>
@@ -769,8 +868,7 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleRow(income.id)}
-                        className="h-8 w-8 p-0"
-                      >
+                        className="h-8 w-8 p-0">
                         {expandedRows.has(income.id) ? (
                           <ChevronDown className="h-4 w-4" />
                         ) : (
@@ -779,13 +877,24 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                       </Button>
                     </TableCell>
                     <TableCell className="font-medium">{income.name}</TableCell>
-                    <TableCell className="capitalize">{income.category}</TableCell>
-                    <TableCell>${parseFloat(income.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</TableCell>
-                    <TableCell className="capitalize">{income.frequency}</TableCell>
+                    <TableCell className="capitalize">
+                      {income.category}
+                    </TableCell>
+                    <TableCell>
+                      $
+                      {parseFloat(income.amount).toLocaleString("en-US", {
+                        minimumFractionDigits: 2
+                      })}
+                    </TableCell>
+                    <TableCell className="capitalize">
+                      {income.frequency}
+                    </TableCell>
                     <TableCell>
                       {income.familyMember ? (
-                        <Badge variant="outline" className="bg-[rgba(184,98,42,0.10)] text-[#7A3A0A] border-[rgba(184,98,42,0.25)]">
-                          <Link2 className="h-3 w-3 mr-1" />
+                        <Badge
+                          variant="outline"
+                          className="border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)] text-[#7A3A0A]">
+                          <Link2 className="mr-1 h-3 w-3" />
                           {income.familyMember.name}
                         </Badge>
                       ) : (
@@ -799,82 +908,147 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                           income.isActive
                             ? "bg-[rgba(0,196,170,0.12)] text-[#007A68] hover:bg-[rgba(0,196,170,0.12)]"
                             : ""
-                        }
-                      >
+                        }>
                         {income.isActive ? "Current" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(income)}>
+                          <DropdownMenuItem
+                            onClick={() => handleEditClick(income)}>
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => !income.familyMember && handleDeleteClick(income.id)}
-                            className={income.familyMember ? "text-muted-foreground cursor-not-allowed opacity-50" : "text-[#8B0000]"}
-                            disabled={!!income.familyMember}
-                          >
-                            {income.familyMember ? "🔒 Linked to Family Member" : "Delete"}
+                            onClick={() =>
+                              !income.familyMember &&
+                              handleDeleteClick(income.id)
+                            }
+                            className={
+                              income.familyMember
+                                ? "text-muted-foreground cursor-not-allowed opacity-50"
+                                : "text-[#8B0000]"
+                            }
+                            disabled={!!income.familyMember}>
+                            {income.familyMember
+                              ? "🔒 Linked to Family Member"
+                              : "Delete"}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                  <TableRow className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedRows.has(income.id) ? 'opacity-100' : 'opacity-0 h-0'}`}>
+                  <TableRow
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedRows.has(income.id) ? "opacity-100" : "h-0 opacity-0"}`}>
                     <TableCell colSpan={8} className="bg-muted/50 p-0">
-                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedRows.has(income.id) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                        <div className="p-4 space-y-3">
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedRows.has(income.id) ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"}`}>
+                        <div className="space-y-3 p-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <span className="font-medium">Subject to CPF:</span>{" "}
+                              <span className="font-medium">
+                                Subject to CPF:
+                              </span>{" "}
                               {income.subjectToCpf ? "Yes" : "No"}
                             </div>
-                            {income.accountForBonus && income.bonusGroups && (() => {
-                              try {
-                                const bonusGroups = JSON.parse(income.bonusGroups);
-                                const totalBonusMonths = bonusGroups.reduce((sum: number, group: { month: number; amount: string }) => {
-                                  return sum + (parseFloat(group.amount) || 0);
-                                }, 0);
-                                const annualBonusAmount = parseFloat(income.amount) * totalBonusMonths;
-                                return (
-                                  <div>
-                                    <span className="font-medium">Annual Bonus:</span>{" "}
-                                    ${annualBonusAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                                  </div>
-                                );
-                              } catch {
-                                return null;
-                              }
-                            })()}
+                            {income.accountForBonus &&
+                              income.bonusGroups &&
+                              (() => {
+                                try {
+                                  const bonusGroups = JSON.parse(
+                                    income.bonusGroups
+                                  )
+                                  const totalBonusMonths = bonusGroups.reduce(
+                                    (
+                                      sum: number,
+                                      group: { month: number; amount: string }
+                                    ) => {
+                                      return (
+                                        sum + (parseFloat(group.amount) || 0)
+                                      )
+                                    },
+                                    0
+                                  )
+                                  const annualBonusAmount =
+                                    parseFloat(income.amount) * totalBonusMonths
+                                  return (
+                                    <div>
+                                      <span className="font-medium">
+                                        Annual Bonus:
+                                      </span>{" "}
+                                      $
+                                      {annualBonusAmount.toLocaleString(
+                                        "en-US",
+                                        { minimumFractionDigits: 2 }
+                                      )}
+                                    </div>
+                                  )
+                                } catch {
+                                  return null
+                                }
+                              })()}
                           </div>
-                          {income.subjectToCpf && income.employeeCpfContribution && (
-                            <div className="bg-[rgba(184,98,42,0.10)] p-3 rounded-md space-y-2">
-                              <div className="font-semibold text-[#7A3A0A]">CPF Breakdown (Monthly)</div>
-                              <div className="grid grid-cols-3 gap-4 text-sm">
-                                <div>
-                                  <span className="text-[#7A3A0A]">Employer Share (17%):</span>{" "}
-                                  <div className="font-medium">${parseFloat(income.employerCpfContribution || "0").toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                          {income.subjectToCpf &&
+                            income.employeeCpfContribution && (
+                              <div className="space-y-2 rounded-md bg-[rgba(184,98,42,0.10)] p-3">
+                                <div className="font-semibold text-[#7A3A0A]">
+                                  CPF Breakdown (Monthly)
                                 </div>
-                                <div>
-                                  <span className="text-[#7A3A0A]">Employee Share (20%):</span>{" "}
-                                  <div className="font-medium">${parseFloat(income.employeeCpfContribution).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
-                                </div>
-                                <div>
-                                  <span className="text-[#007A68]">Nett Income:</span>{" "}
-                                  <div className="font-semibold text-[#007A68]">${parseFloat(income.netTakeHome || "0").toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                  <div>
+                                    <span className="text-[#7A3A0A]">
+                                      Employer Share (17%):
+                                    </span>{" "}
+                                    <div className="font-medium">
+                                      $
+                                      {parseFloat(
+                                        income.employerCpfContribution || "0"
+                                      ).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2
+                                      })}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#7A3A0A]">
+                                      Employee Share (20%):
+                                    </span>{" "}
+                                    <div className="font-medium">
+                                      $
+                                      {parseFloat(
+                                        income.employeeCpfContribution
+                                      ).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2
+                                      })}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#007A68]">
+                                      Nett Income:
+                                    </span>{" "}
+                                    <div className="font-semibold text-[#007A68]">
+                                      $
+                                      {parseFloat(
+                                        income.netTakeHome || "0"
+                                      ).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2
+                                      })}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                           {income.description && (
                             <div>
-                              <span className="font-medium">Notes:</span> {income.description}
+                              <span className="font-medium">Notes:</span>{" "}
+                              {income.description}
                             </div>
                           )}
                           <div>
@@ -884,36 +1058,60 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
                           {/* Income Timeline with Projected Growth Curve */}
                           {(() => {
-                            const currentAmount = parseFloat(income.amount);
-                            let milestones: { targetMonth: string; amount: number; reason?: string }[] = [];
+                            const currentAmount = parseFloat(income.amount)
+                            let milestones: {
+                              targetMonth: string
+                              amount: number
+                              reason?: string
+                            }[] = []
 
                             // Parse future milestones
                             if (income.futureMilestones) {
                               try {
-                                milestones = JSON.parse(income.futureMilestones);
+                                milestones = JSON.parse(income.futureMilestones)
                               } catch {
-                                milestones = [];
+                                milestones = []
                               }
                             }
 
                             // Build timeline data points (past + present + future)
-                            const timelinePoints: { date: string; amount: number; label: string; reason?: string; isPast?: boolean; isPresent?: boolean; isExtension?: boolean }[] = [];
+                            const timelinePoints: {
+                              date: string
+                              amount: number
+                              label: string
+                              reason?: string
+                              isPast?: boolean
+                              isPresent?: boolean
+                              isExtension?: boolean
+                            }[] = []
 
                             // Parse past income history
                             if (income.pastIncomeHistory) {
                               try {
-                                const pastHistory = JSON.parse(income.pastIncomeHistory);
-                                pastHistory.forEach((entry: { period: string; amount: number; granularity: string }) => {
-                                  const label = entry.granularity === 'yearly'
-                                    ? entry.period
-                                    : format(new Date(entry.period + '-01'), 'MMM yyyy');
-                                  timelinePoints.push({
-                                    date: entry.period,
-                                    amount: entry.amount,
-                                    label,
-                                    isPast: true,
-                                  });
-                                });
+                                const pastHistory = JSON.parse(
+                                  income.pastIncomeHistory
+                                )
+                                pastHistory.forEach(
+                                  (entry: {
+                                    period: string
+                                    amount: number
+                                    granularity: string
+                                  }) => {
+                                    const label =
+                                      entry.granularity === "yearly"
+                                        ? entry.period
+                                        : format(
+                                            new Date(entry.period + "-01"),
+                                            "MMM yyyy"
+                                          )
+                                    timelinePoints.push({
+                                      date: entry.period,
+                                      amount: entry.amount,
+                                      label,
+                                      isPast: true
+                                    })
+                                  }
+                                )
                               } catch {
                                 // ignore
                               }
@@ -921,131 +1119,221 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
 
                             // Add present
                             timelinePoints.push({
-                              date: format(new Date(), 'yyyy-MM'),
+                              date: format(new Date(), "yyyy-MM"),
                               amount: currentAmount,
-                              label: 'Now',
-                              isPresent: true,
-                            });
+                              label: "Now",
+                              isPresent: true
+                            })
 
                             // Add future milestones
                             milestones.forEach((m) => {
-                              const [year, month] = m.targetMonth.split('-');
+                              const [year, month] = m.targetMonth.split("-")
                               timelinePoints.push({
                                 date: m.targetMonth,
                                 amount: m.amount,
-                                label: format(new Date(parseInt(year), parseInt(month) - 1, 1), 'MMMM yyyy'),
-                                reason: m.reason,
-                              });
-                            });
+                                label: format(
+                                  new Date(
+                                    parseInt(year),
+                                    parseInt(month) - 1,
+                                    1
+                                  ),
+                                  "MMMM yyyy"
+                                ),
+                                reason: m.reason
+                              })
+                            })
 
                             // Sort by date
-                            timelinePoints.sort((a, b) => a.date.localeCompare(b.date));
+                            timelinePoints.sort((a, b) =>
+                              a.date.localeCompare(b.date)
+                            )
 
                             // Only show if we have milestones or past data
-                            if (timelinePoints.length <= 1) return null;
+                            if (timelinePoints.length <= 1) return null
 
                             // Add extension point 6 months after the last data point
-                            const lastPoint = timelinePoints[timelinePoints.length - 1];
-                            const lastDate = new Date(lastPoint.date + '-01');
-                            const extensionDate = new Date(lastDate);
-                            extensionDate.setMonth(extensionDate.getMonth() + 6);
+                            const lastPoint =
+                              timelinePoints[timelinePoints.length - 1]
+                            const lastDate = new Date(lastPoint.date + "-01")
+                            const extensionDate = new Date(lastDate)
+                            extensionDate.setMonth(extensionDate.getMonth() + 6)
                             timelinePoints.push({
-                              date: format(extensionDate, 'yyyy-MM'),
+                              date: format(extensionDate, "yyyy-MM"),
                               amount: lastPoint.amount,
-                              label: format(extensionDate, 'MMM yyyy'),
-                              isExtension: true,
-                            });
+                              label: format(extensionDate, "MMM yyyy"),
+                              isExtension: true
+                            })
 
                             // Find present point for the reference dot
-                            const presentPoint = timelinePoints.find(p => p.isPresent);
+                            const presentPoint = timelinePoints.find(
+                              (p) => p.isPresent
+                            )
 
                             // Prepare chart data with timestamp for proper time scaling
-                            const chartData = timelinePoints.map((point, index) => {
-                              // Check if this is a duplicate amount (same as previous)
-                              const prevPoint = index > 0 ? timelinePoints[index - 1] : null;
-                              const isDuplicateAmount = prevPoint && prevPoint.amount === point.amount;
+                            const chartData = timelinePoints.map(
+                              (point, index) => {
+                                // Check if this is a duplicate amount (same as previous)
+                                const prevPoint =
+                                  index > 0 ? timelinePoints[index - 1] : null
+                                const isDuplicateAmount =
+                                  prevPoint && prevPoint.amount === point.amount
 
-                              return {
-                                name: point.label,
-                                amount: point.amount,
-                                timestamp: new Date(point.date + '-01').getTime(),
-                                isPresent: point.isPresent,
-                                isPast: point.isPast,
-                                isFuture: !point.isPast && !point.isPresent,
-                                // Only show label if not extension and not a duplicate amount
-                                displayLabel: point.isExtension || isDuplicateAmount ? '' : `$${point.amount.toLocaleString()}/mth`,
-                              };
-                            });
+                                return {
+                                  name: point.label,
+                                  amount: point.amount,
+                                  timestamp: new Date(
+                                    point.date + "-01"
+                                  ).getTime(),
+                                  isPresent: point.isPresent,
+                                  isPast: point.isPast,
+                                  isFuture: !point.isPast && !point.isPresent,
+                                  // Only show label if not extension and not a duplicate amount
+                                  displayLabel:
+                                    point.isExtension || isDuplicateAmount
+                                      ? ""
+                                      : `$${point.amount.toLocaleString()}/mth`
+                                }
+                              }
+                            )
 
                             // Get the present point timestamp for ReferenceDot
-                            const presentTimestamp = presentPoint ? new Date(presentPoint.date + '-01').getTime() : null;
+                            const presentTimestamp = presentPoint
+                              ? new Date(presentPoint.date + "-01").getTime()
+                              : null
 
                             // Create merged data with separate fields for past/present and future
-                            const presentIndex = chartData.findIndex(p => p.isPresent);
-                            const mergedChartData = chartData.map((p, index) => ({
-                              ...p,
-                              pastAmount: index <= presentIndex ? p.amount : undefined,
-                              futureAmount: index >= presentIndex ? p.amount : undefined,
-                              // Separate labels for each area
-                              pastLabel: index <= presentIndex ? p.displayLabel : '',
-                              futureLabel: index > presentIndex ? p.displayLabel : '',
-                            }));
+                            const presentIndex = chartData.findIndex(
+                              (p) => p.isPresent
+                            )
+                            const mergedChartData = chartData.map(
+                              (p, index) => ({
+                                ...p,
+                                pastAmount:
+                                  index <= presentIndex ? p.amount : undefined,
+                                futureAmount:
+                                  index >= presentIndex ? p.amount : undefined,
+                                // Separate labels for each area
+                                pastLabel:
+                                  index <= presentIndex ? p.displayLabel : "",
+                                futureLabel:
+                                  index > presentIndex ? p.displayLabel : ""
+                              })
+                            )
 
                             return (
-                              <div className="mt-6 pt-4 border-t border-border">
-                                <div className="font-medium mb-4 text-foreground">Income Timeline</div>
-                                <div className="grid grid-cols-3 gap-8" style={{ height: 160 }}>
+                              <div className="border-border mt-6 border-t pt-4">
+                                <div className="text-foreground mb-4 font-medium">
+                                  Income Timeline
+                                </div>
+                                <div
+                                  className="grid grid-cols-3 gap-8"
+                                  style={{ height: 160 }}>
                                   {/* Left side - Timeline list (1/3 width) - scrollable */}
-                                  <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: 160 }}>
-                                    {timelinePoints.filter(p => !p.isExtension).map((point, index) => (
-                                      <div key={index} className="flex items-center gap-3">
+                                  <div
+                                    className="space-y-3 overflow-y-auto pr-2"
+                                    style={{ maxHeight: 160 }}>
+                                    {timelinePoints
+                                      .filter((p) => !p.isExtension)
+                                      .map((point, index) => (
                                         <div
-                                          className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                                            point.isPresent
-                                              ? 'bg-[#00C4AA]'
-                                              : point.isPast
-                                                ? 'bg-muted'
-                                                : 'bg-[#B8622A]'
-                                          }`}
-                                        />
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <span className={`text-sm ${point.isPresent ? 'text-foreground' : point.isPast ? 'text-foreground/400' : 'text-foreground'}`}>
-                                            {point.label}
-                                          </span>
-                                          <span className={`font-semibold ${point.isPresent ? 'text-foreground' : point.isPast ? 'text-foreground' : 'text-foreground'}`}>
-                                            ${point.amount.toLocaleString()}
-                                          </span>
-                                          {point.isPast && (
-                                            <span className="text-xs bg-muted text-foreground/400 px-2 py-0.5 rounded-full">
-                                              Past Income
+                                          key={index}
+                                          className="flex items-center gap-3">
+                                          <div
+                                            className={`h-3 w-3 flex-shrink-0 rounded-full ${
+                                              point.isPresent
+                                                ? "bg-[#00C4AA]"
+                                                : point.isPast
+                                                  ? "bg-muted"
+                                                  : "bg-[#B8622A]"
+                                            }`}
+                                          />
+                                          <div className="flex flex-wrap items-center gap-2">
+                                            <span
+                                              className={`text-sm ${point.isPresent ? "text-foreground" : point.isPast ? "text-foreground/400" : "text-foreground"}`}>
+                                              {point.label}
                                             </span>
-                                          )}
-                                          {point.reason && (
-                                            <span className="text-xs bg-muted text-foreground px-2 py-0.5 rounded-full">
-                                              {point.reason.charAt(0).toUpperCase() + point.reason.slice(1)}
+                                            <span
+                                              className={`font-semibold ${point.isPresent ? "text-foreground" : point.isPast ? "text-foreground" : "text-foreground"}`}>
+                                              ${point.amount.toLocaleString()}
                                             </span>
-                                          )}
+                                            {point.isPast && (
+                                              <span className="bg-muted text-foreground/400 rounded-full px-2 py-0.5 text-xs">
+                                                Past Income
+                                              </span>
+                                            )}
+                                            {point.reason && (
+                                              <span className="bg-muted text-foreground rounded-full px-2 py-0.5 text-xs">
+                                                {point.reason
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                                  point.reason.slice(1)}
+                                              </span>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
-                                    ))}
+                                      ))}
                                   </div>
 
                                   {/* Right side - Income Chart using Recharts (2/3 width) - fills container height */}
-                                  <div className="col-span-2 relative bg-muted rounded-xl overflow-hidden h-full">
+                                  <div className="bg-muted relative col-span-2 h-full overflow-hidden rounded-xl">
                                     <ResponsiveChart width="100%" height="100%">
-                                      <AreaChart data={mergedChartData} margin={{ top: 20, right: 40, left: 50, bottom: 20 }}>
+                                      <AreaChart
+                                        data={mergedChartData}
+                                        margin={{
+                                          top: 20,
+                                          right: 40,
+                                          left: 50,
+                                          bottom: 20
+                                        }}>
                                         <defs>
-                                          <linearGradient id={`gradient-past-${income.id}`} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="hsl(var(--foreground) / 0.55)" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="hsl(var(--foreground) / 0.55)" stopOpacity={0.05} />
+                                          <linearGradient
+                                            id={`gradient-past-${income.id}`}
+                                            x1="0"
+                                            y1="0"
+                                            x2="0"
+                                            y2="1">
+                                            <stop
+                                              offset="5%"
+                                              stopColor="hsl(var(--foreground) / 0.55)"
+                                              stopOpacity={0.2}
+                                            />
+                                            <stop
+                                              offset="95%"
+                                              stopColor="hsl(var(--foreground) / 0.55)"
+                                              stopOpacity={0.05}
+                                            />
                                           </linearGradient>
-                                          <linearGradient id={`gradient-future-${income.id}`} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#D4845A" stopOpacity={0.25} />
-                                            <stop offset="95%" stopColor="#D4845A" stopOpacity={0.05} />
+                                          <linearGradient
+                                            id={`gradient-future-${income.id}`}
+                                            x1="0"
+                                            y1="0"
+                                            x2="0"
+                                            y2="1">
+                                            <stop
+                                              offset="5%"
+                                              stopColor="#D4845A"
+                                              stopOpacity={0.25}
+                                            />
+                                            <stop
+                                              offset="95%"
+                                              stopColor="#D4845A"
+                                              stopOpacity={0.05}
+                                            />
                                           </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="timestamp" type="number" domain={['dataMin', 'dataMax']} hide />
-                                        <YAxis hide domain={['dataMin * 0.6', 'dataMax * 1.1']} />
+                                        <XAxis
+                                          dataKey="timestamp"
+                                          type="number"
+                                          domain={["dataMin", "dataMax"]}
+                                          hide
+                                        />
+                                        <YAxis
+                                          hide
+                                          domain={[
+                                            "dataMin * 0.6",
+                                            "dataMax * 1.1"
+                                          ]}
+                                        />
                                         {/* Past/Present - solid line */}
                                         <Area
                                           type="stepAfter"
@@ -1053,13 +1341,16 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                           stroke="hsl(var(--foreground) / 0.55)"
                                           strokeWidth={2}
                                           fill={`url(#gradient-past-${income.id})`}
-                                          connectNulls={false}
-                                        >
+                                          connectNulls={false}>
                                           <LabelList
                                             dataKey="pastLabel"
                                             position="top"
                                             offset={8}
-                                            style={{ fontSize: 11, fontWeight: 500, fill: 'hsl(var(--muted-foreground))' }}
+                                            style={{
+                                              fontSize: 11,
+                                              fontWeight: 500,
+                                              fill: "hsl(var(--muted-foreground))"
+                                            }}
                                           />
                                         </Area>
                                         {/* Future - dashed violet line */}
@@ -1070,13 +1361,16 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                           strokeWidth={2}
                                           strokeDasharray="6 4"
                                           fill={`url(#gradient-future-${income.id})`}
-                                          connectNulls={false}
-                                        >
+                                          connectNulls={false}>
                                           <LabelList
                                             dataKey="futureLabel"
                                             position="top"
                                             offset={8}
-                                            style={{ fontSize: 11, fontWeight: 500, fill: 'hsl(var(--muted-foreground))' }}
+                                            style={{
+                                              fontSize: 11,
+                                              fontWeight: 500,
+                                              fill: "hsl(var(--muted-foreground))"
+                                            }}
                                           />
                                         </Area>
                                         {presentTimestamp && presentPoint && (
@@ -1088,7 +1382,13 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                             stroke="#00C4AA"
                                             strokeWidth={2}
                                             shape={(props: any) => (
-                                              <circle cx={props.cx} cy={props.cy} r={6} fill="#00C4AA" stroke="#00C4AA" strokeWidth={2}>
+                                              <circle
+                                                cx={props.cx}
+                                                cy={props.cy}
+                                                r={6}
+                                                fill="#00C4AA"
+                                                stroke="#00C4AA"
+                                                strokeWidth={2}>
                                                 <animate
                                                   attributeName="r"
                                                   values="5;7;5"
@@ -1110,13 +1410,12 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
                                   </div>
                                 </div>
                               </div>
-                            );
+                            )
                           })()}
                         </div>
                       </div>
                     </TableCell>
                   </TableRow>
-
                 </React.Fragment>
               ))
             )}
@@ -1125,22 +1424,22 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
       </div>
 
       {/* Results count */}
-      <p className="text-sm text-muted-foreground">
-        Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedIncomes.length)} of{" "}
+      <p className="text-muted-foreground text-sm">
+        Showing {startIndex + 1} to{" "}
+        {Math.min(endIndex, filteredAndSortedIncomes.length)} of{" "}
         {filteredAndSortedIncomes.length} results
       </p>
 
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground text-sm">Rows per page</span>
           <Select
             value={rowsPerPage.toString()}
             onValueChange={(value) => {
-              setRowsPerPage(parseInt(value));
-              setCurrentPage(1);
-            }}
-          >
+              setRowsPerPage(parseInt(value))
+              setCurrentPage(1)
+            }}>
             <SelectTrigger className="w-[70px]">
               <SelectValue />
             </SelectTrigger>
@@ -1157,19 +1456,17 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
             variant="outline"
             size="sm"
             onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
+            disabled={currentPage === 1}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm text-muted-foreground px-2">
+          <span className="text-muted-foreground px-2 text-sm">
             Page {currentPage} of {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
-          >
+            disabled={currentPage === totalPages || totalPages === 0}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -1179,10 +1476,10 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         open={isAddDialogOpen || isEditDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
-            setIsAddDialogOpen(false);
-            setIsEditDialogOpen(false);
-            setIncomeToEdit(null);
-            setPendingIncomeFormData(null);
+            setIsAddDialogOpen(false)
+            setIsEditDialogOpen(false)
+            setIncomeToEdit(null)
+            setPendingIncomeFormData(null)
           }
         }}
         onIncomeAdded={handleIncomeAdded}
@@ -1204,34 +1501,51 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         initialMA={cpfInitialValues.ma}
       />
 
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={(open) => {
-        setDeleteConfirmOpen(open);
-        if (!open) setDeleteError(null);
-      }}>
+      <AlertDialog
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          setDeleteConfirmOpen(open)
+          if (!open) setDeleteError(null)
+        }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{deleteError ? "Cannot Delete Income" : "Are you absolutely sure?"}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {deleteError
+                ? "Cannot Delete Income"
+                : "Are you absolutely sure?"}
+            </AlertDialogTitle>
             <AlertDialogDescription asChild>
               {deleteError ? (
                 <div className="space-y-2">
-                  <div className="text-[#8B0000] font-medium">{deleteError}</div>
-                  <div className="text-sm">To delete this income, please delete the family member from the Family Members tab.</div>
+                  <div className="font-medium text-[#8B0000]">
+                    {deleteError}
+                  </div>
+                  <div className="text-sm">
+                    To delete this income, please delete the family member from
+                    the Family Members tab.
+                  </div>
                 </div>
               ) : (
-                <div>This action cannot be undone. This will permanently delete your income source and all its associated records.</div>
+                <div>
+                  This action cannot be undone. This will permanently delete
+                  your income source and all its associated records.
+                </div>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setDeleteConfirmOpen(false);
-              setDeleteError(null);
-              setIncomeToDelete(null);
-            }}>
+            <AlertDialogCancel
+              onClick={() => {
+                setDeleteConfirmOpen(false)
+                setDeleteError(null)
+                setIncomeToDelete(null)
+              }}>
               {deleteError ? "Close" : "Cancel"}
             </AlertDialogCancel>
             {!deleteError && (
-              <AlertDialogAction onClick={handleDeleteConfirm}>Continue</AlertDialogAction>
+              <AlertDialogAction onClick={handleDeleteConfirm}>
+                Continue
+              </AlertDialogAction>
             )}
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1243,5 +1557,5 @@ export function IncomeList({ initialIncomes }: IncomeListProps) {
         incomes={incomes}
       />
     </div>
-  );
+  )
 }

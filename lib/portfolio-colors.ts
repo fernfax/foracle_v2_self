@@ -18,8 +18,8 @@ export const BRAND_DATA_COLORS = [
   "#D4845A", // coral
   "#2C3E3D", // deep pine
   "#A9551F", // burnt terracotta
-  "#7A9B86", // muted sage
-] as const;
+  "#7A9B86" // muted sage
+] as const
 
 /** Known category → brand color (mirrors the prototype's CAT_COLORS intent). */
 const CATEGORY_COLOR_MAP: Record<string, string> = {
@@ -43,26 +43,27 @@ const CATEGORY_COLOR_MAP: Record<string, string> = {
   Entertainment: "#A9551F",
   Hobbies: "#A9551F",
   Allowances: "#7A9B86",
-  Shopping: "#7A9B86",
-};
+  Shopping: "#7A9B86"
+}
 
 function hashString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
+  let h = 0
+  for (let i = 0; i < s.length; i++)
+    h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0
+  return Math.abs(h)
 }
 
 /** Stable brand color for an expense category (Budget dots). */
 export function categoryColor(name: string): string {
-  if (CATEGORY_COLOR_MAP[name]) return CATEGORY_COLOR_MAP[name];
+  if (CATEGORY_COLOR_MAP[name]) return CATEGORY_COLOR_MAP[name]
   const ci = Object.keys(CATEGORY_COLOR_MAP).find(
     (k) => k.toLowerCase() === name.toLowerCase()
-  );
-  if (ci) return CATEGORY_COLOR_MAP[ci];
-  return BRAND_DATA_COLORS[hashString(name) % BRAND_DATA_COLORS.length];
+  )
+  if (ci) return CATEGORY_COLOR_MAP[ci]
+  return BRAND_DATA_COLORS[hashString(name) % BRAND_DATA_COLORS.length]
 }
 
 /** Stable brand color from any seed string (e.g. a goal name or holding type). */
 export function brandColor(seed: string): string {
-  return BRAND_DATA_COLORS[hashString(seed) % BRAND_DATA_COLORS.length];
+  return BRAND_DATA_COLORS[hashString(seed) % BRAND_DATA_COLORS.length]
 }

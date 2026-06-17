@@ -8,23 +8,23 @@
 // =============================================================================
 
 export interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  resetAt: Date;
-  error?: string;
+  allowed: boolean
+  remaining: number
+  resetAt: Date
+  error?: string
 }
 
 export interface UserQuota {
-  userId: string;
-  dailyCount: number;
-  dailyResetAt: Date;
+  userId: string
+  dailyCount: number
+  dailyResetAt: Date
 }
 
 export interface ThreadRateLimit {
-  threadId: string;
-  lastMessageAt: Date;
-  messageCount: number;
-  windowResetAt: Date;
+  threadId: string
+  lastMessageAt: Date
+  messageCount: number
+  windowResetAt: Date
 }
 
 // =============================================================================
@@ -38,28 +38,28 @@ const CONFIG = {
   // Per-thread limits
   THREAD_RATE_LIMIT_WINDOW_MS: 60 * 1000, // 1 minute
   THREAD_MAX_MESSAGES_PER_WINDOW: 10, // max 10 messages per minute per thread
-  THREAD_MIN_INTERVAL_MS: 2000, // 2 seconds between messages
-};
+  THREAD_MIN_INTERVAL_MS: 2000 // 2 seconds between messages
+}
 
 // =============================================================================
 // In-Memory Storage (Replace with Redis/DB in production)
 // =============================================================================
 
-const userQuotas = new Map<string, UserQuota>();
-const threadRateLimits = new Map<string, ThreadRateLimit>();
+const userQuotas = new Map<string, UserQuota>()
+const threadRateLimits = new Map<string, ThreadRateLimit>()
 
 // =============================================================================
 // Helper Functions
 // =============================================================================
 
 function getStartOfDay(): Date {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
 }
 
 function getEndOfDay(): Date {
-  const startOfDay = getStartOfDay();
-  return new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+  const startOfDay = getStartOfDay()
+  return new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000)
 }
 
 // =============================================================================
@@ -67,63 +67,67 @@ function getEndOfDay(): Date {
 // =============================================================================
 
 export function checkUserDailyQuota(userId: string): RateLimitResult {
-  const now = new Date();
-  const endOfDay = getEndOfDay();
+  const now = new Date()
+  const endOfDay = getEndOfDay()
 
-  let quota = userQuotas.get(userId);
+  let quota = userQuotas.get(userId)
 
   // Create or reset quota if needed
   if (!quota || now >= quota.dailyResetAt) {
     quota = {
       userId,
       dailyCount: 0,
-      dailyResetAt: endOfDay,
-    };
-    userQuotas.set(userId, quota);
+      dailyResetAt: endOfDay
+    }
+    userQuotas.set(userId, quota)
   }
 
-  const remaining = CONFIG.DAILY_MESSAGE_QUOTA - quota.dailyCount;
+  const remaining = CONFIG.DAILY_MESSAGE_QUOTA - quota.dailyCount
 
   if (remaining <= 0) {
     return {
       allowed: false,
       remaining: 0,
       resetAt: quota.dailyResetAt,
-      error: `Daily message limit reached (${CONFIG.DAILY_MESSAGE_QUOTA}/day). Resets at midnight.`,
-    };
+      error: `Daily message limit reached (${CONFIG.DAILY_MESSAGE_QUOTA}/day). Resets at midnight.`
+    }
   }
 
   return {
     allowed: true,
     remaining,
-    resetAt: quota.dailyResetAt,
-  };
-}
-
-export function incrementUserDailyQuota(userId: string): void {
-  const quota = userQuotas.get(userId);
-  if (quota) {
-    quota.dailyCount++;
+    resetAt: quota.dailyResetAt
   }
 }
 
-export function getUserQuotaInfo(userId: string): { used: number; limit: number; resetAt: Date } {
-  const quota = userQuotas.get(userId);
-  const now = new Date();
+export function incrementUserDailyQuota(userId: string): void {
+  const quota = userQuotas.get(userId)
+  if (quota) {
+    quota.dailyCount++
+  }
+}
+
+export function getUserQuotaInfo(userId: string): {
+  used: number
+  limit: number
+  resetAt: Date
+} {
+  const quota = userQuotas.get(userId)
+  const now = new Date()
 
   if (!quota || now >= quota.dailyResetAt) {
     return {
       used: 0,
       limit: CONFIG.DAILY_MESSAGE_QUOTA,
-      resetAt: getEndOfDay(),
-    };
+      resetAt: getEndOfDay()
+    }
   }
 
   return {
     used: quota.dailyCount,
     limit: CONFIG.DAILY_MESSAGE_QUOTA,
-    resetAt: quota.dailyResetAt,
-  };
+    resetAt: quota.dailyResetAt
+  }
 }
 
 // =============================================================================
@@ -131,9 +135,9 @@ export function getUserQuotaInfo(userId: string): { used: number; limit: number;
 // =============================================================================
 
 export function checkThreadRateLimit(threadId: string): RateLimitResult {
-  const now = new Date();
+  const now = new Date()
 
-  let limit = threadRateLimits.get(threadId);
+  let limit = threadRateLimits.get(threadId)
 
   // Create or reset window if needed
   if (!limit || now >= limit.windowResetAt) {
@@ -141,48 +145,56 @@ export function checkThreadRateLimit(threadId: string): RateLimitResult {
       threadId,
       lastMessageAt: new Date(0), // Beginning of time
       messageCount: 0,
-      windowResetAt: new Date(now.getTime() + CONFIG.THREAD_RATE_LIMIT_WINDOW_MS),
-    };
-    threadRateLimits.set(threadId, limit);
+      windowResetAt: new Date(
+        now.getTime() + CONFIG.THREAD_RATE_LIMIT_WINDOW_MS
+      )
+    }
+    threadRateLimits.set(threadId, limit)
   }
 
   // Check minimum interval between messages
-  const timeSinceLastMessage = now.getTime() - limit.lastMessageAt.getTime();
+  const timeSinceLastMessage = now.getTime() - limit.lastMessageAt.getTime()
   if (timeSinceLastMessage < CONFIG.THREAD_MIN_INTERVAL_MS) {
-    const waitTime = Math.ceil((CONFIG.THREAD_MIN_INTERVAL_MS - timeSinceLastMessage) / 1000);
+    const waitTime = Math.ceil(
+      (CONFIG.THREAD_MIN_INTERVAL_MS - timeSinceLastMessage) / 1000
+    )
     return {
       allowed: false,
       remaining: CONFIG.THREAD_MAX_MESSAGES_PER_WINDOW - limit.messageCount,
-      resetAt: new Date(limit.lastMessageAt.getTime() + CONFIG.THREAD_MIN_INTERVAL_MS),
-      error: `Please wait ${waitTime} second${waitTime > 1 ? "s" : ""} before sending another message.`,
-    };
+      resetAt: new Date(
+        limit.lastMessageAt.getTime() + CONFIG.THREAD_MIN_INTERVAL_MS
+      ),
+      error: `Please wait ${waitTime} second${waitTime > 1 ? "s" : ""} before sending another message.`
+    }
   }
 
   // Check messages per window
   if (limit.messageCount >= CONFIG.THREAD_MAX_MESSAGES_PER_WINDOW) {
-    const waitSeconds = Math.ceil((limit.windowResetAt.getTime() - now.getTime()) / 1000);
+    const waitSeconds = Math.ceil(
+      (limit.windowResetAt.getTime() - now.getTime()) / 1000
+    )
     return {
       allowed: false,
       remaining: 0,
       resetAt: limit.windowResetAt,
-      error: `Too many messages. Please wait ${waitSeconds} seconds.`,
-    };
+      error: `Too many messages. Please wait ${waitSeconds} seconds.`
+    }
   }
 
   return {
     allowed: true,
     remaining: CONFIG.THREAD_MAX_MESSAGES_PER_WINDOW - limit.messageCount,
-    resetAt: limit.windowResetAt,
-  };
+    resetAt: limit.windowResetAt
+  }
 }
 
 export function recordThreadMessage(threadId: string): void {
-  const now = new Date();
-  const limit = threadRateLimits.get(threadId);
+  const now = new Date()
+  const limit = threadRateLimits.get(threadId)
 
   if (limit) {
-    limit.lastMessageAt = now;
-    limit.messageCount++;
+    limit.lastMessageAt = now
+    limit.messageCount++
   }
 }
 
@@ -195,27 +207,27 @@ export function checkRateLimits(
   threadId: string
 ): RateLimitResult {
   // Check user daily quota first
-  const userResult = checkUserDailyQuota(userId);
+  const userResult = checkUserDailyQuota(userId)
   if (!userResult.allowed) {
-    return userResult;
+    return userResult
   }
 
   // Check thread rate limit
-  const threadResult = checkThreadRateLimit(threadId);
+  const threadResult = checkThreadRateLimit(threadId)
   if (!threadResult.allowed) {
-    return threadResult;
+    return threadResult
   }
 
   return {
     allowed: true,
     remaining: Math.min(userResult.remaining, threadResult.remaining),
-    resetAt: userResult.resetAt,
-  };
+    resetAt: userResult.resetAt
+  }
 }
 
 export function recordMessage(userId: string, threadId: string): void {
-  incrementUserDailyQuota(userId);
-  recordThreadMessage(threadId);
+  incrementUserDailyQuota(userId)
+  recordThreadMessage(threadId)
 }
 
 // =============================================================================
@@ -223,17 +235,17 @@ export function recordMessage(userId: string, threadId: string): void {
 // =============================================================================
 
 export function resetUserQuota(userId: string): void {
-  userQuotas.delete(userId);
+  userQuotas.delete(userId)
 }
 
 export function resetThreadRateLimit(threadId: string): void {
-  threadRateLimits.delete(threadId);
+  threadRateLimits.delete(threadId)
 }
 
 export function resetAllLimits(): void {
-  userQuotas.clear();
-  threadRateLimits.clear();
+  userQuotas.clear()
+  threadRateLimits.clear()
 }
 
 // Export config for display purposes
-export const RATE_LIMIT_CONFIG = { ...CONFIG };
+export const RATE_LIMIT_CONFIG = { ...CONFIG }

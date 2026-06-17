@@ -1,20 +1,22 @@
-import { z } from "zod";
+import { z } from "zod"
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const moneyString = z.string().regex(/^-?\d+(\.\d{1,2})?$/);
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+const moneyString = z.string().regex(/^-?\d+(\.\d{1,2})?$/)
 
 const booleanLike = z
   .union([
     z.boolean(),
     z.literal("true").transform(() => true),
-    z.literal("false").transform(() => false),
+    z.literal("false").transform(() => false)
   ])
-  .pipe(z.boolean());
+  .pipe(z.boolean())
 
 export const listVehicleAssetsQuerySchema = z.object({
-  isActive: booleanLike.optional(),
-});
-export type ListVehicleAssetsQuery = z.infer<typeof listVehicleAssetsQuerySchema>;
+  isActive: booleanLike.optional()
+})
+export type ListVehicleAssetsQuery = z.infer<
+  typeof listVehicleAssetsQuerySchema
+>
 
 export const createVehicleAssetBodySchema = z.object({
   id: z.string().uuid().optional(),
@@ -29,9 +31,11 @@ export const createVehicleAssetBodySchema = z.object({
   loanAmountRepaid: moneyString.nullish(),
   monthlyLoanPayment: moneyString.nullish(),
   addToExpenditures: z.boolean().optional(),
-  expenseName: z.string().max(255).nullish(),
-});
-export type CreateVehicleAssetBody = z.infer<typeof createVehicleAssetBodySchema>;
+  expenseName: z.string().max(255).nullish()
+})
+export type CreateVehicleAssetBody = z.infer<
+  typeof createVehicleAssetBodySchema
+>
 
 export const updateVehicleAssetBodySchema = z
   .object({
@@ -47,9 +51,11 @@ export const updateVehicleAssetBodySchema = z
     monthlyLoanPayment: moneyString.nullish(),
     isActive: z.boolean().optional(),
     addToExpenditures: z.boolean().optional(),
-    expenseName: z.string().max(255).nullish(),
+    expenseName: z.string().max(255).nullish()
   })
   .refine((v) => Object.keys(v).length > 0, {
-    message: "At least one field must be provided",
-  });
-export type UpdateVehicleAssetBody = z.infer<typeof updateVehicleAssetBodySchema>;
+    message: "At least one field must be provided"
+  })
+export type UpdateVehicleAssetBody = z.infer<
+  typeof updateVehicleAssetBodySchema
+>

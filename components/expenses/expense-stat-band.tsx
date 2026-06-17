@@ -1,32 +1,32 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
-import { CalendarDays, PieChart, Receipt, Tags } from "lucide-react";
+import { useMemo } from "react"
+import { CalendarDays, PieChart, Receipt, Tags } from "lucide-react"
 
-import { StatCard } from "@/components/ui/stat-card";
-import { formatBudgetCurrency } from "@/lib/budget-utils";
-import { calculateMonthlyAmount } from "@/lib/expense-calculator";
+import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { calculateMonthlyAmount } from "@/lib/expense-calculator"
+import { StatCard } from "@/components/ui/stat-card"
 
 interface ExpenseRow {
-  amount: string;
-  frequency: string;
-  customMonths: string | null;
-  category: string;
-  isActive: boolean | null;
+  amount: string
+  frequency: string
+  customMonths: string | null
+  category: string
+  isActive: boolean | null
 }
 
 interface ExpenseStatBandProps {
-  expenses: ExpenseRow[];
+  expenses: ExpenseRow[]
   /** Click handler for the "Expected expenses" card (opens the breakdown modal). */
-  onExpectedClick?: () => void;
+  onExpectedClick?: () => void
   /** Click handler for the "Top category" card (opens the top-category modal). */
-  onTopCategoryClick?: () => void;
+  onTopCategoryClick?: () => void
 }
 
 const toNum = (s: string | null | undefined): number => {
-  const n = parseFloat(s ?? "");
-  return Number.isFinite(n) ? n : 0;
-};
+  const n = parseFloat(s ?? "")
+  return Number.isFinite(n) ? n : 0
+}
 
 /**
  * The 4-up stat band for the Expenses tab — same frame as the other tabs.
@@ -36,31 +36,35 @@ const toNum = (s: string | null | undefined): number => {
 export function ExpenseStatBand({
   expenses,
   onExpectedClick,
-  onTopCategoryClick,
+  onTopCategoryClick
 }: ExpenseStatBandProps) {
   const stats = useMemo(() => {
-    const active = expenses.filter((e) => e.isActive !== false);
-    const byCategory = new Map<string, number>();
-    let monthlyTotal = 0;
+    const active = expenses.filter((e) => e.isActive !== false)
+    const byCategory = new Map<string, number>()
+    let monthlyTotal = 0
 
     for (const e of active) {
-      const monthly = calculateMonthlyAmount(toNum(e.amount), e.frequency, e.customMonths);
-      monthlyTotal += monthly;
-      byCategory.set(e.category, (byCategory.get(e.category) ?? 0) + monthly);
+      const monthly = calculateMonthlyAmount(
+        toNum(e.amount),
+        e.frequency,
+        e.customMonths
+      )
+      monthlyTotal += monthly
+      byCategory.set(e.category, (byCategory.get(e.category) ?? 0) + monthly)
     }
 
-    let top: { name: string; amount: number } | null = null;
+    let top: { name: string; amount: number } | null = null
     for (const [name, amount] of byCategory) {
-      if (!top || amount > top.amount) top = { name, amount };
+      if (!top || amount > top.amount) top = { name, amount }
     }
 
     return {
       monthlyTotal,
       top,
       avgPerDay: (monthlyTotal * 12) / 365,
-      categoryCount: byCategory.size,
-    };
-  }, [expenses]);
+      categoryCount: byCategory.size
+    }
+  }, [expenses])
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -98,5 +102,5 @@ export function ExpenseStatBand({
         delta="in use"
       />
     </div>
-  );
+  )
 }

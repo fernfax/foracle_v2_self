@@ -1,24 +1,28 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Plus, Search, type LucideIcon } from "lucide-react";
+import * as React from "react"
+import { Plus, Search, type LucideIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export interface ToolbarProps {
   /** Count chip on the left, e.g. { value: 4, label: "members" }. */
-  count?: { value: number; label: string };
+  count?: { value: number; label: string }
   /** Convenience search box on the left. */
-  search?: { value: string; onChange: (v: string) => void; placeholder?: string };
+  search?: {
+    value: string
+    onChange: (v: string) => void
+    placeholder?: string
+  }
   /** Extra left-side content (filter selects, segmented toggles). */
-  filters?: React.ReactNode;
+  filters?: React.ReactNode
   /** The single primary "+ Add X" action, right-aligned, filled terracotta. */
-  primaryAction?: { label: string; onClick: () => void; icon?: LucideIcon };
-  className?: string;
-  children?: React.ReactNode;
+  primaryAction?: { label: string; onClick: () => void; icon?: LucideIcon }
+  className?: string
+  children?: React.ReactNode
 }
 
 /**
@@ -32,16 +36,15 @@ export function Toolbar({
   filters,
   primaryAction,
   className,
-  children,
+  children
 }: ToolbarProps) {
-  const ActionIcon = primaryAction?.icon ?? Plus;
+  const ActionIcon = primaryAction?.icon ?? Plus
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(28,43,42,0.06)] bg-card px-3 py-2.5 shadow-card dark:border-[rgba(240,235,224,0.08)] dark:shadow-none",
+        "bg-card shadow-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(28,43,42,0.06)] px-3 py-2.5 dark:border-[rgba(240,235,224,0.08)] dark:shadow-none",
         className
-      )}
-    >
+      )}>
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2.5">
         {count && (
           <Badge variant="neutral" className="tabular-nums">
@@ -50,7 +53,7 @@ export function Toolbar({
         )}
         {search && (
           <div className="relative min-w-[180px] flex-1 sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
               value={search.value}
               onChange={(e) => search.onChange(e.target.value)}
@@ -69,5 +72,5 @@ export function Toolbar({
         </Button>
       )}
     </div>
-  );
+  )
 }

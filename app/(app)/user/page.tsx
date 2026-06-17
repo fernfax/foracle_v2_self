@@ -1,29 +1,40 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server"
 
-export const dynamic = 'force-dynamic';
+import { getCpfByFamilyMember } from "@/lib/actions/cpf"
+import { getCurrentHoldings } from "@/lib/actions/current-holdings"
+import { getExpenses } from "@/lib/actions/expenses"
+import { getFamilyMembers } from "@/lib/actions/family-members"
+import { getIncomesBeta } from "@/lib/actions/incomes-beta"
+import { getInvestments } from "@/lib/actions/investments"
+import { getUserPolicies } from "@/lib/actions/policies"
+import { getPropertyAssets } from "@/lib/actions/property-assets"
+import { getVehicleAssets } from "@/lib/actions/vehicle-assets"
+import { cpfBalanceForMember } from "@/lib/cpf-balances"
+import { computeHouseholdSummary } from "@/lib/household-summary"
+import { computeNetWorth } from "@/lib/net-worth"
 
-import { getIncomesBeta } from "@/lib/actions/incomes-beta";
-import { getFamilyMembers } from "@/lib/actions/family-members";
-import { getCpfByFamilyMember } from "@/lib/actions/cpf";
-import { getCurrentHoldings } from "@/lib/actions/current-holdings";
-import { getUserPolicies } from "@/lib/actions/policies";
-import { getPropertyAssets } from "@/lib/actions/property-assets";
-import { getVehicleAssets } from "@/lib/actions/vehicle-assets";
-import { getExpenses } from "@/lib/actions/expenses";
-import { getInvestments } from "@/lib/actions/investments";
-import { UserHomepageClient } from "./client";
-import { computeHouseholdSummary } from "@/lib/household-summary";
-import { computeNetWorth } from "@/lib/net-worth";
-import { cpfBalanceForMember } from "@/lib/cpf-balances";
+import { UserHomepageClient } from "./client"
+
+export const dynamic = "force-dynamic"
 
 export default async function UserHomepage() {
-  const { userId } = await auth();
+  const { userId } = await auth()
 
   if (!userId) {
-    return null;
+    return null
   }
 
-  const [incomesBeta, familyMembers, cpfData, currentHoldings, policies, propertyAssets, vehicleAssets, expenses, investments] = await Promise.all([
+  const [
+    incomesBeta,
+    familyMembers,
+    cpfData,
+    currentHoldings,
+    policies,
+    propertyAssets,
+    vehicleAssets,
+    expenses,
+    investments
+  ] = await Promise.all([
     getIncomesBeta(),
     getFamilyMembers(),
     getCpfByFamilyMember(),
@@ -32,21 +43,21 @@ export default async function UserHomepage() {
     getPropertyAssets(),
     getVehicleAssets(),
     getExpenses(),
-    getInvestments(),
-  ]);
+    getInvestments()
+  ])
 
   // Pending and revoked invitations belong only in the Clerk Manage Account >
   // Family modal, not in the on-page Family tab.
   const visibleFamilyMembers = familyMembers.filter(
     (m) => m.status !== "pending" && m.status !== "revoked"
-  );
+  )
 
   const householdSummary = computeHouseholdSummary(
     incomesBeta,
     expenses,
     currentHoldings,
-    visibleFamilyMembers,
-  );
+    visibleFamilyMembers
+  )
 
   // CPF balances reuse the same per-member selection as the CPF tab so the two
   // surfaces never disagree. Driven by cpfData (the canonical CPF-member list).
@@ -59,9 +70,9 @@ export default async function UserHomepage() {
     cpf: cpfData.map((m) => ({
       id: m.familyMemberId,
       name: m.familyMemberName,
-      balance: cpfBalanceForMember(m.familyMemberId, incomesBeta).total,
-    })),
-  });
+      balance: cpfBalanceForMember(m.familyMemberId, incomesBeta).total
+    }))
+  })
 
   return (
     <UserHomepageClient
@@ -76,5 +87,5 @@ export default async function UserHomepage() {
       householdSummary={householdSummary}
       netWorth={netWorth}
     />
-  );
+  )
 }

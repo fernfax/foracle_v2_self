@@ -1,24 +1,28 @@
-import { and, desc, eq, isNull, or } from "drizzle-orm";
-import { nanoid } from "nanoid";
-import { clerkClient, currentUser } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { familyMembers, incomesBeta, users } from "@/db/schema";
-import type { AuthContext } from "@/lib/auth-context";
-import { assertCallerIsMaster } from "@/lib/auth-context";
-import { RELATIONSHIP_VALUES, type RelationshipValue } from "@/lib/family-relationships";
-import { isFutureIsoDate } from "@/lib/date-helpers";
+import { db } from "@/db"
+import { clerkClient, currentUser } from "@clerk/nextjs/server"
+import { and, desc, eq, isNull, or } from "drizzle-orm"
+import { nanoid } from "nanoid"
+
 import type {
   CreateFamilyMemberBody,
   InviteFamilyMemberBody,
-  UpdateFamilyMemberBody,
-} from "@/lib/api-schemas/family";
+  UpdateFamilyMemberBody
+} from "@/lib/api-schemas/family"
+import type { AuthContext } from "@/lib/auth-context"
+import { assertCallerIsMaster } from "@/lib/auth-context"
+import { isFutureIsoDate } from "@/lib/date-helpers"
+import {
+  RELATIONSHIP_VALUES,
+  type RelationshipValue
+} from "@/lib/family-relationships"
+import { familyMembers, incomesBeta, users } from "@/db/schema"
 
-export type FamilyMemberRow = typeof familyMembers.$inferSelect;
+export type FamilyMemberRow = typeof familyMembers.$inferSelect
 
 export class FutureDateOfBirthError extends Error {
   constructor() {
-    super("Date of birth cannot be in the future");
-    this.name = "FutureDateOfBirthError";
+    super("Date of birth cannot be in the future")
+    this.name = "FutureDateOfBirthError"
   }
 }
 
@@ -27,13 +31,13 @@ export class FutureDateOfBirthError extends Error {
 // passes through — onboarding's getOrCreateSelfMember included.
 function assertDobNotInFuture(dob: string | null | undefined): void {
   if (dob && isFutureIsoDate(dob)) {
-    throw new FutureDateOfBirthError();
+    throw new FutureDateOfBirthError()
   }
 }
 
 export class FamilyMemberNotFoundError extends Error {
   constructor() {
-    super("Family member not found");
+    super("Family member not found")
   }
 }
 
@@ -44,10 +48,10 @@ export class InvitationError extends Error {
     | "INVALID_EMAIL"
     | "INVALID_STATUS"
     | "ALREADY_LINKED"
-    | "EXISTING_USER";
+    | "EXISTING_USER"
   constructor(code: InvitationError["code"], message: string) {
-    super(message);
-    this.code = code;
+    super(message)
+    this.code = code
   }
 }
 
@@ -60,8 +64,8 @@ export async function listFamilyMembers(
 ): Promise<FamilyMemberRow[]> {
   return db.query.familyMembers.findMany({
     where: eq(familyMembers.familyId, ctx.familyId),
-    orderBy: [desc(familyMembers.createdAt)],
-  });
+    orderBy: [desc(familyMembers.createdAt)]
+  })
 }
 
 export async function getFamilyMemberById(
@@ -69,16 +73,19 @@ export async function getFamilyMemberById(
   id: string
 ): Promise<FamilyMemberRow | null> {
   const row = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)),
-  });
-  return row ?? null;
+    where: and(
+      eq(familyMembers.id, id),
+      eq(familyMembers.familyId, ctx.familyId)
+    )
+  })
+  return row ?? null
 }
 
 export async function createFamilyMember(
   ctx: AuthContext,
   body: CreateFamilyMemberBody
 ): Promise<FamilyMemberRow> {
-  assertDobNotInFuture(body.dateOfBirth);
+  assertDobNotInFuture(body.dateOfBirth)
   const [row] = await db
     .insert(familyMembers)
     .values({
@@ -89,10 +96,10 @@ export async function createFamilyMember(
       relationship: body.relationship,
       dateOfBirth: body.dateOfBirth ?? null,
       isContributing: body.isContributing ?? false,
-      notes: body.notes ?? null,
+      notes: body.notes ?? null
     })
-    .returning();
-  return row;
+    .returning()
+  return row
 }
 
 export async function updateFamilyMember(
@@ -100,26 +107,30 @@ export async function updateFamilyMember(
   id: string,
   patch: UpdateFamilyMemberBody
 ): Promise<FamilyMemberRow> {
-  const existing = await getFamilyMemberById(ctx, id);
-  if (!existing) throw new FamilyMemberNotFoundError();
+  const existing = await getFamilyMemberById(ctx, id)
+  if (!existing) throw new FamilyMemberNotFoundError()
 
-  assertDobNotInFuture(patch.dateOfBirth);
+  assertDobNotInFuture(patch.dateOfBirth)
 
   const update: Partial<typeof familyMembers.$inferInsert> = {
-    updatedAt: new Date(),
-  };
-  if (patch.name !== undefined) update.name = patch.name;
-  if (patch.relationship !== undefined) update.relationship = patch.relationship;
-  if (patch.dateOfBirth !== undefined) update.dateOfBirth = patch.dateOfBirth ?? null;
-  if (patch.isContributing !== undefined) update.isContributing = patch.isContributing;
-  if (patch.notes !== undefined) update.notes = patch.notes ?? null;
+    updatedAt: new Date()
+  }
+  if (patch.name !== undefined) update.name = patch.name
+  if (patch.relationship !== undefined) update.relationship = patch.relationship
+  if (patch.dateOfBirth !== undefined)
+    update.dateOfBirth = patch.dateOfBirth ?? null
+  if (patch.isContributing !== undefined)
+    update.isContributing = patch.isContributing
+  if (patch.notes !== undefined) update.notes = patch.notes ?? null
 
   const [row] = await db
     .update(familyMembers)
     .set(update)
-    .where(and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)))
-    .returning();
-  return row;
+    .where(
+      and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId))
+    )
+    .returning()
+  return row
 }
 
 // Cascades all incomes linked to this member (CPF data lives on income rows).
@@ -128,12 +139,20 @@ export async function deleteFamilyMember(
   ctx: AuthContext,
   id: string
 ): Promise<{
-  deletedIncomes: { id: string; name: string; amount: string; category: string }[];
+  deletedIncomes: {
+    id: string
+    name: string
+    amount: string
+    category: string
+  }[]
 }> {
   const existing = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)),
-  });
-  if (!existing) throw new FamilyMemberNotFoundError();
+    where: and(
+      eq(familyMembers.id, id),
+      eq(familyMembers.familyId, ctx.familyId)
+    )
+  })
+  if (!existing) throw new FamilyMemberNotFoundError()
 
   // Capture the linked incomes (for the confirmation summary) before deleting.
   const linkedIncomes = await db
@@ -141,17 +160,19 @@ export async function deleteFamilyMember(
       id: incomesBeta.id,
       name: incomesBeta.name,
       amount: incomesBeta.amount,
-      category: incomesBeta.category,
+      category: incomesBeta.category
     })
     .from(incomesBeta)
-    .where(eq(incomesBeta.familyMemberId, id));
+    .where(eq(incomesBeta.familyMemberId, id))
 
-  await db.delete(incomesBeta).where(eq(incomesBeta.familyMemberId, id));
+  await db.delete(incomesBeta).where(eq(incomesBeta.familyMemberId, id))
   await db
     .delete(familyMembers)
-    .where(and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)));
+    .where(
+      and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId))
+    )
 
-  return { deletedIncomes: linkedIncomes };
+  return { deletedIncomes: linkedIncomes }
 }
 
 export async function getFamilyMemberIncomes(
@@ -159,18 +180,21 @@ export async function getFamilyMemberIncomes(
   id: string
 ): Promise<{ id: string; name: string; amount: string; category: string }[]> {
   const member = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, id), eq(familyMembers.familyId, ctx.familyId)),
-  });
-  if (!member) throw new FamilyMemberNotFoundError();
+    where: and(
+      eq(familyMembers.id, id),
+      eq(familyMembers.familyId, ctx.familyId)
+    )
+  })
+  if (!member) throw new FamilyMemberNotFoundError()
   return db
     .select({
       id: incomesBeta.id,
       name: incomesBeta.name,
       amount: incomesBeta.amount,
-      category: incomesBeta.category,
+      category: incomesBeta.category
     })
     .from(incomesBeta)
-    .where(eq(incomesBeta.familyMemberId, id));
+    .where(eq(incomesBeta.familyMemberId, id))
 }
 
 // Finds the caller's own Self row in the current family. Adopts legacy rows
@@ -187,11 +211,14 @@ async function findCallerSelfRow(
       eq(familyMembers.relationship, "Self"),
       or(
         eq(familyMembers.clerkUserId, ctx.userId),
-        and(eq(familyMembers.userId, ctx.userId), isNull(familyMembers.clerkUserId))
+        and(
+          eq(familyMembers.userId, ctx.userId),
+          isNull(familyMembers.clerkUserId)
+        )
       )
-    ),
-  });
-  return row ?? null;
+    )
+  })
+  return row ?? null
 }
 
 // Onboarding helper. If the caller already has a Self row (clerk-linked OR
@@ -200,8 +227,8 @@ export async function getOrCreateSelfMember(
   ctx: AuthContext,
   data: { name: string; dateOfBirth: string }
 ): Promise<FamilyMemberRow> {
-  assertDobNotInFuture(data.dateOfBirth);
-  const existing = await findCallerSelfRow(ctx);
+  assertDobNotInFuture(data.dateOfBirth)
+  const existing = await findCallerSelfRow(ctx)
 
   if (existing) {
     const [row] = await db
@@ -212,11 +239,11 @@ export async function getOrCreateSelfMember(
         name: data.name,
         dateOfBirth: data.dateOfBirth,
         isContributing: true,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       })
       .where(eq(familyMembers.id, existing.id))
-      .returning();
-    return row;
+      .returning()
+    return row
   }
 
   const [row] = await db
@@ -229,10 +256,10 @@ export async function getOrCreateSelfMember(
       name: data.name,
       relationship: "Self",
       dateOfBirth: data.dateOfBirth,
-      isContributing: true,
+      isContributing: true
     })
-    .returning();
-  return row;
+    .returning()
+  return row
 }
 
 // Returns the family member list, ensuring exactly one Self row exists for
@@ -243,17 +270,17 @@ export async function getOrCreateSelfMember(
 export async function listFamilyMembersOrSelf(
   ctx: AuthContext
 ): Promise<FamilyMemberRow[]> {
-  const members = await listFamilyMembers(ctx);
+  const members = await listFamilyMembers(ctx)
   const existing = members.find(
     (m) =>
       m.relationship === "Self" &&
       (m.clerkUserId === ctx.userId ||
         (m.userId === ctx.userId && m.clerkUserId === null))
-  );
+  )
 
   // Already linked — nothing to do.
   if (existing && existing.clerkUserId === ctx.userId) {
-    return members;
+    return members
   }
 
   // Legacy Self row with NULL clerk_user_id — adopt it in place.
@@ -262,17 +289,17 @@ export async function listFamilyMembersOrSelf(
       .update(familyMembers)
       .set({ clerkUserId: ctx.userId, status: "active", updatedAt: new Date() })
       .where(eq(familyMembers.id, existing.id))
-      .returning();
-    return members.map((m) => (m.id === adopted.id ? adopted : m));
+      .returning()
+    return members.map((m) => (m.id === adopted.id ? adopted : m))
   }
 
   // No Self row at all — create one.
   const user = await db.query.users.findFirst({
-    where: eq(users.id, ctx.userId),
-  });
+    where: eq(users.id, ctx.userId)
+  })
   const userName = user
     ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "User"
-    : "User";
+    : "User"
   const [row] = await db
     .insert(familyMembers)
     .values({
@@ -283,10 +310,10 @@ export async function listFamilyMembersOrSelf(
       name: userName,
       relationship: "Self",
       isContributing: false,
-      notes: "Primary account holder",
+      notes: "Primary account holder"
     })
-    .returning();
-  return [row, ...members];
+    .returning()
+  return [row, ...members]
 }
 
 // =============================================================================
@@ -295,21 +322,21 @@ export async function listFamilyMembersOrSelf(
 
 // Internal helper — assertCallerIsMaster() is the master gate.
 async function callerAsMaster(): Promise<AuthContext> {
-  return assertCallerIsMaster();
+  return assertCallerIsMaster()
 }
 
 export async function inviteFamilyMember(
   input: InviteFamilyMemberBody
 ): Promise<{ id: string; status: "pending" }> {
   if (!RELATIONSHIP_VALUES.includes(input.relationship as RelationshipValue)) {
-    throw new InvitationError("INVALID_RELATIONSHIP", "Invalid relationship");
+    throw new InvitationError("INVALID_RELATIONSHIP", "Invalid relationship")
   }
-  const normalizedEmail = input.email.trim().toLowerCase();
+  const normalizedEmail = input.email.trim().toLowerCase()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    throw new InvitationError("INVALID_EMAIL", "Invalid email address");
+    throw new InvitationError("INVALID_EMAIL", "Invalid email address")
   }
 
-  const ctx = await callerAsMaster();
+  const ctx = await callerAsMaster()
 
   // Block invites for emails that already have a fully-signed-up Foracle
   // account. Clerk's `createInvitation` with `ignoreExisting: true` happily
@@ -320,18 +347,18 @@ export async function inviteFamilyMember(
   // realise the family ID is different" complaint.
   const existingUserByEmail = await db.query.users.findFirst({
     where: eq(users.email, normalizedEmail),
-    columns: { id: true, email: true, familyId: true },
-  });
+    columns: { id: true, email: true, familyId: true }
+  })
   if (existingUserByEmail && existingUserByEmail.familyId !== ctx.familyId) {
     throw new InvitationError(
       "EXISTING_USER",
       `${normalizedEmail} already has a Foracle account in another family. They can't be added to this family — ask them to delete their account first, or invite them at a different email.`
-    );
+    )
   }
 
   const existingByEmail = await db.query.familyMembers.findFirst({
-    where: eq(familyMembers.invitedEmail, normalizedEmail),
-  });
+    where: eq(familyMembers.invitedEmail, normalizedEmail)
+  })
   if (
     existingByEmail &&
     existingByEmail.status !== "revoked" &&
@@ -340,18 +367,18 @@ export async function inviteFamilyMember(
     throw new InvitationError(
       "OTHER_FAMILY",
       "This email is already part of another family"
-    );
+    )
   }
   if (
     existingByEmail &&
     existingByEmail.familyId === ctx.familyId &&
     existingByEmail.status === "pending"
   ) {
-    return resendInvitation(existingByEmail.id);
+    return resendInvitation(existingByEmail.id)
   }
 
-  const rowId = `fm_${nanoid()}`;
-  const fullName = `${input.firstName.trim()} ${input.lastName.trim()}`;
+  const rowId = `fm_${nanoid()}`
+  const fullName = `${input.firstName.trim()} ${input.lastName.trim()}`
 
   await db.insert(familyMembers).values({
     id: rowId,
@@ -362,34 +389,34 @@ export async function inviteFamilyMember(
     lastName: input.lastName.trim(),
     relationship: input.relationship,
     invitedEmail: normalizedEmail,
-    status: "pending",
-  });
+    status: "pending"
+  })
 
-  let clerkInvitationId: string | null = null;
+  let clerkInvitationId: string | null = null
   try {
-    const client = await clerkClient();
+    const client = await clerkClient()
     const invitation = await client.invitations.createInvitation({
       emailAddress: normalizedEmail,
       redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/overview`,
       publicMetadata: { foracleFamilyMemberId: rowId },
-      ignoreExisting: true,
-    });
-    clerkInvitationId = invitation.id;
+      ignoreExisting: true
+    })
+    clerkInvitationId = invitation.id
   } catch (err) {
     await db
       .update(familyMembers)
       .set({ status: "revoked", updatedAt: new Date() })
-      .where(eq(familyMembers.id, rowId));
-    throw err;
+      .where(eq(familyMembers.id, rowId))
+    throw err
   }
 
   if (clerkInvitationId) {
     await db
       .update(familyMembers)
       .set({ clerkInvitationId, updatedAt: new Date() })
-      .where(eq(familyMembers.id, rowId));
+      .where(eq(familyMembers.id, rowId))
   }
-  return { id: rowId, status: "pending" };
+  return { id: rowId, status: "pending" }
 }
 
 // Convert an existing informational family member (no Clerk user yet) into a
@@ -402,35 +429,38 @@ export async function convertFamilyMember(
   rowId: string,
   input: { email: string; firstName?: string; lastName?: string }
 ): Promise<{ id: string; status: "pending" }> {
-  const normalizedEmail = input.email.trim().toLowerCase();
+  const normalizedEmail = input.email.trim().toLowerCase()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    throw new InvitationError("INVALID_EMAIL", "Invalid email address");
+    throw new InvitationError("INVALID_EMAIL", "Invalid email address")
   }
 
-  const ctx = await callerAsMaster();
+  const ctx = await callerAsMaster()
 
   const row = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, rowId), eq(familyMembers.familyId, ctx.familyId)),
-  });
-  if (!row) throw new FamilyMemberNotFoundError();
+    where: and(
+      eq(familyMembers.id, rowId),
+      eq(familyMembers.familyId, ctx.familyId)
+    )
+  })
+  if (!row) throw new FamilyMemberNotFoundError()
   if (row.clerkUserId) {
     throw new InvitationError(
       "ALREADY_LINKED",
       "This family member is already a Foracle user"
-    );
+    )
   }
   if (row.status !== "active" && row.status !== "informational") {
     throw new InvitationError(
       "INVALID_STATUS",
       "Only informational members can be converted"
-    );
+    )
   }
 
   // Reject if this email already belongs to a different family. An existing
   // pending row in the *current* family is fine — it would be a no-op overlap.
   const existingByEmail = await db.query.familyMembers.findFirst({
-    where: eq(familyMembers.invitedEmail, normalizedEmail),
-  });
+    where: eq(familyMembers.invitedEmail, normalizedEmail)
+  })
   if (
     existingByEmail &&
     existingByEmail.id !== row.id &&
@@ -440,16 +470,24 @@ export async function convertFamilyMember(
     throw new InvitationError(
       "OTHER_FAMILY",
       "This email is already part of another family"
-    );
+    )
   }
 
   // Derive firstName/lastName: prefer caller input, fall back to existing
   // columns, then to splitting the display name.
-  const fallbackSplit = row.name?.split(/\s+/) ?? [];
-  const firstName = (input.firstName ?? row.firstName ?? fallbackSplit[0] ?? "").trim();
+  const fallbackSplit = row.name?.split(/\s+/) ?? []
+  const firstName = (
+    input.firstName ??
+    row.firstName ??
+    fallbackSplit[0] ??
+    ""
+  ).trim()
   const lastName = (
-    input.lastName ?? row.lastName ?? fallbackSplit.slice(1).join(" ") ?? ""
-  ).trim();
+    input.lastName ??
+    row.lastName ??
+    fallbackSplit.slice(1).join(" ") ??
+    ""
+  ).trim()
 
   await db
     .update(familyMembers)
@@ -459,20 +497,20 @@ export async function convertFamilyMember(
       lastName: lastName || null,
       status: "pending",
       emailInvitationAccepted: false,
-      updatedAt: new Date(),
+      updatedAt: new Date()
     })
-    .where(eq(familyMembers.id, row.id));
+    .where(eq(familyMembers.id, row.id))
 
-  let clerkInvitationId: string | null = null;
+  let clerkInvitationId: string | null = null
   try {
-    const client = await clerkClient();
+    const client = await clerkClient()
     const invitation = await client.invitations.createInvitation({
       emailAddress: normalizedEmail,
       redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/overview`,
       publicMetadata: { foracleFamilyMemberId: row.id },
-      ignoreExisting: true,
-    });
-    clerkInvitationId = invitation.id;
+      ignoreExisting: true
+    })
+    clerkInvitationId = invitation.id
   } catch (err) {
     // Roll the row back so the UI doesn't show a pending invite that was
     // never actually sent.
@@ -481,99 +519,105 @@ export async function convertFamilyMember(
       .set({
         status: row.status,
         invitedEmail: row.invitedEmail,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       })
-      .where(eq(familyMembers.id, row.id));
-    throw err;
+      .where(eq(familyMembers.id, row.id))
+    throw err
   }
 
   if (clerkInvitationId) {
     await db
       .update(familyMembers)
       .set({ clerkInvitationId, updatedAt: new Date() })
-      .where(eq(familyMembers.id, row.id));
+      .where(eq(familyMembers.id, row.id))
   }
 
-  return { id: row.id, status: "pending" };
+  return { id: row.id, status: "pending" }
 }
 
 export async function revokeInvitation(
   rowId: string
 ): Promise<{ id: string; status: "revoked" }> {
-  const ctx = await callerAsMaster();
+  const ctx = await callerAsMaster()
 
   const row = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, rowId), eq(familyMembers.familyId, ctx.familyId)),
-  });
-  if (!row) throw new FamilyMemberNotFoundError();
+    where: and(
+      eq(familyMembers.id, rowId),
+      eq(familyMembers.familyId, ctx.familyId)
+    )
+  })
+  if (!row) throw new FamilyMemberNotFoundError()
   if (row.status !== "pending") {
     throw new InvitationError(
       "INVALID_STATUS",
       "Only pending invitations can be revoked"
-    );
+    )
   }
 
   if (row.clerkInvitationId) {
     try {
-      const client = await clerkClient();
-      await client.invitations.revokeInvitation(row.clerkInvitationId);
+      const client = await clerkClient()
+      await client.invitations.revokeInvitation(row.clerkInvitationId)
     } catch (err) {
-      console.error("Failed to revoke Clerk invitation", err);
+      console.error("Failed to revoke Clerk invitation", err)
     }
   }
 
   await db
     .update(familyMembers)
     .set({ status: "revoked", updatedAt: new Date() })
-    .where(eq(familyMembers.id, rowId));
+    .where(eq(familyMembers.id, rowId))
 
-  return { id: rowId, status: "revoked" };
+  return { id: rowId, status: "revoked" }
 }
 
 export async function resendInvitation(
   rowId: string
 ): Promise<{ id: string; status: "pending" }> {
-  const ctx = await callerAsMaster();
+  const ctx = await callerAsMaster()
 
   const row = await db.query.familyMembers.findFirst({
-    where: and(eq(familyMembers.id, rowId), eq(familyMembers.familyId, ctx.familyId)),
-  });
-  if (!row || !row.invitedEmail) throw new FamilyMemberNotFoundError();
+    where: and(
+      eq(familyMembers.id, rowId),
+      eq(familyMembers.familyId, ctx.familyId)
+    )
+  })
+  if (!row || !row.invitedEmail) throw new FamilyMemberNotFoundError()
   if (row.status !== "pending") {
     throw new InvitationError(
       "INVALID_STATUS",
       "Only pending invitations can be resent"
-    );
+    )
   }
 
   if (row.clerkInvitationId) {
     try {
-      const client = await clerkClient();
-      await client.invitations.revokeInvitation(row.clerkInvitationId);
+      const client = await clerkClient()
+      await client.invitations.revokeInvitation(row.clerkInvitationId)
     } catch (err) {
       console.error(
         "Failed to revoke previous Clerk invitation during resend",
         err
-      );
+      )
     }
   }
 
-  const client = await clerkClient();
+  const client = await clerkClient()
   const invitation = await client.invitations.createInvitation({
     emailAddress: row.invitedEmail,
     redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/overview`,
     publicMetadata: { foracleFamilyMemberId: row.id },
-    ignoreExisting: true,
-  });
+    ignoreExisting: true
+  })
 
   await db
     .update(familyMembers)
     .set({ clerkInvitationId: invitation.id, updatedAt: new Date() })
-    .where(eq(familyMembers.id, row.id));
+    .where(eq(familyMembers.id, row.id))
 
-  return { id: row.id, status: "pending" };
+  return { id: row.id, status: "pending" }
 }
 
 // Re-export for the action layer's onboarding flow which previously had its
 // own currentUser() call.
-export { currentUser };
+export { currentUser }
