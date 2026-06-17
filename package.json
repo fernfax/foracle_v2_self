@@ -22,7 +22,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "[ \"$RENDER\" = \"true\" ] || [ \"$VERCEL\" = \"1\" ] || playwright install"
   },
   "keywords": [],
   "author": "",
