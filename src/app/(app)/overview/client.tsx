@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import {
   Briefcase,
   Building2,
@@ -119,7 +119,6 @@ export function DashboardClient({
     () => true,
     () => false
   )
-  const router = useRouter()
   const searchParams = useSearchParams()
   // `?view=` selects the layout. Default = "cashflow" — the sankey is now the
   // primary entry point. Users can flip to ?view=classic via the toggle.
@@ -127,16 +126,6 @@ export function DashboardClient({
 
   if (!mounted) {
     return <div className="bg-muted h-[500px] animate-pulse rounded-lg" />
-  }
-
-  const handleViewChange = (next: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    // Strip the param when picking the default (cashflow) so the URL stays
-    // clean. Explicitly set it only when opting into Classic.
-    if (next === "cashflow") params.delete("view")
-    else params.set("view", next)
-    const qs = params.toString()
-    router.replace(qs ? `/overview?${qs}` : "/overview", { scroll: false })
   }
 
   return (

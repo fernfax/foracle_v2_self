@@ -63,8 +63,7 @@ const mainNavItems = [
 ]
 
 export function Sidebar() {
-  const { isPinned, setIsPinned, isHovered, setIsHovered, isExpanded } =
-    useSidebar()
+  const { isPinned, setIsPinned, setIsHovered, isExpanded } = useSidebar()
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
   const { user, isLoaded } = useUser()
 

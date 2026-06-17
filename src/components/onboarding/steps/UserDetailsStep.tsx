@@ -38,7 +38,7 @@ export function UserDetailsStep({
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
-  const [memberId, setMemberId] = useState(data?.id || "")
+  const [_memberId, setMemberId] = useState(data?.id || "")
 
   // Update form when data changes (e.g., navigating back)
   useEffect(() => {

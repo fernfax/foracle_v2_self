@@ -1509,7 +1509,6 @@ async function executeGetBalanceSummary(
   let totalExpenses = 0
   let totalBaseIncome = 0 // Track base income separately (without hypotheticals) for safety assessment
   let minimumBalance = startingBalance
-  let minimumBalanceMonth = params.fromMonth
 
   for (let i = 0; i < monthCount; i++) {
     const currentMonth = addMonthsToString(params.fromMonth, i)
@@ -1570,7 +1569,6 @@ async function executeGetBalanceSummary(
     // Track minimum balance
     if (cumulativeBalance < minimumBalance) {
       minimumBalance = cumulativeBalance
-      minimumBalanceMonth = currentMonth
     }
 
     const projection: MonthlyBalanceProjection = {

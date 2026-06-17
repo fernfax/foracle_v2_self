@@ -131,7 +131,6 @@ export function EditPolicyDialog({
   open,
   onOpenChange,
   policy,
-  userId,
   onPolicyUpdated
 }: EditPolicyDialogProps) {
   const router = useRouter()
@@ -288,7 +287,7 @@ export function EditPolicyDialog({
                     ? options.hospitalisationPlan.toString()
                     : ""
               })
-            } catch (e) {
+            } catch {
               // Reset if parsing fails
               setDeathCoverage({ enabled: false, amount: "" })
               setTpdCoverage({ enabled: false, amount: "" })

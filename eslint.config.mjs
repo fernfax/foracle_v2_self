@@ -16,7 +16,17 @@ const eslintConfig = defineConfig([
       "@next/next/no-html-link-for-pages": "off",
       "react/jsx-key": "off",
       "no-unused-vars": "off",
-      "unused-imports/no-unused-imports": "error"
+      "unused-imports/no-unused-imports": "error",
+      // Allow intentionally-unused identifiers when prefixed with "_"
+      // (callback params, destructured-omit, error-boundary args, catch).
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_"
+        }
+      ]
     }
   },
   {

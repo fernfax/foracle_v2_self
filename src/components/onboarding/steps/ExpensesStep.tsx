@@ -60,7 +60,7 @@ interface ExpensesStepProps {
 }
 
 export function ExpensesStep({
-  income,
+  income: _income,
   data,
   onSave,
   onNext,
@@ -159,13 +159,6 @@ export function ExpensesStep({
         ? prev.filter((c) => c !== categoryName)
         : [...prev, categoryName]
     )
-  }
-
-  const updateCategoryAmount = (categoryName: string, amount: string) => {
-    setCategoryAmounts((prev) => ({
-      ...prev,
-      [categoryName]: amount
-    }))
   }
 
   const handleSubmit = async () => {

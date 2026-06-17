@@ -31,7 +31,7 @@ export function ExpenseNumpad({
   value,
   onChange,
   onSubmit,
-  disabled = false,
+  disabled: _disabled = false,
   submitDisabled = false
 }: ExpenseNumpadProps) {
   const handleNumberPress = (num: string) => {

@@ -27,7 +27,7 @@ interface HoldingsStepProps {
 
 export function HoldingsStep({
   familyMember,
-  holdings,
+  holdings: _holdings,
   onAdd,
   onNext,
   onBack,

@@ -45,7 +45,7 @@ export function AddCpfDetailsDialog({
   onOpenChange,
   onBack,
   onComplete,
-  totalCpfContribution,
+  totalCpfContribution: _totalCpfContribution,
   familyMemberName,
   initialOA,
   initialSA,

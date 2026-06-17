@@ -1025,9 +1025,9 @@ export function TimelineView({
   familyMembers
 }: TimelineViewProps) {
   // Timeline Studio is the default (and currently only) view. The Action Cards
-  // view is hidden for now — the toggle is removed below. `view`/`setView` stay
-  // wired so re-enabling the toggle later is a one-line change.
-  const [view, setView] = useState<ViewMode>("timeline")
+  // view is hidden for now — the toggle is removed below. `view`/`_setView`
+  // stay wired so re-enabling the toggle later is a one-line change.
+  const [view, _setView] = useState<ViewMode>("timeline")
   const effectiveView: ViewMode = view
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
   // Clearing hover is deferred by a tick so the pointer can travel from an axis
@@ -1765,7 +1765,7 @@ export function TimelineView({
       // Stay in edit mode so the user can keep adding bars without
       // re-clicking the pencil — matches Figma/Photoshop tool behaviour.
     },
-    [drawCommit, cells]
+    [drawCommit]
   )
 
   const handleDrawDiscard = useCallback(() => {
@@ -1920,8 +1920,8 @@ export function TimelineView({
   return (
     <div className="space-y-6">
       {/* Action Cards view is hidden for now — Timeline Studio is the only view.
-          Re-add <ViewToggle view={effectiveView} onChangeView={setView} /> to
-          bring the toggle back. */}
+          Re-add a ViewToggle wired to `effectiveView` / `_setView` to bring the
+          toggle back. */}
 
       {error && (
         <div className="border-destructive/40 bg-destructive/10 text-destructive flex items-center justify-between rounded-lg border px-4 py-2 text-sm">
@@ -2240,41 +2240,6 @@ export function TimelineView({
   )
 }
 
-function ViewToggle({
-  view,
-  onChangeView
-}: {
-  view: ViewMode
-  onChangeView: (v: ViewMode) => void
-}) {
-  return (
-    <div className="flex justify-end">
-      <div className="border-border/40 bg-muted inline-flex items-center rounded-full border p-1 text-sm shadow-sm">
-        <button
-          onClick={() => onChangeView("cards")}
-          className={cn(
-            "rounded-full px-4 py-1.5 font-medium transition-colors",
-            view === "cards"
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}>
-          Action Cards
-        </button>
-        <button
-          onClick={() => onChangeView("timeline")}
-          className={cn(
-            "rounded-full px-4 py-1.5 font-medium transition-colors",
-            view === "timeline"
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}>
-          Timeline Studio
-        </button>
-      </div>
-    </div>
-  )
-}
-
 /**
  * Trackpad-friendly horizontal wheel-scroll hook.
  *
@@ -2417,8 +2382,8 @@ function TimelineHeader({
   onScrollPrev,
   onScrollNext,
   onScrollToToday,
-  editMode,
-  onToggleEditMode
+  editMode: _editMode,
+  onToggleEditMode: _onToggleEditMode
 }: {
   cells: MonthCell[]
   windowOffsetMonths: number
@@ -3589,7 +3554,7 @@ const MonthAxis = memo(function MonthAxis({
   cells,
   hoverIndex,
   onHover,
-  totals
+  totals: _totals
 }: MonthAxisProps) {
   const yearSegments = useMemo(() => buildYearSegments(cells), [cells])
   const gridCols = {
@@ -4329,7 +4294,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   isFirst = false,
   isFirstInGroup = true,
   familyMemberHeader = null,
-  rowFamilyMemberId = null,
+  rowFamilyMemberId: _rowFamilyMemberId = null,
   alternate = false,
   tlConfig,
   onAmountChange,
@@ -4347,7 +4312,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
   onDrawMove,
   onDrawEnd,
   onDraftReshape,
-  onMonthClick
+  onMonthClick: _onMonthClick
 }: IncomeStreamRowProps) {
   // Representative income for the draw context (drawing in this row carries
   // the row's familyMemberId). Prefer the current/recurring income if any —
@@ -4923,6 +4888,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                   <span
                     role="slider"
                     aria-label="Drag to change new income's start month"
+                    aria-valuemin={0}
+                    aria-valuemax={cells.length - 1}
+                    aria-valuenow={startIdx}
                     onPointerDown={(e) =>
                       handleDraftPointerDown(e, "resize-left")
                     }
@@ -4936,6 +4904,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                   <span
                     role="slider"
                     aria-label="Drag to change new income's end month"
+                    aria-valuemin={0}
+                    aria-valuemax={cells.length - 1}
+                    aria-valuenow={endIdxLocal}
                     onPointerDown={(e) =>
                       handleDraftPointerDown(e, "resize-right")
                     }
@@ -5059,6 +5030,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         <span
                           role="slider"
                           aria-label={`Drag to change ${income.name} start date`}
+                          aria-valuemin={0}
+                          aria-valuemax={cells.length - 1}
+                          aria-valuenow={seg.startIndex}
                           onPointerDown={(e) => {
                             e.stopPropagation()
                             handlePointerDown(e, "resize-left", income)
@@ -5087,6 +5061,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         <span
                           role="slider"
                           aria-label={`Drag to change ${income.name} end date`}
+                          aria-valuemin={0}
+                          aria-valuemax={cells.length - 1}
+                          aria-valuenow={seg.startIndex + seg.spanCount - 1}
                           onPointerDown={(e) => {
                             e.stopPropagation()
                             handlePointerDown(e, "resize-right", income)

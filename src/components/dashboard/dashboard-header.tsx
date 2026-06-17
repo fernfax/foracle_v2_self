@@ -441,32 +441,6 @@ export function DashboardHeader({
   )
   const currentSavings = currentIncomeData.net - currentExpenses
 
-  const previousMonth = useMemo(
-    () =>
-      new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1),
-    [selectedMonth]
-  )
-  const prevIncomeData = useMemo(
-    () => calculateIncomeForMonth(previousMonth),
-    [calculateIncomeForMonth, previousMonth]
-  )
-  const prevExpenses = useMemo(
-    () => calculateExpensesForMonth(previousMonth),
-    [calculateExpensesForMonth, previousMonth]
-  )
-  const prevSavings = prevIncomeData.net - prevExpenses
-
-  // Calculate changes
-  const incomeChange = currentIncomeData.net - prevIncomeData.net
-  const incomeChangePercent =
-    prevIncomeData.net > 0 ? (incomeChange / prevIncomeData.net) * 100 : 0
-  const expenseChange = currentExpenses - prevExpenses
-  const expenseChangePercent =
-    prevExpenses > 0 ? (expenseChange / prevExpenses) * 100 : 0
-  const savingsChange = currentSavings - prevSavings
-  const savingsChangePercent =
-    prevSavings !== 0 ? (savingsChange / Math.abs(prevSavings)) * 100 : 0
-
   // Use calculated values if data loaded, otherwise use props
   const displayIncome = incomes.length > 0 ? currentIncomeData.net : totalIncome
   const displayGrossIncome =
@@ -476,7 +450,6 @@ export function DashboardHeader({
     incomes.length > 0 && expenses.length > 0 ? currentSavings : netSavings
   const hasCpfDeductions =
     incomes.length > 0 && currentIncomeData.cpfDeduction > 0
-  const hasData = incomes.length > 0 && expenses.length > 0
 
   const animationClass =
     slideDirection === "left"

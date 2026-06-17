@@ -105,7 +105,7 @@ export function AdjustBudgetModal({
       } else {
         setError(result.error || "Failed to shift budget")
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred")
     } finally {
       setIsSubmitting(false)

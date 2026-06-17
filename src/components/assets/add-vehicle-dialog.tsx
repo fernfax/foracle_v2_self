@@ -187,13 +187,6 @@ export function AddVehicleDialog({
     return tenureYears * 12 + tenureMonthsPart > 84
   }, [loanTenureYears, loanTenureMonths])
 
-  // Calculate loan progress
-  const loanProgress = useMemo(() => {
-    const taken = parseFloat(loanAmountTaken) || 0
-    if (taken === 0) return 100
-    return Math.min(100, Math.max(0, ((taken - outstandingLoan) / taken) * 100))
-  }, [loanAmountTaken, outstandingLoan])
-
   const resetForm = () => {
     setVehicleName("")
     setPurchaseDate(undefined)

@@ -150,14 +150,12 @@ class OpenAIProvider implements EmbeddingProvider {
       (a: { index: number }, b: { index: number }) => a.index - b.index
     )
 
-    return sorted.map(
-      (item: { embedding: number[]; index: number }, idx: number) => ({
-        embedding: item.embedding,
-        tokenCount: data.usage?.prompt_tokens
-          ? Math.floor(data.usage.prompt_tokens / texts.length)
-          : undefined
-      })
-    )
+    return sorted.map((item: { embedding: number[]; index: number }) => ({
+      embedding: item.embedding,
+      tokenCount: data.usage?.prompt_tokens
+        ? Math.floor(data.usage.prompt_tokens / texts.length)
+        : undefined
+    }))
   }
 }
 

@@ -44,13 +44,6 @@ interface WealthProjectionChartProps {
   investments: Investment[]
 }
 
-interface DataPoint {
-  period: number
-  periodLabel: string
-  withContributions: number
-  withoutContributions: number
-}
-
 const TIME_RANGES = [
   { value: 1, label: "12m", displayLabel: "12 months" },
   { value: 2, label: "24m", displayLabel: "24 months" },

@@ -313,8 +313,6 @@ You are now responding in Singlish (Singapore English).
   return basePrompt
 }
 
-const DEFAULT_SYSTEM_PROMPT = generateSystemPrompt(false)
-
 // =============================================================================
 // Conversation Store (In-Memory)
 // =============================================================================

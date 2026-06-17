@@ -79,7 +79,7 @@ export function EditFamilyMemberDialog({
   const [isContributing, setIsContributing] = useState(false)
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [wasContributingInitially, setWasContributingInitially] =
+  const [_wasContributingInitially, setWasContributingInitially] =
     useState(false)
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)

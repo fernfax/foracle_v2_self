@@ -174,7 +174,7 @@ export function IncomeStep({
             bonusGroups: bonusData,
             familyMemberAge
           })
-        } catch (updateError) {
+        } catch {
           // If income not found (deleted), create a new one instead
           console.warn("Income not found, creating new one")
           savedIncome = await createIncome({

@@ -50,7 +50,7 @@ export function CurrencySelector({
     if (open && !rates) {
       fetchRates()
     }
-  }, [open])
+  }, [open, rates])
 
   const fetchRates = async () => {
     setLoading(true)

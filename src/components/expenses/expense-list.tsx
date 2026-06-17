@@ -145,12 +145,9 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
   const [categories, setCategories] = useState<ExpenseCategory[]>([])
   const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false)
   const [isTopCategoryModalOpen, setIsTopCategoryModalOpen] = useState(false)
-  const [breakdownSortBy, setBreakdownSortBy] = useState<
+  const [breakdownSortBy, _setBreakdownSortBy] = useState<
     "amount" | "category" | "count"
   >("amount")
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set()
-  )
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -516,9 +513,6 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       maximumFractionDigits: 2
     }).format(parseFloat(amount))
   }
-
-  const totalResults = expenses.length
-  const filteredResults = filteredExpenses.length
 
   return (
     <div className="space-y-6">

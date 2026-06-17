@@ -95,7 +95,7 @@ export function BudgetClient({
   const [budgetSummary, setBudgetSummary] = useState(initialBudgetSummary)
   const [todaySpent, setTodaySpent] = useState(initialTodaySpent)
   const [budgetShifts, setBudgetShifts] = useState(initialBudgetShifts)
-  const [isLoading, setIsLoading] = useState(false)
+  const [_isLoading, setIsLoading] = useState(false)
 
   // Modal state
   const [addExpenseOpen, setAddExpenseOpen] = useState(false)
