@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { inviteFamilyMember } from "@/actions/family-invitations"
-import { toast } from "sonner"
-
 import {
   RELATIONSHIPS,
   type RelationshipValue
-} from "@/lib/family-relationships"
+} from "@/data/family-relationships.data"
+import { toast } from "sonner"
+
 import { cn } from "@/lib/utils"
 import {
   AlertDialog,

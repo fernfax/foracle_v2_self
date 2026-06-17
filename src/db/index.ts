@@ -1,10 +1,11 @@
-import { isDevelopment } from "@/configs/deployment-env"
+import { DATABASE_URL } from "@/configs/db.config"
+import { IS_DEV } from "@/configs/env.config"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 
 import * as schema from "@/db/schema"
 
-if (!process.env.DATABASE_URL) {
+if (!DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is not set")
 }
 
@@ -23,13 +24,13 @@ declare global {
 
 const client =
   global.__postgresClient ??
-  postgres(process.env.DATABASE_URL, {
+  postgres(DATABASE_URL, {
     max: 10,
     idle_timeout: 30,
     max_lifetime: 60 * 30
   })
 
-if (isDevelopment) {
+if (IS_DEV) {
   global.__postgresClient = client
 }
 

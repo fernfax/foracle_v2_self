@@ -9,7 +9,7 @@ import {
   CPF_RATE_BAND_ORDER,
   CPF_RATES,
   OW_CEILING
-} from "@/configs/cpf-constants"
+} from "@/data/cpf.data"
 import { describe, expect, it } from "vitest"
 
 import {

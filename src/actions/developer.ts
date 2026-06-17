@@ -1,6 +1,6 @@
 "use server"
 
-import { isDevelopment } from "@/configs/deployment-env"
+import { IS_DEV } from "@/configs/env.config"
 import { db } from "@/db"
 import { eq, sql } from "drizzle-orm"
 
@@ -65,7 +65,7 @@ const REGISTRY: Record<string, TableEntry> = {
 }
 
 function assertDevMode() {
-  if (!isDevelopment) {
+  if (!IS_DEV) {
     throw new Error("Developer Mode is only available in development.")
   }
 }

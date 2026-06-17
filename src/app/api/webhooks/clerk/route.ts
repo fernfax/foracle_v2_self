@@ -1,4 +1,5 @@
 import { headers } from "next/headers"
+import { CLERK_WEBHOOK_SECRET } from "@/configs/clerk.config"
 import { db } from "@/db"
 import { WebhookEvent } from "@clerk/nextjs/server"
 import { and, eq, ne } from "drizzle-orm"
@@ -52,7 +53,7 @@ const FAMILY_SHARED_TABLES = [
 
 export async function POST(req: Request) {
   // Get the Svix headers for verification
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
+  const WEBHOOK_SECRET = CLERK_WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {
     throw new Error("Please add CLERK_WEBHOOK_SECRET to .env.local")

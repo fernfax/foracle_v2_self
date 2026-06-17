@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { isDevelopment } from "@/configs/deployment-env"
+import { IS_DEV } from "@/configs/env.config"
 
 import { buildDiagram } from "@/lib/developer-diagram"
 import { DeveloperNav } from "@/components/developer/developer-nav"
@@ -8,7 +8,7 @@ import { DiagramCanvas } from "@/components/developer/diagram-canvas"
 export const dynamic = "force-dynamic"
 
 export default async function DeveloperDiagramPage() {
-  if (!isDevelopment) {
+  if (!IS_DEV) {
     notFound()
   }
 

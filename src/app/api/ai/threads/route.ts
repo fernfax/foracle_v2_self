@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { AI_ASSISTANT_ENABLED } from "@/configs/ai.config"
 import { auth } from "@clerk/nextjs/server"
 
 import { getUserQuotaInfo } from "@/lib/ai/rate-limiter"
@@ -15,7 +16,7 @@ import {
 // app/api/ai/chat/route.ts). Disabled unless ENABLE_AI_ASSISTANT=true is set
 // explicitly per environment (including local dev). Deliberate, not inferred from NODE_ENV.
 function aiAssistantEnabled(): boolean {
-  return process.env.ENABLE_AI_ASSISTANT === "true"
+  return AI_ASSISTANT_ENABLED
 }
 
 function featureDisabledResponse() {

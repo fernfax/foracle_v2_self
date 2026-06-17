@@ -1,11 +1,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { type RelationshipValue } from "@/data/family-relationships.data"
 import { db } from "@/db"
 import { desc, eq, inArray } from "drizzle-orm"
 
 import { getCurrentUserAndFamily } from "@/lib/auth-context"
-import { type RelationshipValue } from "@/lib/family-relationships"
 import {
   convertFamilyMember as convertFamilyMemberService,
   inviteFamilyMember as inviteFamilyMemberService,

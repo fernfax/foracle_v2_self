@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { DEPLOYMENT_ENVIRONMENT, isDevelopment } from "@/configs/deployment-env"
+import { IS_DEV } from "@/configs/env.config"
 
 import { DEVELOPER_TABLES } from "@/lib/developer-tables"
 import { DeveloperNav } from "@/components/developer/developer-nav"
@@ -8,7 +8,7 @@ import { DeveloperTableAccordion } from "@/components/developer/developer-table-
 export const dynamic = "force-dynamic"
 
 export default function DeveloperPage() {
-  if (!isDevelopment) {
+  if (!IS_DEV) {
     notFound()
   }
 
@@ -21,7 +21,8 @@ export default function DeveloperPage() {
         <p className="text-muted-foreground mt-1 text-sm">
           Inspect database tables and your data. Read-only. Rows are scoped to
           your account and capped at 100 per table. Available only in
-          development (environment={DEPLOYMENT_ENVIRONMENT}).
+          development (environment=
+          {process.env.NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT ?? "production"}).
         </p>
       </header>
 

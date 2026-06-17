@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSinglishMode } from "@/actions/singlish-mode"
+import { AI_ASSISTANT_ENABLED } from "@/configs/ai.config"
 import { auth } from "@clerk/nextjs/server"
 
 import { getOrchestrator } from "@/lib/ai/orchestrator"
@@ -92,7 +93,7 @@ function formatUserFriendlyError(error: unknown): string {
 // store. Opt in explicitly per environment with ENABLE_AI_ASSISTANT=true
 // (including local dev — set it in .env.local). Deliberate, not inferred from NODE_ENV.
 function aiAssistantEnabled(): boolean {
-  return process.env.ENABLE_AI_ASSISTANT === "true"
+  return AI_ASSISTANT_ENABLED
 }
 
 // =============================================================================

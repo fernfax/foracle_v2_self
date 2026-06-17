@@ -1,7 +1,7 @@
+import { RELATIONSHIP_VALUES } from "@/data/family-relationships.data"
 import { z } from "zod"
 
 import { isFutureIsoDate } from "@/lib/date-helpers"
-import { RELATIONSHIP_VALUES } from "@/lib/family-relationships"
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 // Date of birth can never be in the future. (Defense in depth — the

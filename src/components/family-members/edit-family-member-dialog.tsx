@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { updateFamilyMember } from "@/actions/family-members"
+import { RELATIONSHIPS } from "@/data/family-relationships.data"
 import { format, parse } from "date-fns"
 import { CalendarIcon, Info } from "lucide-react"
 
 import { today } from "@/lib/date-helpers"
-import { RELATIONSHIPS } from "@/lib/family-relationships"
 import { cn } from "@/lib/utils"
 import {
   AlertDialog,

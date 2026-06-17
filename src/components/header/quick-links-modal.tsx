@@ -6,7 +6,7 @@ import {
   MAX_QUICK_LINKS,
   QUICK_LINK_OPTIONS,
   type QuickLinkOption
-} from "@/configs/quick-links-config"
+} from "@/configs/quick-links.config"
 import {
   Building,
   DollarSign,

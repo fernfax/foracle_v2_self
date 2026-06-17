@@ -1,3 +1,8 @@
+import { APP_URL } from "@/configs/app.config"
+import {
+  RELATIONSHIP_VALUES,
+  type RelationshipValue
+} from "@/data/family-relationships.data"
 import { db } from "@/db"
 import { clerkClient, currentUser } from "@clerk/nextjs/server"
 import { and, desc, eq, isNull, or } from "drizzle-orm"
@@ -11,10 +16,6 @@ import type {
 import type { AuthContext } from "@/lib/auth-context"
 import { assertCallerIsMaster } from "@/lib/auth-context"
 import { isFutureIsoDate } from "@/lib/date-helpers"
-import {
-  RELATIONSHIP_VALUES,
-  type RelationshipValue
-} from "@/lib/family-relationships"
 import { familyMembers, incomesBeta, users } from "@/db/schema"
 
 export type FamilyMemberRow = typeof familyMembers.$inferSelect
@@ -397,7 +398,7 @@ export async function inviteFamilyMember(
     const client = await clerkClient()
     const invitation = await client.invitations.createInvitation({
       emailAddress: normalizedEmail,
-      redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/overview`,
+      redirectUrl: `${APP_URL}/overview`,
       publicMetadata: { foracleFamilyMemberId: rowId },
       ignoreExisting: true
     })
@@ -506,7 +507,7 @@ export async function convertFamilyMember(
     const client = await clerkClient()
     const invitation = await client.invitations.createInvitation({
       emailAddress: normalizedEmail,
-      redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/overview`,
+      redirectUrl: `${APP_URL}/overview`,
       publicMetadata: { foracleFamilyMemberId: row.id },
       ignoreExisting: true
     })
@@ -605,7 +606,7 @@ export async function resendInvitation(
   const client = await clerkClient()
   const invitation = await client.invitations.createInvitation({
     emailAddress: row.invitedEmail,
-    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/overview`,
+    redirectUrl: `${APP_URL}/overview`,
     publicMetadata: { foracleFamilyMemberId: row.id },
     ignoreExisting: true
   })

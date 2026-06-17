@@ -1,7 +1,7 @@
 "use server"
 
 import { randomUUID } from "crypto"
-import { MAX_QUICK_LINKS } from "@/configs/quick-links-config"
+import { MAX_QUICK_LINKS } from "@/configs/quick-links.config"
 import { db } from "@/db"
 import { auth } from "@clerk/nextjs/server"
 import { and, asc, eq } from "drizzle-orm"

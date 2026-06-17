@@ -7,7 +7,7 @@ import {
   updateQuickLinksOrder,
   type QuickLink
 } from "@/actions/quick-links"
-import { QUICK_LINK_OPTIONS } from "@/configs/quick-links-config"
+import { QUICK_LINK_OPTIONS } from "@/configs/quick-links.config"
 
 import { QuickLinksDisplay } from "@/components/header/quick-links-display"
 import { QuickLinksModal } from "@/components/header/quick-links-modal"

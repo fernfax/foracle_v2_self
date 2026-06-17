@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { isDevelopment } from "@/configs/deployment-env"
+import { IS_DEV } from "@/configs/env.config"
 
 /**
  * Registers the service worker (public/sw.js) on the client, after window load.
@@ -14,7 +14,7 @@ import { isDevelopment } from "@/configs/deployment-env"
  */
 export function RegisterSW() {
   useEffect(() => {
-    if (isDevelopment) return
+    if (IS_DEV) return
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator))
       return
 

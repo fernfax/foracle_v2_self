@@ -6,7 +6,7 @@ import {
   getFamilyAdminData,
   type FamilyAdminData
 } from "@/actions/family-invitations"
-import { isDevelopment } from "@/configs/deployment-env"
+import { IS_DEV } from "@/configs/env.config"
 import { UserButton } from "@clerk/nextjs"
 import { Code2, Moon, Palette, Sun, Users } from "lucide-react"
 import { useTheme } from "next-themes"
@@ -17,8 +17,6 @@ import { BackgroundDecorPicker } from "@/components/user/background-decor-picker
 import { ThemePicker } from "@/components/user/theme-picker"
 
 type ClerkUserButtonProps = React.ComponentProps<typeof UserButton>
-
-const IS_DEV = isDevelopment
 
 function FamilyProfilePage() {
   const [data, setData] = useState<FamilyAdminData | null>(null)

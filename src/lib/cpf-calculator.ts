@@ -15,7 +15,7 @@ import {
   CPF_RATE_BAND_ORDER,
   CPF_RATES,
   OW_CEILING
-} from "@/configs/cpf-constants"
+} from "@/data/cpf.data"
 
 export {
   CPF_RATES,
@@ -30,8 +30,8 @@ export {
   CPF_LOW_WAGE_NO_CPF,
   CPF_LOW_WAGE_NO_EMPLOYEE,
   CPF_LOW_WAGE_PHASE_IN_END
-} from "@/configs/cpf-constants"
-export type { CPFAgeGroup } from "@/configs/cpf-constants"
+} from "@/data/cpf.data"
+export type { CPFAgeGroup } from "@/data/cpf.data"
 
 // Legacy aliases the UI imports (the OW/AW explainer tooltips).
 export const OW_CEILING_AMOUNT = OW_CEILING

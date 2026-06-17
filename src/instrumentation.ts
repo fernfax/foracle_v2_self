@@ -23,13 +23,13 @@
  *   - https://nodejs.org/api/process.html#event-warning
  *   - https://github.com/porsager/postgres/issues/836 (same root cause)
  */
-import { isDevelopment } from "@/configs/deployment-env"
+import { IS_DEV } from "@/configs/env.config"
 
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return
   // Only filter in local dev — deployed servers never sleep, so the warning
   // would only ever fire from a real bug we'd want to see.
-  if (!isDevelopment) return
+  if (!IS_DEV) return
 
   // NOTE: a `process.on("warning", …)` listener does NOT suppress Node's default
   // stderr printer — verified on Node 24, both fire — so the older listener
