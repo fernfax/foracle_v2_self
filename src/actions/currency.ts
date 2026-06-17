@@ -6,8 +6,10 @@ import {
   type ExchangeRates
 } from "@/lib/currency-utils"
 
-// Types can be re-exported from "use server" files
-export type { CurrencyCode, ExchangeRates }
+// NOTE: a "use server" module must export only async server actions — do NOT
+// re-export types here. Turbopack mis-compiles a type re-export into a runtime
+// reference (ReferenceError). Import CurrencyCode/ExchangeRates from
+// "@/lib/currency-utils" directly.
 
 // Cache for exchange rates (server-side)
 let cachedRates: ExchangeRates | null = null

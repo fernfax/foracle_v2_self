@@ -14,13 +14,9 @@ import { driver, type Driver } from "driver.js"
 import "driver.js/dist/driver.css"
 import "@/app/driver-theme.css"
 
-import {
-  getTourStatus,
-  markTourCompleted,
-  type TourStatus
-} from "@/actions/tour"
+import { getTourStatus, markTourCompleted } from "@/actions/tour"
 
-import { emptyTourStatus } from "@/lib/api-schemas/user-prefs"
+import { emptyTourStatus, type TourStatus } from "@/lib/api-schemas/user-prefs"
 import { TOUR_CONFIGS, type TourName } from "@/lib/tour/tour-config"
 
 /**

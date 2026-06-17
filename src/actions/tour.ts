@@ -13,7 +13,10 @@ import {
   resetTourStatus as resetTourStatusService
 } from "@/lib/services/user-prefs"
 
-export type { TourName, TourStatus }
+// NOTE: this is a "use server" module — it must export only async server
+// actions. Don't re-export types here (Turbopack mis-compiles a type re-export
+// into a runtime reference); import TourName/TourStatus from
+// "@/lib/api-schemas/user-prefs" directly.
 
 const EMPTY: TourStatus = emptyTourStatus()
 
