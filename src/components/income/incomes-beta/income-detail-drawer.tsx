@@ -1,10 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import {
-  toggleIncomeBetaStatus as toggleIncomeStatus,
-  updateIncomeBeta as updateIncome
-} from "@/actions/incomes-beta"
+import { toggleIncomeStatus, updateIncome } from "@/actions/incomes"
 import { addMonths, format, parseISO } from "date-fns"
 import { Archive, Clock, Infinity as InfinityIcon, Target } from "lucide-react"
 

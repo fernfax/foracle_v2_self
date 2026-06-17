@@ -1,7 +1,7 @@
 import { getBudgetVsActual } from "@/actions/budget-calculator"
 import { getCurrentHoldings } from "@/actions/current-holdings"
 import { getExpenses } from "@/actions/expenses"
-import { getIncomesBeta } from "@/actions/incomes-beta"
+import { getIncomes } from "@/actions/incomes"
 import { getInvestments } from "@/actions/investments"
 import { getDashboardMetrics } from "@/actions/user"
 import { auth } from "@clerk/nextjs/server"
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   const [metrics, incomes, expenses, holdings, investments, budgetData] =
     await Promise.all([
       getDashboardMetrics(),
-      getIncomesBeta(),
+      getIncomes(),
       getExpenses(),
       getCurrentHoldings(),
       getInvestments(),

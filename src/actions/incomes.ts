@@ -5,16 +5,16 @@ import { revalidatePath } from "next/cache"
 import { getCurrentUserAndFamily } from "@/lib/auth-context"
 import { effectiveIncomeCategory } from "@/lib/income-category"
 import {
-  createIncome,
-  deleteIncome,
+  createIncome as createIncomeService,
+  deleteIncome as deleteIncomeService,
   listIncomes,
   toggleIncomeActive,
-  updateIncome
+  updateIncome as updateIncomeService
 } from "@/lib/services/incomes"
 
-// The IncomesBetaView still passes legacy enum values like "current-recurring"
-// when patching incomeCategory. Coerce to the new 3-value taxonomy at the
-// boundary so the UI doesn't have to change in lock-step.
+// The income UI still passes legacy enum values like "current-recurring" when
+// patching incomeCategory. Coerce to the new 3-value taxonomy at the boundary
+// so the UI doesn't have to change in lock-step.
 function normalizeIncomeCategory(
   v: string | undefined | null
 ): "past" | "current" | "future" | undefined {
@@ -31,7 +31,7 @@ function normalizeIncomeCategory(
  * compile. Beta rows are always monthly recurring; "one-off" income is
  * modelled as start_date == end_date.
  */
-export async function getIncomesBeta() {
+export async function getIncomes() {
   const ctx = await getCurrentUserAndFamily()
   const rows = await listIncomes(ctx)
   return rows.map((r) => ({
@@ -39,12 +39,12 @@ export async function getIncomesBeta() {
     // A "future" income whose start date has arrived reads as "current" (see
     // lib/income-category). Non-destructive — derived fresh on every read.
     incomeCategory: effectiveIncomeCategory(r.incomeCategory, r.startDate),
-    frequency: "monthly" as const,
+    frequency: "monthly" as string,
     customMonths: null as string | null
   }))
 }
 
-export async function createIncomeBeta(data: {
+export async function createIncome(data: {
   name: string
   category: string
   incomeCategory?: string
@@ -70,7 +70,7 @@ export async function createIncomeBeta(data: {
   cpfMedisaveAccount?: number
 }) {
   const ctx = await getCurrentUserAndFamily()
-  const row = await createIncome(ctx, {
+  const row = await createIncomeService(ctx, {
     name: data.name,
     category: data.category,
     incomeCategory: normalizeIncomeCategory(data.incomeCategory),
@@ -94,14 +94,14 @@ export async function createIncomeBeta(data: {
   return row
 }
 
-export async function updateIncomeBeta(
+export async function updateIncome(
   id: string,
   data: {
     name?: string
     category?: string
     incomeCategory?: string
     amount?: number
-    // Accepted-and-ignored. See createIncomeBeta.
+    // Accepted-and-ignored. See createIncome.
     frequency?: string
     customMonths?: string | null
     subjectToCpf?: boolean
@@ -122,7 +122,7 @@ export async function updateIncomeBeta(
   }
 ) {
   const ctx = await getCurrentUserAndFamily()
-  const patch: Parameters<typeof updateIncome>[2] = {}
+  const patch: Parameters<typeof updateIncomeService>[2] = {}
   if (data.name !== undefined) patch.name = data.name
   if (data.category !== undefined) patch.category = data.category
   if (data.incomeCategory !== undefined) {
@@ -155,19 +155,19 @@ export async function updateIncomeBeta(
   if (data.cpfMedisaveAccount !== undefined)
     patch.cpfMedisaveAccount = data.cpfMedisaveAccount.toString()
 
-  const row = await updateIncome(ctx, id, patch)
+  const row = await updateIncomeService(ctx, id, patch)
   revalidatePath("/user")
   return row
 }
 
-export async function deleteIncomeBeta(id: string) {
+export async function deleteIncome(id: string) {
   const ctx = await getCurrentUserAndFamily()
-  await deleteIncome(ctx, id)
+  await deleteIncomeService(ctx, id)
   revalidatePath("/user")
   return { success: true }
 }
 
-export async function toggleIncomeBetaStatus(id: string) {
+export async function toggleIncomeStatus(id: string) {
   const ctx = await getCurrentUserAndFamily()
   const row = await toggleIncomeActive(ctx, id)
   revalidatePath("/user")

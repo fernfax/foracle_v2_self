@@ -9,11 +9,7 @@ import {
   useRef,
   useState
 } from "react"
-import {
-  createIncomeBeta,
-  deleteIncomeBeta as deleteIncome,
-  updateIncomeBeta as updateIncome
-} from "@/actions/incomes-beta"
+import { createIncome, deleteIncome, updateIncome } from "@/actions/incomes"
 import {
   addMonths,
   differenceInCalendarMonths,
@@ -1753,7 +1749,7 @@ export function IncomesBetaView({
       // Permanent → no end date, the bar runs into perpetuity. Temporary →
       // bounded by the drawn end month.
       const endDate = data.isPermanent ? null : `${endKey}-01`
-      await createIncomeBeta({
+      await createIncome({
         name: data.name,
         category: drawCommit.rowIncome.category,
         incomeCategory: category,
@@ -1817,7 +1813,7 @@ export function IncomesBetaView({
               ? "future"
               : "current"
       }
-      await createIncomeBeta({
+      await createIncome({
         name: data.name,
         category: "salary",
         incomeCategory: category,
@@ -1843,7 +1839,7 @@ export function IncomesBetaView({
     setDraftSaving(true)
     try {
       const startKey = format(startOfMonth(new Date()), "yyyy-MM-dd")
-      await createIncomeBeta({
+      await createIncome({
         name,
         category: "salary",
         incomeCategory:
@@ -5506,7 +5502,7 @@ function ActionCardsView({
 /**
  * Inline draft card — the cards-view replacement for the IncomeCreatorDrawer
  * modal. Owns no state of its own; the parent IncomesBetaView holds the
- * DraftIncome and decides when to persist via createIncomeBeta. Submitting
+ * DraftIncome and decides when to persist via createIncome. Submitting
  * needs only name + amount + archetype; other fields (dates, family member,
  * CPF, category) are filled in afterwards via the resulting SentenceCard's
  * inline editors.

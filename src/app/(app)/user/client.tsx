@@ -22,7 +22,6 @@ import { CpfProjectionGraph } from "@/components/cpf/cpf-projection-graph"
 import { CpfView } from "@/components/cpf/cpf-view"
 import { CashflowSankey } from "@/components/dashboard/cashflow-sankey"
 import { FamilyMemberGrid } from "@/components/family-members/family-member-grid"
-import { IncomeList } from "@/components/income/income-list"
 import { IncomeStatBand } from "@/components/income/income-stat-band"
 import { IncomesBetaView } from "@/components/income/incomes-beta/incomes-beta-view"
 import { NetWorthView } from "@/components/net-worth/net-worth-view"
@@ -97,7 +96,6 @@ function useHydrated() {
 }
 
 interface UserHomepageClientProps {
-  initialIncomes: Income[]
   // The Beta view is wired to its own `incomes_beta` table. Empty until the
   // user creates rows via the new beta CRUD flow.
   initialIncomesBeta: Income[]
@@ -116,7 +114,6 @@ interface UserHomepageClientProps {
 }
 
 export function UserHomepageClient({
-  initialIncomes,
   initialIncomesBeta,
   initialFamilyMembers,
   initialCpfData,
@@ -136,43 +133,19 @@ export function UserHomepageClient({
   // (no ?tab=) always defaults to Overview.
   const rawTab = searchParams.get("tab") || "overview"
   const tabFromUrl = rawTab === "current" ? "holdings" : rawTab
-  // "standard" = the Timeline Studio (formerly "beta") — now the default.
-  // "legacy" = the old income table view. Opt into it with ?view=legacy.
-  const viewFromUrl: "legacy" | "standard" =
-    searchParams.get("view") === "legacy" ? "legacy" : "standard"
-
-  // activeTab/incomeView are optimistic (set on tap so the UI switches
-  // instantly), then resynced to the URL when navigation commits or on
-  // back/forward. Syncing during render via the previous-value pattern avoids a
-  // set-state-in-effect.
+  // activeTab is optimistic (set on tap so the UI switches instantly), then
+  // resynced to the URL when navigation commits or on back/forward. Syncing
+  // during render via the previous-value pattern avoids a set-state-in-effect.
   const [activeTab, setActiveTab] = useState(tabFromUrl)
-  const [incomeView, setIncomeView] = useState<"legacy" | "standard">(
-    viewFromUrl
-  )
   const [prevTabFromUrl, setPrevTabFromUrl] = useState(tabFromUrl)
-  const [prevViewFromUrl, setPrevViewFromUrl] = useState(viewFromUrl)
   if (prevTabFromUrl !== tabFromUrl) {
     setPrevTabFromUrl(tabFromUrl)
     setActiveTab(tabFromUrl)
   }
-  if (prevViewFromUrl !== viewFromUrl) {
-    setPrevViewFromUrl(viewFromUrl)
-    setIncomeView(viewFromUrl)
-  }
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
-    // Switching tabs always returns to the standard view
     router.push(`/user?tab=${value}`, { scroll: false })
-  }
-
-  const handleToggleIncomeView = () => {
-    const next = incomeView === "legacy" ? "standard" : "legacy"
-    setIncomeView(next)
-    const params = new URLSearchParams()
-    params.set("tab", "incomes")
-    if (next === "legacy") params.set("view", "legacy")
-    router.push(`/user?${params.toString()}`, { scroll: false })
   }
 
   return (
@@ -223,14 +196,10 @@ export function UserHomepageClient({
               netIncome={householdSummary.netIncome}
               incomes={initialIncomesBeta}
             />
-            {incomeView === "standard" ? (
-              <IncomesBetaView
-                incomes={initialIncomesBeta}
-                familyMembers={initialFamilyMembers}
-              />
-            ) : (
-              <IncomeList initialIncomes={initialIncomes} />
-            )}
+            <IncomesBetaView
+              incomes={initialIncomesBeta}
+              familyMembers={initialFamilyMembers}
+            />
           </TabsContent>
 
           <TabsContent value="expenses" className="mt-4">

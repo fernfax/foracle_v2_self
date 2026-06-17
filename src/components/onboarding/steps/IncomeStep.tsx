@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createIncome, updateIncome } from "@/actions/income"
+import { createIncome, updateIncome } from "@/actions/incomes"
 import { format } from "date-fns"
 import { Lightbulb, Plus } from "lucide-react"
 

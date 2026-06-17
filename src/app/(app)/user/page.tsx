@@ -2,7 +2,7 @@ import { getCpfByFamilyMember } from "@/actions/cpf"
 import { getCurrentHoldings } from "@/actions/current-holdings"
 import { getExpenses } from "@/actions/expenses"
 import { getFamilyMembers } from "@/actions/family-members"
-import { getIncomesBeta } from "@/actions/incomes-beta"
+import { getIncomes } from "@/actions/incomes"
 import { getInvestments } from "@/actions/investments"
 import { getUserPolicies } from "@/actions/policies"
 import { getPropertyAssets } from "@/actions/property-assets"
@@ -34,7 +34,7 @@ export default async function UserHomepage() {
     expenses,
     investments
   ] = await Promise.all([
-    getIncomesBeta(),
+    getIncomes(),
     getFamilyMembers(),
     getCpfByFamilyMember(),
     getCurrentHoldings(),
@@ -75,7 +75,6 @@ export default async function UserHomepage() {
 
   return (
     <UserHomepageClient
-      initialIncomes={incomesBeta}
       initialIncomesBeta={incomesBeta}
       initialFamilyMembers={visibleFamilyMembers}
       initialCpfData={cpfData}

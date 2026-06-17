@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createIncomeBeta as createIncome } from "@/actions/incomes-beta"
+import { createIncome } from "@/actions/incomes"
 import { format, startOfMonth } from "date-fns"
 import {
   ArrowRight,

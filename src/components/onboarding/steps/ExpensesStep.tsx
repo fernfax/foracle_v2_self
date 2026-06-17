@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getIncomes } from "@/actions/income"
+import { getIncomes } from "@/actions/incomes"
 import { createOnboardingExpenses } from "@/actions/onboarding"
 import { Lightbulb } from "lucide-react"
 

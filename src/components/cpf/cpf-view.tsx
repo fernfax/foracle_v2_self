@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import type { CpfByFamilyMember } from "@/actions/cpf"
-import { updateIncome } from "@/actions/income"
+import { updateIncome } from "@/actions/incomes"
 import { Building2, Landmark, PiggyBank, Target } from "lucide-react"
 import { toast } from "sonner"
 
