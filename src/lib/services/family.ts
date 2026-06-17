@@ -16,7 +16,7 @@ import type {
 import type { AuthContext } from "@/lib/auth-context"
 import { assertCallerIsMaster } from "@/lib/auth-context"
 import { isFutureIsoDate } from "@/lib/date-helpers"
-import { familyMembers, incomesBeta, users } from "@/db/schema"
+import { familyMembers, incomes, users } from "@/db/schema"
 
 export type FamilyMemberRow = typeof familyMembers.$inferSelect
 
@@ -158,15 +158,15 @@ export async function deleteFamilyMember(
   // Capture the linked incomes (for the confirmation summary) before deleting.
   const linkedIncomes = await db
     .select({
-      id: incomesBeta.id,
-      name: incomesBeta.name,
-      amount: incomesBeta.amount,
-      category: incomesBeta.category
+      id: incomes.id,
+      name: incomes.name,
+      amount: incomes.amount,
+      category: incomes.category
     })
-    .from(incomesBeta)
-    .where(eq(incomesBeta.familyMemberId, id))
+    .from(incomes)
+    .where(eq(incomes.familyMemberId, id))
 
-  await db.delete(incomesBeta).where(eq(incomesBeta.familyMemberId, id))
+  await db.delete(incomes).where(eq(incomes.familyMemberId, id))
   await db
     .delete(familyMembers)
     .where(
@@ -189,13 +189,13 @@ export async function getFamilyMemberIncomes(
   if (!member) throw new FamilyMemberNotFoundError()
   return db
     .select({
-      id: incomesBeta.id,
-      name: incomesBeta.name,
-      amount: incomesBeta.amount,
-      category: incomesBeta.category
+      id: incomes.id,
+      name: incomes.name,
+      amount: incomes.amount,
+      category: incomes.category
     })
-    .from(incomesBeta)
-    .where(eq(incomesBeta.familyMemberId, id))
+    .from(incomes)
+    .where(eq(incomes.familyMemberId, id))
 }
 
 // Finds the caller's own Self row in the current family. Adopts legacy rows

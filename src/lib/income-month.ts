@@ -4,7 +4,7 @@
 // dashboard cashflow Sankey so the two can never drift.
 //
 // Lifted from the previously-private getAmountForMonth / getBonusForMonth in
-// components/income/incomes-beta/incomes-beta-view.tsx, re-keyed by a "YYYY-MM"
+// components/income/timeline/timeline-view.tsx, re-keyed by a "YYYY-MM"
 // month string instead of a MonthCell. All values are GROSS — callers derive
 // CPF/net from the stored netTakeHome ratio (the Sankey and the studio share
 // that convention).

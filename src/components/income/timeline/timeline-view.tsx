@@ -69,21 +69,21 @@ import {
   DatePillEditor,
   EditablePill,
   TextPillEditor
-} from "@/components/income/incomes-beta/editable-pill"
+} from "@/components/income/timeline/editable-pill"
 import {
   activeMilestoneAt,
   FutureChangeDialog,
   priorEffectiveAmount,
   resolveEffectiveAmount,
   type FutureMilestone
-} from "@/components/income/incomes-beta/future-change-dialog"
-import { IncomeCreatorDrawer } from "@/components/income/incomes-beta/income-creator-drawer"
-import { IncomeDetailDrawer } from "@/components/income/incomes-beta/income-detail-drawer"
+} from "@/components/income/timeline/future-change-dialog"
+import { IncomeCreatorDrawer } from "@/components/income/timeline/income-creator-drawer"
+import { IncomeDetailDrawer } from "@/components/income/timeline/income-detail-drawer"
 import {
   IncomeBarPopup,
   QuickAdjustPad
-} from "@/components/income/incomes-beta/quick-adjust-pad"
-import { useOptimisticIncomes } from "@/components/income/incomes-beta/use-optimistic-incomes"
+} from "@/components/income/timeline/quick-adjust-pad"
+import { useOptimisticIncomes } from "@/components/income/timeline/use-optimistic-incomes"
 
 type Income = {
   id: string
@@ -732,14 +732,14 @@ function buildYearSegments(cells: MonthCell[]): YearSegment[] {
   return segments
 }
 
-interface IncomesBetaViewProps {
+interface TimelineViewProps {
   incomes: Income[]
   familyMembers: FamilyMember[]
 }
 
 type ViewMode = "timeline" | "cards"
 
-// In-page draft state for Action Cards. Lives in IncomesBetaView; flows down
+// In-page draft state for Action Cards. Lives in TimelineView; flows down
 // to ActionCardsView, which renders a DraftSentenceCard in place of the
 // dashed "+ New Income Rule" tile while a draft is active. Replaces the
 // IncomeCreatorDrawer modal for the cards-view "Add Income" entry points.
@@ -1020,10 +1020,10 @@ function AddIncomeStreamDialog({
   )
 }
 
-export function IncomesBetaView({
+export function TimelineView({
   incomes: rawIncomes,
   familyMembers
-}: IncomesBetaViewProps) {
+}: TimelineViewProps) {
   // Timeline Studio is the default (and currently only) view. The Action Cards
   // view is hidden for now — the toggle is removed below. `view`/`setView` stay
   // wired so re-enabling the toggle later is a one-line change.
@@ -2080,7 +2080,10 @@ export function IncomesBetaView({
         />
       )}
 
-      <BetaFooter familyMembers={familyMembers} incomeCount={incomes.length} />
+      <TimelineFooter
+        familyMembers={familyMembers}
+        incomeCount={incomes.length}
+      />
 
       <IncomeCreatorDrawer
         open={creatorOpen}
@@ -5501,7 +5504,7 @@ function ActionCardsView({
 
 /**
  * Inline draft card — the cards-view replacement for the IncomeCreatorDrawer
- * modal. Owns no state of its own; the parent IncomesBetaView holds the
+ * modal. Owns no state of its own; the parent TimelineView holds the
  * DraftIncome and decides when to persist via createIncome. Submitting
  * needs only name + amount + archetype; other fields (dates, family member,
  * CPF, category) are filled in afterwards via the resulting SentenceCard's
@@ -5931,7 +5934,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   )
 }
 
-function BetaFooter({
+function TimelineFooter({
   familyMembers,
   incomeCount
 }: {

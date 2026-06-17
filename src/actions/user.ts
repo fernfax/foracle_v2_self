@@ -9,7 +9,7 @@ import {
   expenses,
   familyMembers,
   goals,
-  incomesBeta,
+  incomes,
   policies,
   propertyAssets,
   users,
@@ -43,9 +43,9 @@ export async function getUserIncomes() {
   const { familyId } = await getCurrentUserAndFamily()
   // Canonical income source is incomes_beta (monthly-only). Synthesize the
   // legacy frequency/customMonths fields so dashboard metrics keep working.
-  const rows = await db.query.incomesBeta.findMany({
-    where: eq(incomesBeta.familyId, familyId),
-    orderBy: (incomesBeta, { desc }) => [desc(incomesBeta.createdAt)]
+  const rows = await db.query.incomes.findMany({
+    where: eq(incomes.familyId, familyId),
+    orderBy: (incomes, { desc }) => [desc(incomes.createdAt)]
   })
   return rows.map((r) => ({
     ...r,

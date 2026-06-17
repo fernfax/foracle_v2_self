@@ -11,9 +11,9 @@ import {
 import type { AuthContext } from "@/lib/auth-context"
 import { resolveCpfAge } from "@/lib/cpf-age"
 import { calculateCPF, CPF_RATES_VERSION } from "@/lib/cpf-calculator"
-import { familyMembers, incomesBeta } from "@/db/schema"
+import { familyMembers, incomes } from "@/db/schema"
 
-export type IncomeRow = typeof incomesBeta.$inferSelect
+export type IncomeRow = typeof incomes.$inferSelect
 
 export class IncomeNotFoundError extends Error {
   constructor() {
@@ -83,9 +83,9 @@ export async function listIncomes(ctx: AuthContext): Promise<
     }
   >
 > {
-  const rows = await db.query.incomesBeta.findMany({
-    where: eq(incomesBeta.familyId, ctx.familyId),
-    orderBy: [desc(incomesBeta.createdAt)],
+  const rows = await db.query.incomes.findMany({
+    where: eq(incomes.familyId, ctx.familyId),
+    orderBy: [desc(incomes.createdAt)],
     with: {
       familyMember: {
         columns: {
@@ -128,8 +128,8 @@ export async function getIncomeById(
   ctx: AuthContext,
   id: string
 ): Promise<IncomeRow | null> {
-  const row = await db.query.incomesBeta.findFirst({
-    where: and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId))
+  const row = await db.query.incomes.findFirst({
+    where: and(eq(incomes.id, id), eq(incomes.familyId, ctx.familyId))
   })
   return row ?? null
 }
@@ -150,7 +150,7 @@ export async function createIncome(
   })
 
   const [row] = await db
-    .insert(incomesBeta)
+    .insert(incomes)
     .values({
       id: nanoid(),
       userId: ctx.userId,
@@ -192,7 +192,7 @@ export async function updateIncome(
   const existing = await getIncomeById(ctx, id)
   if (!existing) throw new IncomeNotFoundError()
 
-  const update: Partial<typeof incomesBeta.$inferInsert> = {
+  const update: Partial<typeof incomes.$inferInsert> = {
     updatedAt: new Date()
   }
   if (patch.name !== undefined) update.name = patch.name
@@ -226,7 +226,7 @@ export async function updateIncome(
     update.cpfMedisaveAccount = patch.cpfMedisaveAccount ?? null
 
   // CPF is a function of (subjectToCpf, amount, age). Recompute whenever any
-  // input could have shifted — mirrors lib/actions/incomes-beta.ts behavior so
+  // input could have shifted — mirrors the incomes service behavior so
   // the action delegating to this service stays observably identical.
   const finalAmount =
     patch.amount !== undefined ? Number(patch.amount) : Number(existing.amount)
@@ -251,9 +251,9 @@ export async function updateIncome(
   update.cpfRatesVersion = cpf.cpfRatesVersion
 
   const [row] = await db
-    .update(incomesBeta)
+    .update(incomes)
     .set(update)
-    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId)))
+    .where(and(eq(incomes.id, id), eq(incomes.familyId, ctx.familyId)))
     .returning()
   return row
 }
@@ -265,9 +265,9 @@ export async function toggleIncomeActive(
   const existing = await getIncomeById(ctx, id)
   if (!existing) throw new IncomeNotFoundError()
   const [row] = await db
-    .update(incomesBeta)
+    .update(incomes)
     .set({ isActive: !existing.isActive, updatedAt: new Date() })
-    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId)))
+    .where(and(eq(incomes.id, id), eq(incomes.familyId, ctx.familyId)))
     .returning()
   return row
 }
@@ -279,6 +279,6 @@ export async function deleteIncome(
   const existing = await getIncomeById(ctx, id)
   if (!existing) throw new IncomeNotFoundError()
   await db
-    .delete(incomesBeta)
-    .where(and(eq(incomesBeta.id, id), eq(incomesBeta.familyId, ctx.familyId)))
+    .delete(incomes)
+    .where(and(eq(incomes.id, id), eq(incomes.familyId, ctx.familyId)))
 }

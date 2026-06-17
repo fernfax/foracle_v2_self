@@ -3,14 +3,14 @@ import path from "path"
 import { setupClerkTestingToken } from "@clerk/testing/playwright"
 import { expect, test } from "@playwright/test"
 
-const TARGET = "/user?tab=incomes&view=beta"
+const TARGET = "/user?tab=incomes"
 const ARTIFACTS_DIR = path.join(
   process.cwd(),
   "test-results",
-  "dogfood-incomes-beta"
+  "dogfood-timeline"
 )
 
-test.describe("Dogfood: incomes beta view", () => {
+test.describe("Dogfood: incomes timeline view", () => {
   test.beforeAll(() => {
     fs.mkdirSync(ARTIFACTS_DIR, { recursive: true })
   })
@@ -64,15 +64,12 @@ test.describe("Dogfood: incomes beta view", () => {
     const isOnSignIn = /\/sign-in/.test(finalUrl)
     const isOnOnboarding = /\/onboarding/.test(finalUrl)
     const landedOnTarget =
-      /\/user/.test(finalUrl) && finalUrl.includes("view=beta")
+      /\/user/.test(finalUrl) && finalUrl.includes("tab=incomes")
 
-    // 3) If we made it past auth, poke at the beta view
+    // 3) If we made it past auth, poke at the timeline view
     if (landedOnTarget) {
       // Visible headings
       const headings = await page.locator("h1, h2, h3").allTextContents()
-
-      // Look for incomes-beta-specific UI signals
-      const hasBetaBadge = (await page.getByText(/beta/i).count()) > 0
       const incomeRows = await page
         .locator('[data-testid="income-row"], [role="row"]')
         .count()
@@ -103,7 +100,6 @@ test.describe("Dogfood: incomes beta view", () => {
       console.log("URL:", finalUrl)
       console.log("Title:", title)
       console.log("Headings:", headings)
-      console.log("Beta badge visible:", hasBetaBadge)
       console.log("Income rows:", incomeRows)
       console.log("Add income button visible:", addIncomeVisible)
     } else {

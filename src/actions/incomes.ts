@@ -27,8 +27,8 @@ function normalizeIncomeCategory(
 /**
  * Read all incomes for the caller's family. Synthesizes `frequency: 'monthly'`
  * and `customMonths: null` on each row so the existing inline `Income` type in
- * `IncomesBetaView` (which still references those fields) continues to
- * compile. Beta rows are always monthly recurring; "one-off" income is
+ * `TimelineView` (which still references those fields) continues to
+ * compile. Income rows are always monthly recurring; "one-off" income is
  * modelled as start_date == end_date.
  */
 export async function getIncomes() {
@@ -50,7 +50,7 @@ export async function createIncome(data: {
   incomeCategory?: string
   amount: number
   // Accepted-and-ignored — the existing creator drawer still has a frequency
-  // picker. Beta is monthly-only by design (see plan), so these are dropped
+  // picker. Incomes are monthly-only by design (see plan), so these are dropped
   // here. Removing them from the drawer is a separate UI task.
   frequency?: string
   customMonths?: string | null

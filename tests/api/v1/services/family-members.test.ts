@@ -13,7 +13,7 @@ import {
   listFamilyMembersOrSelf,
   updateFamilyMember
 } from "@/lib/services/family"
-import { familyMembers, incomesBeta } from "@/db/schema"
+import { familyMembers, incomes } from "@/db/schema"
 
 import { seedUser, truncateAll } from "../../../db-helpers"
 
@@ -131,7 +131,7 @@ describe("family members (real DB)", () => {
       relationship: "Spouse"
     })
     // Seed two incomes_beta rows linked to this member.
-    await db.insert(incomesBeta).values([
+    await db.insert(incomes).values([
       {
         id: randomUUID(),
         userId: ctx.userId,
@@ -165,8 +165,8 @@ describe("family members (real DB)", () => {
 
     const remainingIncomes = await db
       .select()
-      .from(incomesBeta)
-      .where(eq(incomesBeta.familyMemberId, member.id))
+      .from(incomes)
+      .where(eq(incomes.familyMemberId, member.id))
     expect(remainingIncomes).toHaveLength(0)
   })
 

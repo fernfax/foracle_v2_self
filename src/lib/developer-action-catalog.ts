@@ -76,23 +76,23 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
     category: "Income",
     description: "List all household income sources."
   },
-  "incomes-beta.getIncomesBeta": {
+  "incomes.getIncomes": {
     category: "Income",
     description: "List incomes via the normalized beta income model."
   },
-  "incomes-beta.createIncomeBeta": {
+  "incomes.createIncome": {
     category: "Income",
     description: "Add an income using the beta income model."
   },
-  "incomes-beta.updateIncomeBeta": {
+  "incomes.updateIncome": {
     category: "Income",
     description: "Edit an income using the beta income model."
   },
-  "incomes-beta.deleteIncomeBeta": {
+  "incomes.deleteIncome": {
     category: "Income",
     description: "Delete an income using the beta income model."
   },
-  "incomes-beta.toggleIncomeBetaStatus": {
+  "incomes.toggleIncomeStatus": {
     category: "Income",
     description: "Toggle an income active/inactive (beta model)."
   },

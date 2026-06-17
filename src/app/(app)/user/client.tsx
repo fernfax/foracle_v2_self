@@ -23,7 +23,7 @@ import { CpfView } from "@/components/cpf/cpf-view"
 import { CashflowSankey } from "@/components/dashboard/cashflow-sankey"
 import { FamilyMemberGrid } from "@/components/family-members/family-member-grid"
 import { IncomeStatBand } from "@/components/income/income-stat-band"
-import { IncomesBetaView } from "@/components/income/incomes-beta/incomes-beta-view"
+import { TimelineView } from "@/components/income/timeline/timeline-view"
 import { NetWorthView } from "@/components/net-worth/net-worth-view"
 import { ExpensesClient } from "@/app/(app)/expenses/client"
 
@@ -96,9 +96,9 @@ function useHydrated() {
 }
 
 interface UserHomepageClientProps {
-  // The Beta view is wired to its own `incomes_beta` table. Empty until the
+  // The Timeline view is wired to its own `incomes_beta` table. Empty until the
   // user creates rows via the new beta CRUD flow.
-  initialIncomesBeta: Income[]
+  initialIncomes: Income[]
   initialFamilyMembers: FamilyMember[]
   initialCpfData: CpfByFamilyMember[]
   initialCurrentHoldings: CurrentHolding[]
@@ -114,7 +114,7 @@ interface UserHomepageClientProps {
 }
 
 export function UserHomepageClient({
-  initialIncomesBeta,
+  initialIncomes,
   initialFamilyMembers,
   initialCpfData,
   initialCurrentHoldings,
@@ -179,7 +179,7 @@ export function UserHomepageClient({
           className="w-full">
           <TabsContent value="overview" className="mt-4">
             <CashflowSankey
-              incomes={initialIncomesBeta}
+              incomes={initialIncomes}
               expenses={initialExpenses}
               holdings={initialCurrentHoldings}
               investments={initialInvestments}
@@ -194,10 +194,10 @@ export function UserHomepageClient({
             <IncomeStatBand
               grossIncome={householdSummary.grossIncome}
               netIncome={householdSummary.netIncome}
-              incomes={initialIncomesBeta}
+              incomes={initialIncomes}
             />
-            <IncomesBetaView
-              incomes={initialIncomesBeta}
+            <TimelineView
+              incomes={initialIncomes}
               familyMembers={initialFamilyMembers}
             />
           </TabsContent>
@@ -206,18 +206,18 @@ export function UserHomepageClient({
             <ExpensesClient
               embedded
               initialExpenses={initialExpenses}
-              initialIncomes={initialIncomesBeta}
+              initialIncomes={initialIncomes}
               initialHoldings={initialCurrentHoldings}
               initialInvestments={initialInvestments}
             />
           </TabsContent>
 
           <TabsContent value="cpf" className="mt-4">
-            <CpfView cpfData={initialCpfData} incomes={initialIncomesBeta} />
+            <CpfView cpfData={initialCpfData} incomes={initialIncomes} />
             <div className="mt-6">
               <CpfProjectionGraph
                 cpfData={initialCpfData}
-                incomes={initialIncomesBeta}
+                incomes={initialIncomes}
                 propertyAssets={initialPropertyAssets}
               />
             </div>

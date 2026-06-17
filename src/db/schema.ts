@@ -611,13 +611,13 @@ export const familyMembersRelations = relations(
   })
 )
 
-// Parallel incomes table that powers the Beta view. Same column set as
+// Parallel incomes table that powers the Timeline view. Same column set as
 // `incomes` minus `frequency` / `custom_months` (beta assumes monthly
 // recurring), and with a simpler `income_category` discriminator
 // (past | current | future). CPF computed fields follow the same write rule
 // as `incomes`: populated server-side via `calculateCPF` when
 // subject_to_cpf = true; cleared to null otherwise.
-export const incomesBeta = pgTable("incomes_beta", {
+export const incomes = pgTable("incomes", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 })
     .notNull()
@@ -674,17 +674,17 @@ export const incomesBeta = pgTable("incomes_beta", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 })
 
-export const incomesBetaRelations = relations(incomesBeta, ({ one }) => ({
+export const incomesRelations = relations(incomes, ({ one }) => ({
   user: one(users, {
-    fields: [incomesBeta.userId],
+    fields: [incomes.userId],
     references: [users.id]
   }),
   family: one(families, {
-    fields: [incomesBeta.familyId],
+    fields: [incomes.familyId],
     references: [families.id]
   }),
   familyMember: one(familyMembers, {
-    fields: [incomesBeta.familyMemberId],
+    fields: [incomes.familyMemberId],
     references: [familyMembers.id]
   })
 }))

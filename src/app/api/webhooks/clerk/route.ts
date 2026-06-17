@@ -17,7 +17,7 @@ import {
   familyMembers,
   goals,
   holdingAmountHistory,
-  incomesBeta,
+  incomes,
   insuranceProviders,
   investmentPolicies,
   policies,
@@ -46,7 +46,7 @@ const FAMILY_SHARED_TABLES = [
   holdingAmountHistory,
   investmentPolicies,
   budgetShifts,
-  incomesBeta,
+  incomes,
   familyMembers
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ] as any[]

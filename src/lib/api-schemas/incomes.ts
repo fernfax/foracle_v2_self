@@ -13,7 +13,7 @@ const positiveMoneyString = moneyString.refine(
   { message: "Amount must be greater than 0" }
 )
 
-// Beta taxonomy: past / current / future. The action layer still receives the
+// Income taxonomy: past / current / future. The action layer still receives the
 // legacy "current-recurring" / "future-recurring" values from the existing UI
 // and normalizes them. For the v1 API we expose only the new taxonomy.
 const incomeCategoryEnum = z.enum(["past", "current", "future"])

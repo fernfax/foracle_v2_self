@@ -24,7 +24,7 @@ export default async function UserHomepage() {
   }
 
   const [
-    incomesBeta,
+    incomes,
     familyMembers,
     cpfData,
     currentHoldings,
@@ -52,7 +52,7 @@ export default async function UserHomepage() {
   )
 
   const householdSummary = computeHouseholdSummary(
-    incomesBeta,
+    incomes,
     expenses,
     currentHoldings,
     visibleFamilyMembers
@@ -69,13 +69,13 @@ export default async function UserHomepage() {
     cpf: cpfData.map((m) => ({
       id: m.familyMemberId,
       name: m.familyMemberName,
-      balance: cpfBalanceForMember(m.familyMemberId, incomesBeta).total
+      balance: cpfBalanceForMember(m.familyMemberId, incomes).total
     }))
   })
 
   return (
     <UserHomepageClient
-      initialIncomesBeta={incomesBeta}
+      initialIncomes={incomes}
       initialFamilyMembers={visibleFamilyMembers}
       initialCpfData={cpfData}
       initialCurrentHoldings={currentHoldings}

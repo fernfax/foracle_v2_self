@@ -11,7 +11,7 @@ import {
   toggleIncomeActive,
   updateIncome
 } from "@/lib/services/incomes"
-import { incomesBeta } from "@/db/schema"
+import { incomes } from "@/db/schema"
 
 import { seedFamilyMember, seedUser, truncateAll } from "../../../db-helpers"
 
@@ -293,8 +293,8 @@ describe("deleteIncome (real DB)", () => {
 
     const found = await db
       .select()
-      .from(incomesBeta)
-      .where(eq(incomesBeta.id, created.id))
+      .from(incomes)
+      .where(eq(incomes.id, created.id))
     expect(found).toHaveLength(0)
   })
 

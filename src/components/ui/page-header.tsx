@@ -2,7 +2,7 @@ import { ReactNode } from "react"
 
 interface PageHeaderProps {
   title: string
-  /** Optional right-side controls (e.g. <Button>Beta View</Button>). */
+  /** Optional right-side controls (e.g. <Button>Timeline View</Button>). */
   actions?: ReactNode
   /** Optional tab strip rendered below the title row. */
   tabs?: ReactNode

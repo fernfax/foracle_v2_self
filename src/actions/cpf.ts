@@ -12,7 +12,7 @@ import {
 } from "@/lib/cpf-calculator"
 import { effectiveIncomeCategory } from "@/lib/income-category"
 import { bonusDollarsForYear } from "@/lib/income-month"
-import { familyMembers, incomesBeta } from "@/db/schema"
+import { familyMembers, incomes } from "@/db/schema"
 
 export interface CpfByFamilyMember {
   familyMemberId: string
@@ -70,7 +70,7 @@ function calculateAge(dateOfBirth: Date): number {
 /**
  * Get aggregated CPF data grouped by family member.
  *
- * Reads the `incomes_beta` table (the canonical income source). Beta rows are
+ * Reads the `incomes_beta` table (the canonical income source). Income rows are
  * monthly by design, so amounts are used as-is. Only income that is *currently*
  * active counts toward monthly CPF: subject-to-CPF, active, and with an
  * effective category of "current" (a future income whose start date has already
@@ -93,8 +93,8 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
   // Fetch all incomes in this family (canonical incomes_beta table)
   const allIncomes = await db
     .select()
-    .from(incomesBeta)
-    .where(eq(incomesBeta.familyId, familyId))
+    .from(incomes)
+    .where(eq(incomes.familyId, familyId))
 
   const cpfData: CpfByFamilyMember[] = []
 
@@ -158,7 +158,7 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
     )
 
     for (const income of memberIncomes) {
-      // Beta incomes are monthly by design — use the amount directly.
+      // Incomes are monthly by design — use the amount directly.
       const monthlyGross = parseFloat(income.amount)
 
       // Bonus dollars attracting CPF this year. Recurring entries are

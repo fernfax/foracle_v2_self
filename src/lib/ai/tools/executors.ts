@@ -24,7 +24,7 @@ import {
   expenses,
   expenseSubcategories,
   familyMembers,
-  incomesBeta,
+  incomes,
   policies,
   propertyAssets,
   vehicleAssets
@@ -654,10 +654,8 @@ async function executeGetIncomeSummary(
   const userIncomes = asMonthly(
     await db
       .select()
-      .from(incomesBeta)
-      .where(
-        and(eq(incomesBeta.familyId, familyId), eq(incomesBeta.isActive, true))
-      )
+      .from(incomes)
+      .where(and(eq(incomes.familyId, familyId), eq(incomes.isActive, true)))
   )
 
   // Get family members to map IDs to names
@@ -1111,10 +1109,8 @@ async function executeGetFamilySummary(
   const userIncomes = asMonthly(
     await db
       .select()
-      .from(incomesBeta)
-      .where(
-        and(eq(incomesBeta.familyId, familyId), eq(incomesBeta.isActive, true))
-      )
+      .from(incomes)
+      .where(and(eq(incomes.familyId, familyId), eq(incomes.isActive, true)))
   )
 
   // Build family member summaries
@@ -1452,10 +1448,8 @@ async function executeGetBalanceSummary(
   const userIncomes = asMonthly(
     await db
       .select()
-      .from(incomesBeta)
-      .where(
-        and(eq(incomesBeta.familyId, familyId), eq(incomesBeta.isActive, true))
-      )
+      .from(incomes)
+      .where(and(eq(incomes.familyId, familyId), eq(incomes.isActive, true)))
   )
 
   const userExpenses = await db
