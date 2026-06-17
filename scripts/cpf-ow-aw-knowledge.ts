@@ -5,7 +5,7 @@
  * Explains the difference between OW and AW, and how to calculate
  * the Additional Wage ceiling for CPF contributions.
  */
-import { ingestToKnowledgeBase } from "../lib/vectors"
+import { ingestToKnowledgeBase } from "@/lib/vectors"
 
 require("dotenv").config({ path: ".env.local" })
 

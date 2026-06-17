@@ -15,7 +15,7 @@
 
 // Load environment variables FIRST (before any other imports)
 // Now import modules that depend on env vars
-import { ingestToKnowledgeBase, listKnowledgeBaseDocs } from "../lib/vectors"
+import { ingestToKnowledgeBase, listKnowledgeBaseDocs } from "@/lib/vectors"
 
 require("dotenv").config({ path: ".env.local" })
 

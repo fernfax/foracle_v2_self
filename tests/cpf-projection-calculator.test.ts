@@ -1,6 +1,6 @@
+import type { CpfByFamilyMember } from "@/actions/cpf"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { CpfByFamilyMember } from "@/lib/actions/cpf"
 import {
   calculateCpfProjection,
   extractCpfProjectionInputs,

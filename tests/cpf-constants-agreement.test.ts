@@ -1,4 +1,15 @@
 import { readFileSync } from "node:fs"
+import {
+  ANNUAL_WAGE_CEILING,
+  CPF_ALLOCATION_BAND_ORDER,
+  CPF_ALLOCATION_RATES,
+  CPF_ANNUAL_LIMIT,
+  CPF_EFFECTIVE_FROM,
+  CPF_RATE_BAND_LABELS,
+  CPF_RATE_BAND_ORDER,
+  CPF_RATES,
+  OW_CEILING
+} from "@/configs/cpf-constants"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -11,17 +22,6 @@ import {
   getCPFRatesByAge,
   OW_CEILING_AMOUNT
 } from "@/lib/cpf-calculator"
-import {
-  ANNUAL_WAGE_CEILING,
-  CPF_ALLOCATION_BAND_ORDER,
-  CPF_ALLOCATION_RATES,
-  CPF_ANNUAL_LIMIT,
-  CPF_EFFECTIVE_FROM,
-  CPF_RATE_BAND_LABELS,
-  CPF_RATE_BAND_ORDER,
-  CPF_RATES,
-  OW_CEILING
-} from "@/lib/cpf-constants"
 
 // The CPF audit found the engine on stale 2025 rates while the AI knowledge
 // base text already had 2026 — three copies of the same numbers, drifting.

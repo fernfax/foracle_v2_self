@@ -1,0 +1,42 @@
+export {
+  ToolRegistry,
+  getToolRegistry,
+  resetToolRegistry,
+  MonthParamSchema,
+  FamilySummaryParamSchema,
+  BalanceSummaryParamSchema,
+  HypotheticalItemSchema,
+  type ToolName,
+  type ToolDefinition,
+  type MonthParams,
+  type FamilySummaryParams,
+  type BalanceSummaryParams,
+  type HypotheticalItem
+} from "@/lib/ai/tools/registry"
+
+export {
+  executeTool,
+  getAuditLog,
+  clearAuditLog,
+  type ToolExecutionResult,
+  type AuditRecord,
+  type IncomeSummaryResult,
+  type ExpensesSummaryResult,
+  type FamilySummaryResult,
+  type BalanceSummaryResult,
+  type IncomeSourceItem,
+  type CpfBreakdown,
+  type ExpenseCategoryBreakdown,
+  type RecurringExpenseItem,
+  type ExpenseCategoryInfo,
+  type FamilyMemberSummary,
+  type IncomeChangeSignal,
+  type MonthlyBalanceProjection,
+  type HypotheticalImpact,
+  type AffordabilityAnalysis,
+  type ConstraintsEvaluation,
+  type ScenarioSummary,
+  type SafetyStatus,
+  type SafetyAssessment,
+  type SafePurchaseRecommendation
+} from "@/lib/ai/tools/executors"

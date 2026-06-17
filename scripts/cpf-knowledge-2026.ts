@@ -5,7 +5,7 @@
  * Adds comprehensive CPF wage ceiling and contribution rate information
  * based on official CPF Board updates effective 1 January 2026.
  */
-import { deleteFromKnowledgeBase, ingestToKnowledgeBase } from "../lib/vectors"
+import { deleteFromKnowledgeBase, ingestToKnowledgeBase } from "@/lib/vectors"
 
 require("dotenv").config({ path: ".env.local" })
 
