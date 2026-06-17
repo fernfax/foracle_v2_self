@@ -1,5 +1,6 @@
 import fs from "fs"
 import path from "path"
+import { setupClerkTestingToken } from "@clerk/testing/playwright"
 import { expect, test } from "@playwright/test"
 
 const TARGET = "/user?tab=incomes&view=beta"
@@ -41,6 +42,10 @@ test.describe("Dogfood: incomes beta view", () => {
         })
       }
     })
+
+    // Apply the Clerk testing token so the dev-instance handshake accepts the
+    // saved session instead of bouncing to sign-in.
+    await setupClerkTestingToken({ page })
 
     // 1) Navigate
     const response = await page.goto(TARGET, { waitUntil: "domcontentloaded" })
