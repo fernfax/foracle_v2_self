@@ -31,21 +31,24 @@ PSQL="/Applications/Postgres.app/Contents/Versions/17/bin/psql"
 URL="postgresql://evanlee@localhost:5432/foracle_v2_self"
 B="$HOME/.claude/skills/gstack/browse/dist/browse"
 
-# 1. Reset (wipes all family data; keeps users/families/Self row)
-"$PSQL" "$URL" -f src/db/manual-migrations/qa/_reset_family.sql
+# 1. Reset + seed the persona — SCRIPTS REMOVED (see note below). Enter the
+#    persona's data through the app, or restore a script from git history.
 
-# 2. Seed the persona (renames Self, inserts the dataset)
-"$PSQL" "$URL" -f src/db/manual-migrations/qa/persona_NN_<name>.sql
-
-# 3. Authenticate the browse session (import Clerk cookies from real Chrome)
+# 2. Authenticate the browse session (import Clerk cookies from real Chrome)
 "$B" goto http://localhost:3000                          # land on localhost first
 "$B" cookie-import-browser chrome --domain localhost     # re-run after any daemon restart
 "$B" goto http://localhost:3000/overview                 # expect dashboard, NOT /sign-in
 ```
 
-The reset/seed scripts print row counts at the end — confirm they match before browsing. The Clerk **display name in the sidebar stays "Evan Lee"** for every persona (it's the Clerk account identity, independent of the seeded household) — this is expected, not a bug; judge each persona by its _data_, not the account name.
+> **Note — persona seed scripts removed.** The `_reset_family.sql` / `persona_NN_*.sql`
+> seed scripts were squashed away (see `src/db/manual-migrations/0001_baseline.sql`,
+> which now holds only the from-scratch schema). The persona _scenarios_ below are
+> still the coverage matrix, but you now reproduce a persona's data by hand through
+> the app, or by restoring a specific seed file from git history
+> (`git log -- src/db/manual-migrations/qa/`). For authenticated automated checks,
+> use the Playwright setup in `tests/e2e/` (Clerk auth via `auth.setup.ts`).
 
-**Seed files (D2):** `src/db/manual-migrations/qa/_reset_family.sql` + `persona_01_blank_slate` · `02_fresh_grad` · `03_dink_couple` · `04_young_family` · `05_sandwich_gen` · `06_pre_retiree` · `07_hnw_investor` · `08_freelancer` · `09_over_budgeter` · `10_power_user`.
+The Clerk **display name in the sidebar stays "Evan Lee"** for every persona (it's the Clerk account identity, independent of the seeded household) — this is expected, not a bug; judge each persona by its _data_, not the account name.
 
 ---
 
@@ -358,7 +361,7 @@ Fully static. **Action:** open → 4 step images load from `public/guide/*.png`;
 The payoff: re-run this identical suite against Vercel and diff each page's behavior against the baseline reports.
 
 1. **Point the harness at Vercel.** Replace `http://localhost:3000` with the Vercel URL throughout. The browse auth flow is the same (log into the Vercel URL in real Chrome, `cookie-import-browser chrome --domain <vercel-host>`).
-2. **Seed the Vercel DB once per persona.** Run `_reset_family.sql` + `persona_NN_*.sql` against the Vercel/Postgres connection string. Confirm the **Self family-member id** still matches `AfJc5H4SGvgCH7RBO35cH` on the migrated DB; if the migration regenerated ids, update the `\set SELF_FM` value in `_reset_family.sql` and each persona file (one line each).
+2. **Provision the Vercel DB schema.** Apply `src/db/manual-migrations/0001_baseline.sql` (or `npm run db:push`) to the Vercel/Postgres connection string. The per-persona seed scripts have been removed — recreate a persona's data through the app, or restore a seed file from git history if you need one.
 3. **Verify env parity first.** `DATABASE_URL`, Clerk publishable/secret keys (and that the Clerk instance's allowed origins include the Vercel host — the JWT `azp` check is origin-bound), `OPENAI_API_KEY` (for `/assistant`). A Clerk origin mismatch will bounce every authed page to `/sign-in` — check this before blaming the app.
 4. **Walk each persona** against Part 3, recording results in a parallel `qa-reports/migration-vercel/` set.
 5. **Diff:** any page whose behavior, numbers, or empty/populated state differs from the baseline report = a migration regression. Pay special attention to: server actions / `revalidatePath` behavior (Vercel's caching differs from Render), the `force-dynamic` pages (`/overview`, `/budget`, `/user`), date/timezone math (Asia/Singapore "today"), and the in-memory assistant threads (serverless cold starts lose them faster).
@@ -371,7 +374,7 @@ Each `qa-report-persona-NN-*.md` uses:
 
 ```
 # QA — Persona NN: <Name> (<archetype>) — <date>
-Seed: persona_NN_<name>.sql · Health: NN/100
+Data setup: <how the persona's data was created> · Health: NN/100
 
 ## Coverage
 | Page | Result | Notes |
@@ -423,18 +426,19 @@ To walk the actual wizard UI again against the dev DB, reset this household and 
 deletion:
 
 ```bash
-# Wipes this family's data AND flips onboarding_completed back to false:
+# Flip onboarding_completed back to false (the _reset_onboarding.sql helper was
+# removed in the migration squash). Replace <clerk-user-id>:
 /Applications/Postgres.app/Contents/Versions/17/bin/psql \
   postgresql://evanlee@localhost:5432/foracle_v2_self \
-  -f src/db/manual-migrations/qa/_reset_onboarding.sql
+  -c "update users set onboarding_completed = false where id = '<clerk-user-id>'"
 
 # Then (authenticated) visit the real route — now reachable again:
 #   http://localhost:3000/onboarding
 # Walk all steps, Complete Setup, and confirm /overview shows what you entered.
 ```
 
-`_reset_onboarding.sql` reuses `_reset_family.sql` (preserves the users/families/Self rows), so the
-stable Self id survives and the persona seeds keep working. Re-run as often as needed.
+To also clear the household's existing data first, delete it through the app (the
+bundled reset script was removed). Re-run as needed.
 
 **Expected-amounts checklist after a manual run** (`/user` and `/overview`):
 
@@ -444,8 +448,10 @@ stable Self id survives and the persona seeds keep working. Re-run as often as n
 - Net worth / liquid holdings == sum of the holdings entered.
 - `onboarding_completed` is `true` again and `/onboarding` redirects to `/overview`.
 
-### Deferred — browser E2E
+### Browser E2E
 
-A Playwright spec that drives the wizard UI (navigation/validation/redirect) is not yet wired; it
-needs `@clerk/testing` + a dedicated `+clerk_test` user and would run `_reset_onboarding` in setup.
-Until then, 6A guards the numbers and 6B covers the UI manually.
+Clerk auth is now wired for Playwright: `tests/e2e/auth.setup.ts` signs in a dedicated `+clerk_test`
+user via a Backend-API sign-in token, and the `authenticated` project reuses the saved session (see
+`tests/e2e/dogfood-incomes-timeline.spec.ts`). A dedicated onboarding-wizard spec
+(navigation/validation/redirect) still isn't written — 6A guards the numbers and 6B covers the UI
+manually for now.
