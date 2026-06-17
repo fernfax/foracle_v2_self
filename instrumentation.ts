@@ -23,27 +23,32 @@
  *   - https://nodejs.org/api/process.html#event-warning
  *   - https://github.com/porsager/postgres/issues/836 (same root cause)
  */
+import { isDevelopment } from "@/lib/deployment-env"
+
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  // Only filter in dev — in prod servers never sleep, so the warning
+  if (process.env.NEXT_RUNTIME !== "nodejs") return
+  // Only filter in local dev — deployed servers never sleep, so the warning
   // would only ever fire from a real bug we'd want to see.
-  if (process.env.NODE_ENV === "production") return;
+  if (!isDevelopment) return
 
   // NOTE: a `process.on("warning", …)` listener does NOT suppress Node's default
   // stderr printer — verified on Node 24, both fire — so the older listener
   // approach silently stopped working. Intercept `process.emitWarning` itself and
   // drop ONLY this one warning name; every other warning (deprecation,
   // experimental, genuine bugs) still surfaces through the untouched original.
-  const originalEmitWarning = process.emitWarning.bind(process);
+  const originalEmitWarning = process.emitWarning.bind(process)
   process.emitWarning = ((warning: unknown, ...args: unknown[]) => {
-    const opt = args[0];
+    const opt = args[0]
     const type =
-      typeof opt === "string" ? opt : (opt as { type?: string } | undefined)?.type;
+      typeof opt === "string"
+        ? opt
+        : (opt as { type?: string } | undefined)?.type
     const name =
       typeof warning === "object" && warning !== null
         ? (warning as { name?: string }).name
-        : undefined;
-    if (type === "TimeoutNegativeWarning" || name === "TimeoutNegativeWarning") return;
-    return (originalEmitWarning as (...a: unknown[]) => void)(warning, ...args);
-  }) as typeof process.emitWarning;
+        : undefined
+    if (type === "TimeoutNegativeWarning" || name === "TimeoutNegativeWarning")
+      return
+    return (originalEmitWarning as (...a: unknown[]) => void)(warning, ...args)
+  }) as typeof process.emitWarning
 }

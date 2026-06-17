@@ -58,7 +58,7 @@ CREATE DATABASE foracle;
 Copy the example environment file and update it with your credentials:
 
 ```bash
-cp .env.local.example .env.local
+cp .env.template .env.local
 ```
 
 Edit `.env.local` and update the following variables:

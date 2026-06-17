@@ -1,56 +1,58 @@
-"use client";
+"use client"
 
-import { UserButton } from "@clerk/nextjs";
-import { Code2, Moon, Palette, Sun, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
-import { useCallback, useEffect, useState } from "react";
-import { FamilyAdminPanel } from "@/components/family-members/family-admin-panel";
+import { useCallback, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { UserButton } from "@clerk/nextjs"
+import { Code2, Moon, Palette, Sun, Users } from "lucide-react"
+import { useTheme } from "next-themes"
+
 import {
   getFamilyAdminData,
-  type FamilyAdminData,
-} from "@/lib/actions/family-invitations";
-import { BackgroundDecorPicker } from "@/components/user/background-decor-picker";
-import { ThemePicker } from "@/components/user/theme-picker";
-import { applyThemeWithTransition } from "@/lib/theme-transition";
+  type FamilyAdminData
+} from "@/lib/actions/family-invitations"
+import { isDevelopment } from "@/lib/deployment-env"
+import { applyThemeWithTransition } from "@/lib/theme-transition"
+import { FamilyAdminPanel } from "@/components/family-members/family-admin-panel"
+import { BackgroundDecorPicker } from "@/components/user/background-decor-picker"
+import { ThemePicker } from "@/components/user/theme-picker"
 
-type ClerkUserButtonProps = React.ComponentProps<typeof UserButton>;
+type ClerkUserButtonProps = React.ComponentProps<typeof UserButton>
 
-const IS_DEV = process.env.NODE_ENV === "development";
+const IS_DEV = isDevelopment
 
 function FamilyProfilePage() {
-  const [data, setData] = useState<FamilyAdminData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<FamilyAdminData | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     try {
-      const fresh = await getFamilyAdminData();
-      setData(fresh);
-      setError(null);
+      const fresh = await getFamilyAdminData()
+      setData(fresh)
+      setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load family data");
+      setError(
+        err instanceof Error ? err.message : "Could not load family data"
+      )
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    refresh()
+  }, [refresh])
 
   return (
     <div className="px-1 py-2">
-      <h2 className="text-lg font-semibold mb-1">Family</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <h2 className="mb-1 text-lg font-semibold">Family</h2>
+      <p className="text-muted-foreground mb-4 text-sm">
         {data?.isMaster
           ? "Invite family members to share this Foracle account."
           : "Pending invitations and family admin."}
       </p>
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-destructive text-sm">{error}</p>}
       {!error && !data && (
         <div className="space-y-3" aria-busy="true">
-          <div className="h-24 animate-pulse rounded-lg bg-muted" />
-          <div className="h-16 animate-pulse rounded-lg bg-muted" />
+          <div className="bg-muted h-24 animate-pulse rounded-lg" />
+          <div className="bg-muted h-16 animate-pulse rounded-lg" />
         </div>
       )}
       {data && (
@@ -61,43 +63,41 @@ function FamilyProfilePage() {
         />
       )}
     </div>
-  );
+  )
 }
 
 export function ClerkUserButton(props: ClerkUserButtonProps) {
-  const [mounted, setMounted] = useState(false);
-  const router = useRouter();
-  const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const [mounted, setMounted] = useState(false)
+  const router = useRouter()
+  const { resolvedTheme, setTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   if (!mounted) {
-    return <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />;
+    return <div className="bg-muted h-8 w-8 animate-pulse rounded-full" />
   }
 
   const toggleTheme = () =>
-    applyThemeWithTransition(() => setTheme(isDark ? "light" : "dark"));
+    applyThemeWithTransition(() => setTheme(isDark ? "light" : "dark"))
 
   return (
     <UserButton afterSignOutUrl="/" {...props}>
       <UserButton.UserProfilePage
         label="Family"
         url="family"
-        labelIcon={<Users className="h-4 w-4" />}
-      >
+        labelIcon={<Users className="h-4 w-4" />}>
         <FamilyProfilePage />
       </UserButton.UserProfilePage>
       <UserButton.UserProfilePage
         label="Display"
         url="display"
-        labelIcon={<Palette className="h-4 w-4" />}
-      >
+        labelIcon={<Palette className="h-4 w-4" />}>
         <div className="px-1 py-2">
-          <h2 className="text-lg font-semibold mb-1">Display</h2>
-          <p className="text-sm text-muted-foreground mb-4">
+          <h2 className="mb-1 text-lg font-semibold">Display</h2>
+          <p className="text-muted-foreground mb-4 text-sm">
             Set your color theme and the decorative wallpaper behind the app.
           </p>
           <div className="space-y-4">
@@ -126,5 +126,5 @@ export function ClerkUserButton(props: ClerkUserButtonProps) {
         )}
       </UserButton.MenuItems>
     </UserButton>
-  );
+  )
 }

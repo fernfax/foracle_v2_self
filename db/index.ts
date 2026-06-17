@@ -1,9 +1,12 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
+
+import { isDevelopment } from "@/lib/deployment-env"
+
+import * as schema from "./schema"
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set");
+  throw new Error("DATABASE_URL environment variable is not set")
 }
 
 // Cache the client across HMR boundaries in dev — Next/Turbopack re-evals
@@ -16,7 +19,7 @@ if (!process.env.DATABASE_URL) {
 // next query stumbles on them.
 declare global {
   // eslint-disable-next-line no-var
-  var __postgresClient: ReturnType<typeof postgres> | undefined;
+  var __postgresClient: ReturnType<typeof postgres> | undefined
 }
 
 const client =
@@ -24,11 +27,11 @@ const client =
   postgres(process.env.DATABASE_URL, {
     max: 10,
     idle_timeout: 30,
-    max_lifetime: 60 * 30,
-  });
+    max_lifetime: 60 * 30
+  })
 
-if (process.env.NODE_ENV !== "production") {
-  global.__postgresClient = client;
+if (isDevelopment) {
+  global.__postgresClient = client
 }
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(client, { schema })

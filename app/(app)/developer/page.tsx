@@ -1,25 +1,27 @@
-import { notFound } from "next/navigation";
-import { DEVELOPER_TABLES } from "@/lib/developer-tables";
-import { DeveloperTableAccordion } from "@/components/developer/developer-table-accordion";
-import { DeveloperNav } from "@/components/developer/developer-nav";
+import { notFound } from "next/navigation"
 
-export const dynamic = "force-dynamic";
+import { DEPLOYMENT_ENVIRONMENT, isDevelopment } from "@/lib/deployment-env"
+import { DEVELOPER_TABLES } from "@/lib/developer-tables"
+import { DeveloperNav } from "@/components/developer/developer-nav"
+import { DeveloperTableAccordion } from "@/components/developer/developer-table-accordion"
+
+export const dynamic = "force-dynamic"
 
 export default function DeveloperPage() {
-  if (process.env.NODE_ENV !== "development") {
-    notFound();
+  if (!isDevelopment) {
+    notFound()
   }
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <header className="mb-4">
-        <h1 className="font-display text-2xl font-semibold text-foreground">
+        <h1 className="font-display text-foreground text-2xl font-semibold">
           Developer Mode
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Inspect database tables and your data. Read-only. Rows are scoped to
-          your account and capped at 100 per table. Available only in development
-          (NODE_ENV={process.env.NODE_ENV}).
+          your account and capped at 100 per table. Available only in
+          development (environment={DEPLOYMENT_ENVIRONMENT}).
         </p>
       </header>
 
@@ -31,5 +33,5 @@ export default function DeveloperPage() {
         ))}
       </div>
     </div>
-  );
+  )
 }

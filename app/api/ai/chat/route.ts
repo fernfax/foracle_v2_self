@@ -1,40 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getOrchestrator } from "@/lib/ai/orchestrator";
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@clerk/nextjs/server"
+
+import { getSinglishMode } from "@/lib/actions/singlish-mode"
+import { getOrchestrator } from "@/lib/ai/orchestrator"
 import {
   checkRateLimits,
-  recordMessage,
   getUserQuotaInfo,
-} from "@/lib/ai/rate-limiter";
+  recordMessage
+} from "@/lib/ai/rate-limiter"
 import {
+  addMessageToThread,
   createThread,
   getThread,
-  addMessageToThread,
-  updateThreadResponseId,
-} from "@/lib/ai/threads";
-import { getSinglishMode } from "@/lib/actions/singlish-mode";
+  updateThreadResponseId
+} from "@/lib/ai/threads"
 
 // =============================================================================
 // Types
 // =============================================================================
 
 interface ChatRequest {
-  message: string;
-  threadId?: string;
+  message: string
+  threadId?: string
 }
 
 interface ChatResponse {
-  success: boolean;
-  response?: string;
-  threadId?: string;
-  toolsUsed?: string[];
+  success: boolean
+  response?: string
+  threadId?: string
+  toolsUsed?: string[]
   quota?: {
-    used: number;
-    limit: number;
-    resetAt: string;
-  };
-  error?: string;
-  errorCode?: string;
+    used: number
+    limit: number
+    resetAt: string
+  }
+  error?: string
+  errorCode?: string
 }
 
 // =============================================================================
@@ -50,37 +51,37 @@ function createErrorResponse(
     {
       success: false,
       error: message,
-      errorCode: code,
+      errorCode: code
     },
     { status }
-  );
+  )
 }
 
 function formatUserFriendlyError(error: unknown): string {
   if (error instanceof Error) {
-    const msg = error.message.toLowerCase();
+    const msg = error.message.toLowerCase()
 
     // Tool execution errors
     if (msg.includes("unauthorized")) {
-      return "I couldn't access your financial data. Please try refreshing the page.";
+      return "I couldn't access your financial data. Please try refreshing the page."
     }
     if (msg.includes("database") || msg.includes("connection")) {
-      return "I'm having trouble fetching your data right now. Please try again in a moment.";
+      return "I'm having trouble fetching your data right now. Please try again in a moment."
     }
     if (msg.includes("timeout")) {
-      return "The request took too long. Please try a simpler question or try again.";
+      return "The request took too long. Please try a simpler question or try again."
     }
 
     // OpenAI errors
     if (msg.includes("rate limit") || msg.includes("429")) {
-      return "I'm receiving too many requests right now. Please wait a moment and try again.";
+      return "I'm receiving too many requests right now. Please wait a moment and try again."
     }
     if (msg.includes("api key") || msg.includes("authentication")) {
-      return "There's a configuration issue. Please contact support.";
+      return "There's a configuration issue. Please contact support."
     }
   }
 
-  return "Something went wrong. Please try again or rephrase your question.";
+  return "Something went wrong. Please try again or rephrase your question."
 }
 
 // The AI assistant is not yet production-ready: threads, conversation history and
@@ -88,47 +89,55 @@ function formatUserFriendlyError(error: unknown): string {
 // rate-limiter.ts), so on an auto-deploy / multi-instance host they reset on every
 // restart and the cost guard is bypassable. The feature is also unlinked from nav.
 // Keep the (paid) endpoint disabled in production until it is backed by a durable
-// store; opt in explicitly with ENABLE_AI_ASSISTANT=true. Dev is always enabled.
+// store. Opt in explicitly per environment with ENABLE_AI_ASSISTANT=true
+// (including local dev — set it in .env.local). Deliberate, not inferred from NODE_ENV.
 function aiAssistantEnabled(): boolean {
-  return (
-    process.env.ENABLE_AI_ASSISTANT === "true" ||
-    process.env.NODE_ENV === "development"
-  );
+  return process.env.ENABLE_AI_ASSISTANT === "true"
 }
 
 // =============================================================================
 // POST Handler
 // =============================================================================
 
-export async function POST(request: NextRequest): Promise<NextResponse<ChatResponse>> {
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<ChatResponse>> {
   try {
     if (!aiAssistantEnabled()) {
       return createErrorResponse(
         "The assistant is not available yet.",
         "FEATURE_DISABLED",
         503
-      );
+      )
     }
 
     // Authenticate user
-    const { userId } = await auth();
+    const { userId } = await auth()
     if (!userId) {
-      return createErrorResponse("Please sign in to use the assistant.", "UNAUTHORIZED", 401);
+      return createErrorResponse(
+        "Please sign in to use the assistant.",
+        "UNAUTHORIZED",
+        401
+      )
     }
 
     // Parse request body
-    let body: ChatRequest;
+    let body: ChatRequest
     try {
-      body = await request.json();
+      body = await request.json()
     } catch {
-      return createErrorResponse("Invalid request format.", "INVALID_REQUEST", 400);
+      return createErrorResponse(
+        "Invalid request format.",
+        "INVALID_REQUEST",
+        400
+      )
     }
 
-    const { message, threadId } = body;
+    const { message, threadId } = body
 
     // Validate message
     if (!message || typeof message !== "string") {
-      return createErrorResponse("Message is required.", "MISSING_MESSAGE", 400);
+      return createErrorResponse("Message is required.", "MISSING_MESSAGE", 400)
     }
 
     if (message.length > 2000) {
@@ -136,19 +145,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
         "Message is too long. Please keep it under 2000 characters.",
         "MESSAGE_TOO_LONG",
         400
-      );
+      )
     }
 
     // Get or create thread
-    let thread = threadId ? await getThread(threadId) : null;
+    let thread = threadId ? await getThread(threadId) : null
     if (!thread) {
-      thread = await createThread(message);
+      thread = await createThread(message)
     }
 
     // Check rate limits
-    const rateLimitResult = checkRateLimits(userId, thread.id);
+    const rateLimitResult = checkRateLimits(userId, thread.id)
     if (!rateLimitResult.allowed) {
-      const quotaInfo = getUserQuotaInfo(userId);
+      const quotaInfo = getUserQuotaInfo(userId)
       return NextResponse.json(
         {
           success: false,
@@ -157,30 +166,33 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
           quota: {
             used: quotaInfo.used,
             limit: quotaInfo.limit,
-            resetAt: quotaInfo.resetAt.toISOString(),
-          },
+            resetAt: quotaInfo.resetAt.toISOString()
+          }
         },
         { status: 429 }
-      );
+      )
     }
 
     // Add user message to thread
-    await addMessageToThread(thread.id, "user", message);
+    await addMessageToThread(thread.id, "user", message)
 
     // Record the message for rate limiting
-    recordMessage(userId, thread.id);
+    recordMessage(userId, thread.id)
 
     // Get user's Singlish mode preference
-    const singlishMode = await getSinglishMode();
+    const singlishMode = await getSinglishMode()
 
     // Get orchestrator and process message
-    console.log("[AI Chat] Getting orchestrator...");
-    let orchestrator;
+    console.log("[AI Chat] Getting orchestrator...")
+    let orchestrator
     try {
-      orchestrator = getOrchestrator();
+      orchestrator = getOrchestrator()
     } catch (initError) {
-      console.error("[AI Chat] Failed to initialize orchestrator:", initError);
-      const errorMessage = initError instanceof Error ? initError.message : "Failed to initialize AI";
+      console.error("[AI Chat] Failed to initialize orchestrator:", initError)
+      const errorMessage =
+        initError instanceof Error
+          ? initError.message
+          : "Failed to initialize AI"
 
       // Check for common initialization issues
       if (errorMessage.includes("OPENAI_API_KEY")) {
@@ -188,27 +200,44 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
           "AI service is not configured. Please contact support.",
           "SERVICE_NOT_CONFIGURED",
           503
-        );
+        )
       }
 
       return createErrorResponse(
         "AI service is temporarily unavailable. Please try again later.",
         "SERVICE_UNAVAILABLE",
         503
-      );
+      )
     }
 
     try {
       // Use the orchestrator's conversation ID for multi-turn context
-      console.log("[AI Chat] Calling orchestrator.chat with message:", message.slice(0, 50));
-      console.log("[AI Chat] Using orchestrator conversation ID:", thread.orchestratorConversationId || "new");
-      console.log("[AI Chat] Singlish mode:", singlishMode);
-      const result = await orchestrator.chat(message, thread.orchestratorConversationId, singlishMode);
-      console.log("[AI Chat] Orchestrator response received, tools used:", result.toolsUsed);
+      console.log(
+        "[AI Chat] Calling orchestrator.chat with message:",
+        message.slice(0, 50)
+      )
+      console.log(
+        "[AI Chat] Using orchestrator conversation ID:",
+        thread.orchestratorConversationId || "new"
+      )
+      console.log("[AI Chat] Singlish mode:", singlishMode)
+      const result = await orchestrator.chat(
+        message,
+        thread.orchestratorConversationId,
+        singlishMode
+      )
+      console.log(
+        "[AI Chat] Orchestrator response received, tools used:",
+        result.toolsUsed
+      )
 
       // Store both the response ID and conversation ID for continuity
       if (result.responseId) {
-        await updateThreadResponseId(thread.id, result.responseId, result.conversationId);
+        await updateThreadResponseId(
+          thread.id,
+          result.responseId,
+          result.conversationId
+        )
       }
 
       // Add assistant message to thread
@@ -217,10 +246,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
         "assistant",
         result.response,
         result.toolsUsed
-      );
+      )
 
       // Get quota info for response
-      const quotaInfo = getUserQuotaInfo(userId);
+      const quotaInfo = getUserQuotaInfo(userId)
 
       return NextResponse.json({
         success: true,
@@ -230,36 +259,36 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
         quota: {
           used: quotaInfo.used,
           limit: quotaInfo.limit,
-          resetAt: quotaInfo.resetAt.toISOString(),
-        },
-      });
+          resetAt: quotaInfo.resetAt.toISOString()
+        }
+      })
     } catch (orchError) {
-      console.error("[AI Chat] Orchestrator error:", orchError);
+      console.error("[AI Chat] Orchestrator error:", orchError)
 
       // Return user-friendly error
-      const userMessage = formatUserFriendlyError(orchError);
+      const userMessage = formatUserFriendlyError(orchError)
 
       // Still add a system message to thread about the error
       await addMessageToThread(
         thread.id,
         "assistant",
         `I encountered an issue: ${userMessage}`
-      );
+      )
 
       return NextResponse.json({
         success: false,
         response: userMessage,
         threadId: thread.id,
         error: userMessage,
-        errorCode: "PROCESSING_ERROR",
-      });
+        errorCode: "PROCESSING_ERROR"
+      })
     }
   } catch (error) {
-    console.error("[AI Chat] Unexpected error:", error);
+    console.error("[AI Chat] Unexpected error:", error)
     return createErrorResponse(
       "An unexpected error occurred. Please try again.",
       "INTERNAL_ERROR",
       500
-    );
+    )
   }
 }

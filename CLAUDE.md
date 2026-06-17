@@ -8,6 +8,7 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 - **A push to `main` triggers a production deploy.** Always run `npm run build` locally before pushing to `main` so a broken build doesn't take production down. Type checking via `npx tsc --noEmit` alone is not sufficient — Render runs the full Next build.
 - Feature work happens on `feature/*` branches and is merged into `main` when ready to ship.
 - Do not force-push to `main`.
+- **Format and lint before committing.** Run `npm run format` and `npm run lint` (fix what it reports) before every commit. A husky `pre-commit` hook runs `lint-staged` (`eslint --fix` + `prettier --write`) over staged files as a safety net, but don't rely on it — keep the working tree clean so commits aren't polluted by reformatting unrelated lines.
 
 ## Stack
 
@@ -29,6 +30,9 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 
 - `npm run dev` — Next dev server on `http://localhost:3000`
 - `npm run build` — production build (run before pushing to `main`)
+- `npm run format` — Prettier write across the repo (config in `.prettierrc.json`)
+- `npm run format:check` — Prettier check only (no writes)
+- `npm run lint` — ESLint (`eslint .`, flat config in `eslint.config.mjs`); `npm run lint:fix` to auto-fix
 - `npx tsc --noEmit` — typecheck only
 - `npm run db:studio` / `db:generate` / `db:migrate` / `db:push` — Drizzle workflows
 - `npm test` — Vitest
@@ -52,6 +56,7 @@ For any UI/UX change — especially in `components/income/`, `components/expense
 When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
 
 Key routing rules:
+
 - Product ideas/brainstorming → invoke /office-hours
 - Strategy/scope → invoke /plan-ceo-review
 - Architecture → invoke /plan-eng-review
