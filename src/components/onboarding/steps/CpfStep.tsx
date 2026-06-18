@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { updateIncome } from "@/actions/incomes"
 import { Info, Lightbulb } from "lucide-react"
+import { toast } from "sonner"
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -69,6 +70,7 @@ export function CpfStep({
       onNext()
     } catch (error) {
       console.error("Failed to save CPF data:", error)
+      toast.error("Could not save your CPF details. Please try again.")
     } finally {
       setIsSubmitting(false)
     }

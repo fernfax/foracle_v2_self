@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { getIncomes } from "@/actions/incomes"
 import { createOnboardingExpenses } from "@/actions/onboarding"
 import { Lightbulb } from "lucide-react"
+import { toast } from "sonner"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -189,6 +190,7 @@ export function ExpensesStep({
       onNext()
     } catch (error) {
       console.error("Failed to save expenses:", error)
+      toast.error("Could not save your expenses. Please try again.")
     } finally {
       setIsSubmitting(false)
     }

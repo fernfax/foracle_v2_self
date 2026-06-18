@@ -13,6 +13,7 @@ import {
   Sparkles,
   User
 } from "lucide-react"
+import { toast } from "sonner"
 
 import { WizardNavigation } from "@/components/onboarding/WizardNavigation"
 import type {
@@ -81,6 +82,7 @@ export function ConfirmationStep({
       onComplete()
     } catch (error) {
       console.error("Failed to complete onboarding:", error)
+      toast.error("Could not complete setup. Please try again.")
     } finally {
       setIsSubmitting(false)
     }

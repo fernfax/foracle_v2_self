@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { createIncome, updateIncome } from "@/actions/incomes"
 import { format } from "date-fns"
 import { Lightbulb, Plus } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -224,6 +225,7 @@ export function IncomeStep({
       onNext()
     } catch (error) {
       console.error("Failed to save income:", error)
+      toast.error("Could not save your income. Please try again.")
     } finally {
       setIsSubmitting(false)
     }

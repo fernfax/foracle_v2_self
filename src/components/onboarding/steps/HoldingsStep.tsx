@@ -6,6 +6,7 @@ import {
   getCurrentHoldings
 } from "@/actions/current-holdings"
 import { Building2, Lightbulb, Plus } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -87,6 +88,7 @@ export function HoldingsStep({
       setHoldingAmount("")
     } catch (error) {
       console.error("Failed to add holding:", error)
+      toast.error("Could not add the account. Please try again.")
     } finally {
       setIsSubmitting(false)
     }

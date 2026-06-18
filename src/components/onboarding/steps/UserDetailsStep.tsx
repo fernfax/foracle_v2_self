@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { getOrCreateSelfMember } from "@/actions/family-members"
 import { format } from "date-fns"
 import { CalendarIcon, Lightbulb } from "lucide-react"
+import { toast } from "sonner"
 
 import { today } from "@/lib/date-helpers"
 import { cn } from "@/lib/utils"
@@ -75,6 +76,7 @@ export function UserDetailsStep({
       onNext()
     } catch (error) {
       console.error("Failed to save family member:", error)
+      toast.error("Could not save your details. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
