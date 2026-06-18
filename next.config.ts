@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: import.meta.dirname
   },
+  devIndicators: {
+    position: "top-right"
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
