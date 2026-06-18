@@ -50,7 +50,8 @@ export function UserDetailsStep({
     }
   }, [data])
 
-  const isFormValid = name && dateOfBirth
+  const trimmedName = name.trim()
+  const isFormValid = trimmedName && dateOfBirth
 
   const handleSubmit = async () => {
     if (!isFormValid || !dateOfBirth) return
@@ -61,14 +62,14 @@ export function UserDetailsStep({
 
       // Get or create the Self member (handles both new and existing cases)
       const savedMember = await getOrCreateSelfMember({
-        name,
+        name: trimmedName,
         dateOfBirth: formattedDate
       })
       setMemberId(savedMember.id)
 
       onSave({
         id: savedMember.id,
-        name,
+        name: trimmedName,
         relationship: "Self",
         dateOfBirth: formattedDate,
         isContributing: true
@@ -88,7 +89,10 @@ export function UserDetailsStep({
         {/* Full Name */}
         <div className="space-y-2">
           <Label htmlFor="name">
-            Full Name <span className="text-[#8B0000]">*</span>
+            Full Name{" "}
+            <span className="text-[#8B0000]" aria-hidden="true">
+              *
+            </span>
           </Label>
           <Input
             id="name"
@@ -96,6 +100,7 @@ export function UserDetailsStep({
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="bg-background"
+            aria-required="true"
           />
         </div>
 
@@ -114,13 +119,18 @@ export function UserDetailsStep({
 
         {/* Date of Birth */}
         <div className="space-y-2">
-          <Label>
-            Date of Birth <span className="text-[#8B0000]">*</span>
+          <Label htmlFor="dob">
+            Date of Birth{" "}
+            <span className="text-[#8B0000]" aria-hidden="true">
+              *
+            </span>
           </Label>
           <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
             <PopoverTrigger asChild>
               <Button
+                id="dob"
                 variant="outline"
+                aria-required="true"
                 className={cn(
                   "bg-background w-full justify-start text-left font-normal",
                   !dateOfBirth && "text-muted-foreground"

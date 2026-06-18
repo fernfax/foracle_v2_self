@@ -129,7 +129,9 @@ export function IncomeStep({
     setBonusGroups(updated)
   }
 
-  const isFormValid = name && category && amount && parseFloat(amount) > 0
+  const trimmedName = name.trim()
+  const isFormValid =
+    trimmedName && category && amount && parseFloat(amount) > 0
 
   const handleSubmit = async () => {
     if (!isFormValid) return
@@ -166,7 +168,7 @@ export function IncomeStep({
       let savedIncome
       if (incomeId) {
         savedIncome = await updateIncome(incomeId, {
-          name,
+          name: trimmedName,
           category,
           amount: parseFloat(amount),
           frequency,
@@ -177,7 +179,7 @@ export function IncomeStep({
         })
       } else {
         savedIncome = await createIncome({
-          name,
+          name: trimmedName,
           category,
           amount: parseFloat(amount),
           frequency,
@@ -193,7 +195,7 @@ export function IncomeStep({
 
       onSave({
         id: savedIncome.id,
-        name,
+        name: trimmedName,
         category,
         amount,
         frequency,
@@ -219,7 +221,10 @@ export function IncomeStep({
         {/* Income Source Name */}
         <div className="space-y-2">
           <Label htmlFor="name">
-            Income Source Name <span className="text-[#8B0000]">*</span>
+            Income Source Name{" "}
+            <span className="text-[#8B0000]" aria-hidden="true">
+              *
+            </span>
           </Label>
           <Input
             id="name"
@@ -227,6 +232,7 @@ export function IncomeStep({
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="bg-background"
+            aria-required="true"
           />
         </div>
 
@@ -234,7 +240,10 @@ export function IncomeStep({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>
-              Category <span className="text-[#8B0000]">*</span>
+              Category{" "}
+              <span className="text-[#8B0000]" aria-hidden="true">
+                *
+              </span>
             </Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="bg-background">
@@ -252,7 +261,10 @@ export function IncomeStep({
 
           <div className="space-y-2">
             <Label>
-              Frequency <span className="text-[#8B0000]">*</span>
+              Frequency{" "}
+              <span className="text-[#8B0000]" aria-hidden="true">
+                *
+              </span>
             </Label>
             <Select value={frequency} onValueChange={setFrequency}>
               <SelectTrigger className="bg-background">
@@ -272,7 +284,10 @@ export function IncomeStep({
         {/* Amount */}
         <div className="space-y-2">
           <Label htmlFor="amount">
-            Amount (SGD) <span className="text-[#8B0000]">*</span>
+            Amount (SGD){" "}
+            <span className="text-[#8B0000]" aria-hidden="true">
+              *
+            </span>
           </Label>
           <div className="relative">
             <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
@@ -287,6 +302,7 @@ export function IncomeStep({
               className="bg-background pl-7"
               min="0"
               step="0.01"
+              aria-required="true"
             />
           </div>
           <p className="text-muted-foreground text-xs">

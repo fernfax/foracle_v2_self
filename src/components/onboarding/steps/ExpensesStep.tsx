@@ -149,6 +149,18 @@ export function ExpensesStep({
     setCategoryAmounts(newAmounts)
   }, [selectedCategories, percentageOfIncome, monthlyIncome])
 
+  // Keep the entry within 0–100 so the derived budget can't exceed income or
+  // go negative. Empty is allowed so the field can be cleared while typing.
+  const handlePercentageChange = (raw: string) => {
+    if (raw === "") {
+      setPercentageOfIncome("")
+      return
+    }
+    const n = parseFloat(raw)
+    if (Number.isNaN(n)) return
+    setPercentageOfIncome(String(Math.min(100, Math.max(0, n))))
+  }
+
   const toggleCategory = (categoryName: string) => {
     setSelectedCategories((prev) =>
       prev.includes(categoryName)
@@ -210,7 +222,9 @@ export function ExpensesStep({
           <div className="space-y-2">
             <Label htmlFor="percentage">
               Percentage of Income for Expenses{" "}
-              <span className="text-[#8B0000]">*</span>
+              <span className="text-[#8B0000]" aria-hidden="true">
+                *
+              </span>
             </Label>
             <div className="relative">
               <Input
@@ -218,10 +232,11 @@ export function ExpensesStep({
                 type="number"
                 placeholder="60"
                 value={percentageOfIncome}
-                onChange={(e) => setPercentageOfIncome(e.target.value)}
+                onChange={(e) => handlePercentageChange(e.target.value)}
                 className="bg-background pr-8"
                 min="0"
                 max="100"
+                aria-required="true"
               />
               <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2">
                 %
