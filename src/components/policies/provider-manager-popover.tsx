@@ -200,7 +200,7 @@ export function ProviderManagerPopover({
                         size="sm"
                         variant="ghost"
                         onClick={() => handleDelete(provider.id)}
-                        className="text-on-danger hover:text-on-danger h-7 px-2 hover:bg-[rgba(224,85,85,0.12)]">
+                        className="text-on-danger hover:text-on-danger hover:bg-brand-alert-red/[0.12] h-7 px-2">
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </>

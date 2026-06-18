@@ -16,23 +16,23 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[rgba(184,98,42,0.14)] text-on-brand dark:bg-[rgba(212,132,90,0.18)] dark:text-[#D4845A]",
+          "bg-brand-terracotta/[0.14] text-on-brand dark:bg-brand-coral/[0.18] dark:text-brand-coral",
         success:
-          "bg-[rgba(0,196,170,0.14)] text-on-success dark:bg-[rgba(0,196,170,0.18)] dark:text-[#33D4BC]",
+          "bg-brand-teal/[0.14] text-on-success dark:bg-brand-teal/[0.18] dark:text-brand-teal-light",
         warning:
-          "bg-[rgba(212,168,67,0.18)] text-on-warning dark:bg-[rgba(212,168,67,0.20)] dark:text-[#D4A843]",
+          "bg-brand-gold/[0.18] text-on-warning dark:bg-brand-gold/[0.2] dark:text-brand-gold",
         danger:
-          "bg-[rgba(224,85,85,0.14)] text-on-danger dark:bg-[rgba(224,112,112,0.18)] dark:text-[#E07070]",
+          "bg-brand-alert-red/[0.14] text-on-danger dark:bg-brand-alert-red-dark/[0.18] dark:text-brand-alert-red-dark",
         destructive:
-          "bg-[rgba(224,85,85,0.14)] text-on-danger dark:bg-[rgba(224,112,112,0.18)] dark:text-[#E07070]",
+          "bg-brand-alert-red/[0.14] text-on-danger dark:bg-brand-alert-red-dark/[0.18] dark:text-brand-alert-red-dark",
         neutral:
-          "bg-[rgba(28,43,42,0.06)] text-[rgba(28,43,42,0.55)] dark:bg-[rgba(240,235,224,0.10)] dark:text-[rgba(240,235,224,0.55)]",
+          "bg-brand-deep-forest/[0.06] text-brand-deep-forest/[0.55] dark:bg-brand-cream/[0.1] dark:text-brand-cream/[0.55]",
         secondary:
-          "bg-[rgba(28,43,42,0.06)] text-[rgba(28,43,42,0.55)] dark:bg-[rgba(240,235,224,0.10)] dark:text-[rgba(240,235,224,0.55)]",
+          "bg-brand-deep-forest/[0.06] text-brand-deep-forest/[0.55] dark:bg-brand-cream/[0.1] dark:text-brand-cream/[0.55]",
         brand:
-          "bg-[rgba(184,98,42,0.14)] text-on-brand dark:bg-[rgba(212,132,90,0.18)] dark:text-[#D4845A]",
+          "bg-brand-terracotta/[0.14] text-on-brand dark:bg-brand-coral/[0.18] dark:text-brand-coral",
         secondaryAccent:
-          "bg-[rgba(58,107,82,0.12)] text-[#3A6B52] dark:bg-[rgba(90,148,112,0.15)] dark:text-[#5A9470]",
+          "bg-brand-jungle/[0.12] text-[#3A6B52] dark:bg-brand-sage/[0.15] dark:text-[#5A9470]",
         outline:
           "border border-border/50 bg-transparent text-foreground/80 shadow-none"
       }

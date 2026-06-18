@@ -257,7 +257,7 @@ export function CategoryManagerPopover({
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteClick(category)}
-                          className="text-on-danger hover:text-on-danger h-7 px-2 hover:bg-[rgba(224,85,85,0.12)]">
+                          className="text-on-danger hover:text-on-danger hover:bg-brand-alert-red/[0.12] h-7 px-2">
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </>
@@ -331,7 +331,7 @@ export function CategoryManagerPopover({
               <Button
                 type="button"
                 onClick={(e) => handleDeleteConfirm(e)}
-                className="bg-[#E05555] hover:bg-[#E05555]">
+                className="bg-brand-alert-red hover:bg-brand-alert-red">
                 Delete
               </Button>
             )}

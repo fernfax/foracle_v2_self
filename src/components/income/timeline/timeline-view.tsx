@@ -213,25 +213,25 @@ const ARCHETYPE_META: Record<
     label: "RECURRING",
     icon: InfinityIcon,
     tone: "text-[#3A6B52]",
-    bar: "bg-gradient-to-r from-[#3A6B52] to-[#5A9470]",
-    pill: "bg-[#3A6B52]/10 text-[#1F4A33] border-[#3A6B52]/30",
-    rail: "bg-[#3A6B52]"
+    bar: "bg-gradient-to-r from-brand-jungle to-brand-sage",
+    pill: "bg-brand-jungle/10 text-[#1F4A33] border-brand-jungle/30",
+    rail: "bg-brand-jungle"
   },
   "one-off": {
     label: "ONE-OFF",
     icon: Target,
-    tone: "text-[#B8622A]",
-    bar: "bg-gradient-to-r from-[#B8622A] to-[#D4845A]",
-    pill: "bg-[#B8622A]/10 text-on-brand border-[#B8622A]/30",
-    rail: "bg-[#B8622A]"
+    tone: "text-brand-terracotta",
+    bar: "bg-gradient-to-r from-brand-terracotta to-brand-coral",
+    pill: "bg-brand-terracotta/10 text-on-brand border-brand-terracotta/30",
+    rail: "bg-brand-terracotta"
   },
   temporary: {
     label: "TEMPORARY",
     icon: Clock,
     tone: "text-on-warning",
-    bar: "bg-gradient-to-r from-[#D4A843] to-[#E0BD5C]",
-    pill: "bg-[#D4A843]/15 text-on-warning border-[#D4A843]/40",
-    rail: "bg-[#D4A843]"
+    bar: "bg-gradient-to-r from-brand-gold to-[#E0BD5C]",
+    pill: "bg-brand-gold/15 text-on-warning border-brand-gold/40",
+    rail: "bg-brand-gold"
   },
   // Future incomes — start date hasn't arrived yet. Brand-deep-forest into
   // brand-jungle so it reads as "projected, not yet in flight" while staying
@@ -239,10 +239,10 @@ const ARCHETYPE_META: Record<
   future: {
     label: "FUTURE",
     icon: InfinityIcon,
-    tone: "text-[#1C2B2A]",
-    bar: "bg-gradient-to-r from-[#1C2B2A] to-[#3A6B52]",
-    pill: "bg-[#1C2B2A]/10 text-[#1C2B2A] border-[#1C2B2A]/30",
-    rail: "bg-[#1C2B2A]"
+    tone: "text-brand-deep-forest",
+    bar: "bg-gradient-to-r from-brand-deep-forest to-brand-jungle",
+    pill: "bg-brand-deep-forest/10 text-brand-deep-forest border-brand-deep-forest/30",
+    rail: "bg-brand-deep-forest"
   }
 }
 
@@ -2773,7 +2773,7 @@ function TimelineStudio({
             "bg-card relative touch-pan-y overflow-hidden overscroll-x-contain rounded-2xl border transition-[box-shadow,border-color] duration-200",
             editMode
               ? "border-brand-terracotta shadow-brand-terracotta/10 shadow-lg"
-              : "shadow-card border-[rgba(28,43,42,0.06)] dark:border-[rgba(240,235,224,0.08)] dark:shadow-none"
+              : "shadow-card border-brand-deep-forest/[0.06] dark:border-brand-cream/[0.08] dark:shadow-none"
           )}>
           {/* Edit-mode pulsing ring — a dedicated inset-ring overlay so only the
             border glows in and out (the card's content opacity is untouched).
@@ -5168,8 +5168,8 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                     className={cn(
                       "pointer-events-none absolute w-1.5 -translate-x-1/2",
                       bonusAbove
-                        ? "bg-gradient-to-b from-[#D4A843] to-[#3A6B52]"
-                        : "bg-gradient-to-b from-[#3A6B52] to-[#D4A843]"
+                        ? "from-brand-gold to-brand-jungle bg-gradient-to-b"
+                        : "from-brand-jungle to-brand-gold bg-gradient-to-b"
                     )}
                     style={
                       bonusAbove
@@ -5188,7 +5188,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                       <button
                         type="button"
                         className={cn(
-                          "focus-visible:ring-ring absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-md bg-gradient-to-r from-[#D4A843] to-[#E0BD5C] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#5A4500] shadow-sm transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
+                          "focus-visible:ring-ring from-brand-gold absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-md bg-gradient-to-r to-[#E0BD5C] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#5A4500] shadow-sm transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
                           bonusTopClass,
                           editMode ? "cursor-pointer" : "cursor-default"
                         )}
@@ -5416,7 +5416,7 @@ function ActionCardsView({
       <div
         ref={riverRef}
         style={tsStyle}
-        className="bg-card shadow-card relative touch-pan-y overflow-hidden overscroll-x-contain rounded-2xl border border-[rgba(28,43,42,0.06)] p-6 dark:border-[rgba(240,235,224,0.08)] dark:shadow-none">
+        className="bg-card shadow-card border-brand-deep-forest/[0.06] dark:border-brand-cream/[0.08] relative touch-pan-y overflow-hidden overscroll-x-contain rounded-2xl border p-6 dark:shadow-none">
         <div className="overflow-hidden" style={EDGE_FADE_STYLE}>
           <div
             className="will-change-transform"
@@ -5725,7 +5725,7 @@ function SentenceCard({
   const pillCls = meta.pill
 
   return (
-    <div className="bg-card shadow-card relative overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.06)] p-5 dark:border-[rgba(240,235,224,0.08)] dark:shadow-none">
+    <div className="bg-card shadow-card border-brand-deep-forest/[0.06] dark:border-brand-cream/[0.08] relative overflow-hidden rounded-2xl border p-5 dark:shadow-none">
       <div className={cn("absolute inset-y-0 left-0 w-1", meta.rail)} />
       <div className="flex items-start justify-between gap-3 pl-2">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">

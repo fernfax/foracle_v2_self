@@ -433,7 +433,7 @@ export function AddGoalDialog({
                   </div>
 
                   {projectedCompletion && (
-                    <div className="rounded-lg border border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)] p-3">
+                    <div className="border-brand-teal/[0.25] bg-brand-teal/[0.12] rounded-lg border p-3">
                       <p className="text-on-success text-sm">
                         At ${parseFloat(monthlyContribution).toLocaleString()}
                         /month, you&apos;ll reach your goal by{" "}
@@ -473,7 +473,7 @@ export function AddGoalDialog({
                     />
                   </div>
                   {validationError && (
-                    <div className="text-on-danger mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm">
+                    <div className="text-on-danger bg-brand-alert-red/[0.12] mt-3 rounded p-2 text-sm">
                       {validationError}
                     </div>
                   )}

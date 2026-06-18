@@ -515,7 +515,7 @@ export function CpfProjectionGraph({
               </p>
             )}
           </div>
-          <div className="rounded-lg bg-[rgba(184,98,42,0.10)] p-2 sm:p-3">
+          <div className="bg-brand-terracotta/[0.1] rounded-lg p-2 sm:p-3">
             <p className="text-foreground mb-0.5 text-xs">
               Projected Cumulative
             </p>
@@ -523,7 +523,7 @@ export function CpfProjectionGraph({
               {formatCurrency(projectedTotal)}
             </p>
           </div>
-          <div className="rounded-lg bg-[rgba(0,196,170,0.12)] p-2 sm:p-3">
+          <div className="bg-brand-teal/[0.12] rounded-lg p-2 sm:p-3">
             <p className="text-foreground mb-0.5 text-xs">Net Change</p>
             <p className="text-on-success text-sm font-semibold sm:text-lg">
               +{formatCurrency(projectedTotal)}

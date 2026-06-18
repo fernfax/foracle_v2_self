@@ -306,7 +306,7 @@ export function TotalIncomeCard({
           <CardTitle className="text-muted-foreground text-sm font-medium">
             Total Nett Income
           </CardTitle>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(0,196,170,0.12)]">
+          <div className="bg-brand-teal/[0.12] flex h-10 w-10 items-center justify-center rounded-xl">
             <DollarSign className="text-on-success h-5 w-5" />
           </div>
         </CardHeader>

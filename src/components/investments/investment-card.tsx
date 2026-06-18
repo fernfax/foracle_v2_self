@@ -49,37 +49,37 @@ const INVESTMENT_TYPE_CONFIG: Record<
   stock: {
     icon: TrendingUp,
     color: "text-on-brand",
-    bgColor: "bg-[rgba(184,98,42,0.10)]",
+    bgColor: "bg-brand-terracotta/[0.1]",
     label: "Stock"
   },
   cash: {
     icon: Banknote,
     color: "text-on-success",
-    bgColor: "bg-[rgba(0,196,170,0.12)]",
+    bgColor: "bg-brand-teal/[0.12]",
     label: "Cash"
   },
   bonds: {
     icon: FileText,
     color: "text-on-warning",
-    bgColor: "bg-[rgba(212,168,67,0.15)]",
+    bgColor: "bg-brand-gold/[0.15]",
     label: "Bonds"
   },
   etf: {
     icon: BarChart3,
     color: "text-on-brand",
-    bgColor: "bg-[rgba(184,98,42,0.10)]",
+    bgColor: "bg-brand-terracotta/[0.1]",
     label: "ETF"
   },
   crypto: {
     icon: Bitcoin,
     color: "text-on-brand",
-    bgColor: "bg-[rgba(184,98,42,0.10)]",
+    bgColor: "bg-brand-terracotta/[0.1]",
     label: "Crypto"
   },
   mutual_fund: {
     icon: PieChart,
     color: "text-on-brand",
-    bgColor: "bg-[rgba(184,98,42,0.10)]",
+    bgColor: "bg-brand-terracotta/[0.1]",
     label: "Mutual Fund"
   },
   reit: {
@@ -209,7 +209,7 @@ export function InvestmentCard({
               {investment.isActive ? (
                 <Badge
                   variant="outline"
-                  className="text-on-success border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
+                  className="text-on-success border-brand-teal/[0.25] bg-brand-teal/[0.12]">
                   Active
                 </Badge>
               ) : (
@@ -235,7 +235,7 @@ export function InvestmentCard({
                   })}
                 </p>
               </div>
-              <div className="rounded-lg bg-[rgba(0,196,170,0.12)] p-3">
+              <div className="bg-brand-teal/[0.12] rounded-lg p-3">
                 <p className="text-foreground/400 mb-1 text-xs tracking-wide uppercase">
                   Projected Yield
                 </p>
@@ -302,7 +302,7 @@ export function InvestmentCard({
               </Button>
               <Button
                 variant="outline"
-                className="text-on-danger hover:text-on-danger flex-1 hover:bg-[rgba(224,85,85,0.12)]"
+                className="text-on-danger hover:text-on-danger hover:bg-brand-alert-red/[0.12] flex-1"
                 onClick={() => {
                   setIsModalOpen(false)
                   onDelete?.()

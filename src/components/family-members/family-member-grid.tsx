@@ -219,7 +219,7 @@ export function FamilyMemberGrid({ initialMembers }: FamilyMemberGridProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-[#E05555] text-white hover:bg-[#E05555]/90">
+              className="bg-brand-alert-red hover:bg-brand-alert-red/90 text-white">
               Remove member
             </AlertDialogAction>
           </AlertDialogFooter>

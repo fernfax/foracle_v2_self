@@ -256,7 +256,7 @@ export function ManageCategoriesDialog({
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDeleteClick(category)}
-                            className="text-on-danger hover:text-on-danger hover:bg-[rgba(224,85,85,0.12)]">
+                            className="text-on-danger hover:text-on-danger hover:bg-brand-alert-red/[0.12]">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </>
@@ -331,7 +331,7 @@ export function ManageCategoriesDialog({
               <Button
                 type="button"
                 onClick={(e) => handleDeleteConfirm(e)}
-                className="bg-[#E05555] hover:bg-[#E05555]">
+                className="bg-brand-alert-red hover:bg-brand-alert-red">
                 Delete
               </Button>
             )}

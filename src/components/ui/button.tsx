@@ -18,7 +18,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(184,98,42,0.18),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#D4845A] hover:shadow-[0_4px_12px_rgba(184,98,42,0.22),0_1px_2px_rgba(28,43,42,0.04)] active:translate-y-px active:shadow-[0_1px_2px_rgba(184,98,42,0.18)] dark:hover:bg-[#B8622A]",
+          "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(184,98,42,0.18),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-brand-coral hover:shadow-[0_4px_12px_rgba(184,98,42,0.22),0_1px_2px_rgba(28,43,42,0.04)] active:translate-y-px active:shadow-[0_1px_2px_rgba(184,98,42,0.18)] dark:hover:bg-brand-terracotta",
         destructive:
           "bg-destructive text-destructive-foreground shadow-[0_2px_8px_rgba(224,85,85,0.18),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-destructive/90 hover:shadow-[0_4px_12px_rgba(224,85,85,0.22)] active:translate-y-px focus-visible:ring-destructive/20",
         outline:
@@ -28,9 +28,9 @@ const buttonVariants = cva(
         ghost:
           "border border-border/30 bg-background text-foreground/70 hover:bg-muted/60 hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline px-0 h-auto",
-        teal: "bg-[#00C4AA] text-[#1C2B2A] shadow-[0_2px_8px_rgba(0,196,170,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#33D4BC] hover:shadow-[0_4px_12px_rgba(0,196,170,0.24)] active:translate-y-px",
+        teal: "bg-brand-teal text-brand-deep-forest shadow-[0_2px_8px_rgba(0,196,170,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-brand-teal-light hover:shadow-[0_4px_12px_rgba(0,196,170,0.24)] active:translate-y-px",
         warning:
-          "bg-[#D4A843] text-[#1C2B2A] shadow-[0_2px_8px_rgba(212,168,67,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-[#D4A843]/90 active:translate-y-px"
+          "bg-brand-gold text-brand-deep-forest shadow-[0_2px_8px_rgba(212,168,67,0.20),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-brand-gold/90 active:translate-y-px"
       },
       size: {
         default: "h-9 px-[22px] py-[10px] has-[>svg]:px-4",

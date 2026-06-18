@@ -400,7 +400,7 @@ export function AddInvestmentModal({
                           className={cn(
                             "rounded-md border px-3 py-2 text-sm transition-colors",
                             selectedMonths.includes(month.value)
-                              ? "border-[rgba(184,98,42,0.25)] bg-[#B8622A] text-white"
+                              ? "border-brand-terracotta/[0.25] bg-brand-terracotta text-white"
                               : "bg-card text-foreground border-border hover:border-border"
                           )}>
                           {month.label}

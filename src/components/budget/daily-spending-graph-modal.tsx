@@ -100,15 +100,15 @@ export function DailySpendingGraphModal({
         {/* Legend */}
         <div className="mb-2 flex items-center justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-[#B8622A]" />
+            <div className="bg-brand-terracotta h-3 w-3 rounded-full" />
             <span className="text-muted-foreground">Daily Spending</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-0 w-4 border-t-2 border-dashed border-[rgba(184,98,42,0.25)]" />
+            <div className="border-brand-terracotta/[0.25] h-0 w-4 border-t-2 border-dashed" />
             <span className="text-muted-foreground">Daily Budget</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-0 w-4 border-t-2 border-dashed border-[rgba(0,196,170,0.25)]" />
+            <div className="border-brand-teal/[0.25] h-0 w-4 border-t-2 border-dashed" />
             <span className="text-muted-foreground">Average Spending</span>
           </div>
         </div>

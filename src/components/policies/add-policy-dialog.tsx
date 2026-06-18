@@ -1081,7 +1081,7 @@ export function AddPolicyDialog({
                 />
               </div>
               {validationError && (
-                <div className="text-on-danger rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm">
+                <div className="text-on-danger bg-brand-alert-red/[0.12] rounded p-2 text-sm">
                   {validationError}
                 </div>
               )}

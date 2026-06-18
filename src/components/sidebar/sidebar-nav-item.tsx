@@ -76,15 +76,15 @@ export function SidebarNavItem({
   const itemBaseClasses = cn(
     "group flex items-center rounded-md py-2 px-2 gap-3 font-display text-sm transition-colors duration-150 overflow-hidden",
     isActive
-      ? "bg-[#B8622A] text-[#FBF7F1] shadow-sm shadow-[#B8622A]/20"
-      : "text-[rgba(240,235,224,0.55)] hover:bg-[#2C3E3D] hover:text-[#F0EBE0]"
+      ? "bg-brand-terracotta text-brand-warm-white shadow-sm shadow-brand-terracotta/20"
+      : "text-brand-cream/[0.55] hover:bg-brand-forest-mid hover:text-brand-cream"
   )
 
   const iconClasses = cn(
     "h-[18px] w-[18px] flex-shrink-0 transition-colors",
     isActive
-      ? "text-[#FBF7F1]"
-      : "text-[rgba(240,235,224,0.55)] group-hover:text-[#F0EBE0]"
+      ? "text-brand-warm-white"
+      : "text-brand-cream/[0.55] group-hover:text-brand-cream"
   )
 
   const trigger = (
@@ -104,7 +104,7 @@ export function SidebarNavItem({
         )}>
         {label}
         {comingSoon && (
-          <span className="font-display rounded-xs bg-[rgba(212,168,67,0.18)] px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[#D4A843] uppercase">
+          <span className="font-display bg-brand-gold/[0.18] text-brand-gold rounded-xs px-1.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
             Soon
           </span>
         )}
@@ -131,7 +131,7 @@ export function SidebarNavItem({
             <p className="flex items-center gap-2">
               {label}
               {comingSoon && (
-                <span className="font-display rounded-xs bg-[rgba(212,168,67,0.18)] px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[#D4A843] uppercase">
+                <span className="font-display bg-brand-gold/[0.18] text-brand-gold rounded-xs px-1.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
                   Soon
                 </span>
               )}
@@ -154,7 +154,7 @@ export function SidebarNavItem({
           )}
           aria-hidden={!(isExpanded && isSubmenuOpen)}>
           <div className="overflow-hidden">
-            <div className="mt-1 ml-4 space-y-0.5 border-l border-[rgba(240,235,224,0.08)] pl-9">
+            <div className="border-brand-cream/[0.08] mt-1 ml-4 space-y-0.5 border-l pl-9">
               {subItems.map((subItem) => {
                 const isSubActive = getSubItemActive(subItem.href)
                 const SubIcon = subItem.icon
@@ -165,8 +165,8 @@ export function SidebarNavItem({
                     className={cn(
                       "font-display flex items-center gap-2 rounded-sm px-3 py-1.5 text-[13px] transition-colors duration-150",
                       isSubActive
-                        ? "bg-[rgba(184,98,42,0.15)] font-medium text-[#D4845A]"
-                        : "text-[rgba(240,235,224,0.50)] hover:bg-[#2C3E3D] hover:text-[#F0EBE0]"
+                        ? "bg-brand-terracotta/[0.15] text-brand-coral font-medium"
+                        : "text-brand-cream/[0.5] hover:bg-brand-forest-mid hover:text-brand-cream"
                     )}
                     tabIndex={isExpanded && isSubmenuOpen ? 0 : -1}>
                     {SubIcon && <SubIcon className="h-4 w-4" />}

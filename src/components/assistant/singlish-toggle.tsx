@@ -41,7 +41,7 @@ export function SinglishToggle({
             className={cn(
               "flex h-8 w-8 items-center justify-center rounded-md text-lg transition-all",
               enabled
-                ? "bg-[rgba(0,196,170,0.12)] ring-2 ring-[#00C4AA]"
+                ? "bg-brand-teal/[0.12] ring-brand-teal ring-2"
                 : "bg-muted hover:bg-muted/80 opacity-50 grayscale",
               (disabled || isPending) && "cursor-not-allowed opacity-40"
             )}

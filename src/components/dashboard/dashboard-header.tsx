@@ -513,7 +513,7 @@ export function DashboardHeader({
                 <span className="text-muted-foreground text-xs font-medium sm:text-sm">
                   Total Nett Income
                 </span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(0,196,170,0.12)]">
+                <div className="bg-brand-teal/[0.12] flex h-8 w-8 items-center justify-center rounded-xl">
                   <DollarSign className="text-on-success h-3.5 w-3.5" />
                 </div>
               </div>
@@ -544,7 +544,7 @@ export function DashboardHeader({
                 <span className="text-muted-foreground text-xs font-medium sm:text-sm">
                   Total Expenses
                 </span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(224,85,85,0.12)]">
+                <div className="bg-brand-alert-red/[0.12] flex h-8 w-8 items-center justify-center rounded-xl">
                   <TrendingDown className="text-on-danger h-3.5 w-3.5" />
                 </div>
               </div>
@@ -571,7 +571,7 @@ export function DashboardHeader({
                 <span className="text-muted-foreground text-xs font-medium sm:text-sm">
                   Net Savings
                 </span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
+                <div className="bg-brand-terracotta/[0.1] flex h-8 w-8 items-center justify-center rounded-xl">
                   <Wallet className="text-on-brand h-3.5 w-3.5" />
                 </div>
               </div>

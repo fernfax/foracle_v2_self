@@ -166,15 +166,15 @@ export function CategoryBudgetBarChart({
         {/* Legend */}
         <div className="text-muted-foreground mt-3 flex items-center justify-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm bg-[#B8622A]" />
+            <div className="bg-brand-terracotta h-2.5 w-2.5 rounded-sm" />
             <span>&lt;75%</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm bg-[#D4A843]" />
+            <div className="bg-brand-gold h-2.5 w-2.5 rounded-sm" />
             <span>75-90%</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm bg-[#E05555]" />
+            <div className="bg-brand-alert-red h-2.5 w-2.5 rounded-sm" />
             <span>&gt;90%</span>
           </div>
           <div className="flex items-center gap-1.5">

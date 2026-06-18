@@ -252,7 +252,7 @@ export function AdjustBudgetModal({
 
           {/* Error Message */}
           {error && (
-            <div className="text-on-danger rounded-lg bg-[rgba(224,85,85,0.12)] p-3 text-sm">
+            <div className="text-on-danger bg-brand-alert-red/[0.12] rounded-lg p-3 text-sm">
               {error}
             </div>
           )}

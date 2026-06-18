@@ -141,11 +141,11 @@ export function NetWorthView({ summary, initialHoldings }: NetWorthViewProps) {
               {formatBudgetCurrency(summary.netWorth)}
             </div>
             <p className="text-muted-foreground mt-1 text-sm">
-              <span className="text-on-success dark:text-[#33D4BC]">
+              <span className="text-on-success dark:text-brand-teal-light">
                 {formatBudgetCurrency(summary.totalAssets)}
               </span>{" "}
               in assets ·{" "}
-              <span className="text-on-danger dark:text-[#E07070]">
+              <span className="text-on-danger dark:text-brand-alert-red-dark">
                 {formatBudgetCurrency(summary.totalLiabilities)}
               </span>{" "}
               in liabilities
@@ -277,7 +277,7 @@ export function NetWorthView({ summary, initialHoldings }: NetWorthViewProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-[#E05555] text-white hover:bg-[#E05555]/90">
+              className="bg-brand-alert-red hover:bg-brand-alert-red/90 text-white">
               Delete holding
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -317,7 +317,7 @@ function RowList({
           </div>
           <span
             className={`font-display shrink-0 text-sm font-semibold tabular-nums ${
-              negative ? "text-on-danger dark:text-[#E07070]" : ""
+              negative ? "text-on-danger dark:text-brand-alert-red-dark" : ""
             }`}>
             {negative ? "−" : ""}
             {formatBudgetCurrency(row.value)}

@@ -95,7 +95,7 @@ export function ConfirmationStep({
       value: data.familyMember?.name || "Not set",
       subValue: data.familyMember?.relationship,
       isSet: !!data.familyMember,
-      bgColor: "bg-[rgba(184,98,42,0.10)]",
+      bgColor: "bg-brand-terracotta/[0.1]",
       iconColor: "text-on-brand"
     },
     {
@@ -106,7 +106,7 @@ export function ConfirmationStep({
         ? `$${parseFloat(data.income.amount).toLocaleString("en-SG")} / ${data.income.frequency}`
         : undefined,
       isSet: !!data.income,
-      bgColor: "bg-[rgba(0,196,170,0.12)]",
+      bgColor: "bg-brand-teal/[0.12]",
       iconColor: "text-on-success"
     },
     {
@@ -117,7 +117,7 @@ export function ConfirmationStep({
         ? `OA: $${parseFloat(data.cpf.cpfOrdinaryAccount).toLocaleString("en-SG")} | SA: $${parseFloat(data.cpf.cpfSpecialAccount).toLocaleString("en-SG")} | MA: $${parseFloat(data.cpf.cpfMedisaveAccount).toLocaleString("en-SG")}`
         : undefined,
       isSet: !!data.cpf && parseFloat(data.cpf.cpfOrdinaryAccount) > 0,
-      bgColor: "bg-[rgba(184,98,42,0.10)]",
+      bgColor: "bg-brand-terracotta/[0.1]",
       iconColor: "text-on-brand"
     },
     {
@@ -134,7 +134,7 @@ export function ConfirmationStep({
               .toLocaleString("en-SG")}`
           : undefined,
       isSet: dbHoldings.length > 0,
-      bgColor: "bg-[rgba(212,168,67,0.15)]",
+      bgColor: "bg-brand-gold/[0.15]",
       iconColor: "text-on-warning"
     },
     {
@@ -151,7 +151,7 @@ export function ConfirmationStep({
               .toLocaleString("en-SG")} / monthly`
           : undefined,
       isSet: dbExpenses.length > 0,
-      bgColor: "bg-[rgba(224,85,85,0.12)]",
+      bgColor: "bg-brand-alert-red/[0.12]",
       iconColor: "text-on-danger"
     }
   ]
@@ -161,7 +161,7 @@ export function ConfirmationStep({
       <div className="flex-1 space-y-8">
         {/* Success Header */}
         <div className="py-6 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)]">
+          <div className="bg-brand-teal/[0.12] mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
             <Sparkles className="text-on-success h-8 w-8" />
           </div>
           <h2 className="mb-2 text-2xl font-semibold">Great job!</h2>

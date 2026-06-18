@@ -64,7 +64,7 @@ export function ChatMessage({
   return (
     <div className="bg-background flex gap-3 px-4 py-4">
       {/* Avatar */}
-      <div className="text-on-success flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)]">
+      <div className="text-on-success bg-brand-teal/[0.12] flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
         <Bot className="h-4 w-4" />
       </div>
 
@@ -234,7 +234,7 @@ export function ChatMessage({
 
               // Blockquote
               blockquote: ({ children }) => (
-                <blockquote className="text-muted-foreground my-3 border-l-4 border-[rgba(0,196,170,0.25)] pl-4 italic">
+                <blockquote className="text-muted-foreground border-brand-teal/[0.25] my-3 border-l-4 pl-4 italic">
                   {children}
                 </blockquote>
               ),
@@ -282,7 +282,7 @@ export function ChatMessage({
                     <li
                       key={idx}
                       className="text-muted-foreground flex items-center gap-2 text-xs">
-                      <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#00C4AA]" />
+                      <span className="bg-brand-teal h-1.5 w-1.5 flex-shrink-0 rounded-full" />
                       <code className="bg-muted rounded px-1.5 py-0.5 font-mono">
                         {tool}
                       </code>

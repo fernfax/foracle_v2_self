@@ -129,7 +129,7 @@ export function VehicleDetailsModal({
         }}>
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(212,168,67,0.15)]">
+            <div className="bg-brand-gold/[0.15] flex h-12 w-12 items-center justify-center rounded-xl">
               <Car className="text-on-warning h-6 w-6" />
             </div>
             <div>
@@ -143,7 +143,7 @@ export function VehicleDetailsModal({
               </p>
               <Badge
                 variant="outline"
-                className={`mt-2 text-xs font-medium ${vehicle.linkedExpenseId ? "text-on-success border-[rgba(0,196,170,0.25)]" : "text-muted-foreground border-border"}`}>
+                className={`mt-2 text-xs font-medium ${vehicle.linkedExpenseId ? "text-on-success border-brand-teal/[0.25]" : "text-muted-foreground border-border"}`}>
                 {vehicle.linkedExpenseId ? (
                   <Check className="mr-1 h-3 w-3" />
                 ) : (
@@ -196,10 +196,10 @@ export function VehicleDetailsModal({
                   variant="secondary"
                   className={
                     coeCountdown.expired
-                      ? "text-on-danger bg-[rgba(224,85,85,0.12)]"
+                      ? "text-on-danger bg-brand-alert-red/[0.12]"
                       : coeCountdown.days && coeCountdown.days < 365
-                        ? "text-on-warning bg-[rgba(212,168,67,0.15)]"
-                        : "text-on-success bg-[rgba(0,196,170,0.12)]"
+                        ? "text-on-warning bg-brand-gold/[0.15]"
+                        : "text-on-success bg-brand-teal/[0.12]"
                   }>
                   {coeCountdown.expired
                     ? "Expired"
@@ -226,7 +226,7 @@ export function VehicleDetailsModal({
                 <h3 className="text-foreground font-semibold">Loan Progress</h3>
                 <Badge
                   variant="secondary"
-                  className="text-on-success bg-[rgba(0,196,170,0.12)] dark:bg-[rgba(0,196,170,0.18)] dark:text-[#33d4bc]">
+                  className="text-on-success bg-brand-teal/[0.12] dark:bg-brand-teal/[0.18] dark:text-brand-teal-light">
                   {progress.toFixed(1)}% Complete
                 </Badge>
               </div>

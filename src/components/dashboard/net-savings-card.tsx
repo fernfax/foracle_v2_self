@@ -296,7 +296,7 @@ export function NetSavingsCard({
         <CardTitle className="text-muted-foreground text-sm font-medium">
           Net Savings
         </CardTitle>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
+        <div className="bg-brand-terracotta/[0.1] flex h-10 w-10 items-center justify-center rounded-xl">
           <Wallet className="text-on-brand h-5 w-5" />
         </div>
       </CardHeader>

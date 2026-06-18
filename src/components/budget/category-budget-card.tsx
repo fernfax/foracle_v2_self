@@ -120,10 +120,10 @@ export function CategoryBudgetCard({
           className={cn(
             "h-full rounded-full transition-all",
             percentUsed > 90
-              ? "bg-[#E05555]"
+              ? "bg-brand-alert-red"
               : percentUsed > 75
-                ? "bg-[#D4A843]"
-                : "bg-[#B8622A]"
+                ? "bg-brand-gold"
+                : "bg-brand-terracotta"
           )}
           style={{ width: `${Math.max(Math.min(percentUsed, 100), 0)}%` }}
         />

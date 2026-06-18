@@ -46,7 +46,7 @@ export function RowActions({
           aria-label={editLabel}
           title={editLabel}
           onClick={stop(onEdit)}
-          className="text-muted-foreground hover:text-primary border-transparent hover:border-transparent hover:bg-[rgba(184,98,42,0.10)]">
+          className="text-muted-foreground hover:text-primary hover:bg-brand-terracotta/[0.1] border-transparent hover:border-transparent">
           <Pencil className="size-4" />
         </Button>
       )}
@@ -58,7 +58,7 @@ export function RowActions({
           aria-label={deleteLabel}
           title={deleteLabel}
           onClick={stop(onDelete)}
-          className="text-muted-foreground hover:text-on-danger border-transparent hover:border-transparent hover:bg-[rgba(224,85,85,0.10)] dark:hover:text-[#E07070]">
+          className="text-muted-foreground hover:text-on-danger hover:bg-brand-alert-red/[0.1] dark:hover:text-brand-alert-red-dark border-transparent hover:border-transparent">
           <Trash2 className="size-4" />
         </Button>
       )}

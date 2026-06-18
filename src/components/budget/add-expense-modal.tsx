@@ -413,7 +413,7 @@ export function AddExpenseModal({
                     categoryBudget.percentUsed > 90
                       ? "bg-destructive"
                       : categoryBudget.percentUsed > 75
-                        ? "bg-[#D4A843]"
+                        ? "bg-brand-gold"
                         : "bg-primary"
                   }`}
                   style={{

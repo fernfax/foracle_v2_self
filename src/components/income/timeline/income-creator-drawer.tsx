@@ -211,7 +211,7 @@ export function IncomeCreatorDrawer({
               icon={Clock}
               label="Temporary"
               detail="Recurring monthly income with a fixed end date — e.g. freelance gig."
-              accent="text-on-warning border-[#D4A843]/50"
+              accent="text-on-warning border-brand-gold/50"
             />
           </div>
         )}

@@ -207,7 +207,7 @@ export function SubcategoryManageModal({
                     className={cn(
                       "flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all",
                       isSelected
-                        ? "border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)]"
+                        ? "border-brand-terracotta/[0.25] bg-brand-terracotta/[0.1]"
                         : "border-border hover:bg-muted/50"
                     )}
                     onClick={() => {

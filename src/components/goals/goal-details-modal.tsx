@@ -121,9 +121,9 @@ export function GoalDetailsModal({
   const onTrack = isOnTrack()
 
   const getProgressColor = () => {
-    if (progress >= 75) return "bg-[#00C4AA]"
-    if (progress >= 50) return "bg-[#B8622A]"
-    if (progress >= 25) return "bg-[#D4A843]"
+    if (progress >= 75) return "bg-brand-teal"
+    if (progress >= 50) return "bg-brand-terracotta"
+    if (progress >= 25) return "bg-brand-gold"
     return "bg-muted"
   }
 
@@ -135,8 +135,8 @@ export function GoalDetailsModal({
             <div
               className={`flex h-12 w-12 items-center justify-center rounded-xl ${
                 goal.isAchieved
-                  ? "bg-[rgba(0,196,170,0.12)]"
-                  : "bg-[rgba(0,196,170,0.12)]"
+                  ? "bg-brand-teal/[0.12]"
+                  : "bg-brand-teal/[0.12]"
               }`}>
               {goal.isAchieved ? (
                 <Trophy className="text-on-success h-6 w-6" />
@@ -151,7 +151,7 @@ export function GoalDetailsModal({
                   variant="outline"
                   className={
                     goal.goalType === "primary"
-                      ? "text-on-brand border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)]"
+                      ? "text-on-brand border-brand-terracotta/[0.25] bg-brand-terracotta/[0.1]"
                       : "border-border bg-muted text-foreground"
                   }>
                   {goal.goalType === "primary"
@@ -159,7 +159,7 @@ export function GoalDetailsModal({
                     : "Secondary Goal"}
                 </Badge>
                 {goal.isAchieved && (
-                  <Badge className="text-on-success border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
+                  <Badge className="text-on-success border-brand-teal/[0.25] bg-brand-teal/[0.12]">
                     Achieved
                   </Badge>
                 )}
@@ -249,8 +249,8 @@ export function GoalDetailsModal({
             <div
               className={`rounded-lg border p-4 ${
                 onTrack
-                  ? "border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]"
-                  : "border-[rgba(212,168,67,0.30)] bg-[rgba(212,168,67,0.15)]"
+                  ? "border-brand-teal/[0.25] bg-brand-teal/[0.12]"
+                  : "border-brand-gold/[0.3] bg-brand-gold/[0.15]"
               }`}>
               <div className="mb-2 flex items-center gap-2">
                 <TrendingUp

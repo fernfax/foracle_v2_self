@@ -56,7 +56,7 @@ export function TopCategoryModal({
                 Your largest spending categories this month.
               </DialogDescription>
             </div>
-            <span className="text-on-danger inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(224,85,85,0.12)] dark:text-[#E07070]">
+            <span className="text-on-danger bg-brand-alert-red/[0.12] dark:text-brand-alert-red-dark inline-flex size-10 shrink-0 items-center justify-center rounded-xl">
               <TrendingDown className="size-5" />
             </span>
           </div>

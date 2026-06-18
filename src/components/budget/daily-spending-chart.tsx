@@ -95,15 +95,15 @@ export function DailySpendingChart({
             {/* Legend */}
             <div className="mb-3 flex items-center justify-center gap-4 text-xs">
               <div className="flex items-center gap-1.5">
-                <div className="h-2.5 w-2.5 rounded-full bg-[#B8622A]" />
+                <div className="bg-brand-terracotta h-2.5 w-2.5 rounded-full" />
                 <span className="text-muted-foreground">Daily Spending</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-0 w-3 border-t-2 border-dashed border-[rgba(184,98,42,0.25)]" />
+                <div className="border-brand-terracotta/[0.25] h-0 w-3 border-t-2 border-dashed" />
                 <span className="text-muted-foreground">Daily Budget</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-0 w-3 border-t-2 border-dashed border-[rgba(0,196,170,0.25)]" />
+                <div className="border-brand-teal/[0.25] h-0 w-3 border-t-2 border-dashed" />
                 <span className="text-muted-foreground">Average</span>
               </div>
             </div>

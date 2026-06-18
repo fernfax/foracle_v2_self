@@ -61,7 +61,7 @@ export default function MobileGuidePage() {
       </div>
 
       {/* Benefits */}
-      <div className="mb-8 rounded-xl bg-gradient-to-r from-[rgba(184,98,42,0.10)] to-[rgba(184,98,42,0.10)] p-6">
+      <div className="from-brand-terracotta/[0.1] to-brand-terracotta/[0.1] mb-8 rounded-xl bg-gradient-to-r p-6">
         <h2 className="mb-3 text-lg font-semibold">Why add to home screen?</h2>
         <ul className="text-muted-foreground space-y-2 text-sm">
           <li className="flex items-center gap-2">
@@ -123,7 +123,7 @@ export default function MobileGuidePage() {
       </div>
 
       {/* Footer Note */}
-      <div className="mt-8 rounded-xl border border-[rgba(212,168,67,0.30)] bg-[rgba(212,168,67,0.15)] p-4">
+      <div className="border-brand-gold/[0.3] bg-brand-gold/[0.15] mt-8 rounded-xl border p-4">
         <p className="text-on-warning text-sm">
           <strong>Note:</strong> This feature only works in Safari on iOS. If
           you&apos;re using a different browser, please open this page in Safari

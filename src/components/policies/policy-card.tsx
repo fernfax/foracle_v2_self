@@ -380,7 +380,7 @@ export function PolicyCard({
                   <p className="text-muted-foreground text-sm">
                     Premium (Cash)
                   </p>
-                  <p className="text-on-success font-medium dark:text-[#33D4BC]">
+                  <p className="text-on-success dark:text-brand-teal-light font-medium">
                     {formatBudgetCurrency(parseFloat(policy.premiumAmount))} /
                     {policy.premiumFrequency.toLowerCase()}
                   </p>
@@ -483,7 +483,7 @@ export function PolicyCard({
                   setIsModalOpen(false)
                   onDelete?.()
                 }}
-                className="text-on-danger hover:text-on-danger w-full dark:text-[#E07070] dark:hover:text-[#E07070]">
+                className="text-on-danger hover:text-on-danger dark:text-brand-alert-red-dark dark:hover:text-brand-alert-red-dark w-full">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Policy
               </Button>

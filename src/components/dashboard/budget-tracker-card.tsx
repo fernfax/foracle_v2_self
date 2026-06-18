@@ -60,9 +60,9 @@ function getIconComponent(
 }
 
 function getProgressColor(percentUsed: number): string {
-  if (percentUsed >= 100) return "bg-[#E05555]"
-  if (percentUsed >= 80) return "bg-[#D4A843]"
-  return "bg-[#00C4AA]"
+  if (percentUsed >= 100) return "bg-brand-alert-red"
+  if (percentUsed >= 80) return "bg-brand-gold"
+  return "bg-brand-teal"
 }
 
 export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {

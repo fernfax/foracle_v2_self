@@ -46,30 +46,30 @@ export function BudgetOverview({
   const usageStatus = getBudgetUsageStatus(percentUsed)
 
   const statusColors = {
-    safe: "bg-[#B8622A]",
-    warning: "bg-[#D4A843]",
-    danger: "bg-[#E05555]"
+    safe: "bg-brand-terracotta",
+    warning: "bg-brand-gold",
+    danger: "bg-brand-alert-red"
   }
 
   const pacingConfig = {
     under: {
       label: "UNDERSPENDING",
       textColor: "text-on-success",
-      bgColor: "bg-[rgba(0,196,170,0.12)]",
+      bgColor: "bg-brand-teal/[0.12]",
       Icon: TrendingDown,
       message: "You're below your expected spending pace."
     },
     "on-track": {
       label: "ON TRACK",
       textColor: "text-on-brand",
-      bgColor: "bg-[rgba(184,98,42,0.10)]",
+      bgColor: "bg-brand-terracotta/[0.1]",
       Icon: CheckCircle,
       message: "You're on track with your budget."
     },
     over: {
       label: "OVERSPENDING",
       textColor: "text-on-danger",
-      bgColor: "bg-[rgba(224,85,85,0.12)]",
+      bgColor: "bg-brand-alert-red/[0.12]",
       Icon: AlertTriangle,
       message: "You're ahead of budget. Consider slowing down spending."
     }

@@ -67,7 +67,7 @@ export function WizardNavigation({
           disabled={!canProceed || isSubmitting}
           className={`min-w-[140px] gap-2 ${
             isLastStep
-              ? "bg-[#B8622A] text-white shadow-lg shadow-[#B8622A]/20 hover:bg-[#B8622A]"
+              ? "bg-brand-terracotta shadow-brand-terracotta/20 hover:bg-brand-terracotta text-white shadow-lg"
               : ""
           }`}>
           {isSubmitting ? (

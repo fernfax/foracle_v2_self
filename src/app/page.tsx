@@ -203,10 +203,10 @@ export default async function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="relative z-10 mx-auto max-w-7xl px-5 pt-16 pb-24 text-center sm:px-6 sm:pt-24 lg:px-8 lg:pt-28 lg:pb-32">
-          <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-[rgba(184,98,42,0.18)] bg-[rgba(184,98,42,0.07)] px-4 py-1.5 dark:border-[rgba(212,132,90,0.3)] dark:bg-[rgba(212,132,90,0.12)]">
+          <div className="border-brand-terracotta/[0.18] bg-brand-terracotta/[0.07] dark:border-brand-coral/[0.3] dark:bg-brand-coral/[0.12] mx-auto mb-7 inline-flex items-center gap-2 rounded-full border px-4 py-1.5">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C4AA] opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C4AA]" />
+              <span className="bg-brand-teal absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
+              <span className="bg-brand-teal relative inline-flex h-2 w-2 rounded-full" />
             </span>
             <span className="font-display text-on-brand text-[11px] font-semibold tracking-[0.16em] uppercase dark:text-[#E8A06A]">
               Made for Singapore, by Singaporeans
@@ -215,7 +215,7 @@ export default async function Home() {
 
           <h1 className="font-display text-foreground mx-auto max-w-4xl text-[2.6rem] leading-[1.05] font-semibold tracking-[-0.03em] sm:text-6xl lg:text-7xl">
             Take control of your money with{" "}
-            <span className="font-editorial font-normal text-[#B8622A]">
+            <span className="font-editorial text-brand-terracotta font-normal">
               clarity
             </span>
             .
@@ -272,7 +272,7 @@ export default async function Home() {
               key={s.n}
               delay={i * 80}
               className="glass-panel rounded-2xl p-7 sm:p-8">
-              <span className="font-display text-4xl font-semibold tracking-tight text-[#B8622A]/85 tabular-nums">
+              <span className="font-display text-brand-terracotta/85 text-4xl font-semibold tracking-tight tabular-nums">
                 {s.n}
               </span>
               <h3 className="font-display text-foreground mt-5 text-lg font-semibold tracking-tight">
@@ -334,30 +334,30 @@ export default async function Home() {
       {/* Comparison */}
       <section
         id="compare"
-        className="relative z-10 scroll-mt-20 bg-[#1C2B2A] py-20 sm:py-28">
+        className="bg-brand-deep-forest relative z-10 scroll-mt-20 py-20 sm:py-28">
         <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
           <Reveal className="mb-12 max-w-2xl">
-            <p className="font-display mb-3 text-[11px] font-semibold tracking-[0.2em] text-[#D4845A] uppercase">
+            <p className="font-display text-brand-coral mb-3 text-[11px] font-semibold tracking-[0.2em] uppercase">
               Why Foracle
             </p>
-            <h2 className="font-display text-3xl font-semibold tracking-[-0.02em] text-[#F0EBE0] sm:text-4xl">
+            <h2 className="font-display text-brand-cream text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
               There&apos;s a calmer way to hold your money
             </h2>
           </Reveal>
 
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
             {/* Old way */}
-            <div className="rounded-2xl border border-[rgba(240,235,224,0.10)] bg-[rgba(240,235,224,0.03)] p-6 sm:p-8">
-              <p className="font-display mb-6 text-[11px] font-semibold tracking-[0.18em] text-[rgba(240,235,224,0.72)] uppercase">
+            <div className="border-brand-cream/[0.1] bg-brand-cream/[0.03] rounded-2xl border p-6 sm:p-8">
+              <p className="font-display text-brand-cream/[0.72] mb-6 text-[11px] font-semibold tracking-[0.18em] uppercase">
                 The old way
               </p>
               <ul className="space-y-4">
                 {COMPARE.map(([old]) => (
                   <li key={old} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-[rgba(224,85,85,0.15)]">
-                      <X className="h-3 w-3 text-[#E07070]" />
+                    <span className="bg-brand-alert-red/[0.15] mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full">
+                      <X className="text-brand-alert-red-dark h-3 w-3" />
                     </span>
-                    <span className="text-[14px] leading-relaxed text-[rgba(240,235,224,0.6)]">
+                    <span className="text-brand-cream/[0.6] text-[14px] leading-relaxed">
                       {old}
                     </span>
                   </li>
@@ -366,17 +366,17 @@ export default async function Home() {
             </div>
 
             {/* Foracle way */}
-            <div className="rounded-2xl border border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.06)] p-6 sm:p-8">
-              <p className="font-display mb-6 text-[11px] font-semibold tracking-[0.18em] text-[#33D4BC] uppercase">
+            <div className="border-brand-teal/[0.25] bg-brand-teal/[0.06] rounded-2xl border p-6 sm:p-8">
+              <p className="font-display text-brand-teal-light mb-6 text-[11px] font-semibold tracking-[0.18em] uppercase">
                 With Foracle
               </p>
               <ul className="space-y-4">
                 {COMPARE.map(([, neu]) => (
                   <li key={neu} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-[rgba(0,196,170,0.18)]">
-                      <Check className="h-3 w-3 text-[#00C4AA]" />
+                    <span className="bg-brand-teal/[0.18] mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full">
+                      <Check className="text-brand-teal h-3 w-3" />
                     </span>
-                    <span className="text-[14px] leading-relaxed text-[#F0EBE0]">
+                    <span className="text-brand-cream text-[14px] leading-relaxed">
                       {neu}
                     </span>
                   </li>
@@ -417,18 +417,18 @@ export default async function Home() {
 
       {/* Final CTA */}
       <section className="relative z-10 mx-auto max-w-5xl px-5 pb-24 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-[#1C2B2A] px-6 py-14 text-center sm:px-12 sm:py-20">
+        <div className="bg-brand-deep-forest relative overflow-hidden rounded-3xl px-6 py-14 text-center sm:px-12 sm:py-20">
           <div
             aria-hidden
-            className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(212,132,90,0.5)] to-transparent"
+            className="via-brand-coral/[0.5] absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
           />
-          <p className="font-display mb-4 text-[11px] font-semibold tracking-[0.2em] text-[#D4845A] uppercase">
+          <p className="font-display text-brand-coral mb-4 text-[11px] font-semibold tracking-[0.2em] uppercase">
             Get started
           </p>
-          <h2 className="font-display mx-auto max-w-xl text-3xl font-semibold tracking-[-0.02em] text-[#F0EBE0] sm:text-4xl">
+          <h2 className="font-display text-brand-cream mx-auto max-w-xl text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
             Ready to see your whole financial life?
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-[rgba(240,235,224,0.6)] sm:text-base">
+          <p className="text-brand-cream/[0.6] mx-auto mt-4 max-w-md text-[15px] leading-relaxed sm:text-base">
             Bring your money into one calm view today. Free to start — no card
             required.
           </p>
@@ -443,7 +443,7 @@ export default async function Home() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full border-[rgba(240,235,224,0.2)] bg-transparent px-10 text-[#F0EBE0] hover:bg-[rgba(240,235,224,0.08)] hover:text-[#F0EBE0] sm:w-auto">
+                className="border-brand-cream/[0.2] text-brand-cream hover:bg-brand-cream/[0.08] hover:text-brand-cream w-full bg-transparent px-10 sm:w-auto">
                 Sign in
               </Button>
             </Link>

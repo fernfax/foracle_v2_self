@@ -821,7 +821,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-[#E05555] hover:bg-[#E05555]">
+              className="bg-brand-alert-red hover:bg-brand-alert-red">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

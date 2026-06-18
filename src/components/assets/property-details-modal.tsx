@@ -91,7 +91,7 @@ export function PropertyDetailsModal({
         }}>
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
+            <div className="bg-brand-terracotta/[0.1] flex h-12 w-12 items-center justify-center rounded-xl">
               <Home className="text-on-brand h-6 w-6" />
             </div>
             <div>
@@ -105,7 +105,7 @@ export function PropertyDetailsModal({
               </p>
               <Badge
                 variant="outline"
-                className={`mt-2 text-xs font-medium ${property.linkedExpenseId ? "text-on-success border-[rgba(0,196,170,0.25)]" : "text-muted-foreground border-border"}`}>
+                className={`mt-2 text-xs font-medium ${property.linkedExpenseId ? "text-on-success border-brand-teal/[0.25]" : "text-muted-foreground border-border"}`}>
                 {property.linkedExpenseId ? (
                   <Check className="mr-1 h-3 w-3" />
                 ) : (
@@ -153,7 +153,7 @@ export function PropertyDetailsModal({
                 <h3 className="text-foreground font-semibold">Loan Progress</h3>
                 <Badge
                   variant="secondary"
-                  className="text-on-success bg-[rgba(0,196,170,0.12)] dark:bg-[rgba(0,196,170,0.18)] dark:text-[#33d4bc]">
+                  className="text-on-success bg-brand-teal/[0.12] dark:bg-brand-teal/[0.18] dark:text-brand-teal-light">
                   {progress.toFixed(1)}% Complete
                 </Badge>
               </div>

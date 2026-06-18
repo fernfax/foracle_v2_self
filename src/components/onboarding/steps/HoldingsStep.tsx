@@ -214,8 +214,8 @@ export function HoldingsStep({
         )}
 
         {/* Add More Later Info Box */}
-        <div className="flex gap-3 rounded-xl border border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.06)] p-4">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(184,98,42,0.10)]">
+        <div className="border-brand-terracotta/[0.25] bg-brand-terracotta/[0.06] flex gap-3 rounded-xl border p-4">
+          <div className="bg-brand-terracotta/[0.1] flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
             <Lightbulb className="text-on-warning h-4 w-4" />
           </div>
           <div>

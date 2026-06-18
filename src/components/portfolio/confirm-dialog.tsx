@@ -47,7 +47,7 @@ export function ConfirmDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="flex items-start gap-3 text-left">
-            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[rgba(224,85,85,0.12)] text-[#E05555] dark:text-[#E07070]">
+            <span className="bg-brand-alert-red/[0.12] dark:text-brand-alert-red-dark inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-[#E05555]">
               <AlertTriangle className="size-[18px]" />
             </span>
             <div className="space-y-1.5">
@@ -62,7 +62,7 @@ export function ConfirmDialog({
           <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className="bg-[#E05555] text-white hover:bg-[#E05555]/90">
+            className="bg-brand-alert-red hover:bg-brand-alert-red/90 text-white">
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -136,7 +136,7 @@ export function TotalExpensesCard({
           <CardTitle className="text-muted-foreground text-sm font-medium">
             Total Expenses
           </CardTitle>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(224,85,85,0.12)]">
+          <div className="bg-brand-alert-red/[0.12] flex h-10 w-10 items-center justify-center rounded-xl">
             <TrendingDown className="text-on-danger h-5 w-5" />
           </div>
         </CardHeader>

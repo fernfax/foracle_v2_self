@@ -84,12 +84,12 @@ export default function RootLayout({
         },
         elements: {
           formButtonPrimary:
-            "bg-[#B8622A] hover:bg-[#D4845A] text-[#FBF7F1] font-medium",
-          card: "border border-[rgba(28,43,42,0.10)] shadow-none",
-          headerTitle: "text-[#1C2B2A]",
-          headerSubtitle: "text-[rgba(28,43,42,0.55)]",
+            "bg-brand-terracotta hover:bg-brand-coral text-brand-warm-white font-medium",
+          card: "border border-brand-deep-forest/[0.1] shadow-none",
+          headerTitle: "text-brand-deep-forest",
+          headerSubtitle: "text-brand-deep-forest/[0.55]",
           socialButtonsBlockButton:
-            "border-[rgba(28,43,42,0.20)] hover:bg-[#F0EBE0]"
+            "border-brand-deep-forest/[0.2] hover:bg-brand-cream"
         }
       }}
       signInFallbackRedirectUrl="/overview"

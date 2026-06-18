@@ -42,7 +42,7 @@ export function Toolbar({
   return (
     <div
       className={cn(
-        "bg-card shadow-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(28,43,42,0.06)] px-3 py-2.5 dark:border-[rgba(240,235,224,0.08)] dark:shadow-none",
+        "bg-card shadow-card border-brand-deep-forest/[0.06] dark:border-brand-cream/[0.08] flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 dark:shadow-none",
         className
       )}>
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2.5">

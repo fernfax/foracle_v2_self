@@ -76,7 +76,7 @@ export function Sidebar() {
       data-tour="sidebar-nav"
       className={cn(
         // Sticky participates in the parent CSS Grid; the grid column drives the visible width.
-        "sticky top-0 h-screen w-full self-start overflow-hidden border-r border-[rgba(240,235,224,0.06)] bg-[#1C2B2A]",
+        "border-brand-cream/[0.06] bg-brand-deep-forest sticky top-0 h-screen w-full self-start overflow-hidden border-r",
         // Mobile-hidden via CSS (not JS) so SSR/first paint never shows the
         // desktop sidebar on phones. display:none drops it from the grid flow.
         "desktop:flex z-50 hidden flex-col"
@@ -136,13 +136,13 @@ export function Sidebar() {
         </nav>
 
         {/* Bottom section — pin toggle + user profile */}
-        <div className="flex-shrink-0 border-t border-[rgba(240,235,224,0.06)]">
+        <div className="border-brand-cream/[0.06] flex-shrink-0 border-t">
           <div className="px-3 py-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsPinned(!isPinned)}
-              className="flex w-full items-center justify-start gap-2 border-transparent bg-transparent text-[rgba(240,235,224,0.55)] hover:border-transparent hover:bg-[#2C3E3D] hover:text-[#F0EBE0]">
+              className="text-brand-cream/[0.55] hover:bg-brand-forest-mid hover:text-brand-cream flex w-full items-center justify-start gap-2 border-transparent bg-transparent hover:border-transparent">
               {isPinned ? (
                 <>
                   <PanelLeftClose className="h-4 w-4 flex-shrink-0" />
@@ -173,7 +173,7 @@ export function Sidebar() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-3 border-t border-[rgba(240,235,224,0.06)] px-3 py-3">
+          <div className="border-brand-cream/[0.06] flex items-center gap-3 border-t px-3 py-3">
             {isLoaded && user ? (
               <>
                 <ClerkUserButton
@@ -189,16 +189,16 @@ export function Sidebar() {
                     "min-w-0 flex-1 transition-opacity duration-200",
                     isExpanded ? "opacity-100" : "pointer-events-none opacity-0"
                   )}>
-                  <p className="font-display truncate text-sm font-medium text-[#F0EBE0]">
+                  <p className="font-display text-brand-cream truncate text-sm font-medium">
                     {user.fullName || user.firstName || "User"}
                   </p>
-                  <p className="truncate text-xs text-[rgba(240,235,224,0.45)]">
+                  <p className="text-brand-cream/[0.45] truncate text-xs">
                     {user.primaryEmailAddress?.emailAddress || ""}
                   </p>
                 </div>
               </>
             ) : (
-              <div className="h-10 w-10 animate-pulse rounded-full bg-[#2C3E3D]" />
+              <div className="bg-brand-forest-mid h-10 w-10 animate-pulse rounded-full" />
             )}
           </div>
         </div>

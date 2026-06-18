@@ -96,7 +96,7 @@ const STEP_CONFIG: StepConfig[] = [
     subtitle: "Let's start with your basic information",
     displayStep: 1,
     icon: User,
-    iconBgColor: "bg-[rgba(58,107,82,0.12)]",
+    iconBgColor: "bg-brand-jungle/[0.12]",
     iconColor: "text-[#3A6B52]"
   },
   {
@@ -104,7 +104,7 @@ const STEP_CONFIG: StepConfig[] = [
     subtitle: "Add your primary source of income",
     displayStep: 2,
     icon: DollarSign,
-    iconBgColor: "bg-[rgba(0,196,170,0.12)]",
+    iconBgColor: "bg-brand-teal/[0.12]",
     iconColor: "text-on-success"
   },
   {
@@ -112,15 +112,15 @@ const STEP_CONFIG: StepConfig[] = [
     subtitle: "Add your CPF Holdings (Optional)",
     displayStep: 3,
     icon: PiggyBank,
-    iconBgColor: "bg-[rgba(184,98,42,0.12)]",
-    iconColor: "text-[#B8622A]"
+    iconBgColor: "bg-brand-terracotta/[0.12]",
+    iconColor: "text-brand-terracotta"
   },
   {
     title: "Current Holdings",
     subtitle: "Add your bank accounts and savings (Optional)",
     displayStep: 4,
     icon: Building2,
-    iconBgColor: "bg-[rgba(212,168,67,0.15)]",
+    iconBgColor: "bg-brand-gold/[0.15]",
     iconColor: "text-on-warning"
   },
   {
@@ -128,15 +128,15 @@ const STEP_CONFIG: StepConfig[] = [
     subtitle: "Choose the categories where you typically spend money",
     displayStep: 5,
     icon: Wallet,
-    iconBgColor: "bg-[rgba(212,132,90,0.12)]",
-    iconColor: "text-[#B8622A]"
+    iconBgColor: "bg-brand-coral/[0.12]",
+    iconColor: "text-brand-terracotta"
   },
   {
     title: "You're all set!",
     subtitle: "Review your information and complete setup",
     displayStep: 6,
     icon: CheckCircle2,
-    iconBgColor: "bg-[rgba(0,196,170,0.15)]",
+    iconBgColor: "bg-brand-teal/[0.15]",
     iconColor: "text-on-success"
   }
 ]

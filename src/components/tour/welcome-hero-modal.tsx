@@ -30,48 +30,48 @@ interface IconConfig {
 const ICON_CONFIGS: IconConfig[] = [
   {
     Icon: Wallet,
-    bgClass: "bg-[rgba(0,196,170,0.12)]",
+    bgClass: "bg-brand-teal/[0.12]",
     textClass: "text-on-success"
   },
   {
     Icon: Target,
-    bgClass: "bg-[rgba(184,98,42,0.10)]",
+    bgClass: "bg-brand-terracotta/[0.1]",
     textClass: "text-on-brand"
   },
   {
     Icon: TrendingUp,
-    bgClass: "bg-[rgba(212,168,67,0.15)]",
+    bgClass: "bg-brand-gold/[0.15]",
     textClass: "text-on-warning"
   },
   {
     Icon: Shield,
-    bgClass: "bg-[rgba(224,85,85,0.12)]",
+    bgClass: "bg-brand-alert-red/[0.12]",
     textClass: "text-on-danger"
   },
   {
     Icon: Users,
-    bgClass: "bg-[rgba(184,98,42,0.10)]",
+    bgClass: "bg-brand-terracotta/[0.1]",
     textClass: "text-on-brand"
   },
   {
     Icon: BarChart3,
-    bgClass: "bg-[rgba(184,98,42,0.10)]",
+    bgClass: "bg-brand-terracotta/[0.1]",
     textClass: "text-on-brand"
   },
   {
     Icon: PiggyBank,
-    bgClass: "bg-[rgba(224,85,85,0.12)]",
+    bgClass: "bg-brand-alert-red/[0.12]",
     textClass: "text-on-danger"
   },
   {
     Icon: CreditCard,
-    bgClass: "bg-[rgba(0,196,170,0.12)]",
+    bgClass: "bg-brand-teal/[0.12]",
     textClass: "text-on-success"
   },
   { Icon: Landmark, bgClass: "bg-muted", textClass: "text-foreground" },
   {
     Icon: Coins,
-    bgClass: "bg-[rgba(184,98,42,0.10)]",
+    bgClass: "bg-brand-terracotta/[0.1]",
     textClass: "text-on-brand"
   }
 ]
@@ -302,7 +302,7 @@ export function WelcomeHeroModal({
       <DialogContent className="gap-0 overflow-hidden border-0 p-0 sm:max-w-xl">
         <DialogTitle className="sr-only">{content.title}</DialogTitle>
         {/* Animated background section */}
-        <div className="from-muted relative h-44 overflow-hidden bg-gradient-to-br via-[rgba(184,98,42,0.10)]/50 to-[rgba(184,98,42,0.10)]/30">
+        <div className="from-muted via-brand-terracotta/[0.1]/50 to-brand-terracotta/[0.1]/30 relative h-44 overflow-hidden bg-gradient-to-br">
           <ModalFloatingIcons />
           {/* Gradient overlay for better text readability — uses the theme bg
               (warm-white in light, nightfall in dark) so the title stays legible

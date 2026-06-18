@@ -279,7 +279,7 @@ export function LifeStages() {
                 <motion.div
                   aria-hidden
                   style={{ scaleX: smooth }}
-                  className="absolute top-0 left-0 z-20 h-0.5 w-full origin-left bg-[#B8622A] lg:hidden"
+                  className="bg-brand-terracotta absolute top-0 left-0 z-20 h-0.5 w-full origin-left lg:hidden"
                 />
                 {/* Soft inset column divider — doesn't touch the rounded corners. */}
                 <div
@@ -346,7 +346,7 @@ export function LifeStages() {
               <motion.div
                 aria-hidden
                 style={{ scaleY: smooth }}
-                className="absolute top-0 left-1/2 h-full w-px origin-top -translate-x-1/2 bg-[#B8622A]"
+                className="bg-brand-terracotta absolute top-0 left-1/2 h-full w-px origin-top -translate-x-1/2"
               />
               {STAGES.map((s, i) => {
                 const isActive = i === active

@@ -939,7 +939,7 @@ export function MonthlyBalanceGraph({
           {hasInvestments && (
             <label
               htmlFor="includeInvestments"
-              className="absolute right-10 bottom-40 z-10 flex cursor-pointer items-center gap-2 rounded-lg border border-[rgba(0,196,170,0.3)] bg-[rgba(0,196,170,0.18)] px-2.5 py-1.5 backdrop-blur-sm">
+              className="border-brand-teal/[0.3] bg-brand-teal/[0.18] absolute right-10 bottom-40 z-10 flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 backdrop-blur-sm">
               <Checkbox
                 id="includeInvestments"
                 checked={includeInvestments}

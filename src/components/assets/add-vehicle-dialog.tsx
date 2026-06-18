@@ -685,7 +685,7 @@ export function AddVehicleDialog({
                     />
                   </div>
                   {validationError && (
-                    <div className="text-on-danger mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm">
+                    <div className="text-on-danger bg-brand-alert-red/[0.12] mt-3 rounded p-2 text-sm">
                       {validationError}
                     </div>
                   )}

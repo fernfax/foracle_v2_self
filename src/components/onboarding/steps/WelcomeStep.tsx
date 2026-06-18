@@ -49,10 +49,10 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-10 text-center">
       {/* Status pill — mirrors the landing hero badge */}
-      <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[rgba(184,98,42,0.18)] bg-[rgba(184,98,42,0.07)] px-4 py-1.5">
+      <div className="border-brand-terracotta/[0.18] bg-brand-terracotta/[0.07] mb-7 inline-flex items-center gap-2 rounded-full border px-4 py-1.5">
         <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C4AA] opacity-60" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C4AA]" />
+          <span className="bg-brand-teal absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
+          <span className="bg-brand-teal relative inline-flex h-2 w-2 rounded-full" />
         </span>
         <span className="font-display text-on-brand text-[11px] font-semibold tracking-[0.16em] uppercase">
           Welcome to Foracle
@@ -62,7 +62,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       {/* Hero headline — Space Grotesk with a single Lora-italic accent */}
       <h1 className="font-display text-foreground mx-auto max-w-2xl text-[2.4rem] leading-[1.05] font-semibold tracking-[-0.03em] sm:text-5xl">
         Your whole financial life, with{" "}
-        <span className="font-editorial font-normal text-[#B8622A]">
+        <span className="font-editorial text-brand-terracotta font-normal">
           clarity
         </span>
         .
@@ -74,7 +74,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       </p>
 
       {/* Features — landing-style hairline grid */}
-      <div className="mt-12 grid w-full max-w-2xl gap-px overflow-hidden rounded-2xl border border-[rgba(28,43,42,0.08)] bg-[rgba(28,43,42,0.08)] sm:grid-cols-2">
+      <div className="border-brand-deep-forest/[0.08] bg-brand-deep-forest/[0.08] mt-12 grid w-full max-w-2xl gap-px overflow-hidden rounded-2xl border sm:grid-cols-2">
         {FEATURES.map(({ icon: Icon, title, description, tint, color }) => (
           <div
             key={title}

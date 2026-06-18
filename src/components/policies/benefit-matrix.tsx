@@ -56,26 +56,26 @@ function getAvatarConfig(relationship: string | null) {
     case "self":
       return {
         icon: User,
-        bgColor: "bg-[rgba(184,98,42,0.10)]",
+        bgColor: "bg-brand-terracotta/[0.1]",
         iconColor: "text-on-brand"
       }
     case "spouse":
       return {
         icon: Heart,
-        bgColor: "bg-[rgba(224,85,85,0.12)]",
+        bgColor: "bg-brand-alert-red/[0.12]",
         iconColor: "text-on-danger"
       }
     case "child":
       return {
         icon: Baby,
-        bgColor: "bg-[rgba(0,196,170,0.12)]",
+        bgColor: "bg-brand-teal/[0.12]",
         iconColor: "text-on-success"
       }
     case "parent":
     case "sibling":
       return {
         icon: Users,
-        bgColor: "bg-[rgba(184,98,42,0.10)]",
+        bgColor: "bg-brand-terracotta/[0.1]",
         iconColor: "text-on-brand"
       }
     default:
@@ -212,7 +212,7 @@ export function BenefitMatrix({ familyMembers, policies }: BenefitMatrixProps) {
                           {member.name}
                         </span>
                         {hasNoCoverage && (
-                          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-[#D4A843]" />
+                          <AlertTriangle className="text-brand-gold h-3.5 w-3.5 flex-shrink-0" />
                         )}
                       </div>
                       {member.relationship && (

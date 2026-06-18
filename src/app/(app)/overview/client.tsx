@@ -206,7 +206,7 @@ export function DashboardClient({
                 <CardTitle className="text-muted-foreground text-sm font-medium">
                   Active Goals
                 </CardTitle>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(0,196,170,0.12)]">
+                <div className="bg-brand-teal/[0.12] flex h-10 w-10 items-center justify-center rounded-xl">
                   <Target className="text-on-success h-5 w-5" />
                 </div>
               </CardHeader>
@@ -226,7 +226,7 @@ export function DashboardClient({
                 <CardTitle className="text-muted-foreground text-sm font-medium">
                   Family Members
                 </CardTitle>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
+                <div className="bg-brand-terracotta/[0.1] flex h-10 w-10 items-center justify-center rounded-xl">
                   <Users className="text-on-brand h-5 w-5" />
                 </div>
               </CardHeader>

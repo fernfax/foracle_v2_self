@@ -226,7 +226,7 @@ export function GoalList({
                       e.stopPropagation()
                       handleMarkAchieved(goal)
                     }}
-                    className="border-border/60 text-muted-foreground hover:text-on-success flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-colors hover:bg-[rgba(0,196,170,0.10)] dark:hover:text-[#33D4BC]">
+                    className="border-border/60 text-muted-foreground hover:text-on-success hover:bg-brand-teal/[0.1] dark:hover:text-brand-teal-light flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-colors">
                     <CheckCircle2 className="size-3.5" />
                     Mark as achieved
                   </button>
@@ -268,7 +268,7 @@ export function GoalList({
             &ldquo;{goalToDelete?.goalName}&rdquo; will be removed. This
             can&rsquo;t be undone.
             {goalToDelete?.linkedExpenseId ? (
-              <span className="text-on-warning mt-2 block dark:text-[#D4A843]">
+              <span className="text-on-warning dark:text-brand-gold mt-2 block">
                 This will also remove the linked monthly expense.
               </span>
             ) : null}

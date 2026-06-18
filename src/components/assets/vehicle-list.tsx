@@ -231,14 +231,14 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                         <p className="text-muted-foreground text-sm">
                           Outstanding loan
                         </p>
-                        <p className="font-display text-on-warning text-2xl font-semibold tabular-nums dark:text-[#D4A843]">
+                        <p className="font-display text-on-warning dark:text-brand-gold text-2xl font-semibold tabular-nums">
                           {formatBudgetCurrency(outstandingLoan)}
                         </p>
                       </div>
                     ) : (
                       <div className="flex flex-col justify-center">
                         <p className="text-muted-foreground text-sm">Loan</p>
-                        <p className="font-display text-on-success text-lg font-semibold dark:text-[#00C4AA]">
+                        <p className="font-display text-on-success dark:text-brand-teal text-lg font-semibold">
                           Owned outright
                         </p>
                       </div>
@@ -273,7 +273,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                           <span className="text-muted-foreground">
                             Loan progress
                           </span>
-                          <span className="text-on-success font-medium dark:text-[#00C4AA]">
+                          <span className="text-on-success dark:text-brand-teal font-medium">
                             {progress.toFixed(1)}% paid
                           </span>
                         </div>
@@ -316,16 +316,16 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
 
                 {/* Footer: principal / interest split (loan only, when computable) */}
                 {showSplit && (
-                  <div className="border-border/40 bg-muted/60 flex items-center gap-5 border-t px-5 py-3 text-sm dark:bg-[rgba(240,235,224,0.04)]">
+                  <div className="border-border/40 bg-muted/60 dark:bg-brand-cream/[0.04] flex items-center gap-5 border-t px-5 py-3 text-sm">
                     <div>
                       <span className="text-muted-foreground">Principal </span>
-                      <span className="text-on-success font-medium tabular-nums dark:text-[#00C4AA]">
+                      <span className="text-on-success dark:text-brand-teal font-medium tabular-nums">
                         {formatBudgetCurrency(Math.max(0, principalRepayment))}
                       </span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Interest </span>
-                      <span className="text-on-warning font-medium tabular-nums dark:text-[#D4A843]">
+                      <span className="text-on-warning dark:text-brand-gold font-medium tabular-nums">
                         {formatBudgetCurrency(interestRepayment)}
                       </span>
                     </div>

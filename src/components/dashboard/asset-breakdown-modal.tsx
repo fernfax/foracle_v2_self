@@ -199,9 +199,9 @@ export function AssetBreakdownModal({
   }
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 75) return "bg-[#00C4AA]"
-    if (progress >= 50) return "bg-[#B8622A]"
-    if (progress >= 25) return "bg-[#D4A843]"
+    if (progress >= 75) return "bg-brand-teal"
+    if (progress >= 50) return "bg-brand-terracotta"
+    if (progress >= 25) return "bg-brand-gold"
     return "bg-muted"
   }
 
@@ -247,7 +247,7 @@ export function AssetBreakdownModal({
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(0,196,170,0.12)]">
+                  <div className="bg-brand-teal/[0.12] flex h-8 w-8 items-center justify-center rounded-lg">
                     <Home className="text-on-success h-4 w-4" />
                   </div>
                   <h3 className="text-lg font-semibold">Properties</h3>
@@ -347,7 +347,7 @@ export function AssetBreakdownModal({
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(212,168,67,0.15)]">
+                  <div className="bg-brand-gold/[0.15] flex h-8 w-8 items-center justify-center rounded-lg">
                     <Car className="text-on-warning h-4 w-4" />
                   </div>
                   <h3 className="text-lg font-semibold">Vehicles</h3>

@@ -90,8 +90,8 @@ const integrationConfig = {
   policy: {
     icon: Shield,
     color: "text-on-brand",
-    bgColor: "bg-[rgba(184,98,42,0.10)]",
-    borderColor: "border-[rgba(184,98,42,0.25)]",
+    bgColor: "bg-brand-terracotta/[0.1]",
+    borderColor: "border-brand-terracotta/[0.25]",
     textColor: "text-on-brand",
     title: "View Insurance Expense",
     description:
@@ -104,8 +104,8 @@ const integrationConfig = {
   property: {
     icon: Home,
     color: "text-on-success",
-    bgColor: "bg-[rgba(0,196,170,0.12)]",
-    borderColor: "border-[rgba(0,196,170,0.25)]",
+    bgColor: "bg-brand-teal/[0.12]",
+    borderColor: "border-brand-teal/[0.25]",
     textColor: "text-on-success",
     title: "View Property Expense",
     description:
@@ -117,8 +117,8 @@ const integrationConfig = {
   vehicle: {
     icon: Car,
     color: "text-on-warning",
-    bgColor: "bg-[rgba(212,168,67,0.15)]",
-    borderColor: "border-[rgba(212,168,67,0.30)]",
+    bgColor: "bg-brand-gold/[0.15]",
+    borderColor: "border-brand-gold/[0.3]",
     textColor: "text-on-warning",
     title: "View Vehicle Expense",
     description:
@@ -130,8 +130,8 @@ const integrationConfig = {
   goal: {
     icon: Target,
     color: "text-on-brand",
-    bgColor: "bg-[rgba(184,98,42,0.10)]",
-    borderColor: "border-[rgba(184,98,42,0.25)]",
+    bgColor: "bg-brand-terracotta/[0.1]",
+    borderColor: "border-brand-terracotta/[0.25]",
     textColor: "text-on-brand",
     title: "View Goal Contribution",
     description:

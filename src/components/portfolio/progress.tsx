@@ -43,7 +43,7 @@ export function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       className={cn(
-        "w-full overflow-hidden rounded-full bg-[rgba(28,43,42,0.08)] dark:bg-[rgba(240,235,224,0.10)]",
+        "bg-brand-deep-forest/[0.08] dark:bg-brand-cream/[0.1] w-full overflow-hidden rounded-full",
         trackClassName,
         className
       )}

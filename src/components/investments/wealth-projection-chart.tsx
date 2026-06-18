@@ -86,7 +86,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <p className="text-foreground mb-2 font-semibold">{label}</p>
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-sm bg-[#00C4AA]" />
+            <div className="bg-brand-teal h-3 w-3 rounded-sm" />
             <span className="text-foreground">With Contributions:</span>
             <span className="font-medium">
               {formatCurrencyFull(payload[0]?.value || 0)}
@@ -385,7 +385,7 @@ export function WealthProjectionChart({
         </div>
 
         {/* Mobile Projected Value */}
-        <div className="mt-2 rounded-lg bg-[rgba(0,196,170,0.12)] p-3 sm:hidden">
+        <div className="bg-brand-teal/[0.12] mt-2 rounded-lg p-3 sm:hidden">
           <p className="text-muted-foreground text-xs">
             {rangeDisplayLabel} estimate
           </p>

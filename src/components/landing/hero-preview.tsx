@@ -59,11 +59,11 @@ export function HeroPreview() {
 
         <div className="grid gap-0 sm:grid-cols-5">
           {/* Left: net worth + animated line chart */}
-          <div className="border-b border-[rgba(28,43,42,0.07)] p-6 sm:col-span-3 sm:border-r sm:border-b-0 sm:p-8">
+          <div className="border-brand-deep-forest/[0.07] border-b p-6 sm:col-span-3 sm:border-r sm:border-b-0 sm:p-8">
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C4AA] opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C4AA]" />
+                <span className="bg-brand-teal absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
+                <span className="bg-brand-teal relative inline-flex h-2 w-2 rounded-full" />
               </span>
               <span className="font-display text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase">
                 Net worth · Live
@@ -74,7 +74,7 @@ export function HeroPreview() {
               <span className="font-display text-foreground text-3xl font-semibold tracking-[-0.02em] tabular-nums sm:text-4xl">
                 S$248,500
               </span>
-              <span className="font-display text-on-success mb-1 inline-flex items-center gap-1 rounded-full bg-[rgba(0,196,170,0.12)] px-2 py-0.5 text-[11px] font-semibold">
+              <span className="font-display text-on-success bg-brand-teal/[0.12] mb-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold">
                 <TrendingUp className="h-3 w-3" />
                 4.2%
               </span>
@@ -119,8 +119,8 @@ export function HeroPreview() {
                   transform: "translate(-50%, -50%)"
                 }}>
                 <span className="relative flex h-2.5 w-2.5">
-                  <span className="hp-halo absolute inline-flex h-full w-full rounded-full bg-[#B8622A]" />
-                  <span className="border-card relative inline-flex h-2.5 w-2.5 rounded-full border-2 bg-[#B8622A]" />
+                  <span className="hp-halo bg-brand-terracotta absolute inline-flex h-full w-full rounded-full" />
+                  <span className="border-card bg-brand-terracotta relative inline-flex h-2.5 w-2.5 rounded-full border-2" />
                 </span>
               </div>
             </div>
@@ -156,7 +156,7 @@ export function HeroPreview() {
                       {c.value}
                     </span>
                   </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(28,43,42,0.07)]">
+                  <div className="bg-brand-deep-forest/[0.07] mt-2 h-1.5 w-full overflow-hidden rounded-full">
                     <div
                       className="hp-bar h-full rounded-full"
                       style={{
@@ -171,7 +171,7 @@ export function HeroPreview() {
             </div>
 
             {/* Goal chip */}
-            <div className="bg-muted/50 mt-6 rounded-xl border border-[rgba(28,43,42,0.08)] p-3.5">
+            <div className="bg-muted/50 border-brand-deep-forest/[0.08] mt-6 rounded-xl border p-3.5">
               <div className="flex items-center justify-between">
                 <span className="font-display text-muted-foreground text-[10px] font-semibold tracking-[0.16em] uppercase">
                   Emergency fund
@@ -180,9 +180,9 @@ export function HeroPreview() {
                   82%
                 </span>
               </div>
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(28,43,42,0.07)]">
+              <div className="bg-brand-deep-forest/[0.07] mt-2 h-1.5 w-full overflow-hidden rounded-full">
                 <div
-                  className="hp-bar h-full w-[82%] rounded-full bg-[#00C4AA]"
+                  className="hp-bar bg-brand-teal h-full w-[82%] rounded-full"
                   style={{ animationDelay: "0.95s" }}
                 />
               </div>
@@ -193,8 +193,8 @@ export function HeroPreview() {
 
       {/* Floating insight chip — overlaps bottom-left */}
       <div className="glass-panel absolute -bottom-5 left-4 hidden items-center gap-2.5 rounded-2xl px-4 py-3 sm:flex">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(184,98,42,0.10)]">
-          <TrendingUp className="h-4 w-4 text-[#B8622A]" />
+        <div className="bg-brand-terracotta/[0.1] flex h-8 w-8 items-center justify-center rounded-lg">
+          <TrendingUp className="text-brand-terracotta h-4 w-4" />
         </div>
         <div className="leading-tight">
           <p className="font-display text-foreground text-[12px] font-semibold">
