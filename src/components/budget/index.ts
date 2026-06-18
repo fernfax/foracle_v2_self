@@ -14,6 +14,7 @@ export { DailySpendingGraphModal } from "@/components/budget/daily-spending-grap
 export { ExpenseHistoryModal } from "@/components/budget/expense-history-modal"
 export { ManageCategoriesModal } from "@/components/budget/manage-categories-modal"
 export { FloatingAddButton } from "@/components/budget/floating-add-button"
+export { BudgetAddFab } from "@/components/budget/budget-add-fab"
 export {
   AddExpenseProvider,
   useAddExpense

@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 import type { BackgroundDecor } from "@/lib/services/user-prefs"
+import { FabStackHost } from "@/components/ui/fab-stack"
 import { PeranakanTilesDecor } from "@/components/ui/peranakan-tiles-decor"
 import { RadialDecor } from "@/components/ui/radial-decor"
 import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget"
@@ -103,6 +104,10 @@ function DashboardContent({ children }: { children: ReactNode }) {
 
       <div className="bottom-spacer h-24"></div>
 
+      {/* Shared bottom-right FAB stack. The host lives here (outside the
+          contained content box); HelpButton/FloatingAddButton and any
+          page-level FABs (budget add, timeline edit) portal into it. */}
+      <FabStackHost />
       <HelpButton />
       <FloatingAddButton />
       <GlobalAddExpenseModal />

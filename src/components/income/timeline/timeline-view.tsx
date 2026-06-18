@@ -58,6 +58,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Fab } from "@/components/ui/fab-stack"
 import { MoneyInput } from "@/components/ui/money-input"
 import { MonthYearPicker } from "@/components/ui/month-year-picker"
 import {
@@ -3278,10 +3279,11 @@ function TimelineStudio({
   )
 }
 
-// Viewport-fixed edit-mode toggle for the Timeline Studio. Portaled to body so
-// `position: fixed` resolves against the viewport, then positioned just above
-// the "?" help button. Brighter/filled when edit mode is on so the on/off
-// state reads at a glance, matching the canvas's edit-mode highlight.
+// Edit-mode toggle for the Timeline Studio. Joins the shared bottom-right FAB
+// stack at order 20, so it sits above the help button (and the add FAB when
+// that's visible) without any hand-tuned offsets. Brighter/filled when edit
+// mode is on so the on/off state reads at a glance, matching the canvas's
+// edit-mode highlight.
 function FloatingEditButton({
   editMode,
   onToggle
@@ -3289,29 +3291,23 @@ function FloatingEditButton({
   editMode: boolean
   onToggle: () => void
 }) {
-  if (typeof document === "undefined") return null
-  return createPortal(
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={editMode}
-      aria-label={editMode ? "Exit edit mode" : "Enter edit mode"}
-      className={cn(
-        "fixed right-6 z-40 inline-flex h-12 items-center gap-2 rounded-full px-5 text-xs font-semibold tracking-wider uppercase shadow-lg backdrop-blur-sm transition-colors",
-        // Stack clear of the two buttons below on mobile: the global "?" help
-        // button (bottom-24) AND the global add FAB (bottom-[9rem]+safe-area,
-        // which only renders on mobile). Sit a button-height above the add FAB,
-        // tracking the same safe-area inset so notched phones don't re-collide.
-        // On desktop the add FAB is hidden, so md:bottom-20 (just above "?") holds.
-        "bottom-[calc(12rem+env(safe-area-inset-bottom))] md:bottom-20",
-        editMode
-          ? "bg-brand-terracotta hover:bg-brand-terracotta/90 ring-brand-terracotta/40 text-white ring-2"
-          : "border-border/40 bg-background/95 text-foreground hover:bg-accent border"
-      )}>
-      <Pencil className="h-4 w-4" />
-      {editMode ? "Editing…" : "Edit"}
-    </button>,
-    document.body
+  return (
+    <Fab order={20}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={editMode}
+        aria-label={editMode ? "Exit edit mode" : "Enter edit mode"}
+        className={cn(
+          "inline-flex h-12 items-center gap-2 rounded-full px-5 text-xs font-semibold tracking-wider uppercase shadow-lg backdrop-blur-sm transition-colors",
+          editMode
+            ? "bg-brand-terracotta hover:bg-brand-terracotta/90 ring-brand-terracotta/40 text-white ring-2"
+            : "border-border/40 bg-background/95 text-foreground hover:bg-accent border"
+        )}>
+        <Pencil className="h-4 w-4" />
+        {editMode ? "Editing…" : "Edit"}
+      </button>
+    </Fab>
   )
 }
 

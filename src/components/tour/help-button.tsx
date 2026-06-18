@@ -36,6 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { Fab } from "@/components/ui/fab-stack"
 import { useTourContext } from "@/components/tour/tour-provider"
 import { WelcomeHeroModal } from "@/components/tour/welcome-hero-modal"
 
@@ -251,16 +252,19 @@ export function HelpButton() {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="bg-background/95 hover:bg-accent desktop:bottom-6 fixed right-6 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-40 rounded-full shadow-lg backdrop-blur-sm"
-            aria-label="Help & Tours"
-            data-tour="help-button">
-            <HelpCircle className="h-5 w-5" />
-          </Button>
-        </DropdownMenuTrigger>
+        {/* order 0 — the help button anchors the bottom-right FAB stack. */}
+        <Fab order={0}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-background/95 hover:bg-accent rounded-full shadow-lg backdrop-blur-sm"
+              aria-label="Help & Tours"
+              data-tour="help-button">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+        </Fab>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>Guided Tours</DropdownMenuLabel>
           <DropdownMenuSeparator />

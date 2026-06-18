@@ -24,13 +24,11 @@ import {
 } from "@/actions/expense-categories"
 import {
   CalendarDays,
-  Plus,
   Settings2,
   Target,
   TrendingUp,
   Wallet
 } from "lucide-react"
-import { createPortal } from "react-dom"
 
 import { formatBudgetCurrency, isCurrentMonth } from "@/lib/budget-utils"
 import { Button } from "@/components/ui/button"
@@ -44,7 +42,8 @@ import {
   DailySpendingGraphModal,
   ExpenseHistoryModal,
   ManageCategoriesModal,
-  MonthNavigator
+  MonthNavigator,
+  useAddExpense
 } from "@/components/budget"
 import { BudgetBreakdown } from "@/components/budget/budget-breakdown"
 import { DailySpendingChart } from "@/components/budget/daily-spending-chart"
@@ -118,12 +117,17 @@ export function BudgetClient({
   // Manage categories modal state
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false)
 
-  // Track when the component is mounted on the client so we can portal the
-  // floating "+" button to <body>. The button must escape an ancestor with
-  // `contain: layout paint` (in DashboardShell) — that property creates a
-  // containing block and would otherwise pin `position: fixed` to it.
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  // The add-expense FAB lives in budget/layout.tsx and signals intent through
+  // the shared AddExpense context (rather than owning this page's rich modal
+  // state). When it fires, open a fresh add modal here.
+  const { isOpen: addFabOpen, closeModal: closeAddFab } = useAddExpense()
+  useEffect(() => {
+    if (addFabOpen) {
+      setEditingExpense(null)
+      setPreselectedCategoryName(null)
+      setAddExpenseOpen(true)
+    }
+  }, [addFabOpen])
 
   // Auto-fetch daily spending data for inline chart
   useEffect(() => {
@@ -333,28 +337,8 @@ export function BudgetClient({
           />
         </div>
 
-        {/* Floating Add Button — mobile only, portaled to <body> */}
-        {mounted &&
-          createPortal(
-            <div className="pointer-events-none fixed right-0 bottom-[calc(7rem+env(safe-area-inset-bottom))] left-0 z-40">
-              {/* Right-aligned (matches the global FloatingAddButton at right-6) so
-                  it never overlaps the full-width "Manage Categories" button. */}
-              <div className="mx-auto flex max-w-lg justify-end pr-6">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-background/95 hover:bg-accent animate-in fade-in slide-in-from-bottom-4 pointer-events-auto h-14 w-14 rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out"
-                  onClick={() => {
-                    setEditingExpense(null)
-                    setPreselectedCategoryName(null)
-                    setAddExpenseOpen(true)
-                  }}>
-                  <Plus className="h-6 w-6" />
-                </Button>
-              </div>
-            </div>,
-            document.body
-          )}
+        {/* Add button lives in budget/layout.tsx (BudgetAddFab) and opens this
+            modal via the shared AddExpense context — see the effect above. */}
       </div>
 
       {/* ── DESKTOP LAYOUT (read-only, data-rich) ── */}
@@ -466,7 +450,12 @@ export function BudgetClient({
       {/* Modals — shared state, triggered from mobile layout */}
       <AddExpenseModal
         open={addExpenseOpen}
-        onOpenChange={setAddExpenseOpen}
+        onOpenChange={(open) => {
+          setAddExpenseOpen(open)
+          // Reset the context when the modal closes so the layout FAB can
+          // re-open it (the open-on-true effect only fires on a fresh flip).
+          if (!open) closeAddFab()
+        }}
         categories={modalCategories}
         budgetData={budgetData}
         dailyExpenses={dailyExpenses}

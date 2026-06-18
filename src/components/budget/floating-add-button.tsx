@@ -3,8 +3,8 @@
 import { usePathname } from "next/navigation"
 import { Plus } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Fab } from "@/components/ui/fab-stack"
 import { useAddExpense } from "@/components/budget/add-expense-context"
 
 export function FloatingAddButton() {
@@ -23,22 +23,18 @@ export function FloatingAddButton() {
   }
 
   return (
-    <Button
-      size="icon"
-      variant="outline"
-      className={cn(
-        // Base styles - match help button styling
-        "bg-background/95 hover:bg-accent fixed z-40 rounded-full shadow-lg backdrop-blur-sm",
-        // Hide on desktop (width+height variant — phone-landscape keeps it,
-        // matching the shell's isDesktop check that drives the bottom nav)
-        "desktop:hidden",
-        // Mobile positioning - above help button; both clear the bottom nav's
-        // safe-area growth on notched devices (env() is 0 elsewhere)
-        "right-6 bottom-[calc(9rem+env(safe-area-inset-bottom))]"
-      )}
-      onClick={handleClick}
-      aria-label="Add expense">
-      <Plus className="h-5 w-5" />
-    </Button>
+    // order 10 — sits directly above the help button. `desktop:hidden` so it's
+    // mobile-only off the budget page; phone-landscape keeps it, matching the
+    // shell's isDesktop check that drives the bottom nav.
+    <Fab order={10} className="desktop:hidden">
+      <Button
+        size="icon"
+        variant="outline"
+        className="bg-background/95 hover:bg-accent rounded-full shadow-lg backdrop-blur-sm"
+        onClick={handleClick}
+        aria-label="Add expense">
+        <Plus className="h-5 w-5" />
+      </Button>
+    </Fab>
   )
 }
