@@ -31,24 +31,10 @@ export async function register() {
   // would only ever fire from a real bug we'd want to see.
   if (!IS_DEV) return
 
-  // NOTE: a `process.on("warning", …)` listener does NOT suppress Node's default
-  // stderr printer — verified on Node 24, both fire — so the older listener
-  // approach silently stopped working. Intercept `process.emitWarning` itself and
-  // drop ONLY this one warning name; every other warning (deprecation,
-  // experimental, genuine bugs) still surfaces through the untouched original.
-  const originalEmitWarning = process.emitWarning.bind(process)
-  process.emitWarning = ((warning: unknown, ...args: unknown[]) => {
-    const opt = args[0]
-    const type =
-      typeof opt === "string"
-        ? opt
-        : (opt as { type?: string } | undefined)?.type
-    const name =
-      typeof warning === "object" && warning !== null
-        ? (warning as { name?: string }).name
-        : undefined
-    if (type === "TimeoutNegativeWarning" || name === "TimeoutNegativeWarning")
-      return
-    return (originalEmitWarning as (...a: unknown[]) => void)(warning, ...args)
-  }) as typeof process.emitWarning
+  // The actual process.emitWarning override lives in a Node-only module, loaded
+  // here via dynamic import so this hook (which Turbopack also builds for the
+  // Edge runtime) carries no Node-only APIs.
+  const { suppressTimeoutWarning } =
+    await import("@/lib/suppress-timeout-warning")
+  suppressTimeoutWarning()
 }
