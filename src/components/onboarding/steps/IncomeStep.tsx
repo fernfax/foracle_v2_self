@@ -310,33 +310,27 @@ export function IncomeStep({
           </p>
         </div>
 
-        {/* CPF Checkbox */}
-        <div className="border-border/60 bg-muted/30 flex items-start space-x-3 rounded-lg border p-4">
+        {/* Whole card toggles via the native label wrapper. */}
+        <label className="border-border/60 bg-muted/30 flex cursor-pointer items-start space-x-3 rounded-lg border p-4">
           <Checkbox
-            id="cpf"
             checked={subjectToCpf}
             onCheckedChange={(checked) => setSubjectToCpf(checked === true)}
             className="mt-0.5"
           />
           <div className="space-y-1">
-            <Label
-              htmlFor="cpf"
-              className="cursor-pointer text-sm leading-none font-medium">
+            <span className="text-sm leading-none font-medium">
               Subject to CPF deductions
-            </Label>
+            </span>
             <p className="text-muted-foreground text-xs">
               Enable this for employment income that has CPF contributions
             </p>
           </div>
-        </div>
+        </label>
 
         {/* Bonus Section */}
         <div className="border-border/60 bg-muted/30 space-y-4 rounded-lg border p-4">
-          <div
-            className="flex cursor-pointer items-start space-x-3"
-            onClick={() => setAccountForBonus(!accountForBonus)}>
+          <label className="flex cursor-pointer items-start space-x-3">
             <Checkbox
-              id="bonus"
               checked={accountForBonus}
               onCheckedChange={(checked) =>
                 setAccountForBonus(checked === true)
@@ -344,17 +338,15 @@ export function IncomeStep({
               className="mt-0.5"
             />
             <div className="space-y-1">
-              <Label
-                htmlFor="bonus"
-                className="cursor-pointer text-sm leading-none font-medium">
+              <span className="text-sm leading-none font-medium">
                 Income Bonus Details
-              </Label>
+              </span>
               <p className="text-muted-foreground text-xs">
                 Set up bonus payments for specific months (e.g., 13th month
                 bonus in December)
               </p>
             </div>
-          </div>
+          </label>
 
           {accountForBonus && (
             <div className="space-y-3 pt-2">

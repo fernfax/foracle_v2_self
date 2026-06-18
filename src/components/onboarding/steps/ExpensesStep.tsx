@@ -268,26 +268,24 @@ export function ExpensesStep({
             {DEFAULT_CATEGORIES.map((category) => {
               const isSelected = selectedCategories.includes(category.name)
               return (
-                <div
+                <label
                   key={category.name}
-                  className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
                     isSelected
                       ? "border-primary bg-primary/5"
                       : "border-border/60 hover:border-border"
                   }`}>
-                  <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => toggleCategory(category.name)}
-                      className="mt-0.5"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{category.name}</p>
-                      <p className="text-muted-foreground truncate text-xs">
-                        {category.description}
-                      </p>
-                    </div>
-                  </label>
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => toggleCategory(category.name)}
+                    className="mt-0.5"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{category.name}</p>
+                    <p className="text-muted-foreground truncate text-xs">
+                      {category.description}
+                    </p>
+                  </div>
                   {isSelected && (
                     <div className="relative w-32 shrink-0">
                       <span className="text-muted-foreground absolute top-1/2 left-2 -translate-y-1/2 text-sm">
@@ -302,7 +300,7 @@ export function ExpensesStep({
                       />
                     </div>
                   )}
-                </div>
+                </label>
               )
             })}
           </div>
