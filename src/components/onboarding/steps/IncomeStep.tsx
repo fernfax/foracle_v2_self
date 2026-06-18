@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import { WizardNavigation } from "@/components/onboarding/WizardNavigation"
 import type {
   BonusGroup,
@@ -378,22 +379,25 @@ export function IncomeStep({
 
               {/* Dynamic Summary */}
               {totalBonusMonths > 0 && monthlyAmount > 0 && (
-                <div className="border-border/60 mt-4 space-y-1 border-t pt-3">
-                  <p className="text-muted-foreground text-sm">
-                    <span className="text-foreground font-medium">
-                      Total Bonus Months:
-                    </span>{" "}
-                    {totalBonusMonths.toFixed(2)} months
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    <span className="text-foreground font-medium">
-                      Total Bonus Gross:
-                    </span>{" "}
-                    $
-                    {totalBonusGross.toLocaleString("en-SG", {
-                      minimumFractionDigits: 2
-                    })}
-                  </p>
+                <div className="mt-4">
+                  <Separator className="bg-border/60" />
+                  <div className="space-y-1 pt-3">
+                    <p className="text-muted-foreground text-sm">
+                      <span className="text-foreground font-medium">
+                        Total Bonus Months:
+                      </span>{" "}
+                      {totalBonusMonths.toFixed(2)} months
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      <span className="text-foreground font-medium">
+                        Total Bonus Gross:
+                      </span>{" "}
+                      $
+                      {totalBonusGross.toLocaleString("en-SG", {
+                        minimumFractionDigits: 2
+                      })}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

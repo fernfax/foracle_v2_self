@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 
 interface WizardNavigationProps {
   onBack?: () => void
@@ -36,52 +37,55 @@ export function WizardNavigation({
   }
 
   return (
-    <div className="border-border/60 mt-auto flex items-center justify-between border-t pt-6">
-      <div>
-        {!isFirstStep && onBack && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onBack}
-            disabled={isSubmitting}
-            className="gap-2">
-            <ChevronLeft className="h-4 w-4" />
-            {backLabel}
-          </Button>
-        )}
-      </div>
-
-      <div className="flex items-center gap-3">
-        {isOptional && onSkip && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onSkip}
-            disabled={isSubmitting}>
-            Skip for now
-          </Button>
-        )}
-        <Button
-          type="button"
-          onClick={onNext}
-          disabled={!canProceed || isSubmitting}
-          className={`min-w-[140px] gap-2 ${
-            isLastStep
-              ? "bg-brand-terracotta shadow-brand-terracotta/20 hover:bg-brand-terracotta text-white shadow-lg"
-              : ""
-          }`}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {isLastStep ? "Completing..." : "Saving..."}
-            </>
-          ) : (
-            <>
-              {getNextLabel()}
-              {!isLastStep && <ChevronRight className="h-4 w-4" />}
-            </>
+    <div className="mt-8">
+      <Separator className="bg-border/60" />
+      <div className="flex items-center justify-between pt-6">
+        <div>
+          {!isFirstStep && onBack && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onBack}
+              disabled={isSubmitting}
+              className="gap-2">
+              <ChevronLeft className="h-4 w-4" />
+              {backLabel}
+            </Button>
           )}
-        </Button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {isOptional && onSkip && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onSkip}
+              disabled={isSubmitting}>
+              Skip for now
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={onNext}
+            disabled={!canProceed || isSubmitting}
+            className={`min-w-[140px] gap-2 ${
+              isLastStep
+                ? "bg-brand-terracotta shadow-brand-terracotta/20 hover:bg-brand-terracotta text-white shadow-lg"
+                : ""
+            }`}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {isLastStep ? "Completing..." : "Saving..."}
+              </>
+            ) : (
+              <>
+                {getNextLabel()}
+                {!isLastStep && <ChevronRight className="h-4 w-4" />}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   )
