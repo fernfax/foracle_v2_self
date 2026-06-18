@@ -74,7 +74,7 @@ export function SidebarNavItem({
   }
 
   const itemBaseClasses = cn(
-    "group flex items-center rounded-md py-2 px-2 gap-3 font-display text-sm transition-colors duration-150 overflow-hidden",
+    "group flex items-center rounded-md py-2 font-display text-sm transition-colors duration-150 overflow-hidden",
     isActive
       ? "bg-brand-terracotta text-brand-warm-white shadow-sm shadow-brand-terracotta/20"
       : "text-brand-cream/[0.55] hover:bg-brand-forest-mid hover:text-brand-cream"
@@ -93,7 +93,11 @@ export function SidebarNavItem({
       onClick={handleClick}
       className={itemBaseClasses}
       aria-label={label}>
-      <Icon className={iconClasses} />
+      {/* Fixed-width leading slot (= collapsed rail inner width) centers every
+          icon on the same x as the rail center, and aligns all labels. */}
+      <span className="flex w-12 shrink-0 items-center justify-center">
+        <Icon className={iconClasses} />
+      </span>
 
       <span
         className={cn(
