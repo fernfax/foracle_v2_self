@@ -30,10 +30,10 @@ export function FloatingAddButton() {
       <Button
         size="icon"
         variant="outline"
-        className="bg-background/95 hover:bg-accent rounded-full shadow-lg backdrop-blur-sm"
+        className="bg-background/95 hover:bg-accent h-14 w-14 rounded-full shadow-lg backdrop-blur-sm"
         onClick={handleClick}
         aria-label="Add expense">
-        <Plus className="h-5 w-5" />
+        <Plus className="size-6" />
       </Button>
     </Fab>
   )
