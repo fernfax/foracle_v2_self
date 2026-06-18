@@ -98,9 +98,20 @@ export function NavigationOverlay() {
       timersRef.current.push(showT)
     }
 
+    // Escape hatch: the overlay blocks the content, so let Esc dismiss it
+    // immediately (in addition to the sidebar/nav staying clickable above it).
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      clearAll()
+      setVisible(false)
+      setLongWait(false)
+    }
+
     document.addEventListener("click", onClick, true)
+    document.addEventListener("keydown", onKeyDown)
     return () => {
       document.removeEventListener("click", onClick, true)
+      document.removeEventListener("keydown", onKeyDown)
       clearAll()
     }
   }, [])
@@ -114,14 +125,18 @@ export function NavigationOverlay() {
         <div className="bg-primary h-full w-full motion-safe:animate-[navProgress_1.1s_ease-in-out_infinite]" />
       </div>
 
-      {/* Content-area frost — nav/sidebar (z-50) paint on top and stay crisp.
-          pointer-events-none so a navigation that never commits (e.g. a
-          preventDefault'd link) can't trap the page behind the blur for the
-          full safety timeout — the user can still tap through to recover. */}
+      {/* Content-area frost. Offset to the content column on desktop
+          (left = --sidebar-w, inherited from the shell grid) so the spinner
+          centers in the visible content, not the whole viewport. It BLOCKS
+          interaction (pointer-events-auto) so the frozen content can't be
+          clicked mid-transition — but the sidebar / bottom-nav sit at z-50 and
+          paint above this z-45 layer, so they stay clickable as an escape hatch
+          (no trap). Esc and the safety timeout also dismiss it. */}
       <div
+        role="status"
         aria-live="polite"
         aria-busy="true"
-        className="bg-background/30 motion-safe:animate-in motion-safe:fade-in pointer-events-none fixed inset-0 z-[45] flex items-center justify-center backdrop-blur-md motion-safe:duration-150">
+        className="bg-background/30 motion-safe:animate-in motion-safe:fade-in desktop:left-[var(--sidebar-w)] fixed inset-0 z-[45] flex items-center justify-center backdrop-blur-md motion-safe:duration-150">
         <div className="flex flex-col items-center gap-3">
           <div className="relative flex h-16 w-16 items-center justify-center">
             <span className="border-primary/15 border-t-primary/70 absolute inset-0 rounded-full border-2 motion-safe:animate-spin" />
