@@ -74,7 +74,9 @@ export function SidebarNavItem({
   }
 
   const itemBaseClasses = cn(
-    "group flex items-center rounded-md py-2 font-display text-sm transition-colors duration-150 overflow-hidden",
+    // pr-3 keeps the label/chevron off the pill's right edge (the left side is
+    // spaced by the w-12 icon slot). Clipped away in the collapsed rail.
+    "group flex items-center rounded-md py-2 pr-3 font-display text-sm transition-colors duration-150 overflow-hidden",
     isActive
       ? "bg-brand-terracotta text-brand-warm-white shadow-sm shadow-brand-terracotta/20"
       : "text-brand-cream/[0.55] hover:bg-brand-forest-mid hover:text-brand-cream"
@@ -158,7 +160,11 @@ export function SidebarNavItem({
           )}
           aria-hidden={!(isExpanded && isSubmenuOpen)}>
           <div className="overflow-hidden">
-            <div className="border-brand-cream/[0.08] mt-1 ml-4 space-y-0.5 border-l pl-9">
+            {/* ml-6 (24px) centers the guide line on the parent icon, which sits
+                at the center of the w-12 leading slot (48px / 2 = 24px). pl-2 is a
+                single indent step off the line; each row's own px-3 spaces the
+                icon inside its hover pill. */}
+            <div className="border-brand-cream/[0.08] mt-1 ml-6 space-y-0.5 border-l pl-3">
               {subItems.map((subItem) => {
                 const isSubActive = getSubItemActive(subItem.href)
                 const SubIcon = subItem.icon
@@ -167,13 +173,13 @@ export function SidebarNavItem({
                     key={subItem.href}
                     href={subItem.href}
                     className={cn(
-                      "font-display flex items-center gap-2 rounded-sm px-3 py-1.5 text-[13px] transition-colors duration-150",
+                      "font-display flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm transition-colors duration-150",
                       isSubActive
                         ? "bg-brand-terracotta/[0.15] text-brand-coral font-medium"
                         : "text-brand-cream/[0.5] hover:bg-brand-forest-mid hover:text-brand-cream"
                     )}
                     tabIndex={isExpanded && isSubmenuOpen ? 0 : -1}>
-                    {SubIcon && <SubIcon className="h-4 w-4" />}
+                    {SubIcon && <SubIcon className="h-[18px] w-[18px]" />}
                     {subItem.label}
                   </Link>
                 )
