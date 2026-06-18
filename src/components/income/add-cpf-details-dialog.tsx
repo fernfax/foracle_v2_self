@@ -23,8 +23,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field } from "@/components/ui/field"
+import { MoneyInput } from "@/components/ui/money-input"
 import { StepIndicator } from "@/components/ui/step-indicator"
 
 interface AddCpfDetailsDialogProps {
@@ -178,80 +178,52 @@ export function AddCpfDetailsDialog({
           <DialogBody>
             <div className="grid gap-6 py-4">
               {/* Ordinary Account (OA) */}
-              <div className="space-y-2">
-                <Label htmlFor="oa">Ordinary Account (OA)</Label>
-                <div className="relative">
-                  <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                    $
-                  </span>
-                  <Input
-                    id="oa"
-                    type="number"
-                    placeholder="0.00"
-                    value={ordinaryAccount}
-                    onChange={(e) => setOrdinaryAccount(e.target.value)}
-                    onBlur={() =>
-                      handleBlur(ordinaryAccount, setOrdinaryAccount)
-                    }
-                    min="0"
-                    step="0.01"
-                    className="bg-card pl-7"
-                  />
-                </div>
-                <p className="text-muted-foreground text-xs">
-                  For housing, insurance, investment, and education
-                </p>
-              </div>
+              <Field
+                label="Ordinary Account (OA)"
+                htmlFor="oa"
+                helper="For housing, insurance, investment, and education">
+                <MoneyInput
+                  id="oa"
+                  placeholder="0.00"
+                  value={ordinaryAccount}
+                  onChange={(e) => setOrdinaryAccount(e.target.value)}
+                  onBlur={() => handleBlur(ordinaryAccount, setOrdinaryAccount)}
+                  min="0"
+                  step="0.01"
+                />
+              </Field>
 
               {/* Special Account (SA) */}
-              <div className="space-y-2">
-                <Label htmlFor="sa">Special Account (SA)</Label>
-                <div className="relative">
-                  <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                    $
-                  </span>
-                  <Input
-                    id="sa"
-                    type="number"
-                    placeholder="0.00"
-                    value={specialAccount}
-                    onChange={(e) => setSpecialAccount(e.target.value)}
-                    onBlur={() => handleBlur(specialAccount, setSpecialAccount)}
-                    min="0"
-                    step="0.01"
-                    className="bg-card pl-7"
-                  />
-                </div>
-                <p className="text-muted-foreground text-xs">
-                  For retirement and investment in approved assets
-                </p>
-              </div>
+              <Field
+                label="Special Account (SA)"
+                htmlFor="sa"
+                helper="For retirement and investment in approved assets">
+                <MoneyInput
+                  id="sa"
+                  placeholder="0.00"
+                  value={specialAccount}
+                  onChange={(e) => setSpecialAccount(e.target.value)}
+                  onBlur={() => handleBlur(specialAccount, setSpecialAccount)}
+                  min="0"
+                  step="0.01"
+                />
+              </Field>
 
               {/* Medisave Account (MA) */}
-              <div className="space-y-2">
-                <Label htmlFor="ma">Medisave Account (MA)</Label>
-                <div className="relative">
-                  <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                    $
-                  </span>
-                  <Input
-                    id="ma"
-                    type="number"
-                    placeholder="0.00"
-                    value={medisaveAccount}
-                    onChange={(e) => setMedisaveAccount(e.target.value)}
-                    onBlur={() =>
-                      handleBlur(medisaveAccount, setMedisaveAccount)
-                    }
-                    min="0"
-                    step="0.01"
-                    className="bg-card pl-7"
-                  />
-                </div>
-                <p className="text-muted-foreground text-xs">
-                  For hospitalization expenses and approved medical insurance
-                </p>
-              </div>
+              <Field
+                label="Medisave Account (MA)"
+                htmlFor="ma"
+                helper="For hospitalization expenses and approved medical insurance">
+                <MoneyInput
+                  id="ma"
+                  placeholder="0.00"
+                  value={medisaveAccount}
+                  onChange={(e) => setMedisaveAccount(e.target.value)}
+                  onBlur={() => handleBlur(medisaveAccount, setMedisaveAccount)}
+                  min="0"
+                  step="0.01"
+                />
+              </Field>
             </div>
           </DialogBody>
 

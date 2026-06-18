@@ -946,7 +946,6 @@ export function MonthlyBalanceGraph({
                 onCheckedChange={(checked) =>
                   handleIncludeInvestmentsChange(checked === true)
                 }
-                className="border-[#007A68] data-[state=checked]:border-[#007A68] data-[state=checked]:bg-[#007A68] data-[state=checked]:text-white"
               />
               <TrendingUp className="text-on-success h-4 w-4 flex-shrink-0" />
               <span className="text-on-success text-xs font-medium whitespace-nowrap sm:text-sm">

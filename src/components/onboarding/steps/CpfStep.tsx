@@ -5,8 +5,8 @@ import { updateIncome } from "@/actions/incomes"
 import { Info, Lightbulb } from "lucide-react"
 import { toast } from "sonner"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field } from "@/components/ui/field"
+import { MoneyInput } from "@/components/ui/money-input"
 import { WizardNavigation } from "@/components/onboarding/WizardNavigation"
 import type { CpfData, IncomeData } from "@/app/onboarding/OnboardingWizard"
 
@@ -112,73 +112,49 @@ export function CpfStep({
         </div>
 
         {/* OA Amount */}
-        <div className="space-y-2">
-          <Label htmlFor="oa">Ordinary Account (OA)</Label>
-          <div className="relative">
-            <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-              $
-            </span>
-            <Input
-              id="oa"
-              type="number"
-              placeholder="0.00"
-              value={oaAmount}
-              onChange={(e) => setOaAmount(e.target.value)}
-              className="bg-background pl-7"
-              min="0"
-              step="0.01"
-            />
-          </div>
-          <p className="text-muted-foreground text-xs">
-            Used for housing, education, and investments
-          </p>
-        </div>
+        <Field
+          label="Ordinary Account (OA)"
+          htmlFor="oa"
+          helper="Used for housing, education, and investments">
+          <MoneyInput
+            id="oa"
+            placeholder="0.00"
+            value={oaAmount}
+            onChange={(e) => setOaAmount(e.target.value)}
+            min="0"
+            step="0.01"
+          />
+        </Field>
 
         {/* SA Amount */}
-        <div className="space-y-2">
-          <Label htmlFor="sa">Special Account (SA)</Label>
-          <div className="relative">
-            <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-              $
-            </span>
-            <Input
-              id="sa"
-              type="number"
-              placeholder="0.00"
-              value={saAmount}
-              onChange={(e) => setSaAmount(e.target.value)}
-              className="bg-background pl-7"
-              min="0"
-              step="0.01"
-            />
-          </div>
-          <p className="text-muted-foreground text-xs">
-            For retirement and investment in retirement-related products
-          </p>
-        </div>
+        <Field
+          label="Special Account (SA)"
+          htmlFor="sa"
+          helper="For retirement and investment in retirement-related products">
+          <MoneyInput
+            id="sa"
+            placeholder="0.00"
+            value={saAmount}
+            onChange={(e) => setSaAmount(e.target.value)}
+            min="0"
+            step="0.01"
+          />
+        </Field>
 
         {/* MA Amount */}
-        <div className="space-y-2">
-          <Label htmlFor="ma">Medisave Account (MA)</Label>
-          <div className="relative">
-            <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-              $
-            </span>
-            <Input
-              id="ma"
-              type="number"
-              placeholder="0.00"
-              value={maAmount}
-              onChange={(e) => setMaAmount(e.target.value)}
-              className="bg-background pl-7"
-              min="0"
-              step="0.01"
-            />
-          </div>
-          <p className="text-muted-foreground text-xs">
-            For healthcare expenses and medical insurance
-          </p>
-        </div>
+        <Field
+          label="Medisave Account (MA)"
+          htmlFor="ma"
+          helper="For healthcare expenses and medical insurance">
+          <MoneyInput
+            id="ma"
+            placeholder="0.00"
+            value={maAmount}
+            onChange={(e) => setMaAmount(e.target.value)}
+            min="0"
+            step="0.01"
+          />
+        </Field>
 
         {/* Customize Later Info Box */}
         <div className="border-brand-terracotta/[0.25] bg-brand-terracotta/[0.06] flex gap-3 rounded-xl border p-4">

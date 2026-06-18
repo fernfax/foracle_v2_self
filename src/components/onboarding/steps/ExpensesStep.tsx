@@ -7,8 +7,8 @@ import { Lightbulb } from "lucide-react"
 import { toast } from "sonner"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field } from "@/components/ui/field"
+import { MoneyInput } from "@/components/ui/money-input"
 import { WizardNavigation } from "@/components/onboarding/WizardNavigation"
 import type { ExpenseSetupData } from "@/app/onboarding/OnboardingWizard"
 
@@ -219,29 +219,22 @@ export function ExpensesStep({
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="percentage">
-              Percentage of Income for Expenses{" "}
-              <span className="text-on-danger" aria-hidden="true">
-                *
-              </span>
-            </Label>
-            <div className="relative">
-              <Input
-                id="percentage"
-                type="number"
-                placeholder="60"
-                value={percentageOfIncome}
-                onChange={(e) => handlePercentageChange(e.target.value)}
-                className="bg-background pr-8"
-                min="0"
-                max="100"
-                aria-required="true"
-              />
-              <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2">
-                %
-              </span>
-            </div>
+          <Field
+            label="Percentage of Income for Expenses"
+            htmlFor="percentage"
+            required
+            helper="We'll use this to estimate your monthly expenses across the selected categories">
+            <MoneyInput
+              id="percentage"
+              symbol="%"
+              side="suffix"
+              placeholder="60"
+              value={percentageOfIncome}
+              onChange={(e) => handlePercentageChange(e.target.value)}
+              min="0"
+              max="100"
+              aria-required="true"
+            />
             <p className="text-foreground mt-2 text-sm font-medium">
               $
               {(
@@ -260,11 +253,7 @@ export function ExpensesStep({
                 })}
               </span>
             </p>
-            <p className="text-muted-foreground text-xs">
-              We&apos;ll use this to estimate your monthly expenses across the
-              selected categories
-            </p>
-          </div>
+          </Field>
         </div>
 
         {/* Expenditure Categories */}

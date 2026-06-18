@@ -14,9 +14,8 @@ import {
 import { updatePolicy } from "@/actions/policies"
 import { getUserFamilyMembers } from "@/actions/user"
 import { format, parseISO } from "date-fns"
-import { CalendarIcon } from "lucide-react"
 
-import { cn, policyFrequencyToExpenseFrequency } from "@/lib/utils"
+import { policyFrequencyToExpenseFrequency } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,8 +27,8 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogBody,
@@ -39,13 +38,11 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
+import { MoneyInput } from "@/components/ui/money-input"
+import { MonthPicker } from "@/components/ui/month-picker"
 import {
   Select,
   SelectContent,
@@ -153,8 +150,6 @@ export function EditPolicyDialog({
   const [startDate, setStartDate] = useState<Date | undefined>(undefined)
   const [coverageUntilAge, setCoverageUntilAge] = useState("")
   const [maturityDate, setMaturityDate] = useState<Date | undefined>(undefined)
-  const [startDateOpen, setStartDateOpen] = useState(false)
-  const [maturityDateOpen, setMaturityDateOpen] = useState(false)
 
   // Premium Details
   const [premiumAmount, setPremiumAmount] = useState("")
@@ -169,7 +164,6 @@ export function EditPolicyDialog({
   const [cashValueDate, setCashValueDate] = useState<Date | undefined>(
     undefined
   )
-  const [cashValueDateOpen, setCashValueDateOpen] = useState(false)
 
   // Coverage Options
   const [deathCoverage, setDeathCoverage] = useState({
@@ -315,15 +309,6 @@ export function EditPolicyDialog({
   const loadProviders = async () => {
     const providersList = await getInsuranceProviders()
     setProviders(providersList)
-  }
-
-  // Toggle month selection for custom frequency
-  const toggleMonth = (month: number) => {
-    setSelectedMonths((prev) =>
-      prev.includes(month)
-        ? prev.filter((m) => m !== month)
-        : [...prev, month].sort((a, b) => a - b)
-    )
   }
 
   // Calculate age when family member is selected
@@ -667,19 +652,23 @@ export function EditPolicyDialog({
                       Select which family member this policy covers
                     </p>
                   </div>
-                  <div>
-                    <Label htmlFor="familyMember">
-                      Family Member <span className="text-on-danger">*</span>
-                      {memberAge !== null && (
-                        <span className="text-muted-foreground ml-2 text-sm">
-                          Age: {memberAge}
-                        </span>
-                      )}
-                    </Label>
+                  <Field
+                    htmlFor="familyMember"
+                    required
+                    label={
+                      <>
+                        Family Member
+                        {memberAge !== null && (
+                          <span className="text-muted-foreground ml-2 text-sm font-normal">
+                            Age: {memberAge}
+                          </span>
+                        )}
+                      </>
+                    }>
                     <Select
                       value={selectedFamilyMember}
                       onValueChange={setSelectedFamilyMember}>
-                      <SelectTrigger id="familyMember">
+                      <SelectTrigger id="familyMember" aria-required="true">
                         <SelectValue placeholder="Select family member" />
                       </SelectTrigger>
                       <SelectContent>
@@ -690,7 +679,7 @@ export function EditPolicyDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </Field>
                 </div>
 
                 {/* Policy Information */}
@@ -705,16 +694,15 @@ export function EditPolicyDialog({
                     </p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="provider">
-                        Insurance Provider{" "}
-                        <span className="text-on-danger">*</span>
-                      </Label>
+                    <Field
+                      label="Insurance Provider"
+                      htmlFor="provider"
+                      required>
                       <Select
                         value={provider}
                         onValueChange={setProvider}
                         required>
-                        <SelectTrigger id="provider">
+                        <SelectTrigger id="provider" aria-required="true">
                           <SelectValue placeholder="Select insurance provider" />
                         </SelectTrigger>
                         <SelectContent>
@@ -729,39 +717,35 @@ export function EditPolicyDialog({
                         providers={providers}
                         onProvidersChanged={loadProviders}
                       />
-                    </div>
+                    </Field>
 
-                    <div>
-                      <Label htmlFor="planName">Plan Name (Optional)</Label>
+                    <Field label="Plan Name" htmlFor="planName" optional>
                       <Input
                         id="planName"
                         placeholder="e.g., Flexi Life III"
                         value={planName}
                         onChange={(e) => setPlanName(e.target.value)}
                       />
-                    </div>
+                    </Field>
 
-                    <div>
-                      <Label htmlFor="policyNumber">
-                        Policy Number (Optional)
-                      </Label>
+                    <Field
+                      label="Policy Number"
+                      htmlFor="policyNumber"
+                      optional>
                       <Input
                         id="policyNumber"
                         placeholder="e.g., POL-2024-001"
                         value={policyNumber}
                         onChange={(e) => setPolicyNumber(e.target.value)}
                       />
-                    </div>
+                    </Field>
 
-                    <div>
-                      <Label htmlFor="policyType">
-                        Policy Type <span className="text-on-danger">*</span>
-                      </Label>
+                    <Field label="Policy Type" htmlFor="policyType" required>
                       <Select
                         value={policyType}
                         onValueChange={setPolicyType}
                         required>
-                        <SelectTrigger id="policyType">
+                        <SelectTrigger id="policyType" aria-required="true">
                           <SelectValue placeholder="Select policy type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -772,10 +756,9 @@ export function EditPolicyDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
+                    </Field>
 
-                    <div>
-                      <Label htmlFor="status">Status</Label>
+                    <Field label="Status" htmlFor="status">
                       <Select value={status} onValueChange={setStatus}>
                         <SelectTrigger id="status">
                           <SelectValue placeholder="Select status" />
@@ -788,7 +771,7 @@ export function EditPolicyDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
+                    </Field>
                   </div>
                 </div>
 
@@ -803,45 +786,18 @@ export function EditPolicyDialog({
                     </p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="startDate">
-                        Start Date <span className="text-on-danger">*</span>
-                      </Label>
-                      <Popover
-                        open={startDateOpen}
-                        onOpenChange={setStartDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !startDate && "text-muted-foreground"
-                            )}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {startDate
-                              ? format(startDate, "MMMM do, yyyy")
-                              : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={startDate}
-                            onSelect={(date) => {
-                              setStartDate(date)
-                              setStartDateOpen(false)
-                            }}
-                            initialFocus
-                            fixedWeeks
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                    <Field label="Start Date" htmlFor="startDate" required>
+                      <DatePicker
+                        id="startDate"
+                        value={startDate}
+                        onChange={setStartDate}
+                      />
+                    </Field>
 
-                    <div>
-                      <Label htmlFor="coverageUntilAge">
-                        Coverage Until Age
-                      </Label>
+                    <Field
+                      label="Coverage Until Age"
+                      htmlFor="coverageUntilAge"
+                      helper="Age when coverage ends">
                       <Input
                         id="coverageUntilAge"
                         type="number"
@@ -849,46 +805,19 @@ export function EditPolicyDialog({
                         value={coverageUntilAge}
                         onChange={(e) => setCoverageUntilAge(e.target.value)}
                       />
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        Age when coverage ends
-                      </p>
-                    </div>
+                    </Field>
 
-                    <div className="md:col-span-2">
-                      <Label htmlFor="maturityDate">Maturity Date</Label>
-                      <Popover
-                        open={maturityDateOpen}
-                        onOpenChange={setMaturityDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !maturityDate && "text-muted-foreground"
-                            )}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {maturityDate
-                              ? format(maturityDate, "MMMM do, yyyy")
-                              : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={maturityDate}
-                            onSelect={(date) => {
-                              setMaturityDate(date)
-                              setMaturityDateOpen(false)
-                            }}
-                            initialFocus
-                            fixedWeeks
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        Autopopulated based on age and coverage duration
-                      </p>
-                    </div>
+                    <Field
+                      label="Maturity Date"
+                      htmlFor="maturityDate"
+                      className="md:col-span-2"
+                      helper="Autopopulated based on age and coverage duration">
+                      <DatePicker
+                        id="maturityDate"
+                        value={maturityDate}
+                        onChange={setMaturityDate}
+                      />
+                    </Field>
                   </div>
                 </div>
 
@@ -903,55 +832,39 @@ export function EditPolicyDialog({
                     </p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="premiumAmount">
-                        Premium Amount <span className="text-on-danger">*</span>
-                      </Label>
-                      <div className="relative">
-                        <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="premiumAmount"
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="pl-7"
-                          value={premiumAmount}
-                          onChange={(e) => setPremiumAmount(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
+                    <Field
+                      label="Premium Amount"
+                      htmlFor="premiumAmount"
+                      required>
+                      <MoneyInput
+                        id="premiumAmount"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={premiumAmount}
+                        onChange={(e) => setPremiumAmount(e.target.value)}
+                        required
+                        aria-required="true"
+                      />
+                    </Field>
 
-                    <div>
-                      <Label htmlFor="premiumAmountCPF">
-                        CPF Premium (Optional)
-                      </Label>
-                      <div className="relative">
-                        <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="premiumAmountCPF"
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="pl-7"
-                          value={premiumAmountCPF}
-                          onChange={(e) => setPremiumAmountCPF(e.target.value)}
-                        />
-                      </div>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        CPF-funded portion of the premium
-                      </p>
-                    </div>
+                    <Field
+                      label="CPF Premium"
+                      htmlFor="premiumAmountCPF"
+                      optional
+                      helper="CPF-funded portion of the premium">
+                      <MoneyInput
+                        id="premiumAmountCPF"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={premiumAmountCPF}
+                        onChange={(e) => setPremiumAmountCPF(e.target.value)}
+                      />
+                    </Field>
 
-                    <div>
-                      <Label htmlFor="premiumFrequency">
-                        Premium Frequency{" "}
-                        <span className="text-on-danger">*</span>
-                      </Label>
+                    <Field
+                      label="Premium Frequency"
+                      htmlFor="premiumFrequency"
+                      required>
                       <Select
                         value={premiumFrequency}
                         onValueChange={(value) => {
@@ -961,7 +874,9 @@ export function EditPolicyDialog({
                           }
                         }}
                         required>
-                        <SelectTrigger id="premiumFrequency">
+                        <SelectTrigger
+                          id="premiumFrequency"
+                          aria-required="true">
                           <SelectValue placeholder="Select frequency" />
                         </SelectTrigger>
                         <SelectContent>
@@ -972,33 +887,18 @@ export function EditPolicyDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
+                    </Field>
 
                     {/* Month Picker for Custom Frequency */}
                     {premiumFrequency === "Custom" && (
-                      <div className="space-y-2 md:col-span-2">
-                        <Label>
-                          Select Months{" "}
-                          <span className="text-on-danger">*</span>
-                        </Label>
-                        <div className="grid grid-cols-6 gap-2">
-                          {MONTHS.map((month) => (
-                            <Button
-                              key={month.value}
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => toggleMonth(month.value)}
-                              className={cn(
-                                "h-10 font-medium",
-                                selectedMonths.includes(month.value)
-                                  ? "border-black bg-black text-white hover:bg-black/90"
-                                  : "bg-card hover:bg-muted"
-                              )}>
-                              {month.label}
-                            </Button>
-                          ))}
-                        </div>
+                      <Field
+                        label="Select Months"
+                        required
+                        className="md:col-span-2">
+                        <MonthPicker
+                          value={selectedMonths}
+                          onChange={setSelectedMonths}
+                        />
                         {selectedMonths.length === 0 && (
                           <p className="text-muted-foreground text-xs">
                             Select the months when premium is due
@@ -1016,13 +916,15 @@ export function EditPolicyDialog({
                               .join(", ")}
                           </p>
                         )}
-                      </div>
+                      </Field>
                     )}
 
-                    <div className="md:col-span-2">
-                      <Label htmlFor="totalPremiumDuration">
-                        Total Premium Duration (Optional)
-                      </Label>
+                    <Field
+                      label="Total Premium Duration"
+                      htmlFor="totalPremiumDuration"
+                      optional
+                      className="md:col-span-2"
+                      helper="Total number of years to pay premiums">
                       <Input
                         id="totalPremiumDuration"
                         type="number"
@@ -1032,10 +934,7 @@ export function EditPolicyDialog({
                           setTotalPremiumDuration(e.target.value)
                         }
                       />
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        Total number of years to pay premiums
-                      </p>
-                    </div>
+                    </Field>
                   </div>
                 </div>
 
@@ -1051,55 +950,22 @@ export function EditPolicyDialog({
                     </p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="cashValue">Cash Value</Label>
-                      <div className="relative">
-                        <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="cashValue"
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="pl-7"
-                          value={cashValue}
-                          onChange={(e) => setCashValue(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>As At Date</Label>
-                      <Popover
-                        open={cashValueDateOpen}
-                        onOpenChange={setCashValueDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !cashValueDate && "text-muted-foreground"
-                            )}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {cashValueDate
-                              ? format(cashValueDate, "MMMM do, yyyy")
-                              : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={cashValueDate}
-                            onSelect={(date) => {
-                              setCashValueDate(date)
-                              setCashValueDateOpen(false)
-                            }}
-                            initialFocus
-                            fixedWeeks
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                    <Field label="Cash Value" htmlFor="cashValue">
+                      <MoneyInput
+                        id="cashValue"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={cashValue}
+                        onChange={(e) => setCashValue(e.target.value)}
+                      />
+                    </Field>
+                    <Field label="As At Date" htmlFor="cashValueDate">
+                      <DatePicker
+                        id="cashValueDate"
+                        value={cashValueDate}
+                        onChange={setCashValueDate}
+                      />
+                    </Field>
                   </div>
                 </div>
 
@@ -1138,25 +1004,18 @@ export function EditPolicyDialog({
                       <Label className="text-muted-foreground text-xs">
                         Sum Assured
                       </Label>
-                      <div className="relative">
-                        <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="pl-7"
-                          disabled={!deathCoverage.enabled}
-                          value={deathCoverage.amount}
-                          onChange={(e) =>
-                            setDeathCoverage({
-                              ...deathCoverage,
-                              amount: e.target.value
-                            })
-                          }
-                        />
-                      </div>
+                      <MoneyInput
+                        step="0.01"
+                        placeholder="0.00"
+                        disabled={!deathCoverage.enabled}
+                        value={deathCoverage.amount}
+                        onChange={(e) =>
+                          setDeathCoverage({
+                            ...deathCoverage,
+                            amount: e.target.value
+                          })
+                        }
+                      />
                     </div>
                   </div>
 
@@ -1183,25 +1042,18 @@ export function EditPolicyDialog({
                       <Label className="text-muted-foreground text-xs">
                         Sum Assured
                       </Label>
-                      <div className="relative">
-                        <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="pl-7"
-                          disabled={!tpdCoverage.enabled}
-                          value={tpdCoverage.amount}
-                          onChange={(e) =>
-                            setTpdCoverage({
-                              ...tpdCoverage,
-                              amount: e.target.value
-                            })
-                          }
-                        />
-                      </div>
+                      <MoneyInput
+                        step="0.01"
+                        placeholder="0.00"
+                        disabled={!tpdCoverage.enabled}
+                        value={tpdCoverage.amount}
+                        onChange={(e) =>
+                          setTpdCoverage({
+                            ...tpdCoverage,
+                            amount: e.target.value
+                          })
+                        }
+                      />
                     </div>
                   </div>
 
@@ -1228,25 +1080,18 @@ export function EditPolicyDialog({
                       <Label className="text-muted-foreground text-xs">
                         Sum Assured
                       </Label>
-                      <div className="relative">
-                        <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="pl-7"
-                          disabled={!criticalIllness.enabled}
-                          value={criticalIllness.amount}
-                          onChange={(e) =>
-                            setCriticalIllness({
-                              ...criticalIllness,
-                              amount: e.target.value
-                            })
-                          }
-                        />
-                      </div>
+                      <MoneyInput
+                        step="0.01"
+                        placeholder="0.00"
+                        disabled={!criticalIllness.enabled}
+                        value={criticalIllness.amount}
+                        onChange={(e) =>
+                          setCriticalIllness({
+                            ...criticalIllness,
+                            amount: e.target.value
+                          })
+                        }
+                      />
                     </div>
                   </div>
 
@@ -1273,25 +1118,18 @@ export function EditPolicyDialog({
                       <Label className="text-muted-foreground text-xs">
                         Sum Assured
                       </Label>
-                      <div className="relative">
-                        <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="pl-7"
-                          disabled={!earlyCriticalIllness.enabled}
-                          value={earlyCriticalIllness.amount}
-                          onChange={(e) =>
-                            setEarlyCriticalIllness({
-                              ...earlyCriticalIllness,
-                              amount: e.target.value
-                            })
-                          }
-                        />
-                      </div>
+                      <MoneyInput
+                        step="0.01"
+                        placeholder="0.00"
+                        disabled={!earlyCriticalIllness.enabled}
+                        value={earlyCriticalIllness.amount}
+                        onChange={(e) =>
+                          setEarlyCriticalIllness({
+                            ...earlyCriticalIllness,
+                            amount: e.target.value
+                          })
+                        }
+                      />
                     </div>
                   </div>
 
@@ -1318,25 +1156,18 @@ export function EditPolicyDialog({
                       <Label className="text-muted-foreground text-xs">
                         Claimable Amount
                       </Label>
-                      <div className="relative">
-                        <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="pl-7"
-                          disabled={!hospitalisationPlan.enabled}
-                          value={hospitalisationPlan.amount}
-                          onChange={(e) =>
-                            setHospitalisationPlan({
-                              ...hospitalisationPlan,
-                              amount: e.target.value
-                            })
-                          }
-                        />
-                      </div>
+                      <MoneyInput
+                        step="0.01"
+                        placeholder="0.00"
+                        disabled={!hospitalisationPlan.enabled}
+                        value={hospitalisationPlan.amount}
+                        onChange={(e) =>
+                          setHospitalisationPlan({
+                            ...hospitalisationPlan,
+                            amount: e.target.value
+                          })
+                        }
+                      />
                     </div>
                   </div>
                 </div>
@@ -1405,10 +1236,7 @@ export function EditPolicyDialog({
 
           <div className="my-4 space-y-4">
             {/* Expense Name Input */}
-            <div className="space-y-2">
-              <Label htmlFor="expenseName" className="text-sm font-medium">
-                Expense Name
-              </Label>
+            <Field label="Expense Name" htmlFor="expenseName">
               <Input
                 id="expenseName"
                 value={expenseName}
@@ -1416,7 +1244,7 @@ export function EditPolicyDialog({
                 placeholder="Enter expense name"
                 className="w-full"
               />
-            </div>
+            </Field>
 
             {/* Other Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1476,12 +1304,7 @@ export function EditPolicyDialog({
 
           <div className="my-4 space-y-4">
             {/* Expense Name Input */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="expenseNameUpdate"
-                className="text-sm font-medium">
-                Expense Name
-              </Label>
+            <Field label="Expense Name" htmlFor="expenseNameUpdate">
               <Input
                 id="expenseNameUpdate"
                 value={expenseName}
@@ -1489,7 +1312,7 @@ export function EditPolicyDialog({
                 placeholder="Enter expense name"
                 className="w-full"
               />
-            </div>
+            </Field>
 
             {/* Other Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">

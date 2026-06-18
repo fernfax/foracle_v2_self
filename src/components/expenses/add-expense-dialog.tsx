@@ -7,7 +7,7 @@ import {
 } from "@/actions/expense-categories"
 import { addExpense } from "@/actions/expenses"
 import { format } from "date-fns"
-import { CalendarIcon, Info } from "lucide-react"
+import { Info } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -21,7 +21,7 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogBody,
@@ -31,9 +31,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -90,8 +89,6 @@ export function AddExpenseDialog({
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [categories, setCategories] = useState<ExpenseCategory[]>([])
-  const [startDateOpen, setStartDateOpen] = useState(false)
-  const [endDateOpen, setEndDateOpen] = useState(false)
   const [expenseCategory, setExpenseCategory] = useState("")
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
 
@@ -232,14 +229,25 @@ export function AddExpenseDialog({
 
           <DialogBody className={!expenseCategory ? "min-h-[100px]" : ""}>
             {/* Expense Type Selector */}
-            <div className="space-y-2">
-              <Label htmlFor="expense-type">
-                Expense Type <span className="text-on-danger">*</span>
-              </Label>
+            <Field
+              label="Expense Type"
+              htmlFor="expense-type"
+              required
+              helper={
+                !expenseCategory
+                  ? "Please select an expense type to continue"
+                  : expenseCategory === "current-recurring"
+                    ? "Expense that repeats regularly (e.g., monthly rent)"
+                    : expenseCategory === "future-recurring"
+                      ? "Recurring expense that starts in the future (e.g., upcoming subscription)"
+                      : expenseCategory === "one-off"
+                        ? "One-time expense that does not repeat (e.g., car repair, vacation)"
+                        : undefined
+              }>
               <Select
                 value={expenseCategory}
                 onValueChange={setExpenseCategory}>
-                <SelectTrigger className="bg-card">
+                <SelectTrigger id="expense-type" aria-required="true">
                   <SelectValue placeholder="Select expense type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,53 +260,25 @@ export function AddExpenseDialog({
                   <SelectItem value="one-off">One-off Expense</SelectItem>
                 </SelectContent>
               </Select>
-              {!expenseCategory && (
-                <p className="text-muted-foreground text-xs">
-                  Please select an expense type to continue
-                </p>
-              )}
-              {expenseCategory === "current-recurring" && (
-                <p className="text-muted-foreground text-xs">
-                  Expense that repeats regularly (e.g., monthly rent)
-                </p>
-              )}
-              {expenseCategory === "future-recurring" && (
-                <p className="text-muted-foreground text-xs">
-                  Recurring expense that starts in the future (e.g., upcoming
-                  subscription)
-                </p>
-              )}
-              {expenseCategory === "one-off" && (
-                <p className="text-muted-foreground text-xs">
-                  One-time expense that does not repeat (e.g., car repair,
-                  vacation)
-                </p>
-              )}
-            </div>
+            </Field>
 
             {/* Show remaining fields only when expense type is selected */}
             {expenseCategory && (
               <div className="grid gap-6 py-4">
                 {/* Row 1: Name and Category */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">
-                      Expense Name <span className="text-on-danger">*</span>
-                    </Label>
+                  <Field label="Expense Name" htmlFor="name" required>
                     <Input
                       id="name"
+                      aria-required="true"
                       placeholder="e.g., Rent, Groceries"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="bg-card"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">
-                      Category <span className="text-on-danger">*</span>
-                    </Label>
+                  </Field>
+                  <Field label="Category" htmlFor="category" required>
                     <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="bg-card">
+                      <SelectTrigger id="category" aria-required="true">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent className="max-h-[400px] overflow-y-auto">
@@ -313,36 +293,33 @@ export function AddExpenseDialog({
                       categories={categories}
                       onCategoriesChanged={loadCategories}
                     />
-                  </div>
+                  </Field>
                 </div>
 
                 {/* Row 2: Amount and Frequency */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">
-                      Expense Amount <span className="text-on-danger">*</span>
-                    </Label>
+                  <Field label="Expense Amount" htmlFor="amount" required>
                     <Input
                       id="amount"
+                      aria-required="true"
                       type="number"
                       placeholder="0"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="bg-card"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="frequency">
-                      Expense Frequency{" "}
-                      <span className="text-on-danger">*</span>
-                    </Label>
+                  </Field>
+                  <Field
+                    label="Expense Frequency"
+                    htmlFor="frequency"
+                    required
+                    helper={selectedFrequency?.description}>
                     <Select
                       value={frequency}
                       onValueChange={setFrequency}
                       disabled={expenseCategory === "one-off"}>
-                      <SelectTrigger className="bg-card">
+                      <SelectTrigger id="frequency" aria-required="true">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -353,20 +330,12 @@ export function AddExpenseDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {selectedFrequency && (
-                      <p className="text-muted-foreground text-xs">
-                        {selectedFrequency.description}
-                      </p>
-                    )}
-                  </div>
+                  </Field>
                 </div>
 
                 {/* Custom Month Selector */}
                 {frequency === "custom" && (
-                  <div className="space-y-2">
-                    <Label>
-                      Select Months <span className="text-on-danger">*</span>
-                    </Label>
+                  <Field label="Select Months" required>
                     <div className="grid grid-cols-6 gap-2">
                       {MONTHS.map((month) => (
                         <Button
@@ -409,7 +378,7 @@ export function AddExpenseDialog({
                             .join(", ")
                         : "None"}
                     </p>
-                  </div>
+                  </Field>
                 )}
 
                 {/* Row 3: Start Date and End Date - Only show for non-recurring expenses */}
@@ -421,100 +390,50 @@ export function AddExpenseDialog({
                         ? "grid-cols-1"
                         : "grid-cols-2"
                     )}>
-                    <div className="space-y-2">
-                      <Label>
-                        {expenseCategory === "one-off"
+                    <Field
+                      label={
+                        expenseCategory === "one-off"
                           ? "Expense Date"
-                          : "Start Date"}{" "}
-                        <span className="text-on-danger">*</span>
-                      </Label>
-                      <Popover
-                        open={startDateOpen}
-                        onOpenChange={setStartDateOpen}>
-                        <PopoverAnchor asChild>
-                          <Button
-                            variant="outline"
-                            type="button"
-                            onClick={() => setStartDateOpen(true)}
-                            className={cn(
-                              "w-full touch-manipulation justify-start text-left font-normal",
-                              !startDate && "text-muted-foreground"
-                            )}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {startDate
-                              ? format(startDate, "MMMM do, yyyy")
-                              : "Pick a date"}
-                          </Button>
-                        </PopoverAnchor>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={startDate}
-                            onSelect={(date) => {
-                              setStartDate(date)
-                              setStartDateOpen(false)
-                            }}
-                            fixedWeeks
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                          : "Start Date"
+                      }
+                      htmlFor="start-date"
+                      required>
+                      <DatePicker
+                        id="start-date"
+                        value={startDate}
+                        onChange={setStartDate}
+                        triggerClassName="w-full touch-manipulation"
+                      />
+                    </Field>
                     {expenseCategory !== "one-off" && (
-                      <div className="space-y-2">
-                        <Label>End Date</Label>
-                        <Popover
-                          open={endDateOpen}
-                          onOpenChange={setEndDateOpen}>
-                          <PopoverAnchor asChild>
-                            <Button
-                              variant="outline"
-                              type="button"
-                              onClick={() => setEndDateOpen(true)}
-                              className={cn(
-                                "w-full touch-manipulation justify-start text-left font-normal",
-                                !endDate && "text-muted-foreground"
-                              )}>
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {endDate
-                                ? format(endDate, "MMMM do, yyyy")
-                                : "Pick a date"}
-                            </Button>
-                          </PopoverAnchor>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={endDate}
-                              onSelect={(date) => {
-                                setEndDate(date)
-                                setEndDateOpen(false)
-                              }}
-                              fixedWeeks
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <p className="text-muted-foreground text-xs">
-                          Leave empty for ongoing expense
-                        </p>
-                      </div>
+                      <Field
+                        label="End Date"
+                        htmlFor="end-date"
+                        helper="Leave empty for ongoing expense">
+                        <DatePicker
+                          id="end-date"
+                          value={endDate}
+                          onChange={setEndDate}
+                          triggerClassName="w-full touch-manipulation"
+                        />
+                      </Field>
                     )}
                   </div>
                 )}
 
                 {/* Row 4: Notes */}
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Expense Notes</Label>
+                <Field
+                  label="Expense Notes"
+                  htmlFor="notes"
+                  helper="Add any additional details about this expense">
                   <Textarea
                     id="notes"
                     placeholder="e.g., Monthly apartment rent..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
-                    className="bg-card"
                   />
-                  <p className="text-muted-foreground text-xs">
-                    Add any additional details about this expense
-                  </p>
-                </div>
+                </Field>
               </div>
             )}
           </DialogBody>

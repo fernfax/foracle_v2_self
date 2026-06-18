@@ -6,9 +6,7 @@ import {
   updateVehicleAsset
 } from "@/actions/vehicle-assets"
 import { differenceInMonths, format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +18,7 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogBody,
@@ -29,13 +27,10 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
+import { MoneyInput } from "@/components/ui/money-input"
 import { Switch } from "@/components/ui/switch"
 
 interface VehicleAsset {
@@ -71,11 +66,9 @@ export function AddVehicleDialog({
   const [purchaseDate, setPurchaseDate] = useState<Date | undefined>(
     vehicle?.purchaseDate ? new Date(vehicle.purchaseDate) : undefined
   )
-  const [purchaseDateOpen, setPurchaseDateOpen] = useState(false)
   const [coeExpiryDate, setCoeExpiryDate] = useState<Date | undefined>(
     vehicle?.coeExpiryDate ? new Date(vehicle.coeExpiryDate) : undefined
   )
-  const [coeExpiryDateOpen, setCoeExpiryDateOpen] = useState(false)
 
   // Purchase Details
   const [originalPurchasePrice, setOriginalPurchasePrice] = useState(
@@ -343,87 +336,42 @@ export function AddVehicleDialog({
                 </div>
                 <div className="bg-muted rounded-lg p-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="vehicleName">
-                        Vehicle Name <span className="text-on-danger">*</span>
-                      </Label>
+                    <Field label="Vehicle Name" htmlFor="vehicleName" required>
                       <Input
                         id="vehicleName"
                         placeholder="e.g. Honda Vezel"
                         value={vehicleName}
                         onChange={(e) => setVehicleName(e.target.value)}
-                        className="bg-card"
+                        aria-required="true"
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>
-                        Purchase Date <span className="text-on-danger">*</span>
-                      </Label>
-                      <Popover
-                        open={purchaseDateOpen}
-                        onOpenChange={setPurchaseDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "bg-card w-full justify-start text-left font-normal",
-                              !purchaseDate && "text-muted-foreground"
-                            )}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {purchaseDate
-                              ? format(purchaseDate, "dd/MM/yyyy")
-                              : "Select date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={purchaseDate}
-                            onSelect={(date) => {
-                              setPurchaseDate(date)
-                              setPurchaseDateOpen(false)
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                    </Field>
+                    <Field
+                      label="Purchase Date"
+                      htmlFor="purchaseDate"
+                      required>
+                      <DatePicker
+                        id="purchaseDate"
+                        value={purchaseDate}
+                        onChange={setPurchaseDate}
+                        displayFormat="dd/MM/yyyy"
+                        placeholder="Select date"
+                        disableFuture
+                      />
+                    </Field>
                   </div>
                   <div className="mt-4">
-                    <div className="space-y-2">
-                      <Label>COE Expiry Date</Label>
-                      <Popover
-                        open={coeExpiryDateOpen}
-                        onOpenChange={setCoeExpiryDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "bg-card w-full justify-start text-left font-normal",
-                              !coeExpiryDate && "text-muted-foreground"
-                            )}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {coeExpiryDate
-                              ? format(coeExpiryDate, "dd/MM/yyyy")
-                              : "Select date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={coeExpiryDate}
-                            onSelect={(date) => {
-                              setCoeExpiryDate(date)
-                              setCoeExpiryDateOpen(false)
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <p className="text-muted-foreground text-xs">
-                        Certificate of Entitlement expiry date (Singapore)
-                      </p>
-                    </div>
+                    <Field
+                      label="COE Expiry Date"
+                      htmlFor="coeExpiryDate"
+                      helper="Certificate of Entitlement expiry date (Singapore)">
+                      <DatePicker
+                        id="coeExpiryDate"
+                        value={coeExpiryDate}
+                        onChange={setCoeExpiryDate}
+                        displayFormat="dd/MM/yyyy"
+                        placeholder="Select date"
+                      />
+                    </Field>
                   </div>
                 </div>
               </div>
@@ -437,114 +385,91 @@ export function AddVehicleDialog({
                 </div>
                 <div className="bg-muted rounded-lg p-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="originalPurchasePrice">
-                        Original Purchase Price{" "}
-                        <span className="text-on-danger">*</span>
-                      </Label>
-                      <div className="relative">
-                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="originalPurchasePrice"
-                          type="number"
-                          placeholder="0.00"
-                          value={originalPurchasePrice}
-                          onChange={(e) =>
-                            setOriginalPurchasePrice(e.target.value)
-                          }
-                          min="0"
-                          step="0.01"
-                          className="bg-card pl-7"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="loanAmountTaken">Loan Amount Taken</Label>
-                      <div className="relative">
-                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="loanAmountTaken"
-                          type="number"
-                          placeholder="0.00"
-                          value={loanAmountTaken}
-                          onChange={(e) => setLoanAmountTaken(e.target.value)}
-                          min="0"
-                          step="0.01"
-                          className="bg-card pl-7"
-                        />
-                      </div>
+                    <Field
+                      label="Original Purchase Price"
+                      htmlFor="originalPurchasePrice"
+                      required>
+                      <MoneyInput
+                        id="originalPurchasePrice"
+                        type="number"
+                        placeholder="0.00"
+                        value={originalPurchasePrice}
+                        onChange={(e) =>
+                          setOriginalPurchasePrice(e.target.value)
+                        }
+                        min="0"
+                        step="0.01"
+                        aria-required="true"
+                      />
+                    </Field>
+                    <Field label="Loan Amount Taken" htmlFor="loanAmountTaken">
+                      <MoneyInput
+                        id="loanAmountTaken"
+                        type="number"
+                        placeholder="0.00"
+                        value={loanAmountTaken}
+                        onChange={(e) => setLoanAmountTaken(e.target.value)}
+                        min="0"
+                        step="0.01"
+                      />
                       {masWarning && (
                         <p className="text-on-warning text-xs">
                           Exceeds MAS cap of 70% of purchase price
                         </p>
                       )}
-                    </div>
+                    </Field>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="loanInterestRate">
-                        Flat Interest Rate (%)
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="loanInterestRate"
-                          type="number"
-                          placeholder="e.g. 2.68"
-                          value={loanInterestRate}
-                          onChange={(e) => setLoanInterestRate(e.target.value)}
-                          min="0"
-                          step="0.01"
-                          className="bg-card pr-8"
-                        />
-                        <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
-                          %
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        Flat rate p.a. as quoted by your bank
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Loan Tenure</Label>
+                    <Field
+                      label="Flat Interest Rate (%)"
+                      htmlFor="loanInterestRate"
+                      helper="Flat rate p.a. as quoted by your bank">
+                      <MoneyInput
+                        symbol="%"
+                        side="suffix"
+                        id="loanInterestRate"
+                        type="number"
+                        placeholder="e.g. 2.68"
+                        value={loanInterestRate}
+                        onChange={(e) => setLoanInterestRate(e.target.value)}
+                        min="0"
+                        step="0.01"
+                      />
+                    </Field>
+                    <Field
+                      label="Loan Tenure"
+                      helper={
+                        tenureWarning || coeOverlapWarning
+                          ? undefined
+                          : "Max 7 years (MAS)"
+                      }>
                       <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <Input
-                            id="loanTenureYears"
-                            type="number"
-                            placeholder="0"
-                            value={loanTenureYears}
-                            onChange={(e) => setLoanTenureYears(e.target.value)}
-                            min="0"
-                            max="7"
-                            step="1"
-                            className="bg-card pr-10"
-                          />
-                          <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
-                            yr
-                          </span>
-                        </div>
-                        <div className="relative flex-1">
-                          <Input
-                            id="loanTenureMonths"
-                            type="number"
-                            placeholder="0"
-                            value={loanTenureMonths}
-                            onChange={(e) =>
-                              setLoanTenureMonths(e.target.value)
-                            }
-                            min="0"
-                            max="11"
-                            step="1"
-                            className="bg-card pr-10"
-                          />
-                          <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
-                            mo
-                          </span>
-                        </div>
+                        <MoneyInput
+                          symbol="yr"
+                          side="suffix"
+                          id="loanTenureYears"
+                          type="number"
+                          placeholder="0"
+                          value={loanTenureYears}
+                          onChange={(e) => setLoanTenureYears(e.target.value)}
+                          min="0"
+                          max="7"
+                          step="1"
+                          className="flex-1"
+                        />
+                        <MoneyInput
+                          symbol="mo"
+                          side="suffix"
+                          id="loanTenureMonths"
+                          type="number"
+                          placeholder="0"
+                          value={loanTenureMonths}
+                          onChange={(e) => setLoanTenureMonths(e.target.value)}
+                          min="0"
+                          max="11"
+                          step="1"
+                          className="flex-1"
+                        />
                       </div>
                       {tenureWarning ? (
                         <p className="text-on-warning text-xs">
@@ -554,12 +479,8 @@ export function AddVehicleDialog({
                         <p className="text-on-warning text-xs">
                           Loan tenure extends past COE expiry date
                         </p>
-                      ) : (
-                        <p className="text-muted-foreground text-xs">
-                          Max 7 years (MAS)
-                        </p>
-                      )}
-                    </div>
+                      ) : null}
+                    </Field>
                   </div>
                 </div>
               </div>
@@ -573,70 +494,50 @@ export function AddVehicleDialog({
                 </div>
                 <div className="bg-muted space-y-4 rounded-lg p-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="loanAmountRepaid">
-                        Loan Amount Repaid
-                      </Label>
-                      <div className="relative">
-                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="loanAmountRepaid"
-                          type="number"
-                          placeholder="0.00"
-                          value={loanAmountRepaid}
-                          onChange={(e) => setLoanAmountRepaid(e.target.value)}
-                          min="0"
-                          step="0.01"
-                          className="bg-card pl-7"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="outstandingLoan">Outstanding Loan</Label>
-                      <div className="relative">
-                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="outstandingLoan"
-                          type="number"
-                          value={outstandingLoan.toFixed(2)}
-                          disabled
-                          className="bg-muted pl-7"
-                        />
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        {outstandingLoanMethod === "flat"
+                    <Field
+                      label="Loan Amount Repaid"
+                      htmlFor="loanAmountRepaid">
+                      <MoneyInput
+                        id="loanAmountRepaid"
+                        type="number"
+                        placeholder="0.00"
+                        value={loanAmountRepaid}
+                        onChange={(e) => setLoanAmountRepaid(e.target.value)}
+                        min="0"
+                        step="0.01"
+                      />
+                    </Field>
+                    <Field
+                      label="Outstanding Loan"
+                      htmlFor="outstandingLoan"
+                      helper={
+                        outstandingLoanMethod === "flat"
                           ? "Flat rate: principal reduces linearly over tenure"
-                          : "Calculated as: Loan Amount Taken − Loan Amount Repaid"}
-                      </p>
-                    </div>
+                          : "Calculated as: Loan Amount Taken − Loan Amount Repaid"
+                      }>
+                      <MoneyInput
+                        id="outstandingLoan"
+                        type="number"
+                        value={outstandingLoan.toFixed(2)}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </Field>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="monthlyLoanPayment">
-                        Monthly Loan Payment
-                      </Label>
-                      <div className="relative">
-                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="monthlyLoanPayment"
-                          type="number"
-                          placeholder="0.00"
-                          value={monthlyLoanPayment}
-                          onChange={(e) =>
-                            setMonthlyLoanPayment(e.target.value)
-                          }
-                          min="0"
-                          step="0.01"
-                          className="bg-card pl-7"
-                        />
-                      </div>
+                    <Field
+                      label="Monthly Loan Payment"
+                      htmlFor="monthlyLoanPayment">
+                      <MoneyInput
+                        id="monthlyLoanPayment"
+                        type="number"
+                        placeholder="0.00"
+                        value={monthlyLoanPayment}
+                        onChange={(e) => setMonthlyLoanPayment(e.target.value)}
+                        min="0"
+                        step="0.01"
+                      />
                       {suggestedMonthlyPayment !== null && (
                         <p className="text-muted-foreground text-xs">
                           Suggested:{" "}
@@ -653,7 +554,7 @@ export function AddVehicleDialog({
                           (from flat rate)
                         </p>
                       )}
-                    </div>
+                    </Field>
                   </div>
                 </div>
               </div>
@@ -729,10 +630,7 @@ export function AddVehicleDialog({
 
           <div className="my-4 space-y-4">
             {/* Expense Name Input - Editable */}
-            <div className="space-y-2">
-              <Label htmlFor="expenseName" className="text-sm font-medium">
-                Expense Name
-              </Label>
+            <Field label="Expense Name" htmlFor="expenseName">
               <Input
                 id="expenseName"
                 value={expenseName}
@@ -740,7 +638,7 @@ export function AddVehicleDialog({
                 placeholder="Enter expense name"
                 className="w-full"
               />
-            </div>
+            </Field>
 
             {/* Display-only Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">

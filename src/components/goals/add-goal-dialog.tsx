@@ -3,9 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { createGoal, updateGoal } from "@/actions/goals"
 import { differenceInMonths, format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +15,7 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogBody,
@@ -26,13 +24,10 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
+import { MoneyInput } from "@/components/ui/money-input"
 import {
   Select,
   SelectContent,
@@ -80,7 +75,6 @@ export function AddGoalDialog({
   const [targetDate, setTargetDate] = useState<Date | undefined>(
     goal?.targetDate ? new Date(goal.targetDate) : undefined
   )
-  const [targetDateOpen, setTargetDateOpen] = useState(false)
 
   // Progress Tracking
   const [currentAmountSaved, setCurrentAmountSaved] = useState(
@@ -256,28 +250,22 @@ export function AddGoalDialog({
                 </div>
                 <div className="bg-muted space-y-4 rounded-lg p-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="goalName">
-                        Goal Name <span className="text-on-danger">*</span>
-                      </Label>
+                    <Field label="Goal Name" htmlFor="goalName" required>
                       <Input
                         id="goalName"
                         placeholder="e.g. Emergency Fund, Vacation, House Down Payment"
                         value={goalName}
                         onChange={(e) => setGoalName(e.target.value)}
-                        className="bg-card"
+                        aria-required="true"
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="goalType">
-                        Goal Type <span className="text-on-danger">*</span>
-                      </Label>
+                    </Field>
+                    <Field label="Goal Type" htmlFor="goalType" required>
                       <Select
                         value={goalType}
                         onValueChange={(v) =>
                           setGoalType(v as "primary" | "secondary")
                         }>
-                        <SelectTrigger className="bg-card">
+                        <SelectTrigger id="goalType" aria-required="true">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -285,82 +273,55 @@ export function AddGoalDialog({
                           <SelectItem value="secondary">Secondary</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
+                    </Field>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="targetAmount">
-                        Target Amount <span className="text-on-danger">*</span>
-                      </Label>
-                      <div className="relative">
-                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="targetAmount"
-                          type="number"
-                          placeholder="0.00"
-                          value={targetAmount}
-                          onChange={(e) => setTargetAmount(e.target.value)}
-                          min="0"
-                          step="0.01"
-                          className="bg-card pl-7"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>
-                        Target Date <span className="text-on-danger">*</span>
-                      </Label>
-                      <Popover
-                        open={targetDateOpen}
-                        onOpenChange={setTargetDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "bg-card w-full justify-start text-left font-normal",
-                              !targetDate && "text-muted-foreground"
-                            )}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {targetDate
-                              ? format(targetDate, "dd/MM/yyyy")
-                              : "Select date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={targetDate}
-                            onSelect={(date) => {
-                              setTargetDate(date)
-                              setTargetDateOpen(false)
-                            }}
-                            initialFocus
-                            disabled={(date) => date < new Date()}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {monthsUntilTarget > 0 && (
-                        <p className="text-muted-foreground text-xs">
-                          {monthsUntilTarget} months until target date
-                        </p>
-                      )}
-                    </div>
+                    <Field
+                      label="Target Amount"
+                      htmlFor="targetAmount"
+                      required>
+                      <MoneyInput
+                        id="targetAmount"
+                        type="number"
+                        placeholder="0.00"
+                        value={targetAmount}
+                        onChange={(e) => setTargetAmount(e.target.value)}
+                        min="0"
+                        step="0.01"
+                        aria-required="true"
+                      />
+                    </Field>
+                    <Field
+                      label="Target Date"
+                      htmlFor="targetDate"
+                      required
+                      helper={
+                        monthsUntilTarget > 0
+                          ? `${monthsUntilTarget} months until target date`
+                          : undefined
+                      }>
+                      <DatePicker
+                        value={targetDate}
+                        onChange={setTargetDate}
+                        id="targetDate"
+                        displayFormat="dd/MM/yyyy"
+                        placeholder="Select date"
+                        disablePast
+                      />
+                    </Field>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description (Optional)</Label>
+                  <Field label="Description" htmlFor="description" optional>
                     <Textarea
                       id="description"
                       placeholder="Add any notes or details about this goal..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="bg-card resize-none"
+                      className="resize-none"
                       rows={2}
                     />
-                  </div>
+                  </Field>
                 </div>
               </div>
 
@@ -373,63 +334,41 @@ export function AddGoalDialog({
                 </div>
                 <div className="bg-muted space-y-4 rounded-lg p-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="currentAmountSaved">
-                        Current Amount Saved
-                      </Label>
-                      <div className="relative">
-                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="currentAmountSaved"
-                          type="number"
-                          placeholder="0.00"
-                          value={currentAmountSaved}
-                          onChange={(e) =>
-                            setCurrentAmountSaved(e.target.value)
-                          }
-                          min="0"
-                          step="0.01"
-                          className="bg-card pl-7"
-                        />
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        How much have you already saved?
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="monthlyContribution">
-                        Monthly Contribution
-                      </Label>
-                      <div className="relative">
-                        <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                          $
-                        </span>
-                        <Input
-                          id="monthlyContribution"
-                          type="number"
-                          placeholder="0.00"
-                          value={monthlyContribution}
-                          onChange={(e) =>
-                            setMonthlyContribution(e.target.value)
-                          }
-                          min="0"
-                          step="0.01"
-                          className="bg-card pl-7"
-                        />
-                      </div>
-                      {suggestedMonthlyContribution > 0 && (
-                        <p className="text-muted-foreground text-xs">
-                          Suggested: $
-                          {suggestedMonthlyContribution.toLocaleString(
-                            undefined,
-                            { maximumFractionDigits: 0 }
-                          )}
-                          /month to reach target
-                        </p>
-                      )}
-                    </div>
+                    <Field
+                      label="Current Amount Saved"
+                      htmlFor="currentAmountSaved"
+                      helper="How much have you already saved?">
+                      <MoneyInput
+                        id="currentAmountSaved"
+                        type="number"
+                        placeholder="0.00"
+                        value={currentAmountSaved}
+                        onChange={(e) => setCurrentAmountSaved(e.target.value)}
+                        min="0"
+                        step="0.01"
+                      />
+                    </Field>
+                    <Field
+                      label="Monthly Contribution"
+                      htmlFor="monthlyContribution"
+                      helper={
+                        suggestedMonthlyContribution > 0
+                          ? `Suggested: $${suggestedMonthlyContribution.toLocaleString(
+                              undefined,
+                              { maximumFractionDigits: 0 }
+                            )}/month to reach target`
+                          : undefined
+                      }>
+                      <MoneyInput
+                        id="monthlyContribution"
+                        type="number"
+                        placeholder="0.00"
+                        value={monthlyContribution}
+                        onChange={(e) => setMonthlyContribution(e.target.value)}
+                        min="0"
+                        step="0.01"
+                      />
+                    </Field>
                   </div>
 
                   {projectedCompletion && (
@@ -513,10 +452,7 @@ export function AddGoalDialog({
 
           <div className="my-4 space-y-4">
             {/* Expense Name Input - Editable */}
-            <div className="space-y-2">
-              <Label htmlFor="expenseName" className="text-sm font-medium">
-                Expense Name
-              </Label>
+            <Field label="Expense Name" htmlFor="expenseName">
               <Input
                 id="expenseName"
                 value={expenseName}
@@ -524,7 +460,7 @@ export function AddGoalDialog({
                 placeholder="Enter expense name"
                 className="w-full"
               />
-            </div>
+            </Field>
 
             {/* Display-only Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">

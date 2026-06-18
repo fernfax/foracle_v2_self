@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { HelpCircle } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,8 +12,11 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { MoneyInput } from "@/components/ui/money-input"
+import { MonthPicker } from "@/components/ui/month-picker"
 import {
   Select,
   SelectContent,
@@ -65,21 +67,6 @@ const INVESTMENT_TYPES = [
   { value: "crypto", label: "Crypto" },
   { value: "mutual_fund", label: "Mutual Fund" },
   { value: "reit", label: "REIT" }
-]
-
-const MONTHS = [
-  { value: 1, label: "Jan" },
-  { value: 2, label: "Feb" },
-  { value: 3, label: "Mar" },
-  { value: 4, label: "Apr" },
-  { value: 5, label: "May" },
-  { value: 6, label: "Jun" },
-  { value: 7, label: "Jul" },
-  { value: 8, label: "Aug" },
-  { value: 9, label: "Sep" },
-  { value: 10, label: "Oct" },
-  { value: 11, label: "Nov" },
-  { value: 12, label: "Dec" }
 ]
 
 export function AddInvestmentModal({
@@ -137,14 +124,6 @@ export function AddInvestmentModal({
       resetForm()
     }
     onOpenChange(isOpen)
-  }
-
-  const toggleMonth = (month: number) => {
-    setSelectedMonths((prev) =>
-      prev.includes(month)
-        ? prev.filter((m) => m !== month)
-        : [...prev, month].sort((a, b) => a - b)
-    )
   }
 
   const handleSubmit = async () => {
@@ -206,24 +185,18 @@ export function AddInvestmentModal({
               </div>
               <div className="bg-muted space-y-4 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">
-                      Investment Name <span className="text-on-danger">*</span>
-                    </Label>
+                  <Field label="Investment Name" htmlFor="name" required>
                     <Input
                       id="name"
+                      aria-required="true"
                       placeholder="e.g., S&P 500 ETF, High Yield Savings"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="bg-card"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="type">
-                      Type <span className="text-on-danger">*</span>
-                    </Label>
+                  </Field>
+                  <Field label="Type" htmlFor="type" required>
                     <Select value={type} onValueChange={setType}>
-                      <SelectTrigger className="bg-card">
+                      <SelectTrigger id="type" aria-required="true">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -234,7 +207,7 @@ export function AddInvestmentModal({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </Field>
                 </div>
               </div>
             </div>
@@ -248,84 +221,74 @@ export function AddInvestmentModal({
               </div>
               <div className="bg-muted space-y-4 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentCapital">
-                      Current Portfolio Capital{" "}
-                      <span className="text-on-danger">*</span>
-                    </Label>
-                    <div className="relative">
-                      <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                        $
+                  <Field
+                    label="Current Portfolio Capital"
+                    htmlFor="currentCapital"
+                    required>
+                    <MoneyInput
+                      id="currentCapital"
+                      aria-required="true"
+                      placeholder="0.00"
+                      value={currentCapital}
+                      onChange={(e) => setCurrentCapital(e.target.value)}
+                      min="0"
+                      step="0.01"
+                    />
+                  </Field>
+                  <Field
+                    htmlFor="projectedYield"
+                    required
+                    label={
+                      <span className="flex items-center gap-1">
+                        Projected Annual Yield %
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className="text-muted-foreground hover:text-foreground transition-colors">
+                                <HelpCircle className="h-3.5 w-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="top"
+                              className="bg-card max-w-[320px] border p-3 text-xs shadow-lg">
+                              <p className="mb-2 font-semibold">
+                                Wealth Projection Formula
+                              </p>
+                              <p className="mb-2">
+                                <strong>With Contributions:</strong>
+                                <br />
+                                FV = C × (1 + r/12)<sup>n</sup> + PMT × ((1 +
+                                r/12)<sup>n</sup> - 1) / (r/12)
+                              </p>
+                              <p className="mb-2">
+                                <strong>Without Contributions:</strong>
+                                <br />
+                                FV = C × (1 + r/12)<sup>n</sup>
+                              </p>
+                              <p className="text-muted-foreground text-[10px]">
+                                Where C = capital, r = annual yield, n = months,
+                                PMT = monthly contribution. Interest compounds
+                                monthly.
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </span>
-                      <Input
-                        id="currentCapital"
-                        type="number"
-                        placeholder="0.00"
-                        value={currentCapital}
-                        onChange={(e) => setCurrentCapital(e.target.value)}
-                        min="0"
-                        step="0.01"
-                        className="bg-card pl-7"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1">
-                      <Label htmlFor="projectedYield">
-                        Projected Annual Yield %{" "}
-                        <span className="text-on-danger">*</span>
-                      </Label>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-muted-foreground hover:text-foreground transition-colors">
-                              <HelpCircle className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="top"
-                            className="bg-card max-w-[320px] border p-3 text-xs shadow-lg">
-                            <p className="mb-2 font-semibold">
-                              Wealth Projection Formula
-                            </p>
-                            <p className="mb-2">
-                              <strong>With Contributions:</strong>
-                              <br />
-                              FV = C × (1 + r/12)<sup>n</sup> + PMT × ((1 +
-                              r/12)<sup>n</sup> - 1) / (r/12)
-                            </p>
-                            <p className="mb-2">
-                              <strong>Without Contributions:</strong>
-                              <br />
-                              FV = C × (1 + r/12)<sup>n</sup>
-                            </p>
-                            <p className="text-muted-foreground text-[10px]">
-                              Where C = capital, r = annual yield, n = months,
-                              PMT = monthly contribution. Interest compounds
-                              monthly.
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="relative">
-                      <Input
-                        id="projectedYield"
-                        type="number"
-                        placeholder="0.00"
-                        value={projectedYield}
-                        onChange={(e) => setProjectedYield(e.target.value)}
-                        min="0"
-                        step="0.01"
-                        className="bg-card pr-8"
-                      />
-                      <span className="text-foreground/400 absolute top-1/2 right-3 -translate-y-1/2">
-                        %
-                      </span>
-                    </div>
-                  </div>
+                    }>
+                    <MoneyInput
+                      symbol="%"
+                      side="suffix"
+                      id="projectedYield"
+                      aria-required="true"
+                      placeholder="0.00"
+                      value={projectedYield}
+                      onChange={(e) => setProjectedYield(e.target.value)}
+                      min="0"
+                      step="0.01"
+                    />
+                  </Field>
                 </div>
               </div>
             </div>
@@ -339,27 +302,20 @@ export function AddInvestmentModal({
               </div>
               <div className="bg-muted space-y-4 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contributionAmount">
-                      Contribution Amount{" "}
-                      <span className="text-on-danger">*</span>
-                    </Label>
-                    <div className="relative">
-                      <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
-                        $
-                      </span>
-                      <Input
-                        id="contributionAmount"
-                        type="number"
-                        placeholder="0.00"
-                        value={contributionAmount}
-                        onChange={(e) => setContributionAmount(e.target.value)}
-                        min="0"
-                        step="0.01"
-                        className="bg-card pl-7"
-                      />
-                    </div>
-                  </div>
+                  <Field
+                    label="Contribution Amount"
+                    htmlFor="contributionAmount"
+                    required>
+                    <MoneyInput
+                      id="contributionAmount"
+                      aria-required="true"
+                      placeholder="0.00"
+                      value={contributionAmount}
+                      onChange={(e) => setContributionAmount(e.target.value)}
+                      min="0"
+                      step="0.01"
+                    />
+                  </Field>
                   <div className="space-y-2">
                     <Label>Contribution Frequency</Label>
                     <div className="flex h-10 items-center gap-4">
@@ -387,33 +343,18 @@ export function AddInvestmentModal({
 
                 {/* Custom Months Selector */}
                 {contributionFrequency === "custom" && (
-                  <div className="space-y-2 pt-2">
-                    <Label>
-                      Select Months <span className="text-on-danger">*</span>
-                    </Label>
-                    <div className="grid grid-cols-6 gap-2">
-                      {MONTHS.map((month) => (
-                        <button
-                          key={month.value}
-                          type="button"
-                          onClick={() => toggleMonth(month.value)}
-                          className={cn(
-                            "rounded-md border px-3 py-2 text-sm transition-colors",
-                            selectedMonths.includes(month.value)
-                              ? "border-brand-terracotta/[0.25] bg-brand-terracotta text-white"
-                              : "bg-card text-foreground border-border hover:border-border"
-                          )}>
-                          {month.label}
-                        </button>
-                      ))}
-                    </div>
+                  <Field label="Select Months" required className="pt-2">
+                    <MonthPicker
+                      value={selectedMonths}
+                      onChange={setSelectedMonths}
+                    />
                     {selectedMonths.length > 0 && (
                       <p className="text-muted-foreground text-xs">
                         {selectedMonths.length} contribution
                         {selectedMonths.length > 1 ? "s" : ""} per year
                       </p>
                     )}
-                  </div>
+                  </Field>
                 )}
               </div>
             </div>

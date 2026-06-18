@@ -31,6 +31,13 @@ import {
   PopoverContent,
   PopoverTrigger
 } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 
 // A bonus draft is a discriminated union persisted to the `bonusGroups` JSON
@@ -1102,19 +1109,24 @@ export function IncomeBarPopup({
                 {bonusGroups.map((g, i) =>
                   g.kind !== "recurring" ? null : (
                     <div key={i} className="flex items-center gap-1.5">
-                      <select
-                        value={g.month}
-                        onChange={(e) =>
-                          updateBonusGroup(i, { month: Number(e.target.value) })
-                        }
-                        className="border-border bg-background h-8 flex-1 rounded-md border px-2 text-xs"
-                        aria-label="Bonus month">
-                        {MONTH_LABELS.map((m, idx) => (
-                          <option key={idx} value={idx + 1}>
-                            {m}
-                          </option>
-                        ))}
-                      </select>
+                      <Select
+                        value={String(g.month)}
+                        onValueChange={(v) =>
+                          updateBonusGroup(i, { month: Number(v) })
+                        }>
+                        <SelectTrigger
+                          className="h-8 flex-1 px-2 text-xs"
+                          aria-label="Bonus month">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MONTH_LABELS.map((m, idx) => (
+                            <SelectItem key={idx} value={String(idx + 1)}>
+                              {m}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Input
                         type="number"
                         step="0.5"

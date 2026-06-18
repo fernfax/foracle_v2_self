@@ -34,8 +34,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { InviteFamilyMemberForm } from "@/components/family-members/invite-family-member-form"
 
 interface FamilyAdminPanelProps {
@@ -304,12 +304,10 @@ export function FamilyAdminPanel({
                         unique user ID, but skip onboarding — they inherit this
                         family&apos;s data.
                       </p>
-                      <div className="space-y-1">
-                        <Label
-                          htmlFor={`convert-email-${member.id}`}
-                          className="text-xs">
-                          Email
-                        </Label>
+                      <Field
+                        label="Email"
+                        htmlFor={`convert-email-${member.id}`}
+                        error={convertError}>
                         <Input
                           id={`convert-email-${member.id}`}
                           type="email"
@@ -321,12 +319,7 @@ export function FamilyAdminPanel({
                           autoFocus
                           className="h-9"
                         />
-                      </div>
-                      {convertError && (
-                        <p className="text-destructive text-xs">
-                          {convertError}
-                        </p>
-                      )}
+                      </Field>
                       <div className="flex justify-end gap-2">
                         <Button
                           type="button"

@@ -30,7 +30,7 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogBody,
@@ -40,9 +40,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -190,8 +189,6 @@ export function EditExpenseDialog({
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [categories, setCategories] = useState<ExpenseCategory[]>([])
-  const [startDateOpen, setStartDateOpen] = useState(false)
-  const [endDateOpen, setEndDateOpen] = useState(false)
   const [expenseCategory, setExpenseCategory] = useState("current-recurring")
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
 
@@ -428,22 +425,39 @@ export function EditExpenseDialog({
             )}
 
             {/* Expense Type Selector */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="edit-expense-type"
-                className="flex items-center gap-1">
-                Expense Type <span className="text-on-danger">*</span>
-                {isLinked && <Lock className="text-muted-foreground h-3 w-3" />}
-              </Label>
+            <Field
+              label={
+                <>
+                  Expense Type
+                  {isLinked && (
+                    <Lock className="text-muted-foreground h-3 w-3" />
+                  )}
+                </>
+              }
+              htmlFor="edit-expense-type"
+              required
+              labelClassName="flex items-center gap-1"
+              helper={
+                isLinked
+                  ? "Inherited from insurance policy"
+                  : !expenseCategory
+                    ? "Please select an expense type to continue"
+                    : expenseCategory === "current-recurring"
+                      ? "Expense that repeats regularly (e.g., monthly rent)"
+                      : expenseCategory === "future-recurring"
+                        ? "Recurring expense that starts in the future (e.g., upcoming subscription)"
+                        : expenseCategory === "one-off"
+                          ? "One-time expense that does not repeat (e.g., car repair, vacation)"
+                          : undefined
+              }>
               <Select
                 value={expenseCategory}
                 onValueChange={isLinked ? undefined : setExpenseCategory}
                 disabled={isLinked}>
                 <SelectTrigger
-                  className={cn(
-                    "bg-card",
-                    isLinked && "bg-muted cursor-not-allowed"
-                  )}>
+                  id="edit-expense-type"
+                  aria-required="true"
+                  className={cn(isLinked && "bg-muted cursor-not-allowed")}>
                   <SelectValue placeholder="Select expense type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -456,85 +470,61 @@ export function EditExpenseDialog({
                   <SelectItem value="one-off">One-off Expense</SelectItem>
                 </SelectContent>
               </Select>
-              {isLinked ? (
-                <p className="text-muted-foreground text-xs">
-                  Inherited from insurance policy
-                </p>
-              ) : (
-                <>
-                  {!expenseCategory && (
-                    <p className="text-muted-foreground text-xs">
-                      Please select an expense type to continue
-                    </p>
-                  )}
-                  {expenseCategory === "current-recurring" && (
-                    <p className="text-muted-foreground text-xs">
-                      Expense that repeats regularly (e.g., monthly rent)
-                    </p>
-                  )}
-                  {expenseCategory === "future-recurring" && (
-                    <p className="text-muted-foreground text-xs">
-                      Recurring expense that starts in the future (e.g.,
-                      upcoming subscription)
-                    </p>
-                  )}
-                  {expenseCategory === "one-off" && (
-                    <p className="text-muted-foreground text-xs">
-                      One-time expense that does not repeat (e.g., car repair,
-                      vacation)
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
+            </Field>
 
             {/* Show remaining fields only when expense type is selected */}
             {expenseCategory && (
               <div className="grid gap-6 py-4">
                 {/* Row 1: Name and Category */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-name"
-                      className="flex items-center gap-1">
-                      Expense Name <span className="text-on-danger">*</span>
-                      {isLinked && (
-                        <Lock className="text-muted-foreground h-3 w-3" />
-                      )}
-                    </Label>
+                  <Field
+                    label={
+                      <>
+                        Expense Name
+                        {isLinked && (
+                          <Lock className="text-muted-foreground h-3 w-3" />
+                        )}
+                      </>
+                    }
+                    htmlFor="edit-name"
+                    required
+                    labelClassName="flex items-center gap-1"
+                    helper={
+                      isLinked ? "Inherited from insurance policy" : undefined
+                    }>
                     <Input
                       id="edit-name"
+                      aria-required="true"
                       placeholder="e.g., Rent, Groceries"
                       value={name}
                       onChange={(e) => !isLinked && setName(e.target.value)}
-                      className={cn(
-                        "bg-card",
-                        isLinked && "bg-muted cursor-not-allowed"
-                      )}
+                      className={cn(isLinked && "bg-muted cursor-not-allowed")}
                       disabled={isLinked}
                     />
-                    {isLinked && (
-                      <p className="text-muted-foreground text-xs">
-                        Inherited from insurance policy
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-category"
-                      className="flex items-center gap-1">
-                      Category <span className="text-on-danger">*</span>
-                      {isLinked && (
-                        <Lock className="text-muted-foreground h-3 w-3" />
-                      )}
-                    </Label>
+                  </Field>
+                  <Field
+                    label={
+                      <>
+                        Category
+                        {isLinked && (
+                          <Lock className="text-muted-foreground h-3 w-3" />
+                        )}
+                      </>
+                    }
+                    htmlFor="edit-category"
+                    required
+                    labelClassName="flex items-center gap-1"
+                    helper={
+                      isLinked ? "Inherited from insurance policy" : undefined
+                    }>
                     <Select
                       value={category}
                       onValueChange={isLinked ? undefined : setCategory}
                       disabled={isLinked}>
                       <SelectTrigger
+                        id="edit-category"
+                        aria-required="true"
                         className={cn(
-                          "bg-card",
                           isLinked && "bg-muted cursor-not-allowed"
                         )}>
                         <SelectValue placeholder="Select a category" />
@@ -547,60 +537,62 @@ export function EditExpenseDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {isLinked ? (
-                      <p className="text-muted-foreground text-xs">
-                        Inherited from insurance policy
-                      </p>
-                    ) : (
+                    {!isLinked && (
                       <CategoryManagerPopover
                         categories={categories}
                         onCategoriesChanged={loadCategories}
                       />
                     )}
-                  </div>
+                  </Field>
                 </div>
 
                 {/* Row 2: Amount and Frequency */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-amount"
-                      className="flex items-center gap-1">
-                      Expense Amount <span className="text-on-danger">*</span>
-                      {isLinked && (
-                        <Lock className="text-muted-foreground h-3 w-3" />
-                      )}
-                    </Label>
+                  <Field
+                    label={
+                      <>
+                        Expense Amount
+                        {isLinked && (
+                          <Lock className="text-muted-foreground h-3 w-3" />
+                        )}
+                      </>
+                    }
+                    htmlFor="edit-amount"
+                    required
+                    labelClassName="flex items-center gap-1"
+                    helper={
+                      isLinked ? "Inherited from insurance policy" : undefined
+                    }>
                     <Input
                       id="edit-amount"
+                      aria-required="true"
                       type="number"
                       placeholder="0"
                       value={amount}
                       onChange={(e) => !isLinked && setAmount(e.target.value)}
                       min="0"
                       step="0.01"
-                      className={cn(
-                        "bg-card",
-                        isLinked && "bg-muted cursor-not-allowed"
-                      )}
+                      className={cn(isLinked && "bg-muted cursor-not-allowed")}
                       disabled={isLinked}
                     />
-                    {isLinked && (
-                      <p className="text-muted-foreground text-xs">
-                        Inherited from insurance policy
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-frequency"
-                      className="flex items-center gap-1">
-                      Expense Frequency{" "}
-                      <span className="text-on-danger">*</span>
-                      {isLinked && (
-                        <Lock className="text-muted-foreground h-3 w-3" />
-                      )}
-                    </Label>
+                  </Field>
+                  <Field
+                    label={
+                      <>
+                        Expense Frequency
+                        {isLinked && (
+                          <Lock className="text-muted-foreground h-3 w-3" />
+                        )}
+                      </>
+                    }
+                    htmlFor="edit-frequency"
+                    required
+                    labelClassName="flex items-center gap-1"
+                    helper={
+                      isLinked
+                        ? "Inherited from insurance policy"
+                        : selectedFrequency?.description
+                    }>
                     <Select
                       value={frequency}
                       onValueChange={
@@ -610,8 +602,9 @@ export function EditExpenseDialog({
                       }
                       disabled={isLinked || expenseCategory === "one-off"}>
                       <SelectTrigger
+                        id="edit-frequency"
+                        aria-required="true"
                         className={cn(
-                          "bg-card",
                           (isLinked || expenseCategory === "one-off") &&
                             "bg-muted cursor-not-allowed"
                         )}>
@@ -625,29 +618,25 @@ export function EditExpenseDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {isLinked ? (
-                      <p className="text-muted-foreground text-xs">
-                        Inherited from insurance policy
-                      </p>
-                    ) : (
-                      selectedFrequency && (
-                        <p className="text-muted-foreground text-xs">
-                          {selectedFrequency.description}
-                        </p>
-                      )
-                    )}
-                  </div>
+                  </Field>
                 </div>
 
                 {/* Custom Month Selector */}
                 {frequency.toLowerCase() === "custom" && (
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-1">
-                      Select Months <span className="text-on-danger">*</span>
-                      {isLinked && (
-                        <Lock className="text-muted-foreground h-3 w-3" />
-                      )}
-                    </Label>
+                  <Field
+                    label={
+                      <>
+                        Select Months
+                        {isLinked && (
+                          <Lock className="text-muted-foreground h-3 w-3" />
+                        )}
+                      </>
+                    }
+                    required
+                    labelClassName="flex items-center gap-1"
+                    helper={
+                      isLinked ? "Inherited from insurance policy" : undefined
+                    }>
                     <div className="grid grid-cols-6 gap-2">
                       {MONTHS.map((month) => (
                         <Button
@@ -692,12 +681,7 @@ export function EditExpenseDialog({
                             .join(", ")
                         : "None"}
                     </p>
-                    {isLinked && (
-                      <p className="text-muted-foreground text-xs">
-                        Inherited from insurance policy
-                      </p>
-                    )}
-                  </div>
+                  </Field>
                 )}
 
                 {/* Row 3: Start Date and End Date - Only show for non-recurring expenses */}
@@ -709,16 +693,23 @@ export function EditExpenseDialog({
                         ? "grid-cols-1"
                         : "grid-cols-2"
                     )}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-1">
-                        {expenseCategory === "one-off"
-                          ? "Expense Date"
-                          : "Start Date"}{" "}
-                        <span className="text-on-danger">*</span>
-                        {isLinked && (
-                          <Lock className="text-muted-foreground h-3 w-3" />
-                        )}
-                      </Label>
+                    <Field
+                      label={
+                        <>
+                          {expenseCategory === "one-off"
+                            ? "Expense Date"
+                            : "Start Date"}
+                          {isLinked && (
+                            <Lock className="text-muted-foreground h-3 w-3" />
+                          )}
+                        </>
+                      }
+                      htmlFor="edit-start-date"
+                      required
+                      labelClassName="flex items-center gap-1"
+                      helper={
+                        isLinked ? "Inherited from insurance policy" : undefined
+                      }>
                       {isLinked ? (
                         <Button
                           variant="outline"
@@ -730,51 +721,31 @@ export function EditExpenseDialog({
                             : "Pick a date"}
                         </Button>
                       ) : (
-                        <Popover
-                          open={startDateOpen}
-                          onOpenChange={setStartDateOpen}>
-                          <PopoverAnchor asChild>
-                            <Button
-                              variant="outline"
-                              type="button"
-                              onClick={() => setStartDateOpen(true)}
-                              className={cn(
-                                "w-full touch-manipulation justify-start text-left font-normal",
-                                !startDate && "text-muted-foreground"
-                              )}>
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {startDate
-                                ? format(startDate, "MMMM do, yyyy")
-                                : "Pick a date"}
-                            </Button>
-                          </PopoverAnchor>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={startDate}
-                              onSelect={(date) => {
-                                setStartDate(date)
-                                setStartDateOpen(false)
-                              }}
-                              fixedWeeks
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <DatePicker
+                          id="edit-start-date"
+                          value={startDate}
+                          onChange={setStartDate}
+                          triggerClassName="w-full touch-manipulation"
+                        />
                       )}
-                      {isLinked && (
-                        <p className="text-muted-foreground text-xs">
-                          Inherited from insurance policy
-                        </p>
-                      )}
-                    </div>
+                    </Field>
                     {expenseCategory !== "one-off" && (
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-1">
-                          End Date
-                          {isLinked && (
-                            <Lock className="text-muted-foreground h-3 w-3" />
-                          )}
-                        </Label>
+                      <Field
+                        label={
+                          <>
+                            End Date
+                            {isLinked && (
+                              <Lock className="text-muted-foreground h-3 w-3" />
+                            )}
+                          </>
+                        }
+                        htmlFor="edit-end-date"
+                        labelClassName="flex items-center gap-1"
+                        helper={
+                          isLinked
+                            ? "Inherited from insurance policy"
+                            : "Leave empty for ongoing expense"
+                        }>
                         {isLinked ? (
                           <Button
                             variant="outline"
@@ -786,68 +757,31 @@ export function EditExpenseDialog({
                               : "No end date"}
                           </Button>
                         ) : (
-                          <Popover
-                            open={endDateOpen}
-                            onOpenChange={setEndDateOpen}>
-                            <PopoverAnchor asChild>
-                              <Button
-                                variant="outline"
-                                type="button"
-                                onClick={() => setEndDateOpen(true)}
-                                className={cn(
-                                  "w-full touch-manipulation justify-start text-left font-normal",
-                                  !endDate && "text-muted-foreground"
-                                )}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {endDate
-                                  ? format(endDate, "MMMM do, yyyy")
-                                  : "Pick a date"}
-                              </Button>
-                            </PopoverAnchor>
-                            <PopoverContent
-                              className="w-auto p-0"
-                              align="start">
-                              <Calendar
-                                mode="single"
-                                selected={endDate}
-                                onSelect={(date) => {
-                                  setEndDate(date)
-                                  setEndDateOpen(false)
-                                }}
-                                fixedWeeks
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <DatePicker
+                            id="edit-end-date"
+                            value={endDate}
+                            onChange={setEndDate}
+                            triggerClassName="w-full touch-manipulation"
+                          />
                         )}
-                        {isLinked ? (
-                          <p className="text-muted-foreground text-xs">
-                            Inherited from insurance policy
-                          </p>
-                        ) : (
-                          <p className="text-muted-foreground text-xs">
-                            Leave empty for ongoing expense
-                          </p>
-                        )}
-                      </div>
+                      </Field>
                     )}
                   </div>
                 )}
 
                 {/* Row 4: Notes */}
-                <div className="space-y-2">
-                  <Label htmlFor="edit-notes">Expense Notes</Label>
+                <Field
+                  label="Expense Notes"
+                  htmlFor="edit-notes"
+                  helper="Add any additional details about this expense">
                   <Textarea
                     id="edit-notes"
                     placeholder="e.g., Monthly apartment rent..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
-                    className="bg-card"
                   />
-                  <p className="text-muted-foreground text-xs">
-                    Add any additional details about this expense
-                  </p>
-                </div>
+                </Field>
               </div>
             )}
           </DialogBody>

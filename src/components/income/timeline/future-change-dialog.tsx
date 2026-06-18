@@ -15,8 +15,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field } from "@/components/ui/field"
+import { MoneyInput } from "@/components/ui/money-input"
 import { MonthYearPicker } from "@/components/ui/month-year-picker"
 import {
   Popover,
@@ -185,59 +185,43 @@ export function FutureChangeDialog({
           </div>
 
           {/* Start month */}
-          <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              {mode === "temporary" ? "From" : "Starting month"}
-            </Label>
+          <Field label={mode === "temporary" ? "From" : "Starting month"}>
             <MonthPicker
               value={targetMonth}
               onChange={setTargetMonth}
               open={startCalOpen}
               onOpenChange={setStartCalOpen}
             />
-          </div>
+          </Field>
 
           {/* End month (temporary only) */}
           {mode === "temporary" && (
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                Until (last month)
-              </Label>
+            <Field
+              label="Until (last month)"
+              helper={`After this month it reverts to ${fmtMoney(priorAmount)}.`}>
               <MonthPicker
                 value={endMonth}
                 onChange={setEndMonth}
                 open={endCalOpen}
                 onOpenChange={setEndCalOpen}
               />
-              <p className="text-muted-foreground text-[11px]">
-                After this month it reverts to {fmtMoney(priorAmount)}.
-              </p>
-            </div>
+            </Field>
           )}
 
           {/* New amount */}
           <div className="space-y-2">
-            <Label
-              htmlFor="future-change-amount"
-              className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              New monthly amount
-            </Label>
-            <div className="relative">
-              <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                $
-              </span>
-              <Input
+            <Field label="New monthly amount" htmlFor="future-change-amount">
+              <MoneyInput
                 id="future-change-amount"
-                type="number"
                 min={0}
                 step="50"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="font-display pl-7 text-lg font-semibold"
+                className="font-display text-lg font-semibold"
                 placeholder="0"
                 autoFocus={!isEdit}
               />
-            </div>
+            </Field>
             {priorAmount != null && (
               <p className="text-muted-foreground flex items-center gap-1 text-[11px]">
                 <span>Currently {fmtMoney(priorAmount)}.</span>

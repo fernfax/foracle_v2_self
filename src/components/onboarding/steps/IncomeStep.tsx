@@ -8,8 +8,9 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { MoneyInput } from "@/components/ui/money-input"
 import {
   Select,
   SelectContent,
@@ -219,34 +220,21 @@ export function IncomeStep({
     <div className="flex flex-1 flex-col">
       <div className="flex-1 space-y-6">
         {/* Income Source Name */}
-        <div className="space-y-2">
-          <Label htmlFor="name">
-            Income Source Name{" "}
-            <span className="text-on-danger" aria-hidden="true">
-              *
-            </span>
-          </Label>
+        <Field label="Income Source Name" htmlFor="name" required>
           <Input
             id="name"
             placeholder="e.g., Primary Salary, Freelance Work"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="bg-background"
             aria-required="true"
           />
-        </div>
+        </Field>
 
         {/* Category and Frequency Row */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>
-              Category{" "}
-              <span className="text-on-danger" aria-hidden="true">
-                *
-              </span>
-            </Label>
+          <Field label="Category" htmlFor="income-category" required>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger id="income-category" aria-required="true">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -257,17 +245,11 @@ export function IncomeStep({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
-          <div className="space-y-2">
-            <Label>
-              Frequency{" "}
-              <span className="text-on-danger" aria-hidden="true">
-                *
-              </span>
-            </Label>
+          <Field label="Frequency" htmlFor="income-frequency" required>
             <Select value={frequency} onValueChange={setFrequency}>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger id="income-frequency" aria-required="true">
                 <SelectValue placeholder="Select frequency" />
               </SelectTrigger>
               <SelectContent>
@@ -278,37 +260,25 @@ export function IncomeStep({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         </div>
 
         {/* Amount */}
-        <div className="space-y-2">
-          <Label htmlFor="amount">
-            Amount (SGD){" "}
-            <span className="text-on-danger" aria-hidden="true">
-              *
-            </span>
-          </Label>
-          <div className="relative">
-            <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-              $
-            </span>
-            <Input
-              id="amount"
-              type="number"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="bg-background pl-7"
-              min="0"
-              step="0.01"
-              aria-required="true"
-            />
-          </div>
-          <p className="text-muted-foreground text-xs">
-            Enter your gross {frequency} income before deductions
-          </p>
-        </div>
+        <Field
+          label="Amount (SGD)"
+          htmlFor="amount"
+          required
+          helper={`Enter your gross ${frequency} income before deductions`}>
+          <MoneyInput
+            id="amount"
+            placeholder="0.00"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            min="0"
+            step="0.01"
+            aria-required="true"
+          />
+        </Field>
 
         {/* Whole card toggles via the native label wrapper. */}
         <label className="border-border/60 bg-muted/30 flex cursor-pointer items-start space-x-3 rounded-lg border p-4">
@@ -352,14 +322,13 @@ export function IncomeStep({
             <div className="space-y-3 pt-2">
               {bonusGroups.map((group, index) => (
                 <div key={index} className="flex items-end gap-3">
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-xs">Bonus Month</Label>
+                  <Field label="Bonus Month" className="flex-1">
                     <Select
                       value={group.month.toString()}
                       onValueChange={(value) =>
                         updateBonusGroup(index, "month", parseInt(value))
                       }>
-                      <SelectTrigger className="bg-background">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -372,9 +341,8 @@ export function IncomeStep({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-xs">Bonus (No. of Months)</Label>
+                  </Field>
+                  <Field label="Bonus (No. of Months)" className="flex-1">
                     <Input
                       type="number"
                       placeholder="e.g., 1.5"
@@ -382,11 +350,10 @@ export function IncomeStep({
                       onChange={(e) =>
                         updateBonusGroup(index, "amount", e.target.value)
                       }
-                      className="bg-background"
                       min="0"
                       step="0.1"
                     />
-                  </div>
+                  </Field>
                   <Button
                     type="button"
                     variant="ghost"

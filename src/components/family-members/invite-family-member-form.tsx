@@ -19,8 +19,8 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 type Status = "idle" | "submitting" | "success" | "error"
 
@@ -106,8 +106,7 @@ export function InviteFamilyMemberForm({
     <>
       <form onSubmit={handleSubmit} className={cn("space-y-4", className)}>
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="invite-first-name">First name</Label>
+          <Field label="First name" htmlFor="invite-first-name">
             <Input
               id="invite-first-name"
               value={firstName}
@@ -115,9 +114,8 @@ export function InviteFamilyMemberForm({
               disabled={status === "submitting"}
               autoComplete="given-name"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="invite-last-name">Last name</Label>
+          </Field>
+          <Field label="Last name" htmlFor="invite-last-name">
             <Input
               id="invite-last-name"
               value={lastName}
@@ -125,11 +123,10 @@ export function InviteFamilyMemberForm({
               disabled={status === "submitting"}
               autoComplete="family-name"
             />
-          </div>
+          </Field>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="invite-email">Email</Label>
+        <Field label="Email" htmlFor="invite-email">
           <Input
             id="invite-email"
             type="email"
@@ -139,10 +136,9 @@ export function InviteFamilyMemberForm({
             autoComplete="email"
             placeholder="them@example.com"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="invite-relationship">Relationship</Label>
+        <Field label="Relationship" htmlFor="invite-relationship">
           {/* Native <select> — Radix Select portals to body and gets covered by
               Clerk's UserProfile modal overlay. Native is z-index-immune. */}
           <select
@@ -167,7 +163,7 @@ export function InviteFamilyMemberForm({
               </option>
             ))}
           </select>
-        </div>
+        </Field>
 
         {status === "error" && !existingUserBlock.open && (
           <p className="text-destructive text-sm">{errorMessage}</p>

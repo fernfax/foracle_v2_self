@@ -4,13 +4,11 @@ import { useState } from "react"
 import { createFamilyMember } from "@/actions/family-members"
 import { RELATIONSHIPS } from "@/data/family-relationships.data"
 import { format } from "date-fns"
-import { CalendarIcon, Info } from "lucide-react"
+import { Info } from "lucide-react"
 
-import { today } from "@/lib/date-helpers"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogBody,
@@ -20,13 +18,9 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -66,7 +60,6 @@ export function AddFamilyMemberDialog({
   const [isContributing, setIsContributing] = useState(false)
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [datePickerOpen, setDatePickerOpen] = useState(false)
 
   const resetForm = () => {
     setName("")
@@ -123,26 +116,20 @@ export function AddFamilyMemberDialog({
         <DialogBody>
           <div className="grid gap-6 py-4">
             {/* Row 1: Full Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">
-                Full Name <span className="text-on-danger">*</span>
-              </Label>
+            <Field label="Full Name" htmlFor="name" required>
               <Input
                 id="name"
                 placeholder="e.g., John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-card"
+                aria-required="true"
               />
-            </div>
+            </Field>
 
             {/* Row 2: Relationship */}
-            <div className="space-y-2">
-              <Label htmlFor="relationship">
-                Relationship <span className="text-on-danger">*</span>
-              </Label>
+            <Field label="Relationship" htmlFor="relationship" required>
               <Select value={relationship} onValueChange={setRelationship}>
-                <SelectTrigger className="bg-card">
+                <SelectTrigger id="relationship" aria-required="true">
                   <SelectValue placeholder="Select relationship" />
                 </SelectTrigger>
                 <SelectContent>
@@ -153,51 +140,22 @@ export function AddFamilyMemberDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
 
             {/* Row 3: Date of Birth */}
-            <div className="space-y-2">
-              <Label>
-                Date of Birth <span className="text-on-danger">*</span>
-              </Label>
-              <Popover
-                open={datePickerOpen}
-                onOpenChange={setDatePickerOpen}
-                modal={false}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dateOfBirth && "text-muted-foreground"
-                    )}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateOfBirth
-                      ? format(dateOfBirth, "MMMM do, yyyy")
-                      : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateOfBirth}
-                    onSelect={(date) => {
-                      setDateOfBirth(date)
-                      setDatePickerOpen(false)
-                    }}
-                    initialFocus
-                    fixedWeeks
-                    captionLayout="dropdown"
-                    fromYear={1900}
-                    toYear={new Date().getFullYear()}
-                    disabled={{ after: today() }}
-                  />
-                </PopoverContent>
-              </Popover>
-              <p className="text-muted-foreground text-xs">
-                Used to calculate age for CPF and other calculations
-              </p>
-            </div>
+            <Field
+              label="Date of Birth"
+              htmlFor="dob"
+              required
+              helper="Used to calculate age for CPF and other calculations">
+              <DatePicker
+                id="dob"
+                value={dateOfBirth}
+                onChange={setDateOfBirth}
+                fromYear={1900}
+                disableFuture
+              />
+            </Field>
 
             {/* Row 4: Contributing Member */}
             <div className="space-y-2">
@@ -223,20 +181,18 @@ export function AddFamilyMemberDialog({
             </div>
 
             {/* Row 5: Notes */}
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+            <Field
+              label="Notes"
+              htmlFor="notes"
+              helper="Add any additional notes about this family member">
               <Textarea
                 id="notes"
                 placeholder="e.g., Currently studying, works at..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                className="bg-card"
               />
-              <p className="text-muted-foreground text-xs">
-                Add any additional notes about this family member
-              </p>
-            </div>
+            </Field>
           </div>
         </DialogBody>
 

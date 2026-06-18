@@ -9,8 +9,10 @@ import { Building2, Lightbulb, Plus } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { MoneyInput } from "@/components/ui/money-input"
 import { WizardNavigation } from "@/components/onboarding/WizardNavigation"
 import type {
   FamilyMemberData,
@@ -165,35 +167,25 @@ export function HoldingsStep({
           </h3>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bankName">Bank Name</Label>
+            <Field label="Bank Name" htmlFor="bankName">
               <Input
                 id="bankName"
                 placeholder="e.g., DBS, OCBC, UOB"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
-                className="bg-background"
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount (SGD)</Label>
-              <div className="relative">
-                <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                  $
-                </span>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={holdingAmount}
-                  onChange={(e) => setHoldingAmount(e.target.value)}
-                  className="bg-background pl-7"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-            </div>
+            <Field label="Amount (SGD)" htmlFor="amount">
+              <MoneyInput
+                id="amount"
+                placeholder="0.00"
+                value={holdingAmount}
+                onChange={(e) => setHoldingAmount(e.target.value)}
+                min="0"
+                step="0.01"
+              />
+            </Field>
           </div>
 
           <Button

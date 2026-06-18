@@ -17,8 +17,9 @@ import {
   DrawerHeader,
   DrawerTitle
 } from "@/components/ui/drawer"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { MoneyInput } from "@/components/ui/money-input"
 import {
   Select,
   SelectContent,
@@ -143,8 +144,7 @@ export function AdjustBudgetModal({
           </div>
 
           {/* Source Category Selector */}
-          <div className="space-y-2">
-            <Label>Take budget from</Label>
+          <Field label="Take budget from">
             {sourceCategoryOptions.length === 0 ? (
               <div className="bg-muted text-muted-foreground rounded-lg p-4 text-center text-sm">
                 <AlertCircle className="mx-auto mb-2 h-5 w-5" />
@@ -169,27 +169,20 @@ export function AdjustBudgetModal({
                 </SelectContent>
               </Select>
             )}
-          </div>
+          </Field>
 
           {/* Amount Input */}
           {sourceCategory && (
-            <div className="space-y-2">
-              <Label>Amount to shift</Label>
-              <div className="relative">
-                <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                  $
-                </span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max={maxShiftable}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="pl-7"
-                  placeholder="0.00"
-                />
-              </div>
+            <Field label="Amount to shift" htmlFor="shift-amount">
+              <MoneyInput
+                id="shift-amount"
+                step="0.01"
+                min="0"
+                max={maxShiftable}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+              />
               <div className="text-muted-foreground flex justify-between text-xs">
                 <span>Max: {formatBudgetCurrency(maxShiftable)}</span>
                 {shiftAmount > maxShiftable && (
@@ -198,7 +191,7 @@ export function AdjustBudgetModal({
                   </span>
                 )}
               </div>
-            </div>
+            </Field>
           )}
 
           {/* Preview */}
@@ -240,14 +233,14 @@ export function AdjustBudgetModal({
 
           {/* Optional Note */}
           {sourceCategory && (
-            <div className="space-y-2">
-              <Label>Note (optional)</Label>
+            <Field label="Note" htmlFor="shift-note" optional>
               <Input
+                id="shift-note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="e.g., Extra dinner budget this month"
               />
-            </div>
+            </Field>
           )}
 
           {/* Error Message */}

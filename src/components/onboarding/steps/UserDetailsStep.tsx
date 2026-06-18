@@ -3,20 +3,12 @@
 import { useEffect, useState } from "react"
 import { getOrCreateSelfMember } from "@/actions/family-members"
 import { format } from "date-fns"
-import { CalendarIcon, Lightbulb } from "lucide-react"
+import { Lightbulb } from "lucide-react"
 import { toast } from "sonner"
 
-import { today } from "@/lib/date-helpers"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
 import { WizardNavigation } from "@/components/onboarding/WizardNavigation"
 import type { FamilyMemberData } from "@/app/onboarding/OnboardingWizard"
 
@@ -38,7 +30,6 @@ export function UserDetailsStep({
     data?.dateOfBirth ? new Date(data.dateOfBirth) : undefined
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [_memberId, setMemberId] = useState(data?.id || "")
 
   // Update form when data changes (e.g., navigating back)
@@ -87,81 +78,41 @@ export function UserDetailsStep({
     <div className="flex flex-1 flex-col">
       <div className="flex-1 space-y-6">
         {/* Full Name */}
-        <div className="space-y-2">
-          <Label htmlFor="name">
-            Full Name{" "}
-            <span className="text-on-danger" aria-hidden="true">
-              *
-            </span>
-          </Label>
+        <Field label="Full Name" htmlFor="name" required>
           <Input
             id="name"
             placeholder="e.g., John Doe"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="bg-background"
             aria-required="true"
           />
-        </div>
+        </Field>
 
         {/* Relationship - Locked to Self */}
-        <div className="space-y-2">
-          <Label>Relationship</Label>
+        <Field
+          label="Relationship"
+          helper="You can add other family members from the dashboard later">
           <Input
             value="Self"
             disabled
             className="bg-muted text-muted-foreground"
           />
-          <p className="text-muted-foreground text-xs">
-            You can add other family members from the dashboard later
-          </p>
-        </div>
+        </Field>
 
         {/* Date of Birth */}
-        <div className="space-y-2">
-          <Label htmlFor="dob">
-            Date of Birth{" "}
-            <span className="text-on-danger" aria-hidden="true">
-              *
-            </span>
-          </Label>
-          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                id="dob"
-                variant="outline"
-                aria-required="true"
-                className={cn(
-                  "bg-background w-full justify-start text-left font-normal",
-                  !dateOfBirth && "text-muted-foreground"
-                )}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateOfBirth
-                  ? format(dateOfBirth, "MMMM do, yyyy")
-                  : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateOfBirth}
-                onSelect={(date) => {
-                  setDateOfBirth(date)
-                  setDatePickerOpen(false)
-                }}
-                initialFocus
-                fixedWeeks
-                captionLayout="dropdown"
-                fromYear={1930}
-                toYear={new Date().getFullYear()}
-                disabled={{ after: today() }}
-              />
-            </PopoverContent>
-          </Popover>
-          <p className="text-muted-foreground text-xs">
-            Used to calculate age for CPF rates and projections
-          </p>
-        </div>
+        <Field
+          label="Date of Birth"
+          htmlFor="dob"
+          required
+          helper="Used to calculate age for CPF rates and projections">
+          <DatePicker
+            id="dob"
+            value={dateOfBirth}
+            onChange={setDateOfBirth}
+            fromYear={1930}
+            disableFuture
+          />
+        </Field>
 
         {/* Add More Later Info Box */}
         <div className="border-brand-terracotta/[0.25] bg-brand-terracotta/[0.06] flex gap-3 rounded-xl border p-4">

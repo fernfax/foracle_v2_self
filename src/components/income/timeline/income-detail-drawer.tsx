@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -177,9 +178,7 @@ export function IncomeDetailDrawer({
 
         <div className="space-y-5 py-1">
           <section className="space-y-2">
-            <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              Income type
-            </Label>
+            <Label>Income type</Label>
             <div className="grid grid-cols-3 gap-2">
               <ArchetypeButton
                 active={archetype === "recurring"}
@@ -205,17 +204,14 @@ export function IncomeDetailDrawer({
             </div>
           </section>
 
-          <section className="space-y-2">
-            <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              Category
-            </Label>
+          <Field label="Category" htmlFor="detail-category">
             <Select
               value={category}
               onValueChange={(v) => {
                 setCategory(v)
                 runUpdate("category", { category: v })
               }}>
-              <SelectTrigger>
+              <SelectTrigger id="detail-category">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -226,13 +222,10 @@ export function IncomeDetailDrawer({
                 ))}
               </SelectContent>
             </Select>
-          </section>
+          </Field>
 
           {familyMembers.length > 0 && (
-            <section className="space-y-2">
-              <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                Family member
-              </Label>
+            <Field label="Family member" htmlFor="detail-family-member">
               <Select
                 value={familyMemberDisplayValue}
                 onValueChange={(v) => {
@@ -242,7 +235,7 @@ export function IncomeDetailDrawer({
                     familyMemberId: next || undefined
                   })
                 }}>
-                <SelectTrigger>
+                <SelectTrigger id="detail-family-member">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -254,7 +247,7 @@ export function IncomeDetailDrawer({
                   ))}
                 </SelectContent>
               </Select>
-            </section>
+            </Field>
           )}
 
           <section className="border-border/40 flex items-center justify-between rounded-lg border px-4 py-3">
@@ -274,12 +267,7 @@ export function IncomeDetailDrawer({
             />
           </section>
 
-          <section className="space-y-2">
-            <Label
-              htmlFor="detail-notes"
-              className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              Notes
-            </Label>
+          <Field label="Notes" htmlFor="detail-notes">
             <Textarea
               id="detail-notes"
               rows={2}
@@ -294,7 +282,7 @@ export function IncomeDetailDrawer({
               }}
               placeholder="Any context for future you"
             />
-          </section>
+          </Field>
 
           {error && <p className="text-destructive text-sm">{error}</p>}
         </div>

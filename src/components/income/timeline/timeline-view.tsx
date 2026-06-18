@@ -58,6 +58,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { MoneyInput } from "@/components/ui/money-input"
 import { MonthYearPicker } from "@/components/ui/month-year-picker"
 import {
   Popover,
@@ -5571,21 +5572,15 @@ function DraftSentenceCard({
           placeholder="Name — e.g. Salary, Annual Bonus"
           className="border-border/40 bg-background font-display text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/10 w-full rounded-lg border px-3 py-2 text-sm font-medium focus:ring-[3px] focus:outline-none"
         />
-        <div className="relative">
-          <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-            $
-          </span>
-          <input
-            type="number"
-            min={0}
-            step="50"
-            inputMode="decimal"
-            value={draft.amount}
-            onChange={(e) => onChange({ ...draft, amount: e.target.value })}
-            placeholder="0"
-            className="border-border/40 bg-background font-display text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/10 w-full rounded-lg border py-2 pr-3 pl-7 text-lg font-semibold focus:ring-[3px] focus:outline-none"
-          />
-        </div>
+        <MoneyInput
+          min={0}
+          step="50"
+          inputMode="decimal"
+          value={draft.amount}
+          onChange={(e) => onChange({ ...draft, amount: e.target.value })}
+          placeholder="0"
+          className="border-border/40 bg-background font-display text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/10 h-auto w-full rounded-lg border py-2 pr-3 text-lg font-semibold"
+        />
       </div>
 
       <div className="mt-4 flex items-center justify-end gap-2">

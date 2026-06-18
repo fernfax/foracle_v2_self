@@ -21,8 +21,10 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { MoneyInput } from "@/components/ui/money-input"
 import { MonthYearPicker } from "@/components/ui/month-year-picker"
 import {
   Popover,
@@ -218,49 +220,33 @@ export function IncomeCreatorDrawer({
 
         {step === 2 && (
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label
-                htmlFor="creator-name"
-                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                Name
-              </Label>
+            <Field label="Name" htmlFor="creator-name" required>
               <Input
                 id="creator-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Salary, Annual Bonus, Freelance Gig"
+                aria-required="true"
                 autoFocus
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label
-                htmlFor="creator-amount"
-                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                Amount
-              </Label>
-              <div className="relative">
-                <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                  $
-                </span>
-                <Input
-                  id="creator-amount"
-                  type="number"
-                  min={0}
-                  step="50"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="font-display pl-7 text-lg font-semibold"
-                  placeholder="0"
-                />
-              </div>
-            </div>
+            <Field label="Amount" htmlFor="creator-amount" required>
+              <MoneyInput
+                id="creator-amount"
+                min={0}
+                step="50"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="font-display text-lg font-semibold"
+                placeholder="0"
+                aria-required="true"
+              />
+            </Field>
 
             {archetype === "recurring" && (
               <div className="space-y-2">
-                <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                  Status
-                </Label>
+                <Label>Status</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -300,7 +286,7 @@ export function IncomeCreatorDrawer({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                <Label>
                   {archetype === "one-off"
                     ? "Payment month"
                     : archetype === "recurring" && recurringStatus === "past"
@@ -332,7 +318,7 @@ export function IncomeCreatorDrawer({
               {(archetype === "temporary" ||
                 (archetype === "recurring" && recurringStatus === "past")) && (
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                  <Label>
                     {archetype === "recurring" ? "Ended on" : "Until"}
                   </Label>
                   <Popover open={endCalOpen} onOpenChange={setEndCalOpen}>
@@ -363,12 +349,9 @@ export function IncomeCreatorDrawer({
 
         {step === 3 && (
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                Category
-              </Label>
+            <Field label="Category" htmlFor="creator-category">
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
+                <SelectTrigger id="creator-category">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -379,19 +362,19 @@ export function IncomeCreatorDrawer({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
 
             {familyMembers.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                  Family member (optional)
-                </Label>
+              <Field
+                label="Family member"
+                htmlFor="creator-family-member"
+                optional>
                 <Select
                   value={familyMemberId || "_none"}
                   onValueChange={(v) =>
                     setFamilyMemberId(v === "_none" ? "" : v)
                   }>
-                  <SelectTrigger>
+                  <SelectTrigger id="creator-family-member">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -405,7 +388,7 @@ export function IncomeCreatorDrawer({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
             )}
 
             <div className="border-border/40 flex items-center justify-between rounded-lg border px-4 py-3">
@@ -421,12 +404,7 @@ export function IncomeCreatorDrawer({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label
-                htmlFor="creator-notes"
-                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                Notes (optional)
-              </Label>
+            <Field label="Notes" htmlFor="creator-notes" optional>
               <Textarea
                 id="creator-notes"
                 rows={2}
@@ -434,7 +412,7 @@ export function IncomeCreatorDrawer({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Any context for future you"
               />
-            </div>
+            </Field>
           </div>
         )}
 
