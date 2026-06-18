@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation"
-import { IS_DEV } from "@/configs/env.config"
 
 import { DeveloperNav } from "@/components/developer/developer-nav"
 import { DiagramCanvas } from "@/components/developer/diagram-canvas"
@@ -10,13 +9,14 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 export default async function DeveloperDiagramPage() {
-  // Dev-server-only tool: `buildDiagram` reads the source tree from disk, which
-  // only exists under `next dev`. `process.env.NODE_ENV` is build-static (every
-  // `next build` is "production"), so this branch — and the scanner module it
-  // dynamically imports — is dead-code-eliminated from builds. That keeps the
-  // scanner's dynamic fs reads out of the file trace entirely (otherwise
-  // Turbopack over-traces the whole project into this route).
-  if (process.env.NODE_ENV !== "production" && IS_DEV) {
+  // Dev tool: `buildDiagram` reads the source tree off disk. Gate on the
+  // build-inlined NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT literal (not the IS_DEV
+  // helper — an imported const isn't reliably folded for DCE) so this branch and
+  // the scanner it dynamically imports are dead-code-eliminated from
+  // production/staging builds — keeping its dynamic fs reads out of the file
+  // trace there. It stays reachable under `next dev` and a local `next start`
+  // whose environment is development.
+  if (process.env.NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT === "development") {
     const { buildDiagram } = await import("@/lib/developer-diagram")
     const diagram = await buildDiagram()
 
