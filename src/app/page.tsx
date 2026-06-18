@@ -208,7 +208,7 @@ export default async function Home() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C4AA] opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C4AA]" />
             </span>
-            <span className="font-display text-[11px] font-semibold tracking-[0.16em] text-[#7A3A0A] uppercase dark:text-[#E8A06A]">
+            <span className="font-display text-on-brand text-[11px] font-semibold tracking-[0.16em] uppercase dark:text-[#E8A06A]">
               Made for Singapore, by Singaporeans
             </span>
           </div>

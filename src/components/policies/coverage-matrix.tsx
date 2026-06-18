@@ -101,26 +101,26 @@ function getAvatarConfig(relationship: string | null) {
       return {
         icon: User,
         bgColor: "bg-[rgba(184,98,42,0.10)]",
-        iconColor: "text-[#7A3A0A]"
+        iconColor: "text-on-brand"
       }
     case "spouse":
       return {
         icon: Heart,
         bgColor: "bg-[rgba(224,85,85,0.12)]",
-        iconColor: "text-[#8B0000]"
+        iconColor: "text-on-danger"
       }
     case "child":
       return {
         icon: Baby,
         bgColor: "bg-[rgba(0,196,170,0.12)]",
-        iconColor: "text-[#007A68]"
+        iconColor: "text-on-success"
       }
     case "parent":
     case "sibling":
       return {
         icon: Users,
         bgColor: "bg-[rgba(184,98,42,0.10)]",
-        iconColor: "text-[#7A3A0A]"
+        iconColor: "text-on-brand"
       }
     default:
       return {
@@ -317,7 +317,7 @@ export function CoverageMatrix({
                                   </span>
                                   {getChipExpiryLevel(policy) ===
                                     "critical" && (
-                                    <AlertTriangle className="h-3 w-3 flex-shrink-0 text-[#8B0000]" />
+                                    <AlertTriangle className="text-on-danger h-3 w-3 flex-shrink-0" />
                                   )}
                                   {getChipExpiryLevel(policy) === "warning" && (
                                     <AlertTriangle className="h-3 w-3 flex-shrink-0 text-[#7A5C00]" />
@@ -328,7 +328,7 @@ export function CoverageMatrix({
                                     {policy.planName}
                                   </span>
                                 )}
-                                <span className="text-xs font-medium text-[#007A68]">
+                                <span className="text-on-success text-xs font-medium">
                                   {formatPremium(policy)}
                                 </span>
                               </button>
@@ -386,18 +386,18 @@ export function CoverageMatrix({
               <div className="flex flex-wrap gap-2">
                 <Badge
                   variant="outline"
-                  className="border-[rgba(184,98,42,0.25)] text-xs font-medium text-[#7A3A0A]">
+                  className="text-on-brand border-[rgba(184,98,42,0.25)] text-xs font-medium">
                   {selectedPolicy.provider}
                 </Badge>
                 <Badge
                   variant="outline"
-                  className="border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)] text-xs font-medium text-[#007A68] uppercase">
+                  className="text-on-success border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)] text-xs font-medium uppercase">
                   {selectedPolicy.status || "Active"}
                 </Badge>
                 {selectedPolicy.linkedExpenseId && (
                   <Badge
                     variant="outline"
-                    className="border-[rgba(0,196,170,0.25)] text-xs font-medium text-[#007A68]">
+                    className="text-on-success border-[rgba(0,196,170,0.25)] text-xs font-medium">
                     In Expenses
                   </Badge>
                 )}
@@ -430,7 +430,7 @@ export function CoverageMatrix({
                 )}
                 <div>
                   <p className="text-muted-foreground">Premium</p>
-                  <p className="font-medium text-[#007A68]">
+                  <p className="text-on-success font-medium">
                     $
                     {parseFloat(selectedPolicy.premiumAmount).toLocaleString(
                       undefined,
@@ -497,7 +497,7 @@ export function CoverageMatrix({
                   variant="outline"
                   size="sm"
                   onClick={handleDelete}
-                  className="w-full text-[#8B0000] hover:text-[#8B0000]">
+                  className="text-on-danger hover:text-on-danger w-full">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete Policy
                 </Button>

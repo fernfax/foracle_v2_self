@@ -139,9 +139,9 @@ export function GoalDetailsModal({
                   : "bg-[rgba(0,196,170,0.12)]"
               }`}>
               {goal.isAchieved ? (
-                <Trophy className="h-6 w-6 text-[#007A68]" />
+                <Trophy className="text-on-success h-6 w-6" />
               ) : (
-                <Target className="h-6 w-6 text-[#007A68]" />
+                <Target className="text-on-success h-6 w-6" />
               )}
             </div>
             <div>
@@ -151,7 +151,7 @@ export function GoalDetailsModal({
                   variant="outline"
                   className={
                     goal.goalType === "primary"
-                      ? "border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)] text-[#7A3A0A]"
+                      ? "text-on-brand border-[rgba(184,98,42,0.25)] bg-[rgba(184,98,42,0.10)]"
                       : "border-border bg-muted text-foreground"
                   }>
                   {goal.goalType === "primary"
@@ -159,7 +159,7 @@ export function GoalDetailsModal({
                     : "Secondary Goal"}
                 </Badge>
                 {goal.isAchieved && (
-                  <Badge className="border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)] text-[#007A68]">
+                  <Badge className="text-on-success border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
                     Achieved
                   </Badge>
                 )}
@@ -196,7 +196,7 @@ export function GoalDetailsModal({
                 />
               </div>
               <div className="flex justify-between text-sm">
-                <span className="font-medium text-[#007A68]">
+                <span className="text-on-success font-medium">
                   {progress.toFixed(1)}% complete
                 </span>
                 <span className="text-muted-foreground">
@@ -219,7 +219,7 @@ export function GoalDetailsModal({
               <p
                 className={`mt-1 text-sm ${
                   timeRemaining.isOverdue
-                    ? "text-[#8B0000]"
+                    ? "text-on-danger"
                     : "text-muted-foreground"
                 }`}>
                 {timeRemaining.text}
@@ -237,7 +237,7 @@ export function GoalDetailsModal({
                   : "Not set"}
               </p>
               {goal.linkedExpenseId && (
-                <p className="mt-1 text-sm text-[#007A68]">
+                <p className="text-on-success mt-1 text-sm">
                   Linked to expenses
                 </p>
               )}
@@ -254,17 +254,17 @@ export function GoalDetailsModal({
               }`}>
               <div className="mb-2 flex items-center gap-2">
                 <TrendingUp
-                  className={`h-4 w-4 ${onTrack ? "text-[#007A68]" : "text-[#7A5A00]"}`}
+                  className={`h-4 w-4 ${onTrack ? "text-on-success" : "text-on-warning"}`}
                 />
                 <span
                   className={`text-sm font-medium ${
-                    onTrack ? "text-[#007A68]" : "text-[#7A5A00]"
+                    onTrack ? "text-on-success" : "text-on-warning"
                   }`}>
                   {onTrack ? "On Track" : "Behind Schedule"}
                 </span>
               </div>
               <p
-                className={`text-sm ${onTrack ? "text-[#007A68]" : "text-[#7A5A00]"}`}>
+                className={`text-sm ${onTrack ? "text-on-success" : "text-on-warning"}`}>
                 At your current rate of ${monthlyContribution.toLocaleString()}
                 /month, you&apos;ll reach your goal by{" "}
                 <span className="font-semibold">

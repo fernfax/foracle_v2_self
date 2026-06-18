@@ -187,7 +187,7 @@ export function SubcategoryManageModal({
                         className="h-8 w-8 touch-manipulation"
                         onClick={handleEdit}
                         disabled={isSubmitting || !editingName.trim()}>
-                        <Check className="h-4 w-4 text-[#007A68]" />
+                        <Check className="text-on-success h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"

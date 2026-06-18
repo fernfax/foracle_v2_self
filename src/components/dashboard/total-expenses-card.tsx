@@ -137,7 +137,7 @@ export function TotalExpensesCard({
             Total Expenses
           </CardTitle>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(224,85,85,0.12)]">
-            <TrendingDown className="h-5 w-5 text-[#8B0000]" />
+            <TrendingDown className="text-on-danger h-5 w-5" />
           </div>
         </CardHeader>
         <CardContent>
@@ -157,7 +157,7 @@ export function TotalExpensesCard({
           {expenses.length > 0 && monthChange.amount !== 0 && (
             <div
               className={`mt-1 flex items-center gap-1 text-xs ${
-                monthChange.amount < 0 ? "text-[#007A68]" : "text-[#8B0000]"
+                monthChange.amount < 0 ? "text-on-success" : "text-on-danger"
               }`}>
               {monthChange.amount < 0 ? (
                 <TrendingDown className="h-3 w-3" />

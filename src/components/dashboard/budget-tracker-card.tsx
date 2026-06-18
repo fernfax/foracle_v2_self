@@ -98,7 +98,7 @@ export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
                   className={cn(
                     "text-sm font-semibold",
                     overallPercent >= 100
-                      ? "text-[#8B0000]"
+                      ? "text-on-danger"
                       : "text-muted-foreground"
                   )}>
                   {formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}
@@ -148,7 +148,7 @@ export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
                       className={cn(
                         "text-xs font-medium",
                         isOverBudget
-                          ? "text-[#8B0000]"
+                          ? "text-on-danger"
                           : "text-muted-foreground"
                       )}>
                       {Math.round(category.percentUsed)}%

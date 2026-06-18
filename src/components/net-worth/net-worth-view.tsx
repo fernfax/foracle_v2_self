@@ -141,11 +141,11 @@ export function NetWorthView({ summary, initialHoldings }: NetWorthViewProps) {
               {formatBudgetCurrency(summary.netWorth)}
             </div>
             <p className="text-muted-foreground mt-1 text-sm">
-              <span className="text-[#007A68] dark:text-[#33D4BC]">
+              <span className="text-on-success dark:text-[#33D4BC]">
                 {formatBudgetCurrency(summary.totalAssets)}
               </span>{" "}
               in assets ·{" "}
-              <span className="text-[#8B0000] dark:text-[#E07070]">
+              <span className="text-on-danger dark:text-[#E07070]">
                 {formatBudgetCurrency(summary.totalLiabilities)}
               </span>{" "}
               in liabilities
@@ -317,7 +317,7 @@ function RowList({
           </div>
           <span
             className={`font-display shrink-0 text-sm font-semibold tabular-nums ${
-              negative ? "text-[#8B0000] dark:text-[#E07070]" : ""
+              negative ? "text-on-danger dark:text-[#E07070]" : ""
             }`}>
             {negative ? "−" : ""}
             {formatBudgetCurrency(row.value)}

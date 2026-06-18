@@ -110,7 +110,7 @@ export function ChatView({
             {/* Loading indicator */}
             {isLoading && (
               <div className="flex gap-3 px-4 py-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)] text-[#007A68]">
+                <div className="text-on-success flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)]">
                   <Bot className="h-4 w-4" />
                 </div>
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -157,7 +157,7 @@ export function ChatView({
         {/* Quota warning */}
         {quotaInfo && quotaInfo.used >= quotaInfo.limit * 0.8 && (
           <div className="mx-auto max-w-3xl px-4">
-            <div className="mb-2 rounded-lg bg-[rgba(212,168,67,0.15)] px-3 py-2 text-sm text-[#7A5A00]">
+            <div className="text-on-warning mb-2 rounded-lg bg-[rgba(212,168,67,0.15)] px-3 py-2 text-sm">
               <span className="font-medium">
                 {quotaInfo.limit - quotaInfo.used} messages remaining today.
               </span>{" "}
@@ -188,7 +188,7 @@ function EmptyState() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)]">
-        <Sparkles className="h-8 w-8 text-[#007A68]" />
+        <Sparkles className="text-on-success h-8 w-8" />
       </div>
 
       <h2 className="mt-4 text-xl font-semibold">Foracle Assistant</h2>

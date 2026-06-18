@@ -54,7 +54,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C4AA] opacity-60" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C4AA]" />
         </span>
-        <span className="font-display text-[11px] font-semibold tracking-[0.16em] text-[#7A3A0A] uppercase">
+        <span className="font-display text-on-brand text-[11px] font-semibold tracking-[0.16em] uppercase">
           Welcome to Foracle
         </span>
       </div>

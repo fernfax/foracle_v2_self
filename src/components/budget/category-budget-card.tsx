@@ -96,7 +96,7 @@ export function CategoryBudgetCard({
             percentUsed > 90
               ? "text-destructive"
               : percentUsed > 75
-                ? "text-[#7A5A00]"
+                ? "text-on-warning"
                 : "text-foreground"
           )}>
           $

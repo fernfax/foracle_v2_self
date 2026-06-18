@@ -102,7 +102,7 @@ export function BudgetShiftHistory({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground h-8 w-8 hover:text-[#8B0000]"
+                  className="text-muted-foreground hover:text-on-danger h-8 w-8"
                   onClick={() => handleDelete(shift.id)}
                   disabled={deletingId === shift.id}>
                   <Trash2

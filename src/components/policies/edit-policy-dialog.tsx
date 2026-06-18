@@ -669,7 +669,7 @@ export function EditPolicyDialog({
                   </div>
                   <div>
                     <Label htmlFor="familyMember">
-                      Family Member <span className="text-[#8B0000]">*</span>
+                      Family Member <span className="text-on-danger">*</span>
                       {memberAge !== null && (
                         <span className="text-muted-foreground ml-2 text-sm">
                           Age: {memberAge}
@@ -708,7 +708,7 @@ export function EditPolicyDialog({
                     <div>
                       <Label htmlFor="provider">
                         Insurance Provider{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                       </Label>
                       <Select
                         value={provider}
@@ -755,7 +755,7 @@ export function EditPolicyDialog({
 
                     <div>
                       <Label htmlFor="policyType">
-                        Policy Type <span className="text-[#8B0000]">*</span>
+                        Policy Type <span className="text-on-danger">*</span>
                       </Label>
                       <Select
                         value={policyType}
@@ -805,7 +805,7 @@ export function EditPolicyDialog({
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <Label htmlFor="startDate">
-                        Start Date <span className="text-[#8B0000]">*</span>
+                        Start Date <span className="text-on-danger">*</span>
                       </Label>
                       <Popover
                         open={startDateOpen}
@@ -905,7 +905,7 @@ export function EditPolicyDialog({
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <Label htmlFor="premiumAmount">
-                        Premium Amount <span className="text-[#8B0000]">*</span>
+                        Premium Amount <span className="text-on-danger">*</span>
                       </Label>
                       <div className="relative">
                         <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
@@ -950,7 +950,7 @@ export function EditPolicyDialog({
                     <div>
                       <Label htmlFor="premiumFrequency">
                         Premium Frequency{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                       </Label>
                       <Select
                         value={premiumFrequency}
@@ -979,7 +979,7 @@ export function EditPolicyDialog({
                       <div className="space-y-2 md:col-span-2">
                         <Label>
                           Select Months{" "}
-                          <span className="text-[#8B0000]">*</span>
+                          <span className="text-on-danger">*</span>
                         </Label>
                         <div className="grid grid-cols-6 gap-2">
                           {MONTHS.map((month) => (
@@ -1363,7 +1363,7 @@ export function EditPolicyDialog({
                     />
                   </div>
                   {validationError && (
-                    <div className="rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm text-[#8B0000]">
+                    <div className="text-on-danger rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm">
                       {validationError}
                     </div>
                   )}

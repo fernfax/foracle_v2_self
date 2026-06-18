@@ -65,19 +65,19 @@ export default function MobileGuidePage() {
         <h2 className="mb-3 text-lg font-semibold">Why add to home screen?</h2>
         <ul className="text-muted-foreground space-y-2 text-sm">
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-[#007A68]" />
+            <CheckCircle2 className="text-on-success h-4 w-4" />
             Full-screen experience without browser UI
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-[#007A68]" />
+            <CheckCircle2 className="text-on-success h-4 w-4" />
             Quick access from your home screen
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-[#007A68]" />
+            <CheckCircle2 className="text-on-success h-4 w-4" />
             Feels like a native app
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-[#007A68]" />A dedicated app
+            <CheckCircle2 className="text-on-success h-4 w-4" />A dedicated app
             icon and its own window
           </li>
         </ul>
@@ -124,7 +124,7 @@ export default function MobileGuidePage() {
 
       {/* Footer Note */}
       <div className="mt-8 rounded-xl border border-[rgba(212,168,67,0.30)] bg-[rgba(212,168,67,0.15)] p-4">
-        <p className="text-sm text-[#7A5A00]">
+        <p className="text-on-warning text-sm">
           <strong>Note:</strong> This feature only works in Safari on iOS. If
           you&apos;re using a different browser, please open this page in Safari
           first.

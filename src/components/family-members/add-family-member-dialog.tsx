@@ -125,7 +125,7 @@ export function AddFamilyMemberDialog({
             {/* Row 1: Full Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Full Name <span className="text-[#8B0000]">*</span>
+                Full Name <span className="text-on-danger">*</span>
               </Label>
               <Input
                 id="name"
@@ -139,7 +139,7 @@ export function AddFamilyMemberDialog({
             {/* Row 2: Relationship */}
             <div className="space-y-2">
               <Label htmlFor="relationship">
-                Relationship <span className="text-[#8B0000]">*</span>
+                Relationship <span className="text-on-danger">*</span>
               </Label>
               <Select value={relationship} onValueChange={setRelationship}>
                 <SelectTrigger className="bg-card">
@@ -158,7 +158,7 @@ export function AddFamilyMemberDialog({
             {/* Row 3: Date of Birth */}
             <div className="space-y-2">
               <Label>
-                Date of Birth <span className="text-[#8B0000]">*</span>
+                Date of Birth <span className="text-on-danger">*</span>
               </Label>
               <Popover
                 open={datePickerOpen}

@@ -312,7 +312,7 @@ export function AddPropertyDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="propertyName">
-                        Property Name <span className="text-[#8B0000]">*</span>
+                        Property Name <span className="text-on-danger">*</span>
                       </Label>
                       <Input
                         id="propertyName"
@@ -324,7 +324,7 @@ export function AddPropertyDialog({
                     </div>
                     <div className="space-y-2">
                       <Label>
-                        Purchase Date <span className="text-[#8B0000]">*</span>
+                        Purchase Date <span className="text-on-danger">*</span>
                       </Label>
                       <Popover
                         open={purchaseDateOpen}
@@ -371,7 +371,7 @@ export function AddPropertyDialog({
                     <div className="space-y-2">
                       <Label htmlFor="originalPurchasePrice">
                         Original Purchase Price{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                       </Label>
                       <div className="relative">
                         <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
@@ -425,7 +425,7 @@ export function AddPropertyDialog({
                     <div className="space-y-2">
                       <Label htmlFor="outstandingLoan">
                         Outstanding Loan{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                       </Label>
                       <div className="relative">
                         <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
@@ -469,7 +469,7 @@ export function AddPropertyDialog({
                     <div className="space-y-2">
                       <Label htmlFor="monthlyLoanPayment">
                         Monthly Loan Payment{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                       </Label>
                       <div className="relative">
                         <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
@@ -512,7 +512,7 @@ export function AddPropertyDialog({
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="interestRate">
-                        Interest Rate <span className="text-[#8B0000]">*</span>
+                        Interest Rate <span className="text-on-danger">*</span>
                       </Label>
                       <div className="relative">
                         <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
@@ -714,7 +714,7 @@ export function AddPropertyDialog({
                     />
                   </div>
                   {validationError && (
-                    <div className="mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm text-[#8B0000]">
+                    <div className="text-on-danger mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm">
                       {validationError}
                     </div>
                   )}

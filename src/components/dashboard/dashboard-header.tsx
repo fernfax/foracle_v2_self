@@ -514,7 +514,7 @@ export function DashboardHeader({
                   Total Nett Income
                 </span>
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(0,196,170,0.12)]">
-                  <DollarSign className="h-3.5 w-3.5 text-[#007A68]" />
+                  <DollarSign className="text-on-success h-3.5 w-3.5" />
                 </div>
               </div>
               <div className="overflow-hidden">
@@ -545,7 +545,7 @@ export function DashboardHeader({
                   Total Expenses
                 </span>
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(224,85,85,0.12)]">
-                  <TrendingDown className="h-3.5 w-3.5 text-[#8B0000]" />
+                  <TrendingDown className="text-on-danger h-3.5 w-3.5" />
                 </div>
               </div>
               <div className="overflow-hidden">
@@ -572,13 +572,13 @@ export function DashboardHeader({
                   Net Savings
                 </span>
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
-                  <Wallet className="h-3.5 w-3.5 text-[#7A3A0A]" />
+                  <Wallet className="text-on-brand h-3.5 w-3.5" />
                 </div>
               </div>
               <div className="overflow-hidden">
                 <p
                   key={selectedMonth.toISOString() + "-savings"}
-                  className={`text-xl font-semibold tabular-nums transition-all duration-300 sm:text-2xl ${displaySavings >= 0 ? "text-[#007A68]" : "text-[#8B0000]"} ${animationClass}`}>
+                  className={`text-xl font-semibold tabular-nums transition-all duration-300 sm:text-2xl ${displaySavings >= 0 ? "text-on-success" : "text-on-danger"} ${animationClass}`}>
                   ${Math.round(displaySavings).toLocaleString()}
                 </p>
               </div>

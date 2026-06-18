@@ -115,7 +115,7 @@ export function SlidingTabs({
                   isActive
                     ? "bg-brand-terracotta/15 text-brand-terracotta"
                     : tab.badgeVariant === "success"
-                      ? "bg-[rgba(0,196,170,0.15)] text-[#007A68]"
+                      ? "text-on-success bg-[rgba(0,196,170,0.15)]"
                       : "bg-primary/10 text-primary"
                 )}>
                 {tab.badge}

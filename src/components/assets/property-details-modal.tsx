@@ -92,7 +92,7 @@ export function PropertyDetailsModal({
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
-              <Home className="h-6 w-6 text-[#7A3A0A]" />
+              <Home className="text-on-brand h-6 w-6" />
             </div>
             <div>
               <DialogTitle className="text-xl">
@@ -105,7 +105,7 @@ export function PropertyDetailsModal({
               </p>
               <Badge
                 variant="outline"
-                className={`mt-2 text-xs font-medium ${property.linkedExpenseId ? "border-[rgba(0,196,170,0.25)] text-[#007A68]" : "text-muted-foreground border-border"}`}>
+                className={`mt-2 text-xs font-medium ${property.linkedExpenseId ? "text-on-success border-[rgba(0,196,170,0.25)]" : "text-muted-foreground border-border"}`}>
                 {property.linkedExpenseId ? (
                   <Check className="mr-1 h-3 w-3" />
                 ) : (
@@ -153,7 +153,7 @@ export function PropertyDetailsModal({
                 <h3 className="text-foreground font-semibold">Loan Progress</h3>
                 <Badge
                   variant="secondary"
-                  className="bg-[rgba(0,196,170,0.12)] text-[#007A68] dark:bg-[rgba(0,196,170,0.18)] dark:text-[#33d4bc]">
+                  className="text-on-success bg-[rgba(0,196,170,0.12)] dark:bg-[rgba(0,196,170,0.18)] dark:text-[#33d4bc]">
                   {progress.toFixed(1)}% Complete
                 </Badge>
               </div>
@@ -169,13 +169,13 @@ export function PropertyDetailsModal({
               <div className="flex justify-between text-sm">
                 <div>
                   <span className="text-muted-foreground">Repaid: </span>
-                  <span className="font-semibold text-[#007A68]">
+                  <span className="text-on-success font-semibold">
                     ${loanRepaid.toLocaleString()}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Remaining: </span>
-                  <span className="font-semibold text-[#7A5A00]">
+                  <span className="text-on-warning font-semibold">
                     ${outstanding.toLocaleString()}
                   </span>
                 </div>
@@ -212,7 +212,7 @@ export function PropertyDetailsModal({
               <div className="bg-muted h-px" />
               <div className="flex items-center justify-between">
                 <span className="text-foreground">Principal Repayment</span>
-                <span className="font-medium text-[#007A68]">
+                <span className="text-on-success font-medium">
                   $
                   {principalRepayment.toLocaleString(undefined, {
                     maximumFractionDigits: 2
@@ -221,7 +221,7 @@ export function PropertyDetailsModal({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-foreground">Interest Payment</span>
-                <span className="font-medium text-[#7A5A00]">
+                <span className="text-on-warning font-medium">
                   $
                   {interestRepayment.toLocaleString(undefined, {
                     maximumFractionDigits: 2
@@ -274,10 +274,10 @@ export function PropertyDetailsModal({
                 )}
                 <div className="bg-muted h-px" />
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-[#7A3A0A]">
+                  <span className="text-on-brand font-medium">
                     Amount to Return to CPF
                   </span>
-                  <span className="font-semibold text-[#7A3A0A]">
+                  <span className="text-on-brand font-semibold">
                     ${cpfReturn.toLocaleString()}
                   </span>
                 </div>

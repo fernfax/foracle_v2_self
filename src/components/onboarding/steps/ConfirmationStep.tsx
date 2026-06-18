@@ -96,7 +96,7 @@ export function ConfirmationStep({
       subValue: data.familyMember?.relationship,
       isSet: !!data.familyMember,
       bgColor: "bg-[rgba(184,98,42,0.10)]",
-      iconColor: "text-[#7A3A0A]"
+      iconColor: "text-on-brand"
     },
     {
       icon: DollarSign,
@@ -107,7 +107,7 @@ export function ConfirmationStep({
         : undefined,
       isSet: !!data.income,
       bgColor: "bg-[rgba(0,196,170,0.12)]",
-      iconColor: "text-[#007A68]"
+      iconColor: "text-on-success"
     },
     {
       icon: PiggyBank,
@@ -118,7 +118,7 @@ export function ConfirmationStep({
         : undefined,
       isSet: !!data.cpf && parseFloat(data.cpf.cpfOrdinaryAccount) > 0,
       bgColor: "bg-[rgba(184,98,42,0.10)]",
-      iconColor: "text-[#7A3A0A]"
+      iconColor: "text-on-brand"
     },
     {
       icon: Building2,
@@ -135,7 +135,7 @@ export function ConfirmationStep({
           : undefined,
       isSet: dbHoldings.length > 0,
       bgColor: "bg-[rgba(212,168,67,0.15)]",
-      iconColor: "text-[#7A5A00]"
+      iconColor: "text-on-warning"
     },
     {
       icon: Receipt,
@@ -152,7 +152,7 @@ export function ConfirmationStep({
           : undefined,
       isSet: dbExpenses.length > 0,
       bgColor: "bg-[rgba(224,85,85,0.12)]",
-      iconColor: "text-[#8B0000]"
+      iconColor: "text-on-danger"
     }
   ]
 
@@ -162,7 +162,7 @@ export function ConfirmationStep({
         {/* Success Header */}
         <div className="py-6 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)]">
-            <Sparkles className="h-8 w-8 text-[#007A68]" />
+            <Sparkles className="text-on-success h-8 w-8" />
           </div>
           <h2 className="mb-2 text-2xl font-semibold">Great job!</h2>
           <p className="text-muted-foreground">
@@ -197,7 +197,7 @@ export function ConfirmationStep({
                 )}
               </div>
               {item.isSet && (
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-[#007A68]" />
+                <CheckCircle2 className="text-on-success h-5 w-5 shrink-0" />
               )}
             </div>
           ))}

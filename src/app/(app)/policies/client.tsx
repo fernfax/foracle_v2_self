@@ -132,31 +132,31 @@ export function PoliciesClient({
         return {
           icon: User,
           bgColor: "bg-[rgba(184,98,42,0.10)]",
-          iconColor: "text-[#7A3A0A]"
+          iconColor: "text-on-brand"
         }
       case "spouse":
         return {
           icon: Heart,
           bgColor: "bg-[rgba(224,85,85,0.12)]",
-          iconColor: "text-[#8B0000]"
+          iconColor: "text-on-danger"
         }
       case "child":
         return {
           icon: Baby,
           bgColor: "bg-[rgba(0,196,170,0.12)]",
-          iconColor: "text-[#007A68]"
+          iconColor: "text-on-success"
         }
       case "parent":
         return {
           icon: Users,
           bgColor: "bg-[rgba(184,98,42,0.10)]",
-          iconColor: "text-[#7A3A0A]"
+          iconColor: "text-on-brand"
         }
       case "sibling":
         return {
           icon: Users,
           bgColor: "bg-[rgba(184,98,42,0.10)]",
-          iconColor: "text-[#7A3A0A]"
+          iconColor: "text-on-brand"
         }
       default:
         return {

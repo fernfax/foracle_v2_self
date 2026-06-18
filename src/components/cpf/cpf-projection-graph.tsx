@@ -243,10 +243,10 @@ function CustomTooltip({
                 {breakdownMode === "total" ? (
                   loanDeduction > 0 ? (
                     <div className="text-foreground ml-4 space-y-0.5">
-                      <p className="text-[#007A68]">
+                      <p className="text-on-success">
                         CPF Earned: {formatCurrency(earned)}
                       </p>
-                      <p className="text-[#7A5A00]">
+                      <p className="text-on-warning">
                         Loan (OA): -{formatCurrency(loanDeduction)}
                       </p>
                       <p className="text-foreground font-medium">
@@ -262,10 +262,10 @@ function CustomTooltip({
                   <div className="text-foreground ml-4 space-y-0.5">
                     {loanDeduction > 0 && (
                       <>
-                        <p className="text-[#007A68]">
+                        <p className="text-on-success">
                           CPF Earned: {formatCurrency(earned)}
                         </p>
-                        <p className="text-[#7A5A00]">
+                        <p className="text-on-warning">
                           Loan (OA): -{formatCurrency(loanDeduction)}
                         </p>
                         <div className="bg-muted my-0.5 h-px" />
@@ -285,7 +285,7 @@ function CustomTooltip({
           <div className="border-border border-t pt-1.5">
             {hasDeductions ? (
               <div className="space-y-0.5">
-                <p className="text-[#007A68]">
+                <p className="text-on-success">
                   Household Earned:{" "}
                   {formatCurrency(
                     ((viewMode === "cumulative"
@@ -294,7 +294,7 @@ function CustomTooltip({
                       householdDeduction
                   )}
                 </p>
-                <p className="text-[#7A5A00]">
+                <p className="text-on-warning">
                   Loan (OA): -{formatCurrency(householdDeduction)}
                 </p>
                 <p className="text-foreground font-medium">
@@ -519,13 +519,13 @@ export function CpfProjectionGraph({
             <p className="text-foreground mb-0.5 text-xs">
               Projected Cumulative
             </p>
-            <p className="text-sm font-semibold text-[#7A3A0A] sm:text-lg">
+            <p className="text-on-brand text-sm font-semibold sm:text-lg">
               {formatCurrency(projectedTotal)}
             </p>
           </div>
           <div className="rounded-lg bg-[rgba(0,196,170,0.12)] p-2 sm:p-3">
             <p className="text-foreground mb-0.5 text-xs">Net Change</p>
-            <p className="text-sm font-semibold text-[#007A68] sm:text-lg">
+            <p className="text-on-success text-sm font-semibold sm:text-lg">
               +{formatCurrency(projectedTotal)}
             </p>
           </div>

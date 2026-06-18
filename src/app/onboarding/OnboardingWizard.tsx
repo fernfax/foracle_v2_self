@@ -105,7 +105,7 @@ const STEP_CONFIG: StepConfig[] = [
     displayStep: 2,
     icon: DollarSign,
     iconBgColor: "bg-[rgba(0,196,170,0.12)]",
-    iconColor: "text-[#007A68]"
+    iconColor: "text-on-success"
   },
   {
     title: "CPF Allocation",
@@ -121,7 +121,7 @@ const STEP_CONFIG: StepConfig[] = [
     displayStep: 4,
     icon: Building2,
     iconBgColor: "bg-[rgba(212,168,67,0.15)]",
-    iconColor: "text-[#7A5A00]"
+    iconColor: "text-on-warning"
   },
   {
     title: "Your Expenses",
@@ -137,7 +137,7 @@ const STEP_CONFIG: StepConfig[] = [
     displayStep: 6,
     icon: CheckCircle2,
     iconBgColor: "bg-[rgba(0,196,170,0.15)]",
-    iconColor: "text-[#007A68]"
+    iconColor: "text-on-success"
   }
 ]
 

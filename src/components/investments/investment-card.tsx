@@ -48,37 +48,37 @@ const INVESTMENT_TYPE_CONFIG: Record<
 > = {
   stock: {
     icon: TrendingUp,
-    color: "text-[#7A3A0A]",
+    color: "text-on-brand",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
     label: "Stock"
   },
   cash: {
     icon: Banknote,
-    color: "text-[#007A68]",
+    color: "text-on-success",
     bgColor: "bg-[rgba(0,196,170,0.12)]",
     label: "Cash"
   },
   bonds: {
     icon: FileText,
-    color: "text-[#7A5A00]",
+    color: "text-on-warning",
     bgColor: "bg-[rgba(212,168,67,0.15)]",
     label: "Bonds"
   },
   etf: {
     icon: BarChart3,
-    color: "text-[#7A3A0A]",
+    color: "text-on-brand",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
     label: "ETF"
   },
   crypto: {
     icon: Bitcoin,
-    color: "text-[#7A3A0A]",
+    color: "text-on-brand",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
     label: "Crypto"
   },
   mutual_fund: {
     icon: PieChart,
-    color: "text-[#7A3A0A]",
+    color: "text-on-brand",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
     label: "Mutual Fund"
   },
@@ -166,7 +166,9 @@ export function InvestmentCard({
             <p className="text-foreground/400 text-xs tracking-wide uppercase">
               Yield
             </p>
-            <p className="font-semibold text-[#007A68]">{yield_.toFixed(1)}%</p>
+            <p className="text-on-success font-semibold">
+              {yield_.toFixed(1)}%
+            </p>
           </div>
           <div>
             <p className="text-foreground/400 text-xs tracking-wide uppercase">
@@ -207,7 +209,7 @@ export function InvestmentCard({
               {investment.isActive ? (
                 <Badge
                   variant="outline"
-                  className="border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)] text-[#007A68]">
+                  className="text-on-success border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)]">
                   Active
                 </Badge>
               ) : (
@@ -237,7 +239,7 @@ export function InvestmentCard({
                 <p className="text-foreground/400 mb-1 text-xs tracking-wide uppercase">
                   Projected Yield
                 </p>
-                <p className="text-xl font-bold text-[#007A68]">
+                <p className="text-on-success text-xl font-bold">
                   {yield_.toFixed(2)}%
                 </p>
               </div>
@@ -300,7 +302,7 @@ export function InvestmentCard({
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] hover:text-[#8B0000]"
+                className="text-on-danger hover:text-on-danger flex-1 hover:bg-[rgba(224,85,85,0.12)]"
                 onClick={() => {
                   setIsModalOpen(false)
                   onDelete?.()

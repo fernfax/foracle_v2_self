@@ -193,7 +193,7 @@ export function AdjustBudgetModal({
               <div className="text-muted-foreground flex justify-between text-xs">
                 <span>Max: {formatBudgetCurrency(maxShiftable)}</span>
                 {shiftAmount > maxShiftable && (
-                  <span className="text-[#8B0000]">
+                  <span className="text-on-danger">
                     Exceeds available budget
                   </span>
                 )}
@@ -213,7 +213,7 @@ export function AdjustBudgetModal({
                     →{" "}
                     <span
                       className={cn(
-                        isValidAmount ? "text-[#7A3A0A]" : "text-[#8B0000]"
+                        isValidAmount ? "text-on-brand" : "text-on-danger"
                       )}>
                       {formatBudgetCurrency(
                         (sourceBudgetInfo?.monthlyBudget || 0) - shiftAmount
@@ -227,7 +227,7 @@ export function AdjustBudgetModal({
                   <div className="text-muted-foreground">
                     {formatBudgetCurrency(targetBudgetInfo?.monthlyBudget || 0)}{" "}
                     →{" "}
-                    <span className="text-[#007A68]">
+                    <span className="text-on-success">
                       {formatBudgetCurrency(
                         (targetBudgetInfo?.monthlyBudget || 0) + shiftAmount
                       )}
@@ -252,7 +252,7 @@ export function AdjustBudgetModal({
 
           {/* Error Message */}
           {error && (
-            <div className="rounded-lg bg-[rgba(224,85,85,0.12)] p-3 text-sm text-[#8B0000]">
+            <div className="text-on-danger rounded-lg bg-[rgba(224,85,85,0.12)] p-3 text-sm">
               {error}
             </div>
           )}

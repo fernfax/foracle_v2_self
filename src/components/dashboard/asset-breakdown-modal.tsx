@@ -210,7 +210,7 @@ export function AssetBreakdownModal({
       <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-[#7A3A0A]" />
+            <TrendingUp className="text-on-brand h-5 w-5" />
             Asset Breakdown
           </DialogTitle>
           <DialogDescription>
@@ -229,13 +229,13 @@ export function AssetBreakdownModal({
             </div>
             <div>
               <p className="text-muted-foreground text-sm">Outstanding Loans</p>
-              <p className="text-2xl font-semibold text-[#7A5A00]">
+              <p className="text-on-warning text-2xl font-semibold">
                 ${breakdownDetails.totalLoan.toLocaleString()}
               </p>
             </div>
             <div>
               <p className="text-muted-foreground text-sm">Net Equity</p>
-              <p className="text-2xl font-semibold text-[#007A68]">
+              <p className="text-on-success text-2xl font-semibold">
                 ${breakdownDetails.totalEquity.toLocaleString()}
               </p>
             </div>
@@ -248,14 +248,14 @@ export function AssetBreakdownModal({
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(0,196,170,0.12)]">
-                    <Home className="h-4 w-4 text-[#007A68]" />
+                    <Home className="text-on-success h-4 w-4" />
                   </div>
                   <h3 className="text-lg font-semibold">Properties</h3>
                   <span className="text-muted-foreground text-sm">
                     ({breakdownDetails.properties.length})
                   </span>
                 </div>
-                <p className="text-lg font-semibold text-[#007A68]">
+                <p className="text-on-success text-lg font-semibold">
                   ${breakdownDetails.propertyEquity.toLocaleString()}
                 </p>
               </div>
@@ -283,7 +283,7 @@ export function AssetBreakdownModal({
                         }>
                         <div className="mb-3 flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Home className="h-5 w-5 text-[#007A68]" />
+                            <Home className="text-on-success h-5 w-5" />
                             <div>
                               <h4 className="font-semibold">
                                 {property.propertyName}
@@ -295,7 +295,7 @@ export function AssetBreakdownModal({
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-right">
-                              <p className="text-lg font-bold text-[#007A68]">
+                              <p className="text-on-success text-lg font-bold">
                                 ${equity.toLocaleString()}
                               </p>
                               <p className="text-muted-foreground text-xs">
@@ -348,14 +348,14 @@ export function AssetBreakdownModal({
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(212,168,67,0.15)]">
-                    <Car className="h-4 w-4 text-[#7A5A00]" />
+                    <Car className="text-on-warning h-4 w-4" />
                   </div>
                   <h3 className="text-lg font-semibold">Vehicles</h3>
                   <span className="text-muted-foreground text-sm">
                     ({breakdownDetails.vehicles.length})
                   </span>
                 </div>
-                <p className="text-lg font-semibold text-[#7A5A00]">
+                <p className="text-on-warning text-lg font-semibold">
                   ${breakdownDetails.vehicleEquity.toLocaleString()}
                 </p>
               </div>
@@ -387,7 +387,7 @@ export function AssetBreakdownModal({
                         }>
                         <div className="mb-3 flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Car className="h-5 w-5 text-[#7A5A00]" />
+                            <Car className="text-on-warning h-5 w-5" />
                             <div>
                               <h4 className="font-semibold">
                                 {vehicle.vehicleName}
@@ -399,7 +399,7 @@ export function AssetBreakdownModal({
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-right">
-                              <p className="text-lg font-bold text-[#7A5A00]">
+                              <p className="text-on-warning text-lg font-bold">
                                 ${equity.toLocaleString()}
                               </p>
                               <p className="text-muted-foreground text-xs">
@@ -443,7 +443,7 @@ export function AssetBreakdownModal({
                           </div>
                         )}
                         {loanTaken === 0 && (
-                          <p className="text-sm text-[#007A68]">
+                          <p className="text-on-success text-sm">
                             Fully paid - No outstanding loan
                           </p>
                         )}

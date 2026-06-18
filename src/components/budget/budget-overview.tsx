@@ -54,21 +54,21 @@ export function BudgetOverview({
   const pacingConfig = {
     under: {
       label: "UNDERSPENDING",
-      textColor: "text-[#007A68]",
+      textColor: "text-on-success",
       bgColor: "bg-[rgba(0,196,170,0.12)]",
       Icon: TrendingDown,
       message: "You're below your expected spending pace."
     },
     "on-track": {
       label: "ON TRACK",
-      textColor: "text-[#7A3A0A]",
+      textColor: "text-on-brand",
       bgColor: "bg-[rgba(184,98,42,0.10)]",
       Icon: CheckCircle,
       message: "You're on track with your budget."
     },
     over: {
       label: "OVERSPENDING",
-      textColor: "text-[#8B0000]",
+      textColor: "text-on-danger",
       bgColor: "bg-[rgba(224,85,85,0.12)]",
       Icon: AlertTriangle,
       message: "You're ahead of budget. Consider slowing down spending."

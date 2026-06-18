@@ -16,6 +16,26 @@
 }
 
 /*
+ * On-tint foreground utilities (design guide §2.6). Semantic text colors for
+ * labels/figures/icons sitting on a tinted badge or circle. Backed by the
+ * --text-on-* tokens, which carry their own dark-mode values — so these are
+ * self-contained in both modes and need no hardcoded-hex dark remap. Registered
+ * via @utility so variants (hover:, dark:, etc.) compose normally.
+ */
+@utility text-on-success {
+  color: var(--text-on-success);
+}
+@utility text-on-warning {
+  color: var(--text-on-warning);
+}
+@utility text-on-danger {
+  color: var(--text-on-danger);
+}
+@utility text-on-brand {
+  color: var(--text-on-brand);
+}
+
+/*
   Foracle design tokens — see /docs/design_guide/design_guide.md.
   Two-layer system:
     1) Brand vars (--brand-*, --p, --g, --go, --tl, --err, --cr, --h, --h2, --h3, --dk)
@@ -170,10 +190,13 @@
     --destructive: 0 65% 66%;
     --destructive-foreground: 38 36% 91%;
 
-    /* Negative/over-budget text reads far brighter on the near-black nightfall
-       canvas than the light-mode maroon (#8B0000). See the dark-mode red remap
-       at the end of this file for the hardcoded utility overrides. */
+    /* On-tint foreground colors brighten on the near-black nightfall canvas so
+       they stay legible (the light-mode shades measure well below WCAG AA on
+       dark). Consumed by the text-on-* utilities; hue + meaning are preserved. */
+    --text-on-success: #33d4bc;
+    --text-on-warning: #e5c158;
     --text-on-danger: #ee8585;
+    --text-on-brand: #e0a878;
 
     --border: 38 36% 91%;
     --input: 38 36% 91%;
@@ -854,33 +877,18 @@
 }
 
 /*
- * Dark-mode negative-red contrast remap.
+ * Dark-mode contrast remap for the remaining hardcoded brand hexes.
  *
- * Many components hardcode the light-mode reds — #8B0000 (maroon) for
- * over-budget / negative text and #E05555 (alert red) — which are far too dark
- * to read on the nightfall canvas (#141E1D). Rather than add a `dark:` override
- * to ~80 individual usages, these UNLAYERED rules brighten those exact utility
- * classes in dark mode only (unlayered beats Tailwind's `utilities` layer, so
- * they win without !important). Light mode is untouched. Brightening reds for
- * negative figures — never greens — keeps the semantic meaning intact.
+ * The four canonical on-tint shades (#8B0000 / #007A68 / #7A5A00 / #7A3A0A) are
+ * now the text-on-* utilities, which carry their own dark values — so they're
+ * gone from here. What's left are alert red and the variant green/gold shades
+ * still hardcoded as text-[#hex] across the app. These UNLAYERED rules brighten
+ * those exact classes in dark mode only (unlayered beats Tailwind's `utilities`
+ * layer, so they win without !important); light mode is untouched, hue + meaning
+ * preserved. Migrate these to semantic utilities to retire this block.
  */
-.dark .text-\[\#8B0000\],
 .dark .text-\[\#E05555\] {
   color: #ee8585;
-}
-
-/*
- * Dark-mode brand-color contrast remap (positive greens / warm browns / golds).
- *
- * Same rationale as the reds above: these deep brand hexes are hardcoded across
- * ~200 usages (positive figures, CPF / balance chart labels, relationship icons)
- * and are unreadable on the nightfall canvas (#141E1D) — e.g. #007A68 measures
- * 2.13:1, well below WCAG AA's 4.5:1. Brighten them in dark mode only, preserving
- * hue + semantic meaning (green stays positive, amber stays warning). Light mode
- * is untouched. Unlayered, so these beat Tailwind's `utilities` layer.
- */
-.dark .text-\[\#007A68\] {
-  color: #33d4bc; /* success / positive — matches the app's bright teal */
 }
 .dark .text-\[\#3A6B52\],
 .dark .text-\[\#1F4A33\],
@@ -888,10 +896,6 @@
 .dark .text-\[\#5A9470\] {
   color: #6fce9f; /* secondary greens */
 }
-.dark .text-\[\#7A3A0A\] {
-  color: #e0a878; /* warm brown (relationship icons, brand text) */
-}
-.dark .text-\[\#7A5A00\],
 .dark .text-\[\#7A5C00\],
 .dark .text-\[\#5A4500\],
 .dark .text-\[\#9A6A12\] {

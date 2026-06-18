@@ -208,7 +208,7 @@ export function AddInvestmentModal({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">
-                      Investment Name <span className="text-[#8B0000]">*</span>
+                      Investment Name <span className="text-on-danger">*</span>
                     </Label>
                     <Input
                       id="name"
@@ -220,7 +220,7 @@ export function AddInvestmentModal({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="type">
-                      Type <span className="text-[#8B0000]">*</span>
+                      Type <span className="text-on-danger">*</span>
                     </Label>
                     <Select value={type} onValueChange={setType}>
                       <SelectTrigger className="bg-card">
@@ -251,7 +251,7 @@ export function AddInvestmentModal({
                   <div className="space-y-2">
                     <Label htmlFor="currentCapital">
                       Current Portfolio Capital{" "}
-                      <span className="text-[#8B0000]">*</span>
+                      <span className="text-on-danger">*</span>
                     </Label>
                     <div className="relative">
                       <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
@@ -273,7 +273,7 @@ export function AddInvestmentModal({
                     <div className="flex items-center gap-1">
                       <Label htmlFor="projectedYield">
                         Projected Annual Yield %{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                       </Label>
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
@@ -342,7 +342,7 @@ export function AddInvestmentModal({
                   <div className="space-y-2">
                     <Label htmlFor="contributionAmount">
                       Contribution Amount{" "}
-                      <span className="text-[#8B0000]">*</span>
+                      <span className="text-on-danger">*</span>
                     </Label>
                     <div className="relative">
                       <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
@@ -389,7 +389,7 @@ export function AddInvestmentModal({
                 {contributionFrequency === "custom" && (
                   <div className="space-y-2 pt-2">
                     <Label>
-                      Select Months <span className="text-[#8B0000]">*</span>
+                      Select Months <span className="text-on-danger">*</span>
                     </Label>
                     <div className="grid grid-cols-6 gap-2">
                       {MONTHS.map((month) => (

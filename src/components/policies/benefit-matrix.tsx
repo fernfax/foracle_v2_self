@@ -57,26 +57,26 @@ function getAvatarConfig(relationship: string | null) {
       return {
         icon: User,
         bgColor: "bg-[rgba(184,98,42,0.10)]",
-        iconColor: "text-[#7A3A0A]"
+        iconColor: "text-on-brand"
       }
     case "spouse":
       return {
         icon: Heart,
         bgColor: "bg-[rgba(224,85,85,0.12)]",
-        iconColor: "text-[#8B0000]"
+        iconColor: "text-on-danger"
       }
     case "child":
       return {
         icon: Baby,
         bgColor: "bg-[rgba(0,196,170,0.12)]",
-        iconColor: "text-[#007A68]"
+        iconColor: "text-on-success"
       }
     case "parent":
     case "sibling":
       return {
         icon: Users,
         bgColor: "bg-[rgba(184,98,42,0.10)]",
-        iconColor: "text-[#7A3A0A]"
+        iconColor: "text-on-brand"
       }
     default:
       return {
@@ -236,8 +236,8 @@ export function BenefitMatrix({ familyMembers, policies }: BenefitMatrixProps) {
                         <div className="flex flex-col gap-0.5">
                           {isSentinel ? (
                             <div className="flex items-center gap-1.5">
-                              <Check className="h-4 w-4 text-[#007A68]" />
-                              <span className="text-xs font-medium text-[#007A68]">
+                              <Check className="text-on-success h-4 w-4" />
+                              <span className="text-on-success text-xs font-medium">
                                 Covered
                               </span>
                             </div>

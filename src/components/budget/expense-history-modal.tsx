@@ -138,7 +138,7 @@ export function ExpenseHistoryModal({
             {/* Total Row */}
             <div className="flex items-center justify-between border-b px-2 py-3">
               <span className="font-medium">Total</span>
-              <span className="text-lg font-semibold text-[#8B0000]">
+              <span className="text-on-danger text-lg font-semibold">
                 {formatBudgetCurrency(totalAmount)}
               </span>
             </div>
@@ -165,7 +165,7 @@ export function ExpenseHistoryModal({
                         <span className="text-muted-foreground text-sm font-medium">
                           {format(parsedDate, "EEE, MMM d")}
                         </span>
-                        <span className="text-sm font-medium text-[#8B0000]">
+                        <span className="text-on-danger text-sm font-medium">
                           OUT {formatBudgetCurrency(dayTotal)}
                         </span>
                       </div>
@@ -237,7 +237,7 @@ export function ExpenseHistoryModal({
                                   {expense.originalCurrency &&
                                   expense.originalAmount ? (
                                     <>
-                                      <div className="font-semibold text-[#8B0000]">
+                                      <div className="text-on-danger font-semibold">
                                         -
                                         {formatBudgetCurrency(
                                           parseFloat(expense.amount)
@@ -258,7 +258,7 @@ export function ExpenseHistoryModal({
                                       </div>
                                     </>
                                   ) : (
-                                    <span className="font-semibold text-[#8B0000]">
+                                    <span className="text-on-danger font-semibold">
                                       -
                                       {formatBudgetCurrency(
                                         parseFloat(expense.amount)

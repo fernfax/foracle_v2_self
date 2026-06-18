@@ -98,7 +98,7 @@ export function TotalAssetsCard({ totalAssets }: TotalAssetsCardProps) {
             Total Assets
           </CardTitle>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(212,168,67,0.15)]">
-            <TrendingUp className="h-5 w-5 text-[#7A5A00]" />
+            <TrendingUp className="text-on-warning h-5 w-5" />
           </div>
         </CardHeader>
         <CardContent>
@@ -116,13 +116,13 @@ export function TotalAssetsCard({ totalAssets }: TotalAssetsCardProps) {
               <div className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
                 {calculatedData.propertyCount > 0 && (
                   <div className="flex items-center gap-1">
-                    <Home className="h-3 w-3 text-[#007A68]" />
+                    <Home className="text-on-success h-3 w-3" />
                     <span>{calculatedData.propertyCount} property</span>
                   </div>
                 )}
                 {calculatedData.vehicleCount > 0 && (
                   <div className="flex items-center gap-1">
-                    <Car className="h-3 w-3 text-[#7A5A00]" />
+                    <Car className="text-on-warning h-3 w-3" />
                     <span>{calculatedData.vehicleCount} vehicle</span>
                   </div>
                 )}

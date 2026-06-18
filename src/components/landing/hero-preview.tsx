@@ -74,7 +74,7 @@ export function HeroPreview() {
               <span className="font-display text-foreground text-3xl font-semibold tracking-[-0.02em] tabular-nums sm:text-4xl">
                 S$248,500
               </span>
-              <span className="font-display mb-1 inline-flex items-center gap-1 rounded-full bg-[rgba(0,196,170,0.12)] px-2 py-0.5 text-[11px] font-semibold text-[#007A68]">
+              <span className="font-display text-on-success mb-1 inline-flex items-center gap-1 rounded-full bg-[rgba(0,196,170,0.12)] px-2 py-0.5 text-[11px] font-semibold">
                 <TrendingUp className="h-3 w-3" />
                 4.2%
               </span>
@@ -176,7 +176,7 @@ export function HeroPreview() {
                 <span className="font-display text-muted-foreground text-[10px] font-semibold tracking-[0.16em] uppercase">
                   Emergency fund
                 </span>
-                <span className="font-display text-[11px] font-semibold text-[#007A68] tabular-nums">
+                <span className="font-display text-on-success text-[11px] font-semibold tabular-nums">
                   82%
                 </span>
               </div>

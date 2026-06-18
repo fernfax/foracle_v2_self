@@ -257,7 +257,7 @@ export function CategoryManagerPopover({
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteClick(category)}
-                          className="h-7 px-2 text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] hover:text-[#8B0000]">
+                          className="text-on-danger hover:text-on-danger h-7 px-2 hover:bg-[rgba(224,85,85,0.12)]">
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </>
@@ -279,7 +279,7 @@ export function CategoryManagerPopover({
             <AlertDialogTitle>
               {linkedExpenses.length > 0 ? (
                 <span className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-[#7A5A00]" />
+                  <AlertTriangle className="text-on-warning h-5 w-5" />
                   Cannot Delete Category
                 </span>
               ) : (

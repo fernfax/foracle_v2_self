@@ -256,7 +256,7 @@ export function ManageCategoriesDialog({
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDeleteClick(category)}
-                            className="text-[#8B0000] hover:bg-[rgba(224,85,85,0.12)] hover:text-[#8B0000]">
+                            className="text-on-danger hover:text-on-danger hover:bg-[rgba(224,85,85,0.12)]">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </>
@@ -279,7 +279,7 @@ export function ManageCategoriesDialog({
             <AlertDialogTitle>
               {linkedExpenses.length > 0 ? (
                 <span className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-[#7A5A00]" />
+                  <AlertTriangle className="text-on-warning h-5 w-5" />
                   Cannot Delete Category
                 </span>
               ) : (

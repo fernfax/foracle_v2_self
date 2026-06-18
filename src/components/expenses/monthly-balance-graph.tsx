@@ -414,30 +414,30 @@ function CustomTooltip({ active, payload, viewMode }: CustomTooltipProps) {
             <>
               {hasBonus ? (
                 <>
-                  <p className="text-[#007A68]">
+                  <p className="text-on-success">
                     Salary Income: {formatCurrency(data.salaryIncome)}
                   </p>
-                  <p className="text-[#7A3A0A]">
+                  <p className="text-on-brand">
                     Bonus: {formatCurrency(data.bonus)}
                   </p>
-                  <p className="font-medium text-[#007A68]">
+                  <p className="text-on-success font-medium">
                     Total Income: {formatCurrency(data.income)}
                   </p>
                 </>
               ) : (
-                <p className="text-[#007A68]">
+                <p className="text-on-success">
                   Income: {formatCurrency(data.income)}
                 </p>
               )}
-              <p className="text-[#8B0000]">
+              <p className="text-on-danger">
                 Expenses: {formatCurrency(data.expense)}
               </p>
-              <p className="font-semibold text-[#7A3A0A]">
+              <p className="text-on-brand font-semibold">
                 Cumulative Balance: {formatCurrency(data.balance)}
               </p>
               {hasInvestmentData &&
                 data.balanceWithInvestments !== undefined && (
-                  <p className="font-semibold text-[#007A68]">
+                  <p className="text-on-success font-semibold">
                     With Investments:{" "}
                     {formatCurrency(data.balanceWithInvestments)}
                   </p>
@@ -447,32 +447,32 @@ function CustomTooltip({ active, payload, viewMode }: CustomTooltipProps) {
             <>
               {hasBonus ? (
                 <>
-                  <p className="text-[#007A68]">
+                  <p className="text-on-success">
                     Salary Income: {formatCurrency(data.salaryIncome)}
                   </p>
-                  <p className="text-[#7A3A0A]">
+                  <p className="text-on-brand">
                     Bonus: {formatCurrency(data.bonus)}
                   </p>
-                  <p className="font-medium text-[#007A68]">
+                  <p className="text-on-success font-medium">
                     Total Income: {formatCurrency(data.income)}
                   </p>
                 </>
               ) : (
-                <p className="text-[#007A68]">
+                <p className="text-on-success">
                   Income: {formatCurrency(data.income)}
                 </p>
               )}
-              <p className="text-[#8B0000]">
+              <p className="text-on-danger">
                 Expenses: {formatCurrency(data.expense)}
               </p>
               <p
-                className={`font-semibold ${data.monthlyBalance >= 0 ? "text-[#7A3A0A]" : "text-[#8B0000]"}`}>
+                className={`font-semibold ${data.monthlyBalance >= 0 ? "text-on-brand" : "text-on-danger"}`}>
                 Savings: {formatCurrency(data.monthlyBalance)}
               </p>
               {hasInvestmentData &&
                 data.monthlyBalanceWithInvestments !== undefined && (
                   <p
-                    className={`font-semibold ${data.monthlyBalanceWithInvestments >= 0 ? "text-[#007A68]" : "text-[#8B0000]"}`}>
+                    className={`font-semibold ${data.monthlyBalanceWithInvestments >= 0 ? "text-on-success" : "text-on-danger"}`}>
                     Savings + Investments:{" "}
                     {formatCurrency(data.monthlyBalanceWithInvestments)}
                   </p>
@@ -861,7 +861,7 @@ export function MonthlyBalanceGraph({
                   {formatCurrency(startingBalance)}
                 </p>
                 {includeInvestments && (
-                  <p className="text-[10px] text-[#007A68] tabular-nums">
+                  <p className="text-on-success text-[10px] tabular-nums">
                     + {formatCurrency(investmentStartingCapital)} investments
                   </p>
                 )}
@@ -872,8 +872,8 @@ export function MonthlyBalanceGraph({
                 <span
                   className={`mb-0.5 text-[11px] font-semibold tabular-nums sm:text-xs ${
                     finalBalance - startingBalance >= 0
-                      ? "text-[#007A68]"
-                      : "text-[#8B0000]"
+                      ? "text-on-success"
+                      : "text-on-danger"
                   }`}>
                   {finalBalance - startingBalance >= 0 ? "+" : ""}
                   {formatCurrency(finalBalance - startingBalance)}
@@ -888,7 +888,7 @@ export function MonthlyBalanceGraph({
                   Net change
                 </span>
                 {includeInvestments && (
-                  <span className="mt-0.5 text-[9px] text-[#007A68] tabular-nums">
+                  <span className="text-on-success mt-0.5 text-[9px] tabular-nums">
                     combined{" "}
                     {finalBalanceWithInvestments -
                       startingBalance -
@@ -911,13 +911,13 @@ export function MonthlyBalanceGraph({
                 </p>
                 <p
                   className={`text-base font-semibold tabular-nums sm:text-xl ${
-                    isPositive ? "text-[#007A68]" : "text-[#8B0000]"
+                    isPositive ? "text-on-success" : "text-on-danger"
                   }`}>
                   {formatCurrency(finalBalance)}
                 </p>
                 {includeInvestments && (
                   <p
-                    className={`text-[10px] tabular-nums ${isCombinedPositive ? "text-[#007A68]" : "text-[#8B0000]"}`}>
+                    className={`text-[10px] tabular-nums ${isCombinedPositive ? "text-on-success" : "text-on-danger"}`}>
                     Combined: {formatCurrency(finalBalanceWithInvestments)}
                   </p>
                 )}
@@ -948,8 +948,8 @@ export function MonthlyBalanceGraph({
                 }
                 className="border-[#007A68] data-[state=checked]:border-[#007A68] data-[state=checked]:bg-[#007A68] data-[state=checked]:text-white"
               />
-              <TrendingUp className="h-4 w-4 flex-shrink-0 text-[#007A68]" />
-              <span className="text-xs font-medium whitespace-nowrap text-[#007A68] sm:text-sm">
+              <TrendingUp className="text-on-success h-4 w-4 flex-shrink-0" />
+              <span className="text-on-success text-xs font-medium whitespace-nowrap sm:text-sm">
                 Include Investments
               </span>
             </label>

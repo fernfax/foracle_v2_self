@@ -27,7 +27,7 @@ export function SpendingPaceIndicator({
     under: {
       label: "UNDERSPENDING",
       bgColor: "bg-[rgba(0,196,170,0.12)]",
-      textColor: "text-[#007A68]",
+      textColor: "text-on-success",
       borderColor: "border-[rgba(0,196,170,0.25)]",
       Icon: TrendingDown,
       message: "You're below your expected spending pace."
@@ -35,7 +35,7 @@ export function SpendingPaceIndicator({
     "on-track": {
       label: "ON TRACK",
       bgColor: "bg-[rgba(184,98,42,0.10)]",
-      textColor: "text-[#7A3A0A]",
+      textColor: "text-on-brand",
       borderColor: "border-[rgba(184,98,42,0.25)]",
       Icon: CheckCircle,
       message: "You're on track with your budget."
@@ -43,7 +43,7 @@ export function SpendingPaceIndicator({
     over: {
       label: "OVERSPENDING",
       bgColor: "bg-[rgba(224,85,85,0.12)]",
-      textColor: "text-[#8B0000]",
+      textColor: "text-on-danger",
       borderColor: "border-[rgba(224,85,85,0.25)]",
       Icon: AlertTriangle,
       message: "You're ahead of budget. Consider slowing down spending."

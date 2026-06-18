@@ -89,10 +89,10 @@ const getIntegrationType = (expense: Expense | null): IntegrationType => {
 const integrationConfig = {
   policy: {
     icon: Shield,
-    color: "text-[#7A3A0A]",
+    color: "text-on-brand",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
     borderColor: "border-[rgba(184,98,42,0.25)]",
-    textColor: "text-[#7A3A0A]",
+    textColor: "text-on-brand",
     title: "View Insurance Expense",
     description:
       "This expense is linked to an insurance policy. Some fields cannot be edited here.",
@@ -103,10 +103,10 @@ const integrationConfig = {
   },
   property: {
     icon: Home,
-    color: "text-[#007A68]",
+    color: "text-on-success",
     bgColor: "bg-[rgba(0,196,170,0.12)]",
     borderColor: "border-[rgba(0,196,170,0.25)]",
-    textColor: "text-[#007A68]",
+    textColor: "text-on-success",
     title: "View Property Expense",
     description:
       "This expense is linked to a property asset. Some fields cannot be edited here.",
@@ -116,10 +116,10 @@ const integrationConfig = {
   },
   vehicle: {
     icon: Car,
-    color: "text-[#7A5A00]",
+    color: "text-on-warning",
     bgColor: "bg-[rgba(212,168,67,0.15)]",
     borderColor: "border-[rgba(212,168,67,0.30)]",
-    textColor: "text-[#7A5A00]",
+    textColor: "text-on-warning",
     title: "View Vehicle Expense",
     description:
       "This expense is linked to a vehicle asset. Some fields cannot be edited here.",
@@ -129,10 +129,10 @@ const integrationConfig = {
   },
   goal: {
     icon: Target,
-    color: "text-[#7A3A0A]",
+    color: "text-on-brand",
     bgColor: "bg-[rgba(184,98,42,0.10)]",
     borderColor: "border-[rgba(184,98,42,0.25)]",
-    textColor: "text-[#7A3A0A]",
+    textColor: "text-on-brand",
     title: "View Goal Contribution",
     description:
       "This expense is linked to a savings goal. Some fields cannot be edited here.",
@@ -432,7 +432,7 @@ export function EditExpenseDialog({
               <Label
                 htmlFor="edit-expense-type"
                 className="flex items-center gap-1">
-                Expense Type <span className="text-[#8B0000]">*</span>
+                Expense Type <span className="text-on-danger">*</span>
                 {isLinked && <Lock className="text-muted-foreground h-3 w-3" />}
               </Label>
               <Select
@@ -497,7 +497,7 @@ export function EditExpenseDialog({
                     <Label
                       htmlFor="edit-name"
                       className="flex items-center gap-1">
-                      Expense Name <span className="text-[#8B0000]">*</span>
+                      Expense Name <span className="text-on-danger">*</span>
                       {isLinked && (
                         <Lock className="text-muted-foreground h-3 w-3" />
                       )}
@@ -523,7 +523,7 @@ export function EditExpenseDialog({
                     <Label
                       htmlFor="edit-category"
                       className="flex items-center gap-1">
-                      Category <span className="text-[#8B0000]">*</span>
+                      Category <span className="text-on-danger">*</span>
                       {isLinked && (
                         <Lock className="text-muted-foreground h-3 w-3" />
                       )}
@@ -566,7 +566,7 @@ export function EditExpenseDialog({
                     <Label
                       htmlFor="edit-amount"
                       className="flex items-center gap-1">
-                      Expense Amount <span className="text-[#8B0000]">*</span>
+                      Expense Amount <span className="text-on-danger">*</span>
                       {isLinked && (
                         <Lock className="text-muted-foreground h-3 w-3" />
                       )}
@@ -596,7 +596,7 @@ export function EditExpenseDialog({
                       htmlFor="edit-frequency"
                       className="flex items-center gap-1">
                       Expense Frequency{" "}
-                      <span className="text-[#8B0000]">*</span>
+                      <span className="text-on-danger">*</span>
                       {isLinked && (
                         <Lock className="text-muted-foreground h-3 w-3" />
                       )}
@@ -643,7 +643,7 @@ export function EditExpenseDialog({
                 {frequency.toLowerCase() === "custom" && (
                   <div className="space-y-2">
                     <Label className="flex items-center gap-1">
-                      Select Months <span className="text-[#8B0000]">*</span>
+                      Select Months <span className="text-on-danger">*</span>
                       {isLinked && (
                         <Lock className="text-muted-foreground h-3 w-3" />
                       )}
@@ -714,7 +714,7 @@ export function EditExpenseDialog({
                         {expenseCategory === "one-off"
                           ? "Expense Date"
                           : "Start Date"}{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                         {isLinked && (
                           <Lock className="text-muted-foreground h-3 w-3" />
                         )}

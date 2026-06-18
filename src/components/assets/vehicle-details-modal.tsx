@@ -130,7 +130,7 @@ export function VehicleDetailsModal({
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(212,168,67,0.15)]">
-              <Car className="h-6 w-6 text-[#7A5A00]" />
+              <Car className="text-on-warning h-6 w-6" />
             </div>
             <div>
               <DialogTitle className="text-xl">
@@ -143,7 +143,7 @@ export function VehicleDetailsModal({
               </p>
               <Badge
                 variant="outline"
-                className={`mt-2 text-xs font-medium ${vehicle.linkedExpenseId ? "border-[rgba(0,196,170,0.25)] text-[#007A68]" : "text-muted-foreground border-border"}`}>
+                className={`mt-2 text-xs font-medium ${vehicle.linkedExpenseId ? "text-on-success border-[rgba(0,196,170,0.25)]" : "text-muted-foreground border-border"}`}>
                 {vehicle.linkedExpenseId ? (
                   <Check className="mr-1 h-3 w-3" />
                 ) : (
@@ -196,10 +196,10 @@ export function VehicleDetailsModal({
                   variant="secondary"
                   className={
                     coeCountdown.expired
-                      ? "bg-[rgba(224,85,85,0.12)] text-[#8B0000]"
+                      ? "text-on-danger bg-[rgba(224,85,85,0.12)]"
                       : coeCountdown.days && coeCountdown.days < 365
-                        ? "bg-[rgba(212,168,67,0.15)] text-[#7A5A00]"
-                        : "bg-[rgba(0,196,170,0.12)] text-[#007A68]"
+                        ? "text-on-warning bg-[rgba(212,168,67,0.15)]"
+                        : "text-on-success bg-[rgba(0,196,170,0.12)]"
                   }>
                   {coeCountdown.expired
                     ? "Expired"
@@ -226,7 +226,7 @@ export function VehicleDetailsModal({
                 <h3 className="text-foreground font-semibold">Loan Progress</h3>
                 <Badge
                   variant="secondary"
-                  className="bg-[rgba(0,196,170,0.12)] text-[#007A68] dark:bg-[rgba(0,196,170,0.18)] dark:text-[#33d4bc]">
+                  className="text-on-success bg-[rgba(0,196,170,0.12)] dark:bg-[rgba(0,196,170,0.18)] dark:text-[#33d4bc]">
                   {progress.toFixed(1)}% Complete
                 </Badge>
               </div>
@@ -242,7 +242,7 @@ export function VehicleDetailsModal({
               <div className="flex justify-between text-sm">
                 <div>
                   <span className="text-muted-foreground">Repaid: </span>
-                  <span className="font-semibold text-[#007A68]">
+                  <span className="text-on-success font-semibold">
                     $
                     {loanRepaid.toLocaleString(undefined, {
                       maximumFractionDigits: 0
@@ -251,7 +251,7 @@ export function VehicleDetailsModal({
                 </div>
                 <div>
                   <span className="text-muted-foreground">Remaining: </span>
-                  <span className="font-semibold text-[#7A5A00]">
+                  <span className="text-on-warning font-semibold">
                     $
                     {outstandingLoan.toLocaleString(undefined, {
                       maximumFractionDigits: 0

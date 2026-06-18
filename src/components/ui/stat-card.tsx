@@ -9,15 +9,15 @@ type StatAccent = "brand" | "jungle" | "teal" | "gold" | "neutral"
 const ACCENT_CHIP: Record<StatAccent, string> = {
   brand: "bg-[rgba(184,98,42,0.12)] text-[#B8622A] dark:text-[#D4845A]",
   jungle: "bg-[rgba(58,107,82,0.12)] text-[#3A6B52] dark:text-[#5A9470]",
-  teal: "bg-[rgba(0,196,170,0.12)] text-[#007A68] dark:text-[#33D4BC]",
-  gold: "bg-[rgba(212,168,67,0.16)] text-[#7A5A00] dark:text-[#D4A843]",
+  teal: "bg-[rgba(0,196,170,0.12)] text-on-success dark:text-[#33D4BC]",
+  gold: "bg-[rgba(212,168,67,0.16)] text-on-warning dark:text-[#D4A843]",
   neutral:
     "bg-[rgba(28,43,42,0.06)] text-muted-foreground dark:bg-[rgba(240,235,224,0.08)]"
 }
 
 const DELTA_TONE = {
-  up: "text-[#007A68] dark:text-[#33D4BC]",
-  down: "text-[#8B0000] dark:text-[#E07070]",
+  up: "text-on-success dark:text-[#33D4BC]",
+  down: "text-on-danger dark:text-[#E07070]",
   flat: "text-muted-foreground"
 } as const
 

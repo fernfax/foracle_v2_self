@@ -234,7 +234,7 @@ export function AddExpenseDialog({
             {/* Expense Type Selector */}
             <div className="space-y-2">
               <Label htmlFor="expense-type">
-                Expense Type <span className="text-[#8B0000]">*</span>
+                Expense Type <span className="text-on-danger">*</span>
               </Label>
               <Select
                 value={expenseCategory}
@@ -283,7 +283,7 @@ export function AddExpenseDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">
-                      Expense Name <span className="text-[#8B0000]">*</span>
+                      Expense Name <span className="text-on-danger">*</span>
                     </Label>
                     <Input
                       id="name"
@@ -295,7 +295,7 @@ export function AddExpenseDialog({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">
-                      Category <span className="text-[#8B0000]">*</span>
+                      Category <span className="text-on-danger">*</span>
                     </Label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="bg-card">
@@ -320,7 +320,7 @@ export function AddExpenseDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="amount">
-                      Expense Amount <span className="text-[#8B0000]">*</span>
+                      Expense Amount <span className="text-on-danger">*</span>
                     </Label>
                     <Input
                       id="amount"
@@ -336,7 +336,7 @@ export function AddExpenseDialog({
                   <div className="space-y-2">
                     <Label htmlFor="frequency">
                       Expense Frequency{" "}
-                      <span className="text-[#8B0000]">*</span>
+                      <span className="text-on-danger">*</span>
                     </Label>
                     <Select
                       value={frequency}
@@ -365,7 +365,7 @@ export function AddExpenseDialog({
                 {frequency === "custom" && (
                   <div className="space-y-2">
                     <Label>
-                      Select Months <span className="text-[#8B0000]">*</span>
+                      Select Months <span className="text-on-danger">*</span>
                     </Label>
                     <div className="grid grid-cols-6 gap-2">
                       {MONTHS.map((month) => (
@@ -426,7 +426,7 @@ export function AddExpenseDialog({
                         {expenseCategory === "one-off"
                           ? "Expense Date"
                           : "Start Date"}{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                       </Label>
                       <Popover
                         open={startDateOpen}

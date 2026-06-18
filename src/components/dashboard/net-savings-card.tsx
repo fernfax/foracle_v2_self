@@ -297,7 +297,7 @@ export function NetSavingsCard({
           Net Savings
         </CardTitle>
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
-          <Wallet className="h-5 w-5 text-[#7A3A0A]" />
+          <Wallet className="text-on-brand h-5 w-5" />
         </div>
       </CardHeader>
       <CardContent>
@@ -318,7 +318,7 @@ export function NetSavingsCard({
           monthChange.amount !== 0 && (
             <div
               className={`mt-1 flex items-center gap-1 text-xs ${
-                monthChange.amount > 0 ? "text-[#007A68]" : "text-[#8B0000]"
+                monthChange.amount > 0 ? "text-on-success" : "text-on-danger"
               }`}>
               {monthChange.amount > 0 ? (
                 <TrendingUp className="h-3 w-3" />

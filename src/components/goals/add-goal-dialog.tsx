@@ -258,7 +258,7 @@ export function AddGoalDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="goalName">
-                        Goal Name <span className="text-[#8B0000]">*</span>
+                        Goal Name <span className="text-on-danger">*</span>
                       </Label>
                       <Input
                         id="goalName"
@@ -270,7 +270,7 @@ export function AddGoalDialog({
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="goalType">
-                        Goal Type <span className="text-[#8B0000]">*</span>
+                        Goal Type <span className="text-on-danger">*</span>
                       </Label>
                       <Select
                         value={goalType}
@@ -291,7 +291,7 @@ export function AddGoalDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="targetAmount">
-                        Target Amount <span className="text-[#8B0000]">*</span>
+                        Target Amount <span className="text-on-danger">*</span>
                       </Label>
                       <div className="relative">
                         <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
@@ -311,7 +311,7 @@ export function AddGoalDialog({
                     </div>
                     <div className="space-y-2">
                       <Label>
-                        Target Date <span className="text-[#8B0000]">*</span>
+                        Target Date <span className="text-on-danger">*</span>
                       </Label>
                       <Popover
                         open={targetDateOpen}
@@ -434,7 +434,7 @@ export function AddGoalDialog({
 
                   {projectedCompletion && (
                     <div className="rounded-lg border border-[rgba(0,196,170,0.25)] bg-[rgba(0,196,170,0.12)] p-3">
-                      <p className="text-sm text-[#007A68]">
+                      <p className="text-on-success text-sm">
                         At ${parseFloat(monthlyContribution).toLocaleString()}
                         /month, you&apos;ll reach your goal by{" "}
                         <span className="font-semibold">
@@ -473,7 +473,7 @@ export function AddGoalDialog({
                     />
                   </div>
                   {validationError && (
-                    <div className="mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm text-[#8B0000]">
+                    <div className="text-on-danger mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm">
                       {validationError}
                     </div>
                   )}

@@ -31,48 +31,48 @@ const ICON_CONFIGS: IconConfig[] = [
   {
     Icon: Wallet,
     bgClass: "bg-[rgba(0,196,170,0.12)]",
-    textClass: "text-[#007A68]"
+    textClass: "text-on-success"
   },
   {
     Icon: Target,
     bgClass: "bg-[rgba(184,98,42,0.10)]",
-    textClass: "text-[#7A3A0A]"
+    textClass: "text-on-brand"
   },
   {
     Icon: TrendingUp,
     bgClass: "bg-[rgba(212,168,67,0.15)]",
-    textClass: "text-[#7A5A00]"
+    textClass: "text-on-warning"
   },
   {
     Icon: Shield,
     bgClass: "bg-[rgba(224,85,85,0.12)]",
-    textClass: "text-[#8B0000]"
+    textClass: "text-on-danger"
   },
   {
     Icon: Users,
     bgClass: "bg-[rgba(184,98,42,0.10)]",
-    textClass: "text-[#7A3A0A]"
+    textClass: "text-on-brand"
   },
   {
     Icon: BarChart3,
     bgClass: "bg-[rgba(184,98,42,0.10)]",
-    textClass: "text-[#7A3A0A]"
+    textClass: "text-on-brand"
   },
   {
     Icon: PiggyBank,
     bgClass: "bg-[rgba(224,85,85,0.12)]",
-    textClass: "text-[#8B0000]"
+    textClass: "text-on-danger"
   },
   {
     Icon: CreditCard,
     bgClass: "bg-[rgba(0,196,170,0.12)]",
-    textClass: "text-[#007A68]"
+    textClass: "text-on-success"
   },
   { Icon: Landmark, bgClass: "bg-muted", textClass: "text-foreground" },
   {
     Icon: Coins,
     bgClass: "bg-[rgba(184,98,42,0.10)]",
-    textClass: "text-[#7A3A0A]"
+    textClass: "text-on-brand"
   }
 ]
 

@@ -307,7 +307,7 @@ export function TotalIncomeCard({
             Total Nett Income
           </CardTitle>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(0,196,170,0.12)]">
-            <DollarSign className="h-5 w-5 text-[#007A68]" />
+            <DollarSign className="text-on-success h-5 w-5" />
           </div>
         </CardHeader>
         <CardContent>
@@ -332,7 +332,7 @@ export function TotalIncomeCard({
           {incomes.length > 0 && monthChange.amount !== 0 && (
             <div
               className={`mt-1 flex items-center gap-1 text-xs ${
-                monthChange.amount > 0 ? "text-[#007A68]" : "text-[#8B0000]"
+                monthChange.amount > 0 ? "text-on-success" : "text-on-danger"
               }`}>
               {monthChange.amount > 0 ? (
                 <TrendingUp className="h-3 w-3" />

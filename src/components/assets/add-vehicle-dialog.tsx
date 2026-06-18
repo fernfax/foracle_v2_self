@@ -345,7 +345,7 @@ export function AddVehicleDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="vehicleName">
-                        Vehicle Name <span className="text-[#8B0000]">*</span>
+                        Vehicle Name <span className="text-on-danger">*</span>
                       </Label>
                       <Input
                         id="vehicleName"
@@ -357,7 +357,7 @@ export function AddVehicleDialog({
                     </div>
                     <div className="space-y-2">
                       <Label>
-                        Purchase Date <span className="text-[#8B0000]">*</span>
+                        Purchase Date <span className="text-on-danger">*</span>
                       </Label>
                       <Popover
                         open={purchaseDateOpen}
@@ -440,7 +440,7 @@ export function AddVehicleDialog({
                     <div className="space-y-2">
                       <Label htmlFor="originalPurchasePrice">
                         Original Purchase Price{" "}
-                        <span className="text-[#8B0000]">*</span>
+                        <span className="text-on-danger">*</span>
                       </Label>
                       <div className="relative">
                         <span className="text-foreground/400 absolute top-1/2 left-3 -translate-y-1/2">
@@ -478,7 +478,7 @@ export function AddVehicleDialog({
                         />
                       </div>
                       {masWarning && (
-                        <p className="text-xs text-[#7A5A00]">
+                        <p className="text-on-warning text-xs">
                           Exceeds MAS cap of 70% of purchase price
                         </p>
                       )}
@@ -547,11 +547,11 @@ export function AddVehicleDialog({
                         </div>
                       </div>
                       {tenureWarning ? (
-                        <p className="text-xs text-[#7A5A00]">
+                        <p className="text-on-warning text-xs">
                           MAS caps car loans at 7 years
                         </p>
                       ) : coeOverlapWarning ? (
-                        <p className="text-xs text-[#7A5A00]">
+                        <p className="text-on-warning text-xs">
                           Loan tenure extends past COE expiry date
                         </p>
                       ) : (
@@ -642,7 +642,7 @@ export function AddVehicleDialog({
                           Suggested:{" "}
                           <button
                             type="button"
-                            className="text-[#007A68] underline-offset-2 hover:underline"
+                            className="text-on-success underline-offset-2 hover:underline"
                             onClick={() =>
                               setMonthlyLoanPayment(
                                 suggestedMonthlyPayment.toFixed(2)
@@ -685,7 +685,7 @@ export function AddVehicleDialog({
                     />
                   </div>
                   {validationError && (
-                    <div className="mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm text-[#8B0000]">
+                    <div className="text-on-danger mt-3 rounded bg-[rgba(224,85,85,0.12)] p-2 text-sm">
                       {validationError}
                     </div>
                   )}

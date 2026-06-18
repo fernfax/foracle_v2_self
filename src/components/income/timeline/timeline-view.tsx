@@ -222,15 +222,15 @@ const ARCHETYPE_META: Record<
     icon: Target,
     tone: "text-[#B8622A]",
     bar: "bg-gradient-to-r from-[#B8622A] to-[#D4845A]",
-    pill: "bg-[#B8622A]/10 text-[#7A3A0A] border-[#B8622A]/30",
+    pill: "bg-[#B8622A]/10 text-on-brand border-[#B8622A]/30",
     rail: "bg-[#B8622A]"
   },
   temporary: {
     label: "TEMPORARY",
     icon: Clock,
-    tone: "text-[#7A5A00]",
+    tone: "text-on-warning",
     bar: "bg-gradient-to-r from-[#D4A843] to-[#E0BD5C]",
-    pill: "bg-[#D4A843]/15 text-[#7A5A00] border-[#D4A843]/40",
+    pill: "bg-[#D4A843]/15 text-on-warning border-[#D4A843]/40",
     rail: "bg-[#D4A843]"
   },
   // Future incomes — start date hasn't arrived yet. Brand-deep-forest into

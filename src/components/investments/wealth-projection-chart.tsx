@@ -360,7 +360,7 @@ export function WealthProjectionChart({
               <p className="text-muted-foreground text-xs">
                 {rangeDisplayLabel} estimate
               </p>
-              <p className="text-lg font-bold text-[#007A68]">
+              <p className="text-on-success text-lg font-bold">
                 {formatCurrencyFull(projectedValue)}
               </p>
             </div>
@@ -389,7 +389,7 @@ export function WealthProjectionChart({
           <p className="text-muted-foreground text-xs">
             {rangeDisplayLabel} estimate
           </p>
-          <p className="text-xl font-bold text-[#007A68]">
+          <p className="text-on-success text-xl font-bold">
             {formatCurrencyFull(projectedValue)}
           </p>
         </div>

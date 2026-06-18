@@ -92,28 +92,28 @@ const getIntegrationInfo = (expense: Expense) => {
   if (expense.linkedPolicyId) {
     return {
       icon: Shield,
-      color: "text-[#7A3A0A]",
+      color: "text-on-brand",
       tooltip: "Linked to insurance policy"
     }
   }
   if (expense.linkedPropertyId) {
     return {
       icon: Home,
-      color: "text-[#007A68]",
+      color: "text-on-success",
       tooltip: "Linked to property asset"
     }
   }
   if (expense.linkedVehicleId) {
     return {
       icon: Car,
-      color: "text-[#7A5A00]",
+      color: "text-on-warning",
       tooltip: "Linked to vehicle asset"
     }
   }
   if (expense.linkedGoalId) {
     return {
       icon: Target,
-      color: "text-[#7A3A0A]",
+      color: "text-on-brand",
       tooltip: "Linked to savings goal"
     }
   }

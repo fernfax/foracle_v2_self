@@ -260,7 +260,7 @@ export function BudgetClient({
     budgetSummary.pacingStatus === "over"
       ? "text-[#E05555]"
       : budgetSummary.pacingStatus === "under"
-        ? "text-[#007A68]"
+        ? "text-on-success"
         : undefined
 
   // Memoized so AddExpenseModal receives a STABLE array reference. Passing a

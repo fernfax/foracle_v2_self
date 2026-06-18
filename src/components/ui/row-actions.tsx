@@ -58,7 +58,7 @@ export function RowActions({
           aria-label={deleteLabel}
           title={deleteLabel}
           onClick={stop(onDelete)}
-          className="text-muted-foreground border-transparent hover:border-transparent hover:bg-[rgba(224,85,85,0.10)] hover:text-[#8B0000] dark:hover:text-[#E07070]">
+          className="text-muted-foreground hover:text-on-danger border-transparent hover:border-transparent hover:bg-[rgba(224,85,85,0.10)] dark:hover:text-[#E07070]">
           <Trash2 className="size-4" />
         </Button>
       )}

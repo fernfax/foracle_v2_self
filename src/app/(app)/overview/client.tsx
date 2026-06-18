@@ -207,7 +207,7 @@ export function DashboardClient({
                   Active Goals
                 </CardTitle>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(0,196,170,0.12)]">
-                  <Target className="h-5 w-5 text-[#007A68]" />
+                  <Target className="text-on-success h-5 w-5" />
                 </div>
               </CardHeader>
               <CardContent>
@@ -227,7 +227,7 @@ export function DashboardClient({
                   Family Members
                 </CardTitle>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(184,98,42,0.10)]">
-                  <Users className="h-5 w-5 text-[#7A3A0A]" />
+                  <Users className="text-on-brand h-5 w-5" />
                 </div>
               </CardHeader>
               <CardContent>

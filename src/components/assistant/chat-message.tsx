@@ -64,7 +64,7 @@ export function ChatMessage({
   return (
     <div className="bg-background flex gap-3 px-4 py-4">
       {/* Avatar */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)] text-[#007A68]">
+      <div className="text-on-success flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(0,196,170,0.12)]">
         <Bot className="h-4 w-4" />
       </div>
 
@@ -141,7 +141,7 @@ export function ChatMessage({
                 // Green status indicators
                 if (text.includes("green") || text.includes("safe")) {
                   return (
-                    <strong className="font-semibold text-[#007A68] dark:text-[#007A68]">
+                    <strong className="text-on-success dark:text-on-success font-semibold">
                       {children}
                     </strong>
                   )
@@ -150,7 +150,7 @@ export function ChatMessage({
                 // Yellow/Caution status indicators
                 if (text.includes("yellow") || text.includes("caution")) {
                   return (
-                    <strong className="font-semibold text-[#7A5A00] dark:text-[#7A5A00]">
+                    <strong className="text-on-warning dark:text-on-warning font-semibold">
                       {children}
                     </strong>
                   )
@@ -159,7 +159,7 @@ export function ChatMessage({
                 // Red/At Risk status indicators
                 if (text.includes("red") || text.includes("at risk")) {
                   return (
-                    <strong className="font-semibold text-[#8B0000] dark:text-[#8B0000]">
+                    <strong className="text-on-danger dark:text-on-danger font-semibold">
                       {children}
                     </strong>
                   )
@@ -245,7 +245,7 @@ export function ChatMessage({
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#007A68] underline hover:text-[#007A68]">
+                  className="text-on-success hover:text-on-success underline">
                   {children}
                 </a>
               )

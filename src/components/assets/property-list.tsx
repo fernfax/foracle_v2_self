@@ -194,14 +194,14 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                         <p className="text-muted-foreground text-sm">
                           Outstanding loan
                         </p>
-                        <p className="font-display text-2xl font-semibold text-[#7A5A00] tabular-nums dark:text-[#D4A843]">
+                        <p className="font-display text-on-warning text-2xl font-semibold tabular-nums dark:text-[#D4A843]">
                           {formatBudgetCurrency(outstanding)}
                         </p>
                       </div>
                     ) : (
                       <div className="flex flex-col justify-center">
                         <p className="text-muted-foreground text-sm">Loan</p>
-                        <p className="font-display text-lg font-semibold text-[#007A68] dark:text-[#00C4AA]">
+                        <p className="font-display text-on-success text-lg font-semibold dark:text-[#00C4AA]">
                           Owned outright
                         </p>
                       </div>
@@ -216,7 +216,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                           <span className="text-muted-foreground">
                             Loan progress
                           </span>
-                          <span className="font-medium text-[#007A68] dark:text-[#00C4AA]">
+                          <span className="text-on-success font-medium dark:text-[#00C4AA]">
                             {progress.toFixed(1)}% paid
                           </span>
                         </div>
@@ -264,7 +264,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                           <span className="text-muted-foreground">
                             Principal{" "}
                           </span>
-                          <span className="font-medium text-[#007A68] tabular-nums dark:text-[#00C4AA]">
+                          <span className="text-on-success font-medium tabular-nums dark:text-[#00C4AA]">
                             {formatBudgetCurrency(principalRepayment)}
                           </span>
                         </div>
@@ -272,7 +272,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                           <span className="text-muted-foreground">
                             Interest{" "}
                           </span>
-                          <span className="font-medium text-[#7A5A00] tabular-nums dark:text-[#D4A843]">
+                          <span className="text-on-warning font-medium tabular-nums dark:text-[#D4A843]">
                             {formatBudgetCurrency(interestRepayment)}
                           </span>
                         </div>
