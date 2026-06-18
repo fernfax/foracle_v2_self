@@ -53,13 +53,23 @@ export default defineConfig({
       use: { ...devices["Pixel 5"] },
       testMatch: /mobile\..*\.spec\.ts/
     },
-    // Authenticated desktop — reuses the saved Clerk session. Runs the dogfood
-    // walk-throughs and any *.authed.spec.ts.
+    // Authenticated desktop — reuses the saved Clerk session. Read-only
+    // walk-throughs that need the e2e user already onboarded.
     {
       name: "authenticated",
       use: { ...devices["Desktop Chrome"], storageState: authFile },
       dependencies: ["setup"],
-      testMatch: [/dogfood-.*\.spec\.ts/, /\.authed\.spec\.ts/]
+      testMatch: [/dogfood-.*\.spec\.ts/]
+    },
+    // Stateful authed specs that mutate the e2e user's onboarding state (flip
+    // onboarding_completed, create/delete incomes). Depends on "authenticated"
+    // so it runs AFTER the read-only walk-throughs — its mid-test flag flips
+    // can't redirect them — and it restores the user in afterAll.
+    {
+      name: "authenticated-onboarding",
+      use: { ...devices["Desktop Chrome"], storageState: authFile },
+      dependencies: ["authenticated"],
+      testMatch: [/\.authed\.spec\.ts/]
     }
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
