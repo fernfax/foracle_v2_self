@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     root: import.meta.dirname
   },
   devIndicators: {
-    position: "top-right"
+    position: "bottom-left"
   },
   experimental: {
     serverActions: {
