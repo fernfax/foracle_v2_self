@@ -320,22 +320,54 @@ font:
 
 ### 10.3 Form inputs
 
-**Anatomy** — `width: 100%`, `padding: 10px 14px`, `border: 1px solid rgba(28,43,42,0.20)` (`border-strong`), `border-radius: 6px`, `font-family: 'DM Sans'`, `font-size: 14px`, `color: var(--h)`, `background: white`, `outline: none`.
+> **Source of truth: the implemented primitives in `src/components/ui/`.** This
+> section documents what they render today; update it when the primitives change,
+> not the other way around.
 
-**Label** — `font-family: 'Space Grotesk'`, `font-size: 11px`, `font-weight: 600`, `letter-spacing: 0.1em`, `text-transform: uppercase`, `color: rgba(28,43,42,0.50)`, `margin-bottom: 6px`.
+**Compose every field with `<Field>`** (`@/components/ui/field`). It renders the
+standard row — a `space-y-2` wrapper, a Title-case label, the required `*`, and a
+helper/error line — with the control as its child. Never hand-roll the
+label/asterisk/helper stack, and never use a native `<input type="date">` or a
+native `<select>` — use the shared components below.
 
-**Helper text** — `font-size: 12px`, `margin-top: 5px`. Color follows state.
+**Field controls:** `Input`, `Select`, `Textarea`, `Checkbox`, `Switch`,
+`DatePicker` (`@/components/ui/date-picker`), `MoneyInput`
+(`@/components/ui/money-input`), `MonthPicker` (`@/components/ui/month-picker`).
+
+**Input shell** — the canonical control look, exported as `fieldShellClassName`
+from `ui/input` and reused by Input and the DatePicker trigger so a date field is
+visually identical to a text field: `background: bg-card`, `border: 1px solid
+border-border/40`, `border-radius: 6px` (`rounded-sm`), `height: 40px` (`h-10`),
+`padding: 8px 14px` (`px-3.5 py-2`), DM Sans 14px (`text-base md:text-sm`),
+`color: foreground`. Do not re-state `bg-card` per field, and do not swap to
+`bg-background` — the primitive default is the standard.
+
+**Label** — ui `Label` **default** variant: Space Grotesk (`font-display`), 14px,
+weight 500, **Title Case**, `color: foreground`, directly above the control. The
+uppercase `caps` variant (11px / 600 / 0.1em) is for KPI/eyebrow/section labels
+and chart axes — **not** form fields.
+
+**Required / optional** — required shows `*` in `text-on-danger` (`aria-hidden`);
+set `aria-required` on the control. Optional appends " (Optional)" in muted text,
+never an asterisk.
+
+**Helper text** — `text-muted-foreground text-xs` (12px), below the control.
+**Error text** — `text-on-danger text-xs` in the same slot (replaces the helper).
+
+**Money / units** — `<MoneyInput>`: a number Input with a `$` prefix in
+`text-muted-foreground`; pass `symbol`/`side` for `%`, `yr`, `mo`, etc.
+
+**Disabled / calculated** — interactive disabled fields dim via
+`disabled:opacity-50`; read-only _computed_ values use `bg-muted`.
 
 **States**
 
-| State    | Border                               | Box-shadow                       | Helper color           | Source modifier                               |
-| -------- | ------------------------------------ | -------------------------------- | ---------------------- | --------------------------------------------- |
-| Default  | `1px solid rgba(28,43,42,0.20)`      | none                             | —                      | `.input-sg`                                   |
-| Focus    | `border-color: var(--p)` `#B8622A`   | `0 0 0 3px rgba(184,98,42,0.10)` | —                      | `.input-sg:focus`                             |
-| Success  | `border-color: var(--tl)` `#00C4AA`  | // TODO: not defined             | `var(--tl)` `#00C4AA`  | `.input-sg.success` + `.input-helper.success` |
-| Error    | `border-color: var(--err)` `#E05555` | // TODO: not defined             | `var(--err)` `#E05555` | `.input-sg.error` + `.input-helper.error`     |
-| Hover    | // TODO: not defined in source       |
-| Disabled | // TODO: not defined in source       |
+| State    | Border                        | Ring                                | Helper           |
+| -------- | ----------------------------- | ----------------------------------- | ---------------- |
+| Default  | `border-border/40`            | none                                | muted            |
+| Focus    | `border-primary` (`#B8622A`)  | `ring-primary/10`, 3px (terracotta) | muted            |
+| Error    | `border-destructive` (caller) | —                                   | `text-on-danger` |
+| Disabled | inherited + `opacity-50`      | —                                   | muted            |
 
 ---
 
