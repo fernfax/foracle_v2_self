@@ -437,9 +437,9 @@ export function FamilyAdminPanel({
                         Resend
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="destructiveGhost"
                         size="sm"
-                        className="text-destructive hover:text-destructive h-8 gap-1 text-xs"
+                        className="h-8 gap-1 text-xs"
                         disabled={isActing}
                         onClick={() => setRevokeTarget(invite)}>
                         <X className="h-3.5 w-3.5" />

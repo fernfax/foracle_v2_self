@@ -261,42 +261,43 @@ Base unit: **8px**. All spacing values are multiples of 8px (with a `4` half-ste
 
 ### 10.1 Buttons
 
-**Anatomy** — `font-family: 'Space Grotesk'`, `font-size: 13px` (default), `font-weight: 500`, `padding: 10px 22px`, `border-radius: 6px`, `display: inline-block`, `cursor: pointer`.
+> **Source of truth: `src/components/ui/button.tsx`.** Every interactive action
+> uses the shared `<Button>`. Style is chosen via `variant`/`size` — **never**
+> ad-hoc color/hover classNames. The only classes a caller may add are layout
+> (`w-full`, positioning). Base: Space Grotesk label 13px/500, 10px radius,
+> terracotta focus ring, hover/active/disabled baked in.
 
-**Variants**
+**Variants** (`variant=`)
 
-| Variant        | Background             | Border                          | Color                 | Source class     |
-| -------------- | ---------------------- | ------------------------------- | --------------------- | ---------------- |
-| Primary        | `var(--p)` `#B8622A`   | none                            | `#FBF7F1`             | `.btn-primary`   |
-| Secondary      | transparent            | `1.5px solid var(--p)`          | `var(--p)`            | `.btn-secondary` |
-| Ghost          | transparent            | `1px solid rgba(28,43,42,0.20)` | `rgba(28,43,42,0.60)` | `.btn-ghost`     |
-| Teal (success) | `var(--tl)` `#00C4AA`  | none                            | `var(--h)` `#1C2B2A`  | `.btn-teal`      |
-| Danger         | `var(--err)` `#E05555` | none                            | `white`               | `.btn-danger`    |
+| Variant            | Use                                                                                |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `default`          | Primary terracotta CTA                                                             |
+| `secondary`        | Terracotta-outline emphasis (1.5px border)                                         |
+| `outline`          | Neutral bordered secondary action                                                  |
+| `ghost`            | Low-emphasis / subtle action                                                       |
+| `link`             | Inline text link (in-flow link-styled action)                                      |
+| `destructive`      | Solid red — prominent destructive CTA                                              |
+| `destructiveGhost` | Quiet destructive — delete/remove icon-buttons, low-emphasis (muted, red on hover) |
+| `teal`             | Positive/success CTA only (goal hit, streak) — never a standard primary            |
+| `warning`          | Gold attention CTA                                                                 |
 
-**Sizes**
+**Sizes** (`size=`): `default` (h-9), `sm` (h-8), `lg` (h-11), `icon` (size-9), `icon-sm` (size-8), `icon-lg` (size-10). Icon-only buttons require `aria-label`. Use `asChild` to give a `<Link>`/`<a>` button styling.
 
-| Size              | Padding     | Font-size |
-| ----------------- | ----------- | --------- |
-| Small (`.btn-sm`) | `7px 16px`  | 12px      |
-| Default           | `10px 22px` | 13px      |
-| Large (`.btn-lg`) | `13px 28px` | 15px      |
+**When to keep a native `<button>` instead** — two cases only:
 
-**States** — // TODO: hover, focus, active, disabled, loading states are **not defined** in source. Only default visual is shown. Hover for primary is implied by `accent-primary-hover` (`#D4845A`) but the rule is not written.
+1. **shadcn UI primitives** that define it that way (calendar cells, tab triggers, popover/select triggers). Follow shadcn's definitions — do not force these to `<Button>`.
+2. **Bespoke controls** where `<Button>`'s height/label-font/focus-ring would fight the design: segmented/toggle groups, radio-cards, swatch pickers, chart bars / drag handles, inline-text edit pills, nav-pill clusters.
 
-**Usage rule (verbatim):** "Teal buttons (`btn-teal`) appear only in success/completion flows — e.g. after a savings goal is reached, a budget streak is achieved. Never use as a primary CTA for standard actions."
+Any native `<button>` that stays MUST set `type="button"`, an `aria-label` if icon-only, and the right ARIA (`aria-pressed` for toggles, `role="tab"` for tabs).
 
-**Code-ready spec**
+**Usage rule:** Teal is success/completion only (goal reached, streak) — never a standard primary CTA.
 
-```css
-/* primary */
-background: var(--accent-primary); /* #B8622A light, #D4845A dark */
-color: var(--bg-page); /* #FBF7F1 light, #141E1D dark */
-border-radius: 6px;
-padding: 10px 22px;
-font:
-  500 13px "Space Grotesk",
-  sans-serif;
-```
+### 10.1.1 Links
+
+- **Internal navigation → `next/link` `<Link href>`.** Never a raw `<a>` for internal routes (hash anchors included). There is no custom Link wrapper and none is needed.
+- **External links → `<a target="_blank" rel="noopener noreferrer">`.**
+- **Link-styled in-flow actions** (not navigation) → `<Button variant="link">`, or `<Button asChild variant="link"><Link/></Button>` when it also navigates. Don't hand-roll `underline hover:underline`.
+- **Exception:** `src/app/offline/page.tsx` uses a plain `<a href="/">` on purpose (the offline fallback must not depend on app JS).
 
 ---
 

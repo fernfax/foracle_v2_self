@@ -49,6 +49,7 @@ export function BudgetShiftHistory({
     <Card className="p-4">
       {/* Header */}
       <button
+        type="button"
         className="flex w-full items-center justify-between"
         onClick={() => setIsExpanded(!isExpanded)}>
         <div>

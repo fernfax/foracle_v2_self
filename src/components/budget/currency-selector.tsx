@@ -197,6 +197,7 @@ export function CurrencySelector({
                 return (
                   <button
                     key={code}
+                    type="button"
                     className={cn(
                       "hover:bg-muted/50 flex w-full items-center justify-between px-2 py-3 transition-colors",
                       isSelected && "bg-primary/10"

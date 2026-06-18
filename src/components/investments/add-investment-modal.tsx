@@ -246,6 +246,7 @@ export function AddInvestmentModal({
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
+                                aria-label="Wealth projection formula"
                                 className="text-muted-foreground hover:text-foreground transition-colors">
                                 <HelpCircle className="h-3.5 w-3.5" />
                               </button>

@@ -572,13 +572,14 @@ function DetailRow({
       <span className="text-muted-foreground flex shrink-0 items-center gap-1">
         {k}
         {onEdit && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onEdit}
-            className="text-muted-foreground hover:bg-muted hover:text-brand-jungle rounded p-0.5"
+            className="text-muted-foreground hover:bg-muted hover:text-brand-jungle"
             aria-label={editLabel ?? `Edit ${k.toLowerCase()}`}>
             <Pencil className="h-3 w-3" />
-          </button>
+          </Button>
         )}
       </span>
       <span className="text-foreground truncate text-right font-semibold tabular-nums">
@@ -1436,13 +1437,13 @@ export function IncomeBarPopup({
         )}
 
         {!readOnly && onDelete && (
-          <button
-            type="button"
+          <Button
+            variant="destructiveGhost"
             onClick={() => onDelete()}
-            className="text-destructive hover:bg-destructive/10 mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold transition-colors">
+            className="mt-3 flex w-full items-center justify-center gap-1.5 py-1.5 text-xs font-semibold">
             <Trash2 className="h-3.5 w-3.5" />
             Delete income
-          </button>
+          </Button>
         )}
       </div>
     </div>

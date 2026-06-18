@@ -21,6 +21,11 @@ const buttonVariants = cva(
           "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(184,98,42,0.18),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-brand-coral hover:shadow-[0_4px_12px_rgba(184,98,42,0.22),0_1px_2px_rgba(28,43,42,0.04)] active:translate-y-px active:shadow-[0_1px_2px_rgba(184,98,42,0.18)] dark:hover:bg-brand-terracotta",
         destructive:
           "bg-destructive text-destructive-foreground shadow-[0_2px_8px_rgba(224,85,85,0.18),0_1px_2px_rgba(28,43,42,0.04)] hover:bg-destructive/90 hover:shadow-[0_4px_12px_rgba(224,85,85,0.22)] active:translate-y-px focus-visible:ring-destructive/20",
+        // Quiet destructive — transparent, muted until hover. For delete/remove
+        // icon-buttons and low-emphasis destructive actions (use the solid
+        // `destructive` variant for prominent destructive CTAs).
+        destructiveGhost:
+          "text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:ring-destructive/20",
         outline:
           "border border-border/40 bg-background text-foreground hover:bg-muted/60 hover:border-border/70",
         secondary:

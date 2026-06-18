@@ -290,10 +290,9 @@ export function IncomeDetailDrawer({
         <DialogFooter className="gap-2 sm:justify-between">
           <Button
             type="button"
-            variant="ghost"
+            variant="destructiveGhost"
             onClick={handleArchive}
-            disabled={pending === "archive"}
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+            disabled={pending === "archive"}>
             <Archive className="mr-2 h-4 w-4" />
             {pending === "archive" ? "Archiving…" : "Archive"}
           </Button>

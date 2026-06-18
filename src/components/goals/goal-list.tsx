@@ -19,6 +19,7 @@ import { toast } from "sonner"
 
 import { formatBudgetCurrency } from "@/lib/budget-utils"
 import { brandColor } from "@/lib/portfolio-colors"
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
@@ -220,16 +221,17 @@ export function GoalList({
 
                 {/* Mark-as-achieved affordance (active view only) — preserves existing action */}
                 {!isAchievedView && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleMarkAchieved(goal)
                     }}
-                    className="border-border/60 text-muted-foreground hover:text-on-success hover:bg-brand-teal/[0.1] dark:hover:text-brand-teal-light flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-colors">
+                    className="border-border/60 text-muted-foreground hover:text-on-success hover:bg-brand-teal/[0.1] dark:hover:text-brand-teal-light w-full gap-1.5 text-xs font-medium">
                     <CheckCircle2 className="size-3.5" />
                     Mark as achieved
-                  </button>
+                  </Button>
                 )}
               </Card>
             )

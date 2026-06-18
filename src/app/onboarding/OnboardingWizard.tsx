@@ -13,6 +13,7 @@ import {
   Wallet
 } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import { ConfirmationStep } from "@/components/onboarding/steps/ConfirmationStep"
 import { CpfStep } from "@/components/onboarding/steps/CpfStep"
 import { ExpensesStep } from "@/components/onboarding/steps/ExpensesStep"
@@ -368,22 +369,19 @@ export function OnboardingWizard({
         {/* External navigation — sole interactive surface in preview mode. */}
         <div className="border-border/40 bg-background/95 fixed inset-x-0 bottom-0 z-50 border-t backdrop-blur-sm">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-3">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={handleBack}
-              disabled={currentStep <= 1}
-              className="text-foreground hover:bg-muted rounded-md px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40">
+              disabled={currentStep <= 1}>
               ← Back
-            </button>
+            </Button>
             <span className="text-muted-foreground text-xs font-semibold tracking-[0.2em] uppercase">
               Step {currentStep} of {TOTAL_STEPS}
             </span>
-            <button
-              type="button"
-              onClick={currentStep < TOTAL_STEPS ? handleNext : handleComplete}
-              className="bg-brand-terracotta hover:bg-brand-terracotta/90 rounded-md px-4 py-2 text-sm font-semibold text-white">
+            <Button
+              onClick={currentStep < TOTAL_STEPS ? handleNext : handleComplete}>
               {currentStep < TOTAL_STEPS ? "Next →" : "Restart preview"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

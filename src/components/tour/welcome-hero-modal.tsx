@@ -344,11 +344,12 @@ export function WelcomeHeroModal({
           </Button>
 
           {/* Skip option */}
-          <button
+          <Button
+            variant="link"
             onClick={() => onOpenChange(false)}
-            className="text-foreground/400 hover:text-foreground mt-3 w-full text-sm transition-colors">
+            className="text-foreground/400 hover:text-foreground mt-3 w-full text-sm no-underline">
             Skip for now
-          </button>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

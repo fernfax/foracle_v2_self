@@ -476,11 +476,13 @@ export function PoliciesClient({
                       <p className="text-muted-foreground text-sm">
                         No policies yet.
                       </p>
-                      <button
+                      <Button
+                        variant="link"
+                        size="sm"
                         onClick={() => handleAddPolicy(member.id)}
-                        className="text-primary cursor-pointer text-sm underline-offset-2 hover:underline">
+                        className="h-auto p-0">
                         Add one
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>

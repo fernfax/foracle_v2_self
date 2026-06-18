@@ -255,6 +255,7 @@ export function WealthProjectionChart({
                 <TooltipTrigger asChild>
                   <button
                     type="button"
+                    aria-label="How the projection is calculated"
                     className="text-muted-foreground hover:text-foreground transition-colors">
                     <HelpCircle className="h-4 w-4" />
                   </button>
@@ -370,6 +371,7 @@ export function WealthProjectionChart({
               {TIME_RANGES.map((range) => (
                 <button
                   key={range.value}
+                  type="button"
                   onClick={() => setSelectedRange(range.value)}
                   className={cn(
                     "rounded-md px-2 py-1.5 text-sm font-medium transition-colors",

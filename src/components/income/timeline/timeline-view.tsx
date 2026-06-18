@@ -999,19 +999,15 @@ function AddIncomeStreamDialog({
                 ← Back
               </button>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-1.5 text-xs font-medium">
+                <Button variant="ghost" size="sm" onClick={onClose}>
                   Cancel
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  size="sm"
                   onClick={handleSave}
-                  disabled={!canSave || saving}
-                  className="bg-brand-terracotta hover:bg-brand-terracotta/90 rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">
+                  disabled={!canSave || saving}>
                   {saving ? "Saving…" : "Save"}
-                </button>
+                </Button>
               </div>
             </div>
           </>
@@ -1927,11 +1923,13 @@ export function TimelineView({
       {error && (
         <div className="border-destructive/40 bg-destructive/10 text-destructive flex items-center justify-between rounded-lg border px-4 py-2 text-sm">
           <span>{error}</span>
-          <button
+          <Button
+            variant="link"
+            size="sm"
             onClick={clearError}
-            className="text-xs font-semibold tracking-wider uppercase hover:underline">
+            className="text-destructive h-auto p-0 text-xs font-semibold tracking-wider uppercase">
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 
@@ -3704,13 +3702,14 @@ function HoverTooltip({
                     {formatCurrency(amount)}
                   </span>
                   {interactive && !isBonusRow && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => onEditIncome?.(income.id, cell.key)}
-                      className="text-muted-foreground hover:bg-muted hover:text-brand-jungle rounded p-0.5"
+                      className="text-muted-foreground hover:bg-muted hover:text-brand-jungle"
                       aria-label={`Adjust ${income.name} from ${format(cell.date, "MMMM yyyy")}`}>
                       <Pencil className="h-3 w-3" />
-                    </button>
+                    </Button>
                   )}
                 </span>
               </div>
@@ -4108,19 +4107,17 @@ function DrawCommitCard({
           </p>
         )}
         <div className="mt-4 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={onDiscard}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-1.5 text-xs font-medium">
+          <Button variant="ghost" size="sm" onClick={onDiscard}>
             Discard
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            size="sm"
             onClick={handleSave}
-            disabled={!name.trim() || !amount.trim() || parseFloat(amount) <= 0}
-            className="bg-brand-terracotta hover:bg-brand-terracotta/90 rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">
+            disabled={
+              !name.trim() || !amount.trim() || parseFloat(amount) <= 0
+            }>
             Save
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -4137,15 +4134,15 @@ function DrawCommitCard({
             <AlertDialogCancel onClick={() => setConfirmDiscard(false)}>
               Keep editing
             </AlertDialogCancel>
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => {
                 setConfirmDiscard(false)
                 onDiscard()
-              }}
-              className="border-border/40 text-foreground hover:bg-muted rounded-md border px-3 py-1.5 text-sm font-medium">
+              }}>
               Discard
-            </button>
+            </Button>
             <AlertDialogAction onClick={handleSave}>Save</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -4722,20 +4719,21 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                   {meta.label}
                 </div>
                 <div className="mt-0.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => onOpenDetail(income.id)}
-                    className="text-muted-foreground hover:bg-muted hover:text-foreground rounded p-1"
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground"
                     aria-label={`Open details for ${income.name}`}>
                     <Settings2 className="h-3 w-3" />
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="destructiveGhost"
+                    size="icon-sm"
                     onClick={() => onRequestDelete(income)}
-                    className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded p-1"
                     aria-label={`Delete ${income.name}`}>
                     <Trash2 className="h-3 w-3" />
-                  </button>
+                  </Button>
                 </div>
               </>
             )
@@ -5756,20 +5754,21 @@ function SentenceCard({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => onOpenDetail(income.id)}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded p-1"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label={`Open details for ${income.name}`}>
             <Settings2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="destructiveGhost"
+            size="icon-sm"
             onClick={() => onRequestDelete(income)}
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded p-1"
             aria-label={`Delete ${income.name}`}>
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -5862,24 +5861,26 @@ function SentenceCard({
             </button>
             .
           </p>
-          <button
-            type="button"
+          <Button
+            variant="destructiveGhost"
+            size="icon-sm"
             onClick={() => onDeleteMilestone(income, firstMilestone.id)}
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex-shrink-0 rounded p-1"
+            className="flex-shrink-0"
             aria-label="Remove future change">
             <X className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 
       {archetype === "recurring" && (
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => onAddMilestone(income)}
-          className="border-border/40 bg-muted text-muted-foreground hover:border-brand-jungle/50 hover:bg-brand-jungle/5 hover:text-brand-jungle mt-4 ml-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors">
+          className="bg-muted text-muted-foreground hover:border-brand-jungle/50 hover:bg-brand-jungle/5 hover:text-brand-jungle mt-4 ml-2 gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           Add Future Change
-        </button>
+        </Button>
       )}
     </div>
   )

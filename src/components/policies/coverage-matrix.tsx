@@ -303,6 +303,7 @@ export function CoverageMatrix({
                             {cellPolicies.map((policy) => (
                               <button
                                 key={policy.id}
+                                type="button"
                                 onClick={() =>
                                   handleChipClick(policy, member.name)
                                 }
@@ -339,12 +340,14 @@ export function CoverageMatrix({
                             <span className="text-muted-foreground text-sm group-hover:hidden">
                               —
                             </span>
-                            <button
+                            <Button
+                              variant="link"
+                              size="sm"
                               onClick={() => onAddPolicy(member.id)}
-                              className="text-muted-foreground hover:text-primary hidden cursor-pointer items-center gap-1 text-xs transition-colors group-hover:flex">
+                              className="text-muted-foreground hover:text-primary hidden h-auto items-center gap-1 p-0 text-xs no-underline group-hover:flex">
                               <Plus className="h-3 w-3" />
                               Add
-                            </button>
+                            </Button>
                           </div>
                         )}
                       </TableCell>

@@ -234,14 +234,14 @@ export default async function Home() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <a href="#how" className="w-full sm:w-auto">
+            <Link href="#how" className="w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="lg"
                 className="w-full px-9 sm:w-auto">
                 See how it works
               </Button>
-            </a>
+            </Link>
           </div>
 
           <p className="font-display text-muted-foreground mt-5 text-[12px] font-medium tracking-[0.12em] uppercase">

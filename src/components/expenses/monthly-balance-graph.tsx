@@ -19,6 +19,7 @@ import {
   type MonthlyBalanceData,
   type SpecialItem
 } from "@/lib/balance-calculator"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -713,11 +714,13 @@ export function MonthlyBalanceGraph({
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:text-foreground transition-colors">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="About this projection"
+                        className="text-muted-foreground hover:text-foreground">
                         <Info className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent
                       side="bottom"

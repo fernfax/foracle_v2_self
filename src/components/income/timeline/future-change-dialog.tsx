@@ -245,12 +245,11 @@ export function FutureChangeDialog({
             {isEdit && onDelete && (
               <Button
                 type="button"
-                variant="ghost"
+                variant="destructiveGhost"
                 onClick={() => {
                   onDelete()
                   onOpenChange(false)
-                }}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                }}>
                 Remove
               </Button>
             )}

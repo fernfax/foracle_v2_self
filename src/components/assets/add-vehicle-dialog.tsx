@@ -541,16 +541,17 @@ export function AddVehicleDialog({
                       {suggestedMonthlyPayment !== null && (
                         <p className="text-muted-foreground text-xs">
                           Suggested:{" "}
-                          <button
-                            type="button"
-                            className="text-on-success underline-offset-2 hover:underline"
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="text-on-success h-auto p-0"
                             onClick={() =>
                               setMonthlyLoanPayment(
                                 suggestedMonthlyPayment.toFixed(2)
                               )
                             }>
                             ${suggestedMonthlyPayment.toFixed(2)}
-                          </button>{" "}
+                          </Button>{" "}
                           (from flat rate)
                         </p>
                       )}

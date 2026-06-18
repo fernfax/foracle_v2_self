@@ -186,9 +186,9 @@ export function RecentExpensesList({
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
                             <Button
-                              variant="ghost"
+                              variant="destructiveGhost"
                               size="icon"
-                              className="text-destructive hover:text-destructive h-7 w-7"
+                              className="h-7 w-7"
                               onClick={() => setDeleteId(expense.id)}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>

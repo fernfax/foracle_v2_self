@@ -483,6 +483,8 @@ export function DashboardHeader({
               )}
               <div className="bg-muted flex w-[230px] items-center justify-between rounded-full px-1 py-1">
                 <button
+                  type="button"
+                  aria-label="Previous month"
                   onClick={goToPreviousMonth}
                   className="hover:bg-muted rounded-full p-1.5 transition-colors">
                   <ChevronLeft className="text-muted-foreground h-4 w-4" />
@@ -494,6 +496,8 @@ export function DashboardHeader({
                   </span>
                 </div>
                 <button
+                  type="button"
+                  aria-label="Next month"
                   onClick={goToNextMonth}
                   className="hover:bg-muted rounded-full p-1.5 transition-colors">
                   <ChevronRight className="text-muted-foreground h-4 w-4" />

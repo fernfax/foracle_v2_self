@@ -920,12 +920,13 @@ export function CashflowSankey({
                 breakdown · {fmt(expandedCategory.value)} across{" "}
                 {expandedCategory.items.length}{" "}
                 {expandedCategory.items.length === 1 ? "item" : "items"} ·{" "}
-                <button
-                  type="button"
+                <Button
+                  variant="link"
+                  size="sm"
                   onClick={() => setExpandedId(null)}
-                  className="font-display text-foreground font-medium underline-offset-2 hover:underline">
+                  className="font-display text-foreground h-auto p-0 font-medium">
                   Show categories
-                </button>
+                </Button>
               </p>
             ) : (
               <p className="text-muted-foreground mt-1 text-xs">
@@ -964,6 +965,7 @@ export function CashflowSankey({
                 )}
                 <div className="bg-muted flex w-[210px] items-center justify-between rounded-full px-1 py-1 sm:w-[230px]">
                   <button
+                    type="button"
                     onClick={goToPreviousMonth}
                     disabled={isCurrentMonth}
                     className="hover:bg-muted rounded-full p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
@@ -977,6 +979,7 @@ export function CashflowSankey({
                     </span>
                   </div>
                   <button
+                    type="button"
                     onClick={goToNextMonth}
                     className="hover:bg-muted rounded-full p-1.5 transition-colors"
                     aria-label="Next month">
@@ -1213,20 +1216,21 @@ export function CashflowSankey({
               )}
               {nodeTip.link && (
                 <div className="border-border/50 mt-1.5 border-t pt-1.5">
-                  <button
-                    type="button"
+                  <Button
+                    variant="link"
+                    size="sm"
                     onClick={() => {
                       const target = nodeTip.link!
                       cancelHideTip()
                       setNodeTip(null)
                       setConfirmNav(target)
                     }}
-                    className="text-brand-terracotta inline-flex items-center gap-1 font-medium hover:underline">
+                    className="text-brand-terracotta h-auto gap-1 p-0 font-medium">
                     {nodeTip.link === "incomes"
                       ? "Go to Incomes"
                       : "Go to Expenses"}{" "}
                     <span aria-hidden>→</span>
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
