@@ -32,7 +32,7 @@ const badgeVariants = cva(
         brand:
           "bg-brand-terracotta/[0.14] text-on-brand dark:bg-brand-coral/[0.18] dark:text-brand-coral",
         secondaryAccent:
-          "bg-brand-jungle/[0.12] text-[#3A6B52] dark:bg-brand-sage/[0.15] dark:text-[#5A9470]",
+          "bg-brand-jungle/[0.12] text-positive dark:bg-brand-sage/[0.15]",
         outline:
           "border border-border/50 bg-transparent text-foreground/80 shadow-none"
       }

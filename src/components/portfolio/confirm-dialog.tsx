@@ -47,7 +47,7 @@ export function ConfirmDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="flex items-start gap-3 text-left">
-            <span className="bg-brand-alert-red/[0.12] dark:text-brand-alert-red-dark inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-[#E05555]">
+            <span className="bg-brand-alert-red/[0.12] text-alert inline-flex size-9 shrink-0 items-center justify-center rounded-xl">
               <AlertTriangle className="size-[18px]" />
             </span>
             <div className="space-y-1.5">

@@ -34,6 +34,12 @@
 @utility text-on-brand {
   color: var(--text-on-brand);
 }
+@utility text-positive {
+  color: var(--text-positive);
+}
+@utility text-alert {
+  color: var(--text-alert);
+}
 
 /*
   Foracle design tokens — see /docs/design_guide/design_guide.md.
@@ -87,6 +93,9 @@
     --text-on-warning: #7a5a00;
     --text-on-danger: #8b0000;
     --text-on-brand: #7a3a0a;
+    /* Standalone semantic text (not on a tint): positive green, bright alert red */
+    --text-positive: #3a6b52;
+    --text-alert: #e05555;
 
     /* === Shadcn HSL tokens, re-pointed at brand palette ===
        Light mode (primary). Hex → HSL conversions kept verbatim so existing
@@ -197,6 +206,8 @@
     --text-on-warning: #e5c158;
     --text-on-danger: #ee8585;
     --text-on-brand: #e0a878;
+    --text-positive: #6fce9f;
+    --text-alert: #ee8585;
 
     --border: 38 36% 91%;
     --input: 38 36% 91%;
@@ -887,14 +898,9 @@
  * layer, so they win without !important); light mode is untouched, hue + meaning
  * preserved. Migrate these to semantic utilities to retire this block.
  */
-.dark .text-\[\#E05555\] {
-  color: #ee8585;
-}
-.dark .text-\[\#3A6B52\],
 .dark .text-\[\#1F4A33\],
-.dark .text-\[\#2E8B57\],
-.dark .text-\[\#5A9470\] {
-  color: #6fce9f; /* secondary greens */
+.dark .text-\[\#2E8B57\] {
+  color: #6fce9f; /* secondary greens (income timeline) */
 }
 .dark .text-\[\#7A5C00\],
 .dark .text-\[\#5A4500\],

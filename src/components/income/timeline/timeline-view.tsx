@@ -212,7 +212,7 @@ const ARCHETYPE_META: Record<
   recurring: {
     label: "RECURRING",
     icon: InfinityIcon,
-    tone: "text-[#3A6B52]",
+    tone: "text-positive",
     bar: "bg-gradient-to-r from-brand-jungle to-brand-sage",
     pill: "bg-brand-jungle/10 text-[#1F4A33] border-brand-jungle/30",
     rail: "bg-brand-jungle"

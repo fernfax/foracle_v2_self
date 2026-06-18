@@ -258,7 +258,7 @@ export function BudgetClient({
 
   const pacingColor =
     budgetSummary.pacingStatus === "over"
-      ? "text-[#E05555]"
+      ? "text-alert"
       : budgetSummary.pacingStatus === "under"
         ? "text-on-success"
         : undefined

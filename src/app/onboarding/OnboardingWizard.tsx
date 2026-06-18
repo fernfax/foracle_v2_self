@@ -97,7 +97,7 @@ const STEP_CONFIG: StepConfig[] = [
     displayStep: 1,
     icon: User,
     iconBgColor: "bg-brand-jungle/[0.12]",
-    iconColor: "text-[#3A6B52]"
+    iconColor: "text-positive"
   },
   {
     title: "Your Income",

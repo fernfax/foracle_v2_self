@@ -9,7 +9,7 @@ type StatAccent = "brand" | "jungle" | "teal" | "gold" | "neutral"
 const ACCENT_CHIP: Record<StatAccent, string> = {
   brand:
     "bg-brand-terracotta/[0.12] text-brand-terracotta dark:text-brand-coral",
-  jungle: "bg-brand-jungle/[0.12] text-[#3A6B52] dark:text-[#5A9470]",
+  jungle: "bg-brand-jungle/[0.12] text-positive",
   teal: "bg-brand-teal/[0.12] text-on-success dark:text-brand-teal-light",
   gold: "bg-brand-gold/[0.16] text-on-warning dark:text-brand-gold",
   neutral:
