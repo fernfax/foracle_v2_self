@@ -9,6 +9,7 @@ import { FabStackHost } from "@/components/ui/fab-stack"
 import { PeranakanTilesDecor } from "@/components/ui/peranakan-tiles-decor"
 import { RadialDecor } from "@/components/ui/radial-decor"
 import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget"
+import { ClerkUserButton } from "@/components/clerk-user-button"
 import { MobileNav } from "@/components/mobile-nav"
 import { NavigationOverlay } from "@/components/navigation-overlay"
 import { Sidebar } from "@/components/sidebar/sidebar"
@@ -75,7 +76,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
                 `desktop:hidden`), scrolls with content (Whoop-style). Owns the
                 safe-area top inset so content clears the notch on first paint.
                 Desktop uses the sidebar instead. */}
-            <div className="desktop:hidden flex justify-center pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-1">
+            <div className="desktop:hidden relative flex items-center justify-center pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-1">
               <Link href="/user?tab=overview" className="flex items-center">
                 <Image
                   src="/wordmark-400.png"
@@ -86,6 +87,20 @@ function DashboardContent({ children }: { children: ReactNode }) {
                   priority
                 />
               </Link>
+              {/* Account avatar — top-right of the mobile header (native app
+                  pattern: avatar up top, tabs at the bottom). Opens the Clerk
+                  menu (sign-out + Family/Display). Vertically aligned with the
+                  wordmark by sharing the same safe-area top inset. */}
+              <div className="absolute top-[calc(env(safe-area-inset-top)+0.5rem)] right-0 flex items-center">
+                <ClerkUserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: { width: "2rem", height: "2rem" }
+                    }
+                  }}
+                />
+              </div>
             </div>
             {/* Desktop has no top header anymore — let page headers sit flush
                 against the top edge. Mobile keeps the standard top padding;

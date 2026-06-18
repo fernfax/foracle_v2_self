@@ -20,7 +20,6 @@ import {
 
 import { cn } from "@/lib/utils"
 import { useGlassRefraction } from "@/hooks/use-glass-refraction"
-import { ClerkUserButton } from "@/components/clerk-user-button"
 
 const mobileNavItems = [
   { href: "/user", label: "User", icon: User },
@@ -40,9 +39,9 @@ const mobileNavItems = [
  * Floating bottom navigation (Whoop-style).
  *
  * One frameless, frosted pill that floats above content — detached from the
- * screen edges with side + bottom margins — holding the labeled nav items AND
- * the account avatar (Clerk user button: sign-out + Family/Display settings) in
- * the same island.
+ * screen edges with side + bottom margins — holding the labeled nav items. The
+ * account avatar (Clerk user button) lives in the mobile top header instead, so
+ * the bar stays a uniform row of nav icons (see sidebar/dashboard-shell.tsx).
  *
  * The active highlight is a single absolutely-positioned element that slides to
  * the selected item via a CSS transform transition (measure-and-translate, the
@@ -131,106 +130,107 @@ export function MobileNav() {
   }
 
   return (
-    <div
-      data-tour="mobile-nav"
-      className="bottom-nav fixed right-[max(0.75rem,env(safe-area-inset-right))] bottom-[calc(0.5rem+env(safe-area-inset-bottom))] left-[max(0.75rem,env(safe-area-inset-left))] z-50">
-      {/* Inline SVG displacement filter for the Chromium-only edge refraction.
+    <>
+      {/* Bottom scrim — a gradient that's solid at the screen edge and fades up,
+          sitting beneath the floating pill (z-40 < z-50). It closes the gap below
+          the pill (so page content can't peek through there on scroll) and gives
+          the translucent glass a calm backdrop instead of live content bleeding
+          through. Mobile-only via .bottom-nav; pointer-events-none so it never
+          intercepts taps. */}
+      <div
+        aria-hidden
+        className="bottom-nav from-background via-background/85 pointer-events-none fixed inset-x-0 bottom-0 z-40 h-28 bg-gradient-to-t to-transparent"
+      />
+      <div
+        data-tour="mobile-nav"
+        className="bottom-nav fixed right-[max(0.75rem,env(safe-area-inset-right))] bottom-[calc(0.5rem+env(safe-area-inset-bottom))] left-[max(0.75rem,env(safe-area-inset-left))] z-50">
+        {/* Inline SVG displacement filter for the Chromium-only edge refraction.
           Static, zero-size, aria-hidden — SSR-safe and offline-safe (no external
           fetch). Referenced by .glass-pill[data-glass-refract] in globals.css. */}
-      <svg
-        aria-hidden
-        focusable={false}
-        width="0"
-        height="0"
-        style={{ position: "absolute", width: 0, height: 0 }}>
-        <filter
-          id="glass-refraction"
-          x="0%"
-          y="0%"
-          width="100%"
-          height="100%"
-          colorInterpolationFilters="sRGB">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.012 0.014"
-            numOctaves={2}
-            seed={7}
-            stitchTiles="stitch"
-            result="noise"
-          />
-          <feGaussianBlur in="noise" stdDeviation="1.2" result="softNoise" />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="softNoise"
-            scale={10}
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
-      </svg>
-
-      {/* The single nav pill — frameless Liquid Glass island, Whoop-style. */}
-      <nav
-        ref={navRef}
-        aria-label="Primary"
-        data-glass-refract={glassRefract ? "true" : undefined}
-        className="glass-pill font-display relative isolate flex h-14 items-center rounded-3xl px-1.5">
-        {/* Sliding active highlight — measures the active item and moves to it. */}
-        <span
-          ref={indicatorRef}
+        <svg
           aria-hidden
-          className={cn(
-            "glass-active pointer-events-none absolute rounded-2xl opacity-0",
-            animate && "transition-all duration-300 ease-out"
-          )}
-        />
+          focusable={false}
+          width="0"
+          height="0"
+          style={{ position: "absolute", width: 0, height: 0 }}>
+          <filter
+            id="glass-refraction"
+            x="0%"
+            y="0%"
+            width="100%"
+            height="100%"
+            colorInterpolationFilters="sRGB">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.012 0.014"
+              numOctaves={2}
+              seed={7}
+              stitchTiles="stitch"
+              result="noise"
+            />
+            <feGaussianBlur in="noise" stdDeviation="1.2" result="softNoise" />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="softNoise"
+              scale={10}
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+        </svg>
 
-        {mobileNavItems.map((item) => {
-          const isActive = activeHref === item.href
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              ref={setItemRef(item.href)}
-              onClick={() => setActiveHref(item.href)}
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "relative z-10 flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0 py-1.5",
-                // One transition-property covering BOTH color (active fade) and
-                // transform (press) so the two never override each other; the
-                // motion itself is motion-safe-gated below.
-                "transition-[color,transform] duration-150 ease-out",
-                "motion-safe:hover:-translate-y-px motion-safe:active:scale-[0.93]",
-                "touch-manipulation select-none [-webkit-tap-highlight-color:transparent]",
-                isActive ? "text-foreground" : "text-foreground/55"
-              )}>
-              <Icon
-                className={cn(
-                  "h-[18px] w-[18px] shrink-0 transition-colors",
-                  isActive && "text-primary"
-                )}
-              />
-              <span className="w-full truncate text-center text-[9px] leading-none font-medium">
-                {item.label}
-              </span>
-            </Link>
-          )
-        })}
-
-        {/* Account avatar — same island, separated by a hairline divider. */}
-        <div aria-hidden className="bg-border/40 mx-1 h-7 w-px shrink-0" />
-        <div className="relative z-10 flex shrink-0 items-center justify-center pr-1 pl-0.5">
-          <ClerkUserButton
-            afterSignOutUrl="/"
-            appearance={{
-              elements: {
-                avatarBox: { width: "2.25rem", height: "2.25rem" }
-              }
-            }}
+        {/* The single nav pill — frameless Liquid Glass island, Whoop-style. */}
+        <nav
+          ref={navRef}
+          aria-label="Primary"
+          data-glass-refract={glassRefract ? "true" : undefined}
+          className="glass-pill font-display relative isolate flex h-[72px] items-center rounded-3xl px-2">
+          {/* Sliding active highlight — measures the active item and moves to it.
+            rounded-2xl (16px) is concentric with the pill's rounded-3xl (24px)
+            given the 8px end inset from px-2, so end items hug the corners. */}
+          <span
+            ref={indicatorRef}
+            aria-hidden
+            className={cn(
+              "glass-active pointer-events-none absolute rounded-2xl opacity-0",
+              animate && "transition-all duration-300 ease-out"
+            )}
           />
-        </div>
-      </nav>
-    </div>
+
+          {mobileNavItems.map((item) => {
+            const isActive = activeHref === item.href
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                ref={setItemRef(item.href)}
+                onClick={() => setActiveHref(item.href)}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "relative z-10 flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2.5",
+                  // One transition-property covering BOTH color (active fade) and
+                  // transform (press) so the two never override each other; the
+                  // motion itself is motion-safe-gated below.
+                  "transition-[color,transform] duration-150 ease-out",
+                  "motion-safe:hover:-translate-y-px motion-safe:active:scale-[0.93]",
+                  "touch-manipulation select-none [-webkit-tap-highlight-color:transparent]",
+                  isActive ? "text-foreground" : "text-foreground/55"
+                )}>
+                <Icon
+                  className={cn(
+                    "h-[22px] w-[22px] shrink-0 transition-colors",
+                    isActive && "text-primary"
+                  )}
+                />
+                <span className="w-full truncate text-center text-[10px] leading-none font-medium">
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+    </>
   )
 }
