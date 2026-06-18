@@ -96,7 +96,7 @@ function useHydrated() {
 }
 
 interface UserHomepageClientProps {
-  // The Timeline view is wired to its own `incomes_beta` table. Empty until the
+  // The Timeline view is wired to its own `incomes` table. Empty until the
   // user creates rows via the new beta CRUD flow.
   initialIncomes: Income[]
   initialFamilyMembers: FamilyMember[]

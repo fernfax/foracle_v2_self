@@ -41,7 +41,7 @@ export async function getCurrentUser() {
  */
 export async function getUserIncomes() {
   const { familyId } = await getCurrentUserAndFamily()
-  // Canonical income source is incomes_beta (monthly-only). Synthesize the
+  // Canonical income source is incomes (monthly-only). Synthesize the
   // legacy frequency/customMonths fields so dashboard metrics keep working.
   const rows = await db.query.incomes.findMany({
     where: eq(incomes.familyId, familyId),

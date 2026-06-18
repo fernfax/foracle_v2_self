@@ -15,7 +15,6 @@ export const DEVELOPER_TABLES: ReadonlyArray<DeveloperTableMeta> = [
   { name: "families", scope: "primaryFamily" },
   { name: "family_members", scope: "familyId" },
   { name: "incomes", scope: "familyId" },
-  { name: "incomes_beta", scope: "familyId" },
   { name: "expenses", scope: "familyId" },
   { name: "daily_expenses", scope: "familyId" },
   { name: "expense_categories", scope: "familyId" },

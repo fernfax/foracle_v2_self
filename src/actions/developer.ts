@@ -52,7 +52,7 @@ const REGISTRY: Record<string, TableEntry> = {
   users: { scope: "self", table: users },
   families: { scope: "primaryFamily", table: families },
   family_members: { scope: "familyId", table: familyMembers },
-  incomes_beta: { scope: "familyId", table: incomes },
+  incomes: { scope: "familyId", table: incomes },
   expenses: { scope: "familyId", table: expenses },
   daily_expenses: { scope: "familyId", table: dailyExpenses },
   expense_categories: { scope: "familyId", table: expenseCategories },

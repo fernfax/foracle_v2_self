@@ -70,7 +70,7 @@ function calculateAge(dateOfBirth: Date): number {
 /**
  * Get aggregated CPF data grouped by family member.
  *
- * Reads the `incomes_beta` table (the canonical income source). Income rows are
+ * Reads the `incomes` table (the canonical income source). Income rows are
  * monthly by design, so amounts are used as-is. Only income that is *currently*
  * active counts toward monthly CPF: subject-to-CPF, active, and with an
  * effective category of "current" (a future income whose start date has already
@@ -90,7 +90,7 @@ export async function getCpfByFamilyMember(): Promise<CpfByFamilyMember[]> {
       )
     )
 
-  // Fetch all incomes in this family (canonical incomes_beta table)
+  // Fetch all incomes in this family (canonical incomes table)
   const allIncomes = await db
     .select()
     .from(incomes)

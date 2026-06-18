@@ -32,7 +32,7 @@ export interface CashflowIncomeInput {
   subjectToCpf: boolean | null
   startDate?: string | null
   endDate?: string | null
-  // Future income changes + bonuses (incomes_beta). When a target month is
+  // Future income changes + bonuses (incomes). When a target month is
   // supplied, the per-month gross honours these so the Sankey matches the
   // Timeline Studio exactly.
   futureMilestones?: string | null

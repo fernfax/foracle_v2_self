@@ -46,7 +46,7 @@ interface FutureMilestone {
 // Types
 // =============================================================================
 
-// incomes_beta is monthly-only; synthesize the legacy frequency fields
+// incomes is monthly-only; synthesize the legacy frequency fields
 // the AI summary math reads.
 function asMonthly<T extends object>(rows: T[]) {
   return rows.map((r) => ({
