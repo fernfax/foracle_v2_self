@@ -1,10 +1,11 @@
 // Builds the developer-mode infra diagram by scanning the project tree.
 //
-// Sources of truth:
-//   - db/schema.ts          → table nodes
-//   - lib/actions/*.ts      → action nodes (one per exported async function)
-//   - app/**/page.tsx       → page nodes
-//   - app/api/**/route.ts   → api route nodes
+// Sources of truth (see SCAN below — defined once so fs paths and import-edge
+// matching can't drift apart, e.g. across a src/ reorganization):
+//   - src/db/schema.ts        → table nodes
+//   - src/actions/*.ts        → action nodes (one per exported function)
+//   - src/app/**/page.tsx     → page nodes
+//   - src/app/api/**/route.ts → api route nodes
 //
 // Edges are extracted from `import { X } from "@/db/schema"` and
 // `import { X } from "@/actions/<file>"` statements. Type-only imports
@@ -21,6 +22,21 @@ import {
 } from "@/lib/developer-action-catalog"
 
 const PROJECT_ROOT = process.cwd()
+
+// Single source of truth for where the scanner looks. The "@/<x>" path alias
+// maps to "src/<x>", so import targets are derived from these fs paths via
+// aliasTarget() rather than written separately — keeping the two in lockstep.
+const APP_DIR = "src/app"
+const API_DIR = "src/app/api"
+const ACTIONS_DIR = "src/actions"
+const SCHEMA_FILE = "src/db/schema.ts"
+
+const aliasTarget = (srcRelPath: string) =>
+  srcRelPath.replace(/^src\//, "").replace(/\.ts$/, "")
+
+const SCHEMA_IMPORT = aliasTarget(SCHEMA_FILE) // "db/schema"
+const ACTIONS_IMPORT_PREFIX = `${aliasTarget(ACTIONS_DIR)}/` // "actions/"
+const APP_REL_PREFIX = new RegExp(`^${APP_DIR}/`) // strips "src/app/" from routes
 
 export type DiagramNodeKind = "table" | "page" | "action" | "api"
 
@@ -103,7 +119,7 @@ export async function buildDiagram(): Promise<Diagram> {
     for (const imp of imports) {
       if (imp.isType) continue
       // Tables: target is "db/schema".
-      if (imp.target === "db/schema") {
+      if (imp.target === SCHEMA_IMPORT) {
         for (const name of imp.names) {
           const t = tableByExport.get(name)
           if (!t) continue
@@ -112,7 +128,7 @@ export async function buildDiagram(): Promise<Diagram> {
           seen.add(k)
           addEdge(nodeId, t.id)
         }
-      } else if (imp.target.startsWith("lib/actions/")) {
+      } else if (imp.target.startsWith(ACTIONS_IMPORT_PREFIX)) {
         for (const name of imp.names) {
           const a = actionByImportPath.get(`${imp.target}::${name}`)
           if (!a) continue
@@ -148,7 +164,7 @@ type TableMeta = {
 }
 
 async function discoverTables(): Promise<TableMeta[]> {
-  const schemaPath = "src/db/schema.ts"
+  const schemaPath = SCHEMA_FILE
   const content = await readFile(path.join(PROJECT_ROOT, schemaPath), "utf-8")
   const regex =
     /^\s*export\s+const\s+(\w+)\s*=\s*pgTable\s*\(\s*["']([^"']+)["']/gm
@@ -177,14 +193,15 @@ type ActionMeta = {
 }
 
 async function discoverActions(): Promise<ActionMeta[]> {
-  const dir = "lib/actions"
+  const dir = ACTIONS_DIR
   const files = await readdir(path.join(PROJECT_ROOT, dir))
   const out: ActionMeta[] = []
   for (const f of files) {
     if (!f.endsWith(".ts")) continue
     const stem = f.replace(/\.ts$/, "")
     const filePath = `${dir}/${f}`
-    const importPath = `${dir}/${stem}`
+    // Edge matching compares against the "@/" import target, e.g. "actions/incomes".
+    const importPath = aliasTarget(`${dir}/${stem}`)
     const content = await readFile(path.join(PROJECT_ROOT, filePath), "utf-8")
     const regex = /^\s*export\s+(?:async\s+)?function\s+(\w+)/gm
     let m: RegExpExecArray | null
@@ -210,15 +227,15 @@ type PageMeta = {
 
 async function discoverPages(): Promise<PageMeta[]> {
   const out: PageMeta[] = []
-  await walk(path.join(PROJECT_ROOT, "src/app"), async (absPath) => {
+  await walk(path.join(PROJECT_ROOT, APP_DIR), async (absPath) => {
     if (!absPath.endsWith("/page.tsx") && !absPath.endsWith("\\page.tsx"))
       return
     const rel = path.relative(PROJECT_ROOT, absPath)
     const route =
       "/" +
         rel
-          .replace(/^app\//, "")
-          .replace(/\/page\.tsx$/, "")
+          .replace(APP_REL_PREFIX, "")
+          .replace(/\/?page\.tsx$/, "")
           .replace(/\(.*?\)\//g, "") // strip route groups
           .replace(/\/$/, "") || "/"
     out.push({ id: `page:${route}`, filePath: rel, route })
@@ -234,12 +251,13 @@ type ApiMeta = {
 
 async function discoverApiRoutes(): Promise<ApiMeta[]> {
   const out: ApiMeta[] = []
-  const apiRoot = path.join(PROJECT_ROOT, "src/app/api")
+  const apiRoot = path.join(PROJECT_ROOT, API_DIR)
   await walk(apiRoot, async (absPath) => {
     if (!absPath.endsWith("/route.ts") && !absPath.endsWith("\\route.ts"))
       return
     const rel = path.relative(PROJECT_ROOT, absPath)
-    const route = "/" + rel.replace(/^app\//, "").replace(/\/route\.ts$/, "")
+    const route =
+      "/" + rel.replace(APP_REL_PREFIX, "").replace(/\/route\.ts$/, "")
     out.push({ id: `api:${route}`, filePath: rel, route })
   })
   return out

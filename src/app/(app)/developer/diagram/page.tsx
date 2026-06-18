@@ -4,9 +4,6 @@ import { DeveloperNav } from "@/components/developer/developer-nav"
 import { DiagramCanvas } from "@/components/developer/diagram-canvas"
 
 export const dynamic = "force-dynamic"
-// Scans the source tree with fs at request time, so it must run on the Node
-// runtime, never Edge.
-export const runtime = "nodejs"
 
 export default async function DeveloperDiagramPage() {
   // Dev tool: `buildDiagram` reads the source tree off disk. Gate on the
