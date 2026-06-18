@@ -10,10 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { WizardNavigation } from "@/components/onboarding/WizardNavigation"
-import type {
-  ExpenseSetupData,
-  IncomeData
-} from "@/app/onboarding/OnboardingWizard"
+import type { ExpenseSetupData } from "@/app/onboarding/OnboardingWizard"
 
 // Default expense categories with display info
 const DEFAULT_CATEGORIES = [
@@ -52,7 +49,6 @@ const FREQUENCY_MULTIPLIERS: Record<string, number> = {
 }
 
 interface ExpensesStepProps {
-  income: IncomeData | null
   data: ExpenseSetupData | null
   onSave: (data: ExpenseSetupData) => void
   onNext: () => void
@@ -61,7 +57,6 @@ interface ExpensesStepProps {
 }
 
 export function ExpensesStep({
-  income: _income,
   data,
   onSave,
   onNext,

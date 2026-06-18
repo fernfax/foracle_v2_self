@@ -4,13 +4,13 @@ import { and, eq } from "drizzle-orm"
 
 import type { CreateOnboardingExpensesBody } from "@/lib/api-schemas/onboarding"
 import type { AuthContext } from "@/lib/auth-context"
-import {
-  currentHoldings,
-  expenses,
-  familyMembers,
-  incomes,
-  users
-} from "@/db/schema"
+import { expenses, familyMembers, incomes, users } from "@/db/schema"
+import type {
+  BonusGroup,
+  CpfData,
+  FamilyMemberData,
+  IncomeData
+} from "@/app/onboarding/OnboardingWizard"
 
 // Weighted distribution used when categoryAmounts isn't supplied for a given
 // category. Mirrors the original lib/actions/onboarding.ts mapping so the
@@ -73,23 +73,83 @@ export async function completeOnboarding(ctx: AuthContext): Promise<void> {
     .where(eq(users.id, ctx.userId))
 }
 
-export async function getOnboardingData(ctx: AuthContext) {
-  const [members, incomeRows, holdings] = await Promise.all([
+// Hydrates the wizard on resume so a half-finished onboarding picks up exactly
+// where it left off — and, critically, so the income step holds the existing
+// row's id and UPDATES it instead of inserting a duplicate. Holdings are not
+// returned: they're owned solely by the DB (HoldingsStep and ConfirmationStep
+// both read them straight back), so the wizard never mirrors them.
+export async function getOnboardingData(ctx: AuthContext): Promise<{
+  familyMember: FamilyMemberData | null
+  income: IncomeData | null
+  cpf: CpfData | null
+}> {
+  const [members, incomeRows] = await Promise.all([
     db.query.familyMembers.findMany({
       where: eq(familyMembers.familyId, ctx.familyId)
     }),
     db.query.incomes.findMany({
       where: eq(incomes.familyId, ctx.familyId)
-    }),
-    db.query.currentHoldings.findMany({
-      where: eq(currentHoldings.familyId, ctx.familyId)
     })
   ])
-  return {
-    familyMembers: members,
-    incomes: incomeRows,
-    currentHoldings: holdings
+
+  const self =
+    members.find((m) => m.relationship === "Self") ?? members[0] ?? null
+  const incomeRow =
+    incomeRows.find((i) => self && i.familyMemberId === self.id) ??
+    incomeRows[0] ??
+    null
+
+  const familyMember: FamilyMemberData | null = self
+    ? {
+        id: self.id,
+        name: self.name,
+        relationship: self.relationship ?? "Self",
+        dateOfBirth: self.dateOfBirth ?? "",
+        isContributing: self.isContributing ?? false,
+        notes: self.notes ?? undefined
+      }
+    : null
+
+  let bonusGroups: BonusGroup[] = []
+  if (incomeRow?.bonusGroups) {
+    try {
+      const parsed = JSON.parse(incomeRow.bonusGroups)
+      if (Array.isArray(parsed)) bonusGroups = parsed
+    } catch {
+      // Malformed JSON from a hand-edited row — treat as no bonus.
+      bonusGroups = []
+    }
   }
+
+  const income: IncomeData | null = incomeRow
+    ? {
+        id: incomeRow.id,
+        name: incomeRow.name,
+        category: incomeRow.category,
+        amount: incomeRow.amount,
+        // Incomes are monthly-only by design (see actions/incomes.ts).
+        frequency: "monthly",
+        subjectToCpf: incomeRow.subjectToCpf ?? false,
+        startDate: incomeRow.startDate,
+        accountForBonus: incomeRow.accountForBonus ?? false,
+        bonusGroups
+      }
+    : null
+
+  const hasCpf =
+    !!incomeRow &&
+    (!!incomeRow.cpfOrdinaryAccount ||
+      !!incomeRow.cpfSpecialAccount ||
+      !!incomeRow.cpfMedisaveAccount)
+  const cpf: CpfData | null = hasCpf
+    ? {
+        cpfOrdinaryAccount: incomeRow.cpfOrdinaryAccount ?? "0",
+        cpfSpecialAccount: incomeRow.cpfSpecialAccount ?? "0",
+        cpfMedisaveAccount: incomeRow.cpfMedisaveAccount ?? "0"
+      }
+    : null
+
+  return { familyMember, income, cpf }
 }
 
 // Deletes all existing current-recurring expenses and re-creates from the

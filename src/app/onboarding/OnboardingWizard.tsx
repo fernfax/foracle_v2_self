@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { getOnboardingData } from "@/actions/onboarding"
 import {
   Building2,
   CheckCircle2,
@@ -54,6 +55,9 @@ export interface CpfData {
   cpfMedisaveAccount: string
 }
 
+// Holdings are owned solely by the DB during onboarding — HoldingsStep and
+// ConfirmationStep both read them back directly — so the wizard never mirrors
+// them in its own state. This type stays here as the shared row shape.
 export interface HoldingData {
   id?: string
   bankName: string
@@ -69,7 +73,6 @@ export interface OnboardingData {
   familyMember: FamilyMemberData | null
   income: IncomeData | null
   cpf: CpfData | null
-  holdings: HoldingData[]
   expenses: ExpenseSetupData | null
 }
 
@@ -167,9 +170,31 @@ export function OnboardingWizard({
     familyMember: null,
     income: null,
     cpf: null,
-    holdings: [],
     expenses: null
   })
+
+  // Hydrate from the DB on resume so prior answers come back and the income
+  // step reuses the existing row (a fresh, empty wizard would re-insert it).
+  // Skipped in preview mode, which is a sandboxed walkthrough with no user data.
+  const [isHydrating, setIsHydrating] = useState(!previewMode)
+
+  useEffect(() => {
+    if (previewMode) return
+    let cancelled = false
+    getOnboardingData()
+      .then((saved) => {
+        if (!cancelled) setOnboardingData((prev) => ({ ...prev, ...saved }))
+      })
+      .catch((error) => {
+        console.error("Failed to hydrate onboarding wizard:", error)
+      })
+      .finally(() => {
+        if (!cancelled) setIsHydrating(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [previewMode])
 
   // Navigation handlers — in preview mode the URL is never updated so the
   // user can leave the preview cleanly, and we don't accidentally interact
@@ -211,13 +236,6 @@ export function OnboardingWizard({
 
   const updateCpf = useCallback((data: CpfData) => {
     setOnboardingData((prev) => ({ ...prev, cpf: data }))
-  }, [])
-
-  const addHolding = useCallback((data: HoldingData) => {
-    setOnboardingData((prev) => ({
-      ...prev,
-      holdings: [...prev.holdings, data]
-    }))
   }, [])
 
   const updateExpenses = useCallback((data: ExpenseSetupData) => {
@@ -273,8 +291,6 @@ export function OnboardingWizard({
         return (
           <HoldingsStep
             familyMember={onboardingData.familyMember}
-            holdings={onboardingData.holdings}
-            onAdd={addHolding}
             onNext={handleNext}
             onBack={handleBack}
             onSkip={handleSkip}
@@ -283,7 +299,6 @@ export function OnboardingWizard({
       case 6:
         return (
           <ExpensesStep
-            income={onboardingData.income}
             data={onboardingData.expenses}
             onSave={updateExpenses}
             onNext={handleNext}
@@ -302,6 +317,26 @@ export function OnboardingWizard({
       default:
         return <WelcomeStep onNext={handleNext} />
     }
+  }
+
+  // Hold the flow until hydration settles so a resuming user can't act on an
+  // empty form (e.g. submit income before its saved id loads — re-inserting it).
+  if (isHydrating) {
+    return (
+      <WizardContainer
+        currentStep={config.displayStep}
+        totalSteps={DISPLAYED_STEPS}
+        title={config.title}
+        subtitle={config.subtitle}
+        showProgress={config.showProgress !== false}
+        icon={config.icon}
+        iconBgColor={config.iconBgColor}
+        iconColor={config.iconColor}>
+        <div className="flex flex-1 items-center justify-center py-12">
+          <p className="text-muted-foreground text-sm">Loading…</p>
+        </div>
+      </WizardContainer>
+    )
   }
 
   if (previewMode) {

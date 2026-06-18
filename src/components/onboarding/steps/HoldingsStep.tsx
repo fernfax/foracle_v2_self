@@ -19,8 +19,6 @@ import type {
 
 interface HoldingsStepProps {
   familyMember: FamilyMemberData | null
-  holdings: HoldingData[]
-  onAdd: (data: HoldingData) => void
   onNext: () => void
   onBack: () => void
   onSkip: () => void
@@ -28,8 +26,6 @@ interface HoldingsStepProps {
 
 export function HoldingsStep({
   familyMember,
-  holdings: _holdings,
-  onAdd,
   onNext,
   onBack,
   onSkip
@@ -81,7 +77,6 @@ export function HoldingsStep({
       }
 
       setLocalHoldings((prev) => [...prev, newHolding])
-      onAdd(newHolding)
 
       // Reset form
       setBankName("")

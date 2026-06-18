@@ -41,7 +41,8 @@ export async function completeOnboarding(): Promise<void> {
 }
 
 /**
- * Get the current user's onboarding data for the confirmation step
+ * Hydrate the wizard from the user's saved onboarding data so a resumed flow
+ * restores prior answers and reuses the existing income row (no duplicates).
  */
 export async function getOnboardingData() {
   const ctx = await getCurrentUserAndFamily()

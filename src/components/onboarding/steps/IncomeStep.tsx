@@ -161,39 +161,21 @@ export function IncomeStep({
           )
         : null
 
+      // incomeId is hydrated from the DB on resume, so an existing row is
+      // always updated in place; a missing id means this is the first save.
       let savedIncome
       if (incomeId) {
-        // Try to update existing income
-        try {
-          savedIncome = await updateIncome(incomeId, {
-            name,
-            category,
-            amount: parseFloat(amount),
-            frequency,
-            subjectToCpf,
-            accountForBonus,
-            bonusGroups: bonusData,
-            familyMemberAge
-          })
-        } catch {
-          // If income not found (deleted), create a new one instead
-          console.warn("Income not found, creating new one")
-          savedIncome = await createIncome({
-            name,
-            category,
-            amount: parseFloat(amount),
-            frequency,
-            subjectToCpf,
-            accountForBonus,
-            bonusGroups: bonusData || undefined,
-            startDate,
-            familyMemberId: familyMember?.id,
-            familyMemberAge
-          })
-          setIncomeId(savedIncome.id)
-        }
+        savedIncome = await updateIncome(incomeId, {
+          name,
+          category,
+          amount: parseFloat(amount),
+          frequency,
+          subjectToCpf,
+          accountForBonus,
+          bonusGroups: bonusData,
+          familyMemberAge
+        })
       } else {
-        // Create new income
         savedIncome = await createIncome({
           name,
           category,

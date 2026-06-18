@@ -454,7 +454,7 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
   },
   "onboarding.getOnboardingData": {
     category: "Onboarding & tours",
-    description: "Fetch wizard answers for the confirmation step."
+    description: "Hydrate the wizard from saved answers on resume."
   },
   "onboarding.createOnboardingExpenses": {
     category: "Onboarding & tours",
