@@ -289,18 +289,11 @@ export function ExpensesStep({
                     </p>
                   </div>
                   {isSelected && (
-                    <div className="relative w-32 shrink-0">
-                      <span className="text-muted-foreground absolute top-1/2 left-2 -translate-y-1/2 text-sm">
-                        $
-                      </span>
-                      <Input
-                        type="text"
-                        value={categoryAmounts[category.name] || ""}
-                        readOnly
-                        disabled
-                        className="text-foreground/400 bg-background h-8 cursor-default pl-6 text-sm disabled:opacity-100"
-                      />
-                    </div>
+                    // Derived from the % + weighting below — a read-only figure,
+                    // not an input.
+                    <span className="text-foreground w-24 shrink-0 text-right text-sm font-medium tabular-nums">
+                      ${categoryAmounts[category.name] || "0"}
+                    </span>
                   )}
                 </label>
               )
