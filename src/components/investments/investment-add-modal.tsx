@@ -257,7 +257,7 @@ export function InvestmentAddModal({
                     htmlFor="projectedYield"
                     required
                     label={
-                      <span className="flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1">
                         Projected Annual Yield %
                         <TooltipProvider delayDuration={0}>
                           <Tooltip>
