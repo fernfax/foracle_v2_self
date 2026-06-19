@@ -287,7 +287,7 @@ export function LandingLifeStages() {
           className="relative">
           <div
             ref={pinRef}
-            className="desktop:gap-7 desktop:py-16 sticky top-0 flex h-svh flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 sm:px-6 lg:px-8 [@media(max-height:600px)]:gap-2 [@media(max-height:600px)]:py-3">
+            className="desktop:gap-7 desktop:py-16 sticky top-16 flex h-[calc(100svh-4rem)] flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 sm:px-6 lg:px-8 [@media(max-height:600px)]:gap-2 [@media(max-height:600px)]:py-3">
             <div className="mx-auto max-w-2xl text-center">{introInner}</div>
             <div className="mx-auto w-full max-w-5xl">
               <div className="glass-strong relative overflow-hidden rounded-3xl">
