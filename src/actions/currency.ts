@@ -1,10 +1,6 @@
 "use server"
 
-import {
-  SUPPORTED_CURRENCIES,
-  type CurrencyCode,
-  type ExchangeRates
-} from "@/lib/currency-utils"
+import { SUPPORTED_CURRENCIES, type ExchangeRates } from "@/lib/currency-utils"
 
 // NOTE: a "use server" module must export only async server actions — do NOT
 // re-export types here. Turbopack mis-compiles a type re-export into a runtime
@@ -63,53 +59,4 @@ export async function getExchangeRates(): Promise<ExchangeRates | null> {
     console.error("Error fetching exchange rates:", error)
     return null
   }
-}
-
-/**
- * Convert foreign currency amount to SGD
- */
-export async function convertToSGD(
-  amount: number,
-  fromCurrency: CurrencyCode,
-  customRate?: number
-): Promise<{ sgdAmount: number; rateUsed: number }> {
-  if (fromCurrency === "SGD") {
-    return { sgdAmount: amount, rateUsed: 1 }
-  }
-
-  // Use custom rate if provided
-  if (customRate !== undefined) {
-    return {
-      sgdAmount: amount * customRate,
-      rateUsed: customRate
-    }
-  }
-
-  // Fetch current rates
-  const rates = await getExchangeRates()
-  if (!rates || !rates.rates[fromCurrency]) {
-    throw new Error(`Exchange rate not available for ${fromCurrency}`)
-  }
-
-  const rate = rates.rates[fromCurrency]
-  return {
-    sgdAmount: amount * rate,
-    rateUsed: rate
-  }
-}
-
-/**
- * Get the exchange rate for a specific currency to SGD
- */
-export async function getExchangeRate(
-  currency: CurrencyCode
-): Promise<number | null> {
-  if (currency === "SGD") return 1
-
-  const rates = await getExchangeRates()
-  if (!rates || !rates.rates[currency]) {
-    return null
-  }
-
-  return rates.rates[currency]
 }

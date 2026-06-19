@@ -21,55 +21,6 @@ export interface BudgetVsActual {
 }
 
 /**
- * Calculate monthly budget per category from recurring expenses.
- * Only includes tracked-in-budget expenses; for a specific month, also
- * includes one-time expenses that occur in that month.
- */
-export async function calculateCategoryBudgets(
-  year?: number,
-  month?: number
-): Promise<CategoryBudget[]> {
-  try {
-    const ctx = await getCurrentUserAndFamily()
-    // No year/month → use current month for the rollup. Mirrors how the
-    // existing UI calls this when it just wants "this month".
-    const now = new Date()
-    const y = year ?? now.getFullYear()
-    const m = month ?? now.getMonth() + 1
-    const { categories } = await getBudgetForMonth(ctx, y, m)
-    return categories.map((c) => ({
-      categoryId: c.categoryId,
-      categoryName: c.categoryName,
-      monthlyBudget: c.monthlyBudget,
-      icon: c.icon
-    }))
-  } catch (error) {
-    console.error("Error calculating category budgets:", error)
-    return []
-  }
-}
-
-/**
- * Calculate total monthly budget from all tracked recurring expenses.
- */
-export async function getTotalMonthlyBudget(
-  year?: number,
-  month?: number
-): Promise<number> {
-  try {
-    const ctx = await getCurrentUserAndFamily()
-    const now = new Date()
-    const y = year ?? now.getFullYear()
-    const m = month ?? now.getMonth() + 1
-    const { summary } = await getBudgetForMonth(ctx, y, m)
-    return summary.totalBudget
-  } catch (error) {
-    console.error("Error calculating total monthly budget:", error)
-    return 0
-  }
-}
-
-/**
  * Get budget vs actual per category for a specific month.
  */
 export async function getBudgetVsActual(

@@ -5,14 +5,12 @@ import { eq } from "drizzle-orm"
 
 import { getCurrentUserAndFamily } from "@/lib/auth-context"
 import {
-  assets,
   expenses,
   familyMembers,
   goals,
   incomes,
   policies,
   propertyAssets,
-  users,
   vehicleAssets
 } from "@/db/schema"
 
@@ -23,17 +21,6 @@ import {
 export async function getCurrentUserId() {
   const { userId } = await getCurrentUserAndFamily()
   return userId
-}
-
-/**
- * Get the current user's profile from the database.
- * Profile lookup is per-user (preferences, name, avatar) — not family-shared.
- */
-export async function getCurrentUser() {
-  const { userId } = await getCurrentUserAndFamily()
-  return db.query.users.findFirst({
-    where: eq(users.id, userId)
-  })
 }
 
 /**
@@ -62,17 +49,6 @@ export async function getUserExpenses() {
   return db.query.expenses.findMany({
     where: eq(expenses.familyId, familyId),
     orderBy: (expenses, { desc }) => [desc(expenses.createdAt)]
-  })
-}
-
-/**
- * Get all generic assets for the caller's family.
- */
-export async function getUserAssets() {
-  const { familyId } = await getCurrentUserAndFamily()
-  return db.query.assets.findMany({
-    where: eq(assets.familyId, familyId),
-    orderBy: (assets, { desc }) => [desc(assets.createdAt)]
   })
 }
 

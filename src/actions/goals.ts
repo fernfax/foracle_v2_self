@@ -53,22 +53,6 @@ export async function getGoals() {
 }
 
 /**
- * Get active goals (not achieved and active)
- */
-export async function getActiveGoals() {
-  const ctx = await getCurrentUserAndFamily()
-  return listGoals(ctx, { isActive: true, isAchieved: false })
-}
-
-/**
- * Get achieved goals
- */
-export async function getAchievedGoals() {
-  const ctx = await getCurrentUserAndFamily()
-  return listGoals(ctx, { isAchieved: true })
-}
-
-/**
  * Update an existing goal. Syncs the linked Savings expense based on
  * addToExpenditures + monthlyContribution.
  */

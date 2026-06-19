@@ -50,22 +50,6 @@ export async function getDailyExpensesForMonth(
 }
 
 /**
- * Get daily expenses for a date range
- */
-export async function getDailyExpenses(
-  startDate: string,
-  endDate: string
-): Promise<DailyExpense[]> {
-  try {
-    const ctx = await getCurrentUserAndFamily()
-    return await listDailyExpenses(ctx, { startDate, endDate })
-  } catch (error) {
-    console.error("Error fetching daily expenses:", error)
-    return []
-  }
-}
-
-/**
  * Add a new daily expense
  */
 export async function addDailyExpense(data: {
@@ -147,57 +131,6 @@ export async function deleteDailyExpense(id: string): Promise<void> {
   const ctx = await getCurrentUserAndFamily()
   await deleteDailyExpenseService(ctx, id)
   revalidatePath("/budget")
-}
-
-/**
- * Get aggregated spending by category for a month
- */
-export async function getCategorySpendingForMonth(
-  year: number,
-  month: number
-): Promise<
-  {
-    categoryName: string
-    categoryId: string | null
-    totalSpent: number
-    count: number
-  }[]
-> {
-  try {
-    const { familyId } = await getCurrentUserAndFamily()
-
-    // Calculate start and end dates for the month
-    const startDate = `${year}-${String(month).padStart(2, "0")}-01`
-    const lastDay = new Date(year, month, 0).getDate()
-    const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
-
-    const result = await db
-      .select({
-        categoryName: dailyExpenses.categoryName,
-        categoryId: dailyExpenses.categoryId,
-        totalSpent: sql<number>`sum(${dailyExpenses.amount})::numeric`,
-        count: sql<number>`count(*)::int`
-      })
-      .from(dailyExpenses)
-      .where(
-        and(
-          eq(dailyExpenses.familyId, familyId),
-          gte(dailyExpenses.date, startDate),
-          lte(dailyExpenses.date, endDate)
-        )
-      )
-      .groupBy(dailyExpenses.categoryName, dailyExpenses.categoryId)
-
-    return result.map((r) => ({
-      categoryName: r.categoryName,
-      categoryId: r.categoryId,
-      totalSpent: Number(r.totalSpent) || 0,
-      count: r.count
-    }))
-  } catch (error) {
-    console.error("Error fetching category spending:", error)
-    return []
-  }
 }
 
 /**

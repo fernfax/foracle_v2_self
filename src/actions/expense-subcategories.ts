@@ -35,19 +35,6 @@ export async function getSubcategoriesByCategory(
 }
 
 /**
- * Get all subcategories for the authenticated user
- */
-export async function getAllSubcategories(): Promise<ExpenseSubcategory[]> {
-  try {
-    const ctx = await getCurrentUserAndFamily()
-    return await listExpenseSubcategories(ctx)
-  } catch (error) {
-    console.error("Error fetching all subcategories:", error)
-    return []
-  }
-}
-
-/**
  * Add a new subcategory to a category
  */
 export async function addSubcategory(

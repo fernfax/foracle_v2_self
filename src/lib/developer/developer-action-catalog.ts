@@ -132,10 +132,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
     category: "Daily spending",
     description: "Get the day-by-day spending log for a month."
   },
-  "daily-expenses.getDailyExpenses": {
-    category: "Daily spending",
-    description: "Get daily spending entries for a date range."
-  },
   "daily-expenses.addDailyExpense": {
     category: "Daily spending",
     description: "Log a daily expense (with currency conversion)."
@@ -147,10 +143,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
   "daily-expenses.deleteDailyExpense": {
     category: "Daily spending",
     description: "Delete a logged daily expense."
-  },
-  "daily-expenses.getCategorySpendingForMonth": {
-    category: "Daily spending",
-    description: "Total this month's spending grouped by category."
   },
   "daily-expenses.getTodaySpending": {
     category: "Daily spending",
@@ -186,14 +178,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
     category: "Categories",
     description: "Group all expenses by category for a month."
   },
-  "expense-categories.updateExpenseCategoryIcon": {
-    category: "Categories",
-    description: "Set a category's icon."
-  },
-  "expense-categories.updateTrackedCategories": {
-    category: "Categories",
-    description: "Choose which categories count toward the budget."
-  },
   "expense-categories.updateTrackedExpenses": {
     category: "Categories",
     description: "Choose which individual expenses the budget tracks."
@@ -201,10 +185,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
   "expense-subcategories.getSubcategoriesByCategory": {
     category: "Categories",
     description: "List subcategories under a category."
-  },
-  "expense-subcategories.getAllSubcategories": {
-    category: "Categories",
-    description: "List every subcategory for the user."
   },
   "expense-subcategories.addSubcategory": {
     category: "Categories",
@@ -220,14 +200,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
   },
 
   // ---- Budget ----
-  "budget-calculator.calculateCategoryBudgets": {
-    category: "Budget",
-    description: "Derive the monthly budget per category from tracked expenses."
-  },
-  "budget-calculator.getTotalMonthlyBudget": {
-    category: "Budget",
-    description: "Total monthly budget across tracked expenses."
-  },
   "budget-calculator.getBudgetVsActual": {
     category: "Budget",
     description: "Compare budget vs actual spend per category."
@@ -248,14 +220,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
     category: "Budget",
     description: "Undo a budget shift."
   },
-  "budget-shifts.getBudgetAdjustmentsForMonth": {
-    category: "Budget",
-    description: "Net per-category budget adjustment from all shifts."
-  },
-  "budget-shifts.getShiftableAmount": {
-    category: "Budget",
-    description: "How much budget is still free to move from a category."
-  },
 
   // ---- Goals ----
   "goals.createGoal": {
@@ -265,14 +229,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
   "goals.getGoals": {
     category: "Goals",
     description: "List all savings goals."
-  },
-  "goals.getActiveGoals": {
-    category: "Goals",
-    description: "List active (not-yet-achieved) goals."
-  },
-  "goals.getAchievedGoals": {
-    category: "Goals",
-    description: "List achieved goals."
   },
   "goals.updateGoal": {
     category: "Goals",
@@ -499,23 +455,11 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
     category: "Currency",
     description: "Fetch SGD exchange rates (1h cache)."
   },
-  "currency.convertToSGD": {
-    category: "Currency",
-    description: "Convert a foreign amount to SGD."
-  },
-  "currency.getExchangeRate": {
-    category: "Currency",
-    description: "Get one currency's rate to SGD."
-  },
 
   // ---- Dashboard ----
   "user.getCurrentUserId": {
     category: "Dashboard",
     description: "Get the signed-in user's Clerk ID."
-  },
-  "user.getCurrentUser": {
-    category: "Dashboard",
-    description: "Load the signed-in user's profile."
   },
   "user.getUserIncomes": {
     category: "Dashboard",
@@ -525,10 +469,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
     category: "Dashboard",
     description: "Dashboard feed: household expenses."
   },
-  "user.getUserAssets": {
-    category: "Dashboard",
-    description: "Dashboard feed: generic assets."
-  },
   "user.getUserPropertyAssets": {
     category: "Dashboard",
     description: "Dashboard feed: property assets."
@@ -537,13 +477,13 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
     category: "Dashboard",
     description: "Dashboard feed: vehicle assets."
   },
-  "user.getUserPolicies": {
-    category: "Dashboard",
-    description: "Dashboard feed: insurance policies."
-  },
   "user.getUserGoals": {
     category: "Dashboard",
     description: "Dashboard feed: savings goals."
+  },
+  "user.getUserPolicies": {
+    category: "Dashboard",
+    description: "Dashboard feed: insurance policies."
   },
   "user.getUserFamilyMembers": {
     category: "Dashboard",
