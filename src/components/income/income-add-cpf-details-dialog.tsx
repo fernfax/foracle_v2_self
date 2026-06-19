@@ -1,7 +1,10 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { ChevronLeft, Info } from "lucide-react"
+import { Controller, useForm } from "react-hook-form"
+import { z } from "zod"
 
 import {
   AlertDialog,
@@ -40,6 +43,28 @@ interface AddCpfDetailsDialogProps {
   isStandalone?: boolean // When true, hides Back button and step indicator
 }
 
+const cpfFormSchema = z.object({
+  ordinaryAccount: z.string(),
+  specialAccount: z.string(),
+  medisaveAccount: z.string()
+})
+type CpfFormValues = z.infer<typeof cpfFormSchema>
+
+// Empty unless a positive value was passed in (mirrors the original
+// formatDecimal: 0/undefined render as blank, otherwise 2 d.p.).
+const formatDecimal = (value: number | undefined): string =>
+  value === undefined || value === 0 ? "" : value.toFixed(2)
+
+const toFormValues = (
+  oa?: number,
+  sa?: number,
+  ma?: number
+): CpfFormValues => ({
+  ordinaryAccount: formatDecimal(oa),
+  specialAccount: formatDecimal(sa),
+  medisaveAccount: formatDecimal(ma)
+})
+
 export function IncomeAddCpfDetailsDialog({
   open,
   onOpenChange,
@@ -52,108 +77,99 @@ export function IncomeAddCpfDetailsDialog({
   initialMA,
   isStandalone = false
 }: AddCpfDetailsDialogProps) {
-  const [ordinaryAccount, setOrdinaryAccount] = useState("")
-  const [specialAccount, setSpecialAccount] = useState("")
-  const [medisaveAccount, setMedisaveAccount] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [initialValues, setInitialValues] = useState<{
-    oa: string
-    sa: string
-    ma: string
-  } | null>(null)
 
-  // Format number to 2 decimal places
-  const formatDecimal = (value: number | undefined): string => {
-    if (value === undefined || value === 0) return ""
-    return value.toFixed(2)
-  }
+  const {
+    control,
+    handleSubmit,
+    reset,
+    getValues,
+    setValue,
+    formState: { isDirty, isSubmitting }
+  } = useForm<CpfFormValues>({
+    resolver: zodResolver(cpfFormSchema),
+    defaultValues: toFormValues(initialOA, initialSA, initialMA)
+  })
 
-  // Format on blur to show 2 decimal places
-  const handleBlur = (value: string, setter: (v: string) => void) => {
-    const num = parseFloat(value)
-    if (!isNaN(num) && num > 0) {
-      setter(num.toFixed(2))
-    }
-  }
-
-  // Pre-populate fields when initial values are provided
+  // Pre-populate when the dialog opens / initial values change.
   useEffect(() => {
-    if (open) {
-      const oa = formatDecimal(initialOA)
-      const sa = formatDecimal(initialSA)
-      const ma = formatDecimal(initialMA)
+    if (open) reset(toFormValues(initialOA, initialSA, initialMA))
+  }, [open, initialOA, initialSA, initialMA, reset])
 
-      setOrdinaryAccount(oa)
-      setSpecialAccount(sa)
-      setMedisaveAccount(ma)
-      setInitialValues({ oa, sa, ma })
-      setHasUnsavedChanges(false)
-    }
-  }, [open, initialOA, initialSA, initialMA])
-
-  // Track changes
-  useEffect(() => {
-    if (!initialValues || !open) {
-      setHasUnsavedChanges(false)
-      return
-    }
-
-    const hasChanges =
-      ordinaryAccount !== initialValues.oa ||
-      specialAccount !== initialValues.sa ||
-      medisaveAccount !== initialValues.ma
-
-    setHasUnsavedChanges(hasChanges)
-  }, [initialValues, ordinaryAccount, specialAccount, medisaveAccount, open])
-
-  const resetForm = () => {
-    setOrdinaryAccount("")
-    setSpecialAccount("")
-    setMedisaveAccount("")
+  // Format a field to 2 d.p. on blur, mirroring the original handleBlur.
+  const formatOnBlur = (name: keyof CpfFormValues) => {
+    const num = parseFloat(getValues(name))
+    if (!isNaN(num) && num > 0) setValue(name, num.toFixed(2))
   }
 
-  const handleClose = (open: boolean) => {
-    if (!open && hasUnsavedChanges) {
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen && isDirty) {
       setShowUnsavedWarning(true)
     } else {
-      onOpenChange(open)
+      onOpenChange(isOpen)
     }
   }
 
   const handleConfirmClose = () => {
     setShowUnsavedWarning(false)
-    setHasUnsavedChanges(false)
+    reset(toFormValues(initialOA, initialSA, initialMA))
     onOpenChange(false)
   }
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true)
+  const onSubmit = async (values: CpfFormValues) => {
     try {
       await onComplete({
-        oa: parseFloat(ordinaryAccount) || 0,
-        sa: parseFloat(specialAccount) || 0,
-        ma: parseFloat(medisaveAccount) || 0
+        oa: parseFloat(values.ordinaryAccount) || 0,
+        sa: parseFloat(values.specialAccount) || 0,
+        ma: parseFloat(values.medisaveAccount) || 0
       })
-      resetForm()
-      setHasUnsavedChanges(false)
+      reset(toFormValues(initialOA, initialSA, initialMA))
     } catch (error) {
       console.error("Failed to save CPF details:", error)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   const handleBack = () => {
-    // Pass current CPF values when going back
-    const currentValues = {
-      oa: parseFloat(ordinaryAccount) || 0,
-      sa: parseFloat(specialAccount) || 0,
-      ma: parseFloat(medisaveAccount) || 0
-    }
-    onBack?.(currentValues)
+    const v = getValues()
+    onBack?.({
+      oa: parseFloat(v.ordinaryAccount) || 0,
+      sa: parseFloat(v.specialAccount) || 0,
+      ma: parseFloat(v.medisaveAccount) || 0
+    })
   }
+
+  const cpfField = (
+    name: keyof CpfFormValues,
+    id: string,
+    label: string,
+    helper: string
+  ) => (
+    <Field label={label} htmlFor={id} helper={helper}>
+      <Controller
+        control={control}
+        name={name}
+        render={({ field }) => (
+          <MoneyInput
+            id={id}
+            placeholder="0.00"
+            value={field.value}
+            onChange={(e) => field.onChange(e.target.value)}
+            onBlur={() => {
+              formatOnBlur(name)
+              field.onBlur()
+            }}
+            min="0"
+            step="0.01"
+          />
+        )}
+      />
+    </Field>
+  )
+
+  const isEdit =
+    initialOA !== undefined ||
+    initialSA !== undefined ||
+    initialMA !== undefined
 
   return (
     <>
@@ -161,12 +177,7 @@ export function IncomeAddCpfDetailsDialog({
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {initialOA !== undefined ||
-              initialSA !== undefined ||
-              initialMA !== undefined
-                ? "Edit"
-                : "Add"}{" "}
-              CPF Account Details{" "}
+              {isEdit ? "Edit" : "Add"} CPF Account Details{" "}
               {familyMemberName && `for ${familyMemberName}`}
               <Info className="text-muted-foreground h-4 w-4" />
             </DialogTitle>
@@ -175,89 +186,66 @@ export function IncomeAddCpfDetailsDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <DialogBody>
-            <div className="grid gap-6 py-4">
-              {/* Ordinary Account (OA) */}
-              <Field
-                label="Ordinary Account (OA)"
-                htmlFor="oa"
-                helper="For housing, insurance, investment, and education">
-                <MoneyInput
-                  id="oa"
-                  placeholder="0.00"
-                  value={ordinaryAccount}
-                  onChange={(e) => setOrdinaryAccount(e.target.value)}
-                  onBlur={() => handleBlur(ordinaryAccount, setOrdinaryAccount)}
-                  min="0"
-                  step="0.01"
-                />
-              </Field>
-
-              {/* Special Account (SA) */}
-              <Field
-                label="Special Account (SA)"
-                htmlFor="sa"
-                helper="For retirement and investment in approved assets">
-                <MoneyInput
-                  id="sa"
-                  placeholder="0.00"
-                  value={specialAccount}
-                  onChange={(e) => setSpecialAccount(e.target.value)}
-                  onBlur={() => handleBlur(specialAccount, setSpecialAccount)}
-                  min="0"
-                  step="0.01"
-                />
-              </Field>
-
-              {/* Medisave Account (MA) */}
-              <Field
-                label="Medisave Account (MA)"
-                htmlFor="ma"
-                helper="For hospitalization expenses and approved medical insurance">
-                <MoneyInput
-                  id="ma"
-                  placeholder="0.00"
-                  value={medisaveAccount}
-                  onChange={(e) => setMedisaveAccount(e.target.value)}
-                  onBlur={() => handleBlur(medisaveAccount, setMedisaveAccount)}
-                  min="0"
-                  step="0.01"
-                />
-              </Field>
-            </div>
-          </DialogBody>
-
-          {/* Footer */}
-          <DialogFooterSticky className="flex-col gap-4">
-            {!isStandalone && <StepIndicator currentStep={3} totalSteps={3} />}
-            <div
-              className={`flex w-full gap-3 ${isStandalone ? "justify-end" : "justify-between"}`}>
-              {!isStandalone && (
-                <Button
-                  variant="ghost"
-                  onClick={handleBack}
-                  disabled={isSubmitting}>
-                  <ChevronLeft className="mr-1 h-4 w-4" />
-                  Back
-                </Button>
-              )}
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleClose(false)}
-                  disabled={isSubmitting}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting
-                    ? "Saving..."
-                    : isStandalone
-                      ? "Save"
-                      : "Save & Finish"}
-                </Button>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogBody>
+              <div className="grid gap-6 py-4">
+                {cpfField(
+                  "ordinaryAccount",
+                  "oa",
+                  "Ordinary Account (OA)",
+                  "For housing, insurance, investment, and education"
+                )}
+                {cpfField(
+                  "specialAccount",
+                  "sa",
+                  "Special Account (SA)",
+                  "For retirement and investment in approved assets"
+                )}
+                {cpfField(
+                  "medisaveAccount",
+                  "ma",
+                  "Medisave Account (MA)",
+                  "For hospitalization expenses and approved medical insurance"
+                )}
               </div>
-            </div>
-          </DialogFooterSticky>
+            </DialogBody>
+
+            {/* Footer */}
+            <DialogFooterSticky className="flex-col gap-4">
+              {!isStandalone && (
+                <StepIndicator currentStep={3} totalSteps={3} />
+              )}
+              <div
+                className={`flex w-full gap-3 ${isStandalone ? "justify-end" : "justify-between"}`}>
+                {!isStandalone && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleBack}
+                    disabled={isSubmitting}>
+                    <ChevronLeft className="mr-1 h-4 w-4" />
+                    Back
+                  </Button>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => handleClose(false)}
+                    disabled={isSubmitting}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting
+                      ? "Saving..."
+                      : isStandalone
+                        ? "Save"
+                        : "Save & Finish"}
+                  </Button>
+                </div>
+              </div>
+            </DialogFooterSticky>
+          </form>
         </DialogContent>
       </Dialog>
 
