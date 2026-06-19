@@ -6,8 +6,11 @@ import {
   type ExpenseCategory
 } from "@/actions/expense-categories"
 import { addExpense } from "@/actions/expenses"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { Info } from "lucide-react"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
 
 import { cn } from "@/lib/utils"
 import {
@@ -74,30 +77,124 @@ const MONTHS = [
   { value: 12, label: "Dec" }
 ]
 
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+]
+
+// Form-layer schema. expenseCategory/name/category/amount are always required;
+// startDate is required only for non-recurring expenses and custom frequency
+// requires at least one month (superRefine) — together these reproduce the
+// original disabled-submit gate via mode:"onChange" + isValid.
+const expenseFormSchema = z
+  .object({
+    expenseCategory: z.string().min(1),
+    name: z.string().min(1),
+    category: z.string().min(1),
+    amount: z.string().min(1),
+    frequency: z.string(),
+    selectedMonths: z.array(z.number()),
+    startDate: z.date().optional(),
+    endDate: z.date().optional(),
+    notes: z.string()
+  })
+  .superRefine((v, ctx) => {
+    if (v.frequency === "custom" && v.selectedMonths.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["selectedMonths"],
+        message: "Select at least one month"
+      })
+    }
+    if (v.expenseCategory !== "current-recurring" && !v.startDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["startDate"],
+        message: "Date is required"
+      })
+    }
+  })
+type ExpenseFormValues = z.infer<typeof expenseFormSchema>
+
+const defaultValues: ExpenseFormValues = {
+  expenseCategory: "",
+  name: "",
+  category: "",
+  amount: "",
+  frequency: "monthly",
+  selectedMonths: [],
+  startDate: undefined,
+  endDate: undefined,
+  notes: ""
+}
+
 export function ExpenseAddDialog({
   open,
   onOpenChange,
   onExpenseAdded
 }: AddExpenseDialogProps) {
-  const [name, setName] = useState("")
-  const [category, setCategory] = useState("")
-  const [amount, setAmount] = useState("")
-  const [frequency, setFrequency] = useState("monthly")
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([])
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
-  const [notes, setNotes] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [categories, setCategories] = useState<ExpenseCategory[]>([])
-  const [expenseCategory, setExpenseCategory] = useState("")
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
 
-  // Track if user has entered any meaningful data (not just selecting expense type)
-  const hasUnsavedChanges =
-    name !== "" || category !== "" || amount !== "" || notes !== ""
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    getValues,
+    setValue,
+    formState: { isValid, isSubmitting }
+  } = useForm<ExpenseFormValues>({
+    resolver: zodResolver(expenseFormSchema),
+    mode: "onChange",
+    defaultValues
+  })
+
+  const expenseCategory = useWatch({ control, name: "expenseCategory" })
+  const frequency = useWatch({ control, name: "frequency" })
+
+  // Reset form and load categories when dialog opens
+  useEffect(() => {
+    if (open) {
+      reset(defaultValues)
+      getExpenseCategories().then(setCategories)
+    }
+  }, [open, reset])
+
+  // One-off expenses are always one-time; force it whenever the type changes to
+  // one-off so the (disabled) frequency field carries the right value.
+  const handleExpenseTypeChange = (value: string) => {
+    setValue("expenseCategory", value, { shouldValidate: true })
+    if (value === "one-off") {
+      setValue("frequency", "one-time", { shouldValidate: true })
+    }
+  }
+
+  const loadCategories = async () => {
+    setCategories(await getExpenseCategories())
+  }
+
+  const selectedFrequency = FREQUENCIES.find((f) => f.value === frequency)
+
+  const hasUnsavedChanges = () => {
+    const v = getValues()
+    return (
+      v.name !== "" || v.category !== "" || v.amount !== "" || v.notes !== ""
+    )
+  }
 
   const handleClose = (openState: boolean) => {
-    if (!openState && hasUnsavedChanges) {
+    if (!openState && hasUnsavedChanges()) {
       setShowUnsavedWarning(true)
     } else {
       onOpenChange(openState)
@@ -106,110 +203,42 @@ export function ExpenseAddDialog({
 
   const handleConfirmClose = () => {
     setShowUnsavedWarning(false)
-    // Reset form
-    setName("")
-    setCategory("")
-    setExpenseCategory("")
-    setAmount("")
-    setFrequency("monthly")
-    setSelectedMonths([])
-    setStartDate(undefined)
-    setEndDate(undefined)
-    setNotes("")
+    reset(defaultValues)
     onOpenChange(false)
   }
 
-  // Reset form and load categories when dialog opens
-  useEffect(() => {
-    if (open) {
-      // Reset form to initial state
-      setName("")
-      setCategory("")
-      setExpenseCategory("")
-      setAmount("")
-      setFrequency("monthly")
-      setSelectedMonths([])
-      setStartDate(undefined)
-      setEndDate(undefined)
-      setNotes("")
-      loadCategories()
-    }
-  }, [open])
-
-  // Auto-set frequency to "one-time" when expense type is "one-off"
-  useEffect(() => {
-    if (expenseCategory === "one-off") {
-      setFrequency("one-time")
-    }
-  }, [expenseCategory])
-
-  const loadCategories = async () => {
-    const data = await getExpenseCategories()
-    setCategories(data)
-  }
-
-  const selectedFrequency = FREQUENCIES.find((f) => f.value === frequency)
-
-  const toggleMonth = (month: number) => {
-    setSelectedMonths((prev) =>
-      prev.includes(month)
-        ? prev.filter((m) => m !== month)
-        : [...prev, month].sort((a, b) => a - b)
-    )
-  }
-
-  const handleSubmit = async () => {
-    // For recurring expenses, startDate is not required
-    const isRecurring = expenseCategory === "current-recurring"
-    if (!name || !category || !amount || (!isRecurring && !startDate)) {
-      return
-    }
-
-    // Validate custom frequency has months selected
-    if (frequency === "custom" && selectedMonths.length === 0) {
-      return
-    }
-
-    setIsSubmitting(true)
+  const onSubmit = async (values: ExpenseFormValues) => {
+    const isRecurring = values.expenseCategory === "current-recurring"
+    const frequency =
+      values.expenseCategory === "one-off" ? "one-time" : values.frequency
     try {
       await addExpense({
-        name,
-        category,
-        expenseCategory,
-        amount: parseFloat(amount),
+        name: values.name,
+        category: values.category,
+        expenseCategory: values.expenseCategory,
+        amount: parseFloat(values.amount),
         frequency,
         customMonths:
-          frequency === "custom" ? JSON.stringify(selectedMonths) : undefined,
+          frequency === "custom"
+            ? JSON.stringify(values.selectedMonths)
+            : undefined,
         startDate: isRecurring
           ? null
-          : startDate
-            ? format(startDate, "yyyy-MM-dd")
+          : values.startDate
+            ? format(values.startDate, "yyyy-MM-dd")
             : null,
         endDate: isRecurring
           ? null
-          : endDate
-            ? format(endDate, "yyyy-MM-dd")
+          : values.endDate
+            ? format(values.endDate, "yyyy-MM-dd")
             : null,
-        description: notes || undefined
+        description: values.notes || undefined
       })
-
-      // Reset form
-      setName("")
-      setCategory("")
-      setExpenseCategory("")
-      setAmount("")
-      setFrequency("monthly")
-      setSelectedMonths([])
-      setStartDate(undefined)
-      setEndDate(undefined)
-      setNotes("")
-
+      reset(defaultValues)
       onExpenseAdded()
       onOpenChange(false)
     } catch (error) {
       console.error("Failed to add expense:", error)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -227,239 +256,263 @@ export function ExpenseAddDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <DialogBody className={!expenseCategory ? "min-h-[100px]" : ""}>
-            {/* Expense Type Selector */}
-            <Field
-              label="Expense Type"
-              htmlFor="expense-type"
-              required
-              helper={
-                !expenseCategory
-                  ? "Please select an expense type to continue"
-                  : expenseCategory === "current-recurring"
-                    ? "Expense that repeats regularly (e.g., monthly rent)"
-                    : expenseCategory === "future-recurring"
-                      ? "Recurring expense that starts in the future (e.g., upcoming subscription)"
-                      : expenseCategory === "one-off"
-                        ? "One-time expense that does not repeat (e.g., car repair, vacation)"
-                        : undefined
-              }>
-              <Select
-                value={expenseCategory}
-                onValueChange={setExpenseCategory}>
-                <SelectTrigger id="expense-type" aria-required="true">
-                  <SelectValue placeholder="Select expense type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="current-recurring">
-                    Recurring Expense
-                  </SelectItem>
-                  <SelectItem value="future-recurring">
-                    Recurring Expense (Future)
-                  </SelectItem>
-                  <SelectItem value="one-off">One-off Expense</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-
-            {/* Show remaining fields only when expense type is selected */}
-            {expenseCategory && (
-              <div className="grid gap-6 py-4">
-                {/* Row 1: Name and Category */}
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Expense Name" htmlFor="name" required>
-                    <Input
-                      id="name"
-                      aria-required="true"
-                      placeholder="e.g., Rent, Groceries"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </Field>
-                  <Field label="Category" htmlFor="category" required>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger id="category" aria-required="true">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[400px] overflow-y-auto">
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.name}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <ExpenseCategoryManagerPopover
-                      categories={categories}
-                      onCategoriesChanged={loadCategories}
-                    />
-                  </Field>
-                </div>
-
-                {/* Row 2: Amount and Frequency */}
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Expense Amount" htmlFor="amount" required>
-                    <Input
-                      id="amount"
-                      aria-required="true"
-                      type="number"
-                      placeholder="0"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      min="0"
-                      step="0.01"
-                    />
-                  </Field>
-                  <Field
-                    label="Expense Frequency"
-                    htmlFor="frequency"
-                    required
-                    helper={selectedFrequency?.description}>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogBody className={!expenseCategory ? "min-h-[100px]" : ""}>
+              {/* Expense Type Selector */}
+              <Field
+                label="Expense Type"
+                htmlFor="expense-type"
+                required
+                helper={
+                  !expenseCategory
+                    ? "Please select an expense type to continue"
+                    : expenseCategory === "current-recurring"
+                      ? "Expense that repeats regularly (e.g., monthly rent)"
+                      : expenseCategory === "future-recurring"
+                        ? "Recurring expense that starts in the future (e.g., upcoming subscription)"
+                        : expenseCategory === "one-off"
+                          ? "One-time expense that does not repeat (e.g., car repair, vacation)"
+                          : undefined
+                }>
+                <Controller
+                  control={control}
+                  name="expenseCategory"
+                  render={({ field }) => (
                     <Select
-                      value={frequency}
-                      onValueChange={setFrequency}
-                      disabled={expenseCategory === "one-off"}>
-                      <SelectTrigger id="frequency" aria-required="true">
-                        <SelectValue />
+                      value={field.value}
+                      onValueChange={handleExpenseTypeChange}>
+                      <SelectTrigger id="expense-type" aria-required="true">
+                        <SelectValue placeholder="Select expense type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {FREQUENCIES.map((freq) => (
-                          <SelectItem key={freq.value} value={freq.value}>
-                            {freq.label}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="current-recurring">
+                          Recurring Expense
+                        </SelectItem>
+                        <SelectItem value="future-recurring">
+                          Recurring Expense (Future)
+                        </SelectItem>
+                        <SelectItem value="one-off">One-off Expense</SelectItem>
                       </SelectContent>
                     </Select>
-                  </Field>
-                </div>
+                  )}
+                />
+              </Field>
 
-                {/* Custom Month Selector */}
-                {frequency === "custom" && (
-                  <Field label="Select Months" required>
-                    <div className="grid grid-cols-6 gap-2">
-                      {MONTHS.map((month) => (
-                        <Button
-                          key={month.value}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleMonth(month.value)}
-                          className={cn(
-                            "h-10 font-medium",
-                            selectedMonths.includes(month.value)
-                              ? "border-black bg-black text-white hover:bg-black/90"
-                              : "bg-card hover:bg-muted"
-                          )}>
-                          {month.label}
-                        </Button>
-                      ))}
-                    </div>
-                    <p className="text-muted-foreground text-sm">
-                      Selected:{" "}
-                      {selectedMonths.length > 0
-                        ? selectedMonths
-                            .map((m) => {
-                              const monthName = [
-                                "January",
-                                "February",
-                                "March",
-                                "April",
-                                "May",
-                                "June",
-                                "July",
-                                "August",
-                                "September",
-                                "October",
-                                "November",
-                                "December"
-                              ][m - 1]
-                              return monthName
-                            })
-                            .join(", ")
-                        : "None"}
-                    </p>
-                  </Field>
-                )}
-
-                {/* Row 3: Start Date and End Date - Only show for non-recurring expenses */}
-                {expenseCategory !== "current-recurring" && (
-                  <div
-                    className={cn(
-                      "grid gap-4",
-                      expenseCategory === "one-off"
-                        ? "grid-cols-1"
-                        : "grid-cols-2"
-                    )}>
-                    <Field
-                      label={
-                        expenseCategory === "one-off"
-                          ? "Expense Date"
-                          : "Start Date"
-                      }
-                      htmlFor="start-date"
-                      required>
-                      <DatePicker
-                        id="start-date"
-                        value={startDate}
-                        onChange={setStartDate}
-                        triggerClassName="w-full touch-manipulation"
+              {/* Show remaining fields only when expense type is selected */}
+              {expenseCategory && (
+                <div className="grid gap-6 py-4">
+                  {/* Row 1: Name and Category */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Expense Name" htmlFor="name" required>
+                      <Input
+                        id="name"
+                        aria-required="true"
+                        placeholder="e.g., Rent, Groceries"
+                        {...register("name")}
                       />
                     </Field>
-                    {expenseCategory !== "one-off" && (
+                    <Field label="Category" htmlFor="category" required>
+                      <Controller
+                        control={control}
+                        name="category"
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}>
+                            <SelectTrigger id="category" aria-required="true">
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[400px] overflow-y-auto">
+                              {categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.name}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      <ExpenseCategoryManagerPopover
+                        categories={categories}
+                        onCategoriesChanged={loadCategories}
+                      />
+                    </Field>
+                  </div>
+
+                  {/* Row 2: Amount and Frequency */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Expense Amount" htmlFor="amount" required>
+                      <Input
+                        id="amount"
+                        aria-required="true"
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
+                        {...register("amount")}
+                      />
+                    </Field>
+                    <Field
+                      label="Expense Frequency"
+                      htmlFor="frequency"
+                      required
+                      helper={selectedFrequency?.description}>
+                      <Controller
+                        control={control}
+                        name="frequency"
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={expenseCategory === "one-off"}>
+                            <SelectTrigger id="frequency" aria-required="true">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {FREQUENCIES.map((freq) => (
+                                <SelectItem key={freq.value} value={freq.value}>
+                                  {freq.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </Field>
+                  </div>
+
+                  {/* Custom Month Selector */}
+                  {frequency === "custom" && (
+                    <Field label="Select Months" required>
+                      <Controller
+                        control={control}
+                        name="selectedMonths"
+                        render={({ field }) => (
+                          <>
+                            <div className="grid grid-cols-6 gap-2">
+                              {MONTHS.map((month) => (
+                                <Button
+                                  key={month.value}
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    field.onChange(
+                                      field.value.includes(month.value)
+                                        ? field.value.filter(
+                                            (m) => m !== month.value
+                                          )
+                                        : [...field.value, month.value].sort(
+                                            (a, b) => a - b
+                                          )
+                                    )
+                                  }
+                                  className={cn(
+                                    "h-10 font-medium",
+                                    field.value.includes(month.value)
+                                      ? "border-black bg-black text-white hover:bg-black/90"
+                                      : "bg-card hover:bg-muted"
+                                  )}>
+                                  {month.label}
+                                </Button>
+                              ))}
+                            </div>
+                            <p className="text-muted-foreground text-sm">
+                              Selected:{" "}
+                              {field.value.length > 0
+                                ? field.value
+                                    .map((m) => MONTH_NAMES[m - 1])
+                                    .join(", ")
+                                : "None"}
+                            </p>
+                          </>
+                        )}
+                      />
+                    </Field>
+                  )}
+
+                  {/* Row 3: Start Date and End Date - only for non-recurring */}
+                  {expenseCategory !== "current-recurring" && (
+                    <div
+                      className={cn(
+                        "grid gap-4",
+                        expenseCategory === "one-off"
+                          ? "grid-cols-1"
+                          : "grid-cols-2"
+                      )}>
                       <Field
-                        label="End Date"
-                        htmlFor="end-date"
-                        helper="Leave empty for ongoing expense">
-                        <DatePicker
-                          id="end-date"
-                          value={endDate}
-                          onChange={setEndDate}
-                          triggerClassName="w-full touch-manipulation"
+                        label={
+                          expenseCategory === "one-off"
+                            ? "Expense Date"
+                            : "Start Date"
+                        }
+                        htmlFor="start-date"
+                        required>
+                        <Controller
+                          control={control}
+                          name="startDate"
+                          render={({ field }) => (
+                            <DatePicker
+                              id="start-date"
+                              value={field.value}
+                              onChange={field.onChange}
+                              triggerClassName="w-full touch-manipulation"
+                            />
+                          )}
                         />
                       </Field>
-                    )}
-                  </div>
-                )}
+                      {expenseCategory !== "one-off" && (
+                        <Field
+                          label="End Date"
+                          htmlFor="end-date"
+                          helper="Leave empty for ongoing expense">
+                          <Controller
+                            control={control}
+                            name="endDate"
+                            render={({ field }) => (
+                              <DatePicker
+                                id="end-date"
+                                value={field.value}
+                                onChange={field.onChange}
+                                triggerClassName="w-full touch-manipulation"
+                              />
+                            )}
+                          />
+                        </Field>
+                      )}
+                    </div>
+                  )}
 
-                {/* Row 4: Notes */}
-                <Field
-                  label="Expense Notes"
-                  htmlFor="notes"
-                  helper="Add any additional details about this expense">
-                  <Textarea
-                    id="notes"
-                    placeholder="e.g., Monthly apartment rent..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
-                  />
-                </Field>
-              </div>
-            )}
-          </DialogBody>
+                  {/* Row 4: Notes */}
+                  <Field
+                    label="Expense Notes"
+                    htmlFor="notes"
+                    helper="Add any additional details about this expense">
+                    <Textarea
+                      id="notes"
+                      placeholder="e.g., Monthly apartment rent..."
+                      rows={3}
+                      {...register("notes")}
+                    />
+                  </Field>
+                </div>
+              )}
+            </DialogBody>
 
-          {/* Footer */}
-          <DialogFooterSticky>
-            <Button
-              variant="ghost"
-              onClick={() => handleClose(false)}
-              disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                !expenseCategory ||
-                !name ||
-                !category ||
-                !amount ||
-                (expenseCategory !== "current-recurring" && !startDate) ||
-                (frequency === "custom" && selectedMonths.length === 0) ||
-                isSubmitting
-              }>
-              {isSubmitting ? "Adding..." : "Add Expense"}
-            </Button>
-          </DialogFooterSticky>
+            {/* Footer */}
+            <DialogFooterSticky>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => handleClose(false)}
+                disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!isValid || isSubmitting}>
+                {isSubmitting ? "Adding..." : "Add Expense"}
+              </Button>
+            </DialogFooterSticky>
+          </form>
         </DialogContent>
       </Dialog>
 
