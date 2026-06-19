@@ -6,13 +6,13 @@ import {
   createInvestment,
   deleteInvestment,
   updateInvestment,
-  type Investment,
   type InvestmentsSummary
 } from "@/actions/investments"
 import { DollarSign, LineChart, Percent, TrendingUp } from "lucide-react"
 import { toast } from "sonner"
 
 import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
+import type { Investment } from "@/db/types"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Toolbar } from "@/components/ui/toolbar"
 import {

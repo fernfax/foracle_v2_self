@@ -10,6 +10,7 @@ import {
   listInvestments,
   updateInvestment as updateInvestmentService
 } from "@/lib/services/investments"
+import type { Investment } from "@/db/types"
 
 // Investment values feed net worth on /user (Holdings) and the /overview
 // dashboard, so every mutation must revalidate those paths — otherwise the
@@ -18,21 +19,6 @@ function revalidateInvestmentSurfaces() {
   revalidatePath("/investments")
   revalidatePath("/user", "layout")
   revalidatePath("/overview")
-}
-
-export interface Investment {
-  id: string
-  userId: string
-  name: string
-  type: string
-  currentCapital: string
-  projectedYield: string
-  contributionAmount: string
-  contributionFrequency: string
-  customMonths: string | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
 }
 
 export interface InvestmentsSummary {

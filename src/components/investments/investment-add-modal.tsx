@@ -1,8 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { HelpCircle } from "lucide-react"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
 
+import type { Investment } from "@/db/types"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -32,18 +36,6 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip"
 
-interface Investment {
-  id: string
-  name: string
-  type: string
-  currentCapital: string
-  projectedYield: string
-  contributionAmount: string
-  contributionFrequency: string
-  customMonths: string | null
-  isActive: boolean | null
-}
-
 interface AddInvestmentModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -69,101 +61,113 @@ const INVESTMENT_TYPES = [
   { value: "reit", label: "REIT" }
 ]
 
+// Form-layer schema. Required fields mirror the original isFormValid gate;
+// custom months are required only when frequency is Custom.
+const investmentFormSchema = z
+  .object({
+    name: z.string().min(1, "Investment name is required"),
+    type: z.string(),
+    currentCapital: z.string().min(1, "Current capital is required"),
+    projectedYield: z.string().min(1, "Projected yield is required"),
+    contributionAmount: z.string().min(1, "Contribution amount is required"),
+    contributionFrequency: z.string(),
+    selectedMonths: z.array(z.number())
+  })
+  .superRefine((v, ctx) => {
+    if (v.contributionFrequency === "custom" && v.selectedMonths.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["selectedMonths"],
+        message: "Select at least one month"
+      })
+    }
+  })
+type InvestmentFormValues = z.infer<typeof investmentFormSchema>
+
+const emptyValues: InvestmentFormValues = {
+  name: "",
+  type: "stock",
+  currentCapital: "",
+  projectedYield: "",
+  contributionAmount: "",
+  contributionFrequency: "monthly",
+  selectedMonths: []
+}
+
+function toFormValues(investment: Investment): InvestmentFormValues {
+  let selectedMonths: number[] = []
+  if (investment.customMonths) {
+    try {
+      const months = JSON.parse(investment.customMonths)
+      selectedMonths = Array.isArray(months) ? months : []
+    } catch {
+      selectedMonths = []
+    }
+  }
+  return {
+    name: investment.name,
+    type: investment.type,
+    currentCapital: investment.currentCapital,
+    projectedYield: investment.projectedYield,
+    contributionAmount: investment.contributionAmount,
+    contributionFrequency: investment.contributionFrequency,
+    selectedMonths
+  }
+}
+
 export function InvestmentAddModal({
   open,
   onOpenChange,
   investment,
   onSubmit
 }: AddInvestmentModalProps) {
-  const [name, setName] = useState("")
-  const [type, setType] = useState("stock")
-  const [currentCapital, setCurrentCapital] = useState("")
-  const [projectedYield, setProjectedYield] = useState("")
-  const [contributionAmount, setContributionAmount] = useState("")
-  const [contributionFrequency, setContributionFrequency] = useState("monthly")
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { isValid, isSubmitting }
+  } = useForm<InvestmentFormValues>({
+    resolver: zodResolver(investmentFormSchema),
+    mode: "onChange",
+    defaultValues: emptyValues
+  })
 
-  // Reset form when modal opens/closes or investment changes
+  const contributionFrequency = useWatch({
+    control,
+    name: "contributionFrequency"
+  })
+  const selectedMonths = useWatch({ control, name: "selectedMonths" })
+
   useEffect(() => {
-    if (open) {
-      if (investment) {
-        setName(investment.name)
-        setType(investment.type)
-        setCurrentCapital(investment.currentCapital)
-        setProjectedYield(investment.projectedYield)
-        setContributionAmount(investment.contributionAmount)
-        setContributionFrequency(investment.contributionFrequency)
-        if (investment.customMonths) {
-          try {
-            setSelectedMonths(JSON.parse(investment.customMonths))
-          } catch {
-            setSelectedMonths([])
-          }
-        } else {
-          setSelectedMonths([])
-        }
-      } else {
-        resetForm()
-      }
-    }
-  }, [open, investment])
-
-  const resetForm = () => {
-    setName("")
-    setType("stock")
-    setCurrentCapital("")
-    setProjectedYield("")
-    setContributionAmount("")
-    setContributionFrequency("monthly")
-    setSelectedMonths([])
-  }
+    if (open) reset(investment ? toFormValues(investment) : emptyValues)
+  }, [open, investment, reset])
 
   const handleClose = (isOpen: boolean) => {
-    if (!isOpen) {
-      resetForm()
-    }
+    if (!isOpen) reset(emptyValues)
     onOpenChange(isOpen)
   }
 
-  const handleSubmit = async () => {
-    if (!name || !currentCapital || !projectedYield || !contributionAmount) {
-      return
-    }
-
-    if (contributionFrequency === "custom" && selectedMonths.length === 0) {
-      return
-    }
-
-    setIsSubmitting(true)
-
+  const submit = async (values: InvestmentFormValues) => {
     try {
       await onSubmit({
-        name,
-        type,
-        currentCapital,
-        projectedYield,
-        contributionAmount,
-        contributionFrequency,
+        name: values.name,
+        type: values.type,
+        currentCapital: values.currentCapital,
+        projectedYield: values.projectedYield,
+        contributionAmount: values.contributionAmount,
+        contributionFrequency: values.contributionFrequency,
         customMonths:
-          contributionFrequency === "custom"
-            ? JSON.stringify(selectedMonths)
+          values.contributionFrequency === "custom"
+            ? JSON.stringify(values.selectedMonths)
             : undefined
       })
       handleClose(false)
     } catch (error) {
       console.error("Failed to save investment:", error)
-    } finally {
-      setIsSubmitting(false)
     }
   }
-
-  const isFormValid =
-    name &&
-    currentCapital &&
-    projectedYield &&
-    contributionAmount &&
-    (contributionFrequency !== "custom" || selectedMonths.length > 0)
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -190,23 +194,30 @@ export function InvestmentAddModal({
                       id="name"
                       aria-required="true"
                       placeholder="e.g., S&P 500 ETF, High Yield Savings"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      {...register("name")}
                     />
                   </Field>
                   <Field label="Type" htmlFor="type" required>
-                    <Select value={type} onValueChange={setType}>
-                      <SelectTrigger id="type" aria-required="true">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {INVESTMENT_TYPES.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>
-                            {t.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      control={control}
+                      name="type"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}>
+                          <SelectTrigger id="type" aria-required="true">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {INVESTMENT_TYPES.map((t) => (
+                              <SelectItem key={t.value} value={t.value}>
+                                {t.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </Field>
                 </div>
               </div>
@@ -225,14 +236,21 @@ export function InvestmentAddModal({
                     label="Current Portfolio Capital"
                     htmlFor="currentCapital"
                     required>
-                    <MoneyInput
-                      id="currentCapital"
-                      aria-required="true"
-                      placeholder="0.00"
-                      value={currentCapital}
-                      onChange={(e) => setCurrentCapital(e.target.value)}
-                      min="0"
-                      step="0.01"
+                    <Controller
+                      control={control}
+                      name="currentCapital"
+                      render={({ field }) => (
+                        <MoneyInput
+                          id="currentCapital"
+                          aria-required="true"
+                          placeholder="0.00"
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          onBlur={field.onBlur}
+                          min="0"
+                          step="0.01"
+                        />
+                      )}
                     />
                   </Field>
                   <Field
@@ -278,16 +296,23 @@ export function InvestmentAddModal({
                         </TooltipProvider>
                       </span>
                     }>
-                    <MoneyInput
-                      symbol="%"
-                      side="suffix"
-                      id="projectedYield"
-                      aria-required="true"
-                      placeholder="0.00"
-                      value={projectedYield}
-                      onChange={(e) => setProjectedYield(e.target.value)}
-                      min="0"
-                      step="0.01"
+                    <Controller
+                      control={control}
+                      name="projectedYield"
+                      render={({ field }) => (
+                        <MoneyInput
+                          symbol="%"
+                          side="suffix"
+                          id="projectedYield"
+                          aria-required="true"
+                          placeholder="0.00"
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          onBlur={field.onBlur}
+                          min="0"
+                          step="0.01"
+                        />
+                      )}
                     />
                   </Field>
                 </div>
@@ -307,28 +332,40 @@ export function InvestmentAddModal({
                     label="Contribution Amount"
                     htmlFor="contributionAmount"
                     required>
-                    <MoneyInput
-                      id="contributionAmount"
-                      aria-required="true"
-                      placeholder="0.00"
-                      value={contributionAmount}
-                      onChange={(e) => setContributionAmount(e.target.value)}
-                      min="0"
-                      step="0.01"
+                    <Controller
+                      control={control}
+                      name="contributionAmount"
+                      render={({ field }) => (
+                        <MoneyInput
+                          id="contributionAmount"
+                          aria-required="true"
+                          placeholder="0.00"
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          onBlur={field.onBlur}
+                          min="0"
+                          step="0.01"
+                        />
+                      )}
                     />
                   </Field>
                   <div className="space-y-2">
                     <Label>Contribution Frequency</Label>
                     <div className="flex h-10 items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <Switch
-                          id="frequency"
-                          checked={contributionFrequency === "custom"}
-                          onCheckedChange={(checked) =>
-                            setContributionFrequency(
-                              checked ? "custom" : "monthly"
-                            )
-                          }
+                        <Controller
+                          control={control}
+                          name="contributionFrequency"
+                          render={({ field }) => (
+                            <Switch
+                              id="frequency"
+                              checked={field.value === "custom"}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked ? "custom" : "monthly")
+                                if (!checked) setValue("selectedMonths", [])
+                              }}
+                            />
+                          )}
                         />
                         <Label
                           htmlFor="frequency"
@@ -345,9 +382,15 @@ export function InvestmentAddModal({
                 {/* Custom Months Selector */}
                 {contributionFrequency === "custom" && (
                   <Field label="Select Months" required className="pt-2">
-                    <MonthPicker
-                      value={selectedMonths}
-                      onChange={setSelectedMonths}
+                    <Controller
+                      control={control}
+                      name="selectedMonths"
+                      render={({ field }) => (
+                        <MonthPicker
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                     {selectedMonths.length > 0 && (
                       <p className="text-muted-foreground text-xs">
@@ -370,8 +413,8 @@ export function InvestmentAddModal({
             Cancel
           </Button>
           <Button
-            onClick={handleSubmit}
-            disabled={!isFormValid || isSubmitting}>
+            onClick={handleSubmit(submit)}
+            disabled={!isValid || isSubmitting}>
             {isSubmitting
               ? "Saving..."
               : investment

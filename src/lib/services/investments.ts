@@ -9,8 +9,7 @@ import type {
 } from "@/lib/api-schemas/investments"
 import type { AuthContext } from "@/lib/auth-context"
 import { investmentPolicies } from "@/db/schema"
-
-export type InvestmentRow = typeof investmentPolicies.$inferSelect
+import type { Investment } from "@/db/types"
 
 export class InvestmentNotFoundError extends Error {
   constructor() {
@@ -19,8 +18,8 @@ export class InvestmentNotFoundError extends Error {
 }
 
 export type CreateInvestmentResult =
-  | { status: "created"; row: InvestmentRow }
-  | { status: "conflict"; row: InvestmentRow }
+  | { status: "created"; row: Investment }
+  | { status: "conflict"; row: Investment }
 
 export type InvestmentsSummary = {
   totalPortfolioValue: number
@@ -32,7 +31,7 @@ export type InvestmentsSummary = {
 export async function listInvestments(
   ctx: AuthContext,
   filters: ListInvestmentsQuery = {}
-): Promise<InvestmentRow[]> {
+): Promise<Investment[]> {
   const conditions = [eq(investmentPolicies.familyId, ctx.familyId)]
   if (filters.isActive !== undefined)
     conditions.push(eq(investmentPolicies.isActive, filters.isActive))
@@ -48,7 +47,7 @@ export async function listInvestments(
 export async function getInvestmentById(
   ctx: AuthContext,
   id: string
-): Promise<InvestmentRow | null> {
+): Promise<Investment | null> {
   const row = await db.query.investmentPolicies.findFirst({
     where: and(
       eq(investmentPolicies.id, id),
@@ -105,7 +104,7 @@ export async function updateInvestment(
   ctx: AuthContext,
   id: string,
   patch: UpdateInvestmentBody
-): Promise<InvestmentRow> {
+): Promise<Investment> {
   const existing = await getInvestmentById(ctx, id)
   if (!existing) throw new InvestmentNotFoundError()
 

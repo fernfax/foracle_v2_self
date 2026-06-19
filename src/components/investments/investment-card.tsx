@@ -14,6 +14,7 @@ import {
   TrendingUp
 } from "lucide-react"
 
+import type { Investment } from "@/db/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,18 +24,6 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-
-interface Investment {
-  id: string
-  name: string
-  type: string
-  currentCapital: string
-  projectedYield: string
-  contributionAmount: string
-  contributionFrequency: string
-  customMonths: string | null
-  isActive: boolean | null
-}
 
 interface InvestmentCardProps {
   investment: Investment

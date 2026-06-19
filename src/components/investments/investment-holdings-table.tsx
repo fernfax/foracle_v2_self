@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import type { Investment } from "@/actions/investments"
 
 import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { brandColor } from "@/lib/portfolio-colors"
+import type { Investment } from "@/db/types"
 import { Badge } from "@/components/ui/badge"
 import { RowActions } from "@/components/ui/row-actions"
 import {
