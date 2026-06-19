@@ -1,8 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { addMonths, format, max, parseISO, startOfMonth } from "date-fns"
 import { ArrowDownRight, ArrowUpRight, CalendarDays } from "lucide-react"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
 
 import type { FutureMilestone } from "@/lib/finance/future-change"
 import { cn } from "@/lib/utils"
@@ -54,6 +57,34 @@ interface FutureChangeDialogProps {
   onDelete?: () => void
 }
 
+// Amount must be positive; a temporary change additionally needs its end month
+// on/after the start. Together these reproduce the original `canSave` gate via
+// mode:"onChange" + isValid.
+const formSchema = z
+  .object({
+    targetMonth: z.date(),
+    amount: z.string(),
+    mode: z.enum(["permanent", "temporary"]),
+    endMonth: z.date()
+  })
+  .superRefine((v, ctx) => {
+    if (!(Number(v.amount) > 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["amount"],
+        message: "Amount must be greater than 0"
+      })
+    }
+    if (v.mode === "temporary" && v.endMonth < v.targetMonth) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["endMonth"],
+        message: "End month must be on or after the start"
+      })
+    }
+  })
+type FormValues = z.infer<typeof formSchema>
+
 export function TimelineFutureChangeDialog({
   open,
   onOpenChange,
@@ -64,74 +95,70 @@ export function TimelineFutureChangeDialog({
   onSave,
   onDelete
 }: FutureChangeDialogProps) {
-  const defaultStart = () => {
+  const [startCalOpen, setStartCalOpen] = useState(false)
+  const [endCalOpen, setEndCalOpen] = useState(false)
+
+  // Default start: the clicked month (clamped to >= this month), else next month.
+  const defaultStart = (): Date => {
     const today = startOfMonth(new Date())
     if (defaultStartMonth) {
-      const proposed = parseISO(`${defaultStartMonth}-01`)
-      return max([proposed, today])
+      return max([parseISO(`${defaultStartMonth}-01`), today])
     }
     return nextMonthStart()
   }
 
-  const [targetMonth, setTargetMonth] = useState<Date>(() =>
-    initial ? parseISO(`${initial.targetMonth}-01`) : defaultStart()
-  )
-  const [amount, setAmount] = useState<string>(() =>
-    initial?.amount != null
-      ? String(initial.amount)
-      : priorAmount != null
-        ? String(priorAmount)
-        : ""
-  )
-  // "permanent" = ongoing until a later change; "temporary" = reverts after end.
-  const [mode, setMode] = useState<"permanent" | "temporary">(() =>
-    initial?.endMonth ? "temporary" : "permanent"
-  )
-  const [endMonth, setEndMonth] = useState<Date>(() =>
-    initial?.endMonth
-      ? parseISO(`${initial.endMonth}-01`)
-      : addMonths(
-          initial ? parseISO(`${initial.targetMonth}-01`) : defaultStart(),
-          6
-        )
-  )
-  const [startCalOpen, setStartCalOpen] = useState(false)
-  const [endCalOpen, setEndCalOpen] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
+  const toFormValues = (): FormValues => {
     const start = initial
       ? parseISO(`${initial.targetMonth}-01`)
       : defaultStart()
-    setTargetMonth(start)
-    setAmount(
-      initial?.amount != null
-        ? String(initial.amount)
-        : priorAmount != null
-          ? String(priorAmount)
-          : ""
-    )
-    setMode(initial?.endMonth ? "temporary" : "permanent")
-    setEndMonth(
-      initial?.endMonth
+    return {
+      targetMonth: start,
+      amount:
+        initial?.amount != null
+          ? String(initial.amount)
+          : priorAmount != null
+            ? String(priorAmount)
+            : "",
+      mode: initial?.endMonth ? "temporary" : "permanent",
+      endMonth: initial?.endMonth
         ? parseISO(`${initial.endMonth}-01`)
         : addMonths(start, 6)
-    )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initial, defaultStartMonth])
+    }
+  }
 
-  // Keep end >= start.
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { isValid }
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    mode: "onChange",
+    defaultValues: toFormValues()
+  })
+
+  const targetMonth = useWatch({ control, name: "targetMonth" })
+  const amount = useWatch({ control, name: "amount" })
+  const mode = useWatch({ control, name: "mode" })
+  const endMonth = useWatch({ control, name: "endMonth" })
+
+  // Re-hydrate when the dialog opens / the milestone or default month changes.
   useEffect(() => {
-    if (endMonth < targetMonth) setEndMonth(targetMonth)
-  }, [targetMonth, endMonth])
+    if (open) reset(toFormValues())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initial, defaultStartMonth, priorAmount])
+
+  // Keep end >= start (setValue is RHF, not a React setState).
+  useEffect(() => {
+    if (endMonth < targetMonth) setValue("endMonth", targetMonth)
+  }, [targetMonth, endMonth, setValue])
 
   const isEdit = Boolean(initial)
   const parsedAmount = Number(amount)
   const validAmount = parsedAmount > 0 && !Number.isNaN(parsedAmount)
-  const canSave =
-    validAmount && (mode === "permanent" || endMonth >= targetMonth)
 
-  // Increment / decrement classification for the live hint + intent.
+  // Increment / decrement classification for the live hint.
   const direction =
     priorAmount == null || !validAmount
       ? null
@@ -141,13 +168,13 @@ export function TimelineFutureChangeDialog({
           ? "down"
           : "same"
 
-  const handleSave = () => {
-    if (!canSave) return
+  const onSubmit = (values: FormValues) => {
     onSave({
       id: initial?.id ?? cryptoId(),
-      targetMonth: format(targetMonth, "yyyy-MM"),
-      amount: parsedAmount,
-      endMonth: mode === "temporary" ? format(endMonth, "yyyy-MM") : null,
+      targetMonth: format(values.targetMonth, "yyyy-MM"),
+      amount: Number(values.amount),
+      endMonth:
+        values.mode === "temporary" ? format(values.endMonth, "yyyy-MM") : null,
       reason: initial?.reason,
       notes: initial?.notes
     })
@@ -167,109 +194,117 @@ export function TimelineFutureChangeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          {/* Permanent vs temporary */}
-          <div className="grid grid-cols-2 gap-2">
-            <ModeButton
-              active={mode === "permanent"}
-              title="Permanent"
-              subtitle="Ongoing from the start month"
-              onClick={() => setMode("permanent")}
-            />
-            <ModeButton
-              active={mode === "temporary"}
-              title="Temporary"
-              subtitle="Reverts after an end month"
-              onClick={() => setMode("temporary")}
-            />
-          </div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-4 py-2">
+            {/* Permanent vs temporary */}
+            <div className="grid grid-cols-2 gap-2">
+              <ModeButton
+                active={mode === "permanent"}
+                title="Permanent"
+                subtitle="Ongoing from the start month"
+                onClick={() => setValue("mode", "permanent")}
+              />
+              <ModeButton
+                active={mode === "temporary"}
+                title="Temporary"
+                subtitle="Reverts after an end month"
+                onClick={() => setValue("mode", "temporary")}
+              />
+            </div>
 
-          {/* Start month */}
-          <Field label={mode === "temporary" ? "From" : "Starting month"}>
-            <MonthPicker
-              value={targetMonth}
-              onChange={setTargetMonth}
-              open={startCalOpen}
-              onOpenChange={setStartCalOpen}
-            />
-          </Field>
-
-          {/* End month (temporary only) */}
-          {mode === "temporary" && (
-            <Field
-              label="Until (last month)"
-              helper={`After this month it reverts to ${fmtMoney(priorAmount)}.`}>
+            {/* Start month */}
+            <Field label={mode === "temporary" ? "From" : "Starting month"}>
               <MonthPicker
-                value={endMonth}
-                onChange={setEndMonth}
-                open={endCalOpen}
-                onOpenChange={setEndCalOpen}
+                value={targetMonth}
+                onChange={(d) => setValue("targetMonth", d)}
+                open={startCalOpen}
+                onOpenChange={setStartCalOpen}
               />
             </Field>
-          )}
 
-          {/* New amount */}
-          <div className="space-y-2">
-            <Field label="New monthly amount" htmlFor="future-change-amount">
-              <MoneyInput
-                id="future-change-amount"
-                min={0}
-                step="50"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="font-display text-lg font-semibold"
-                placeholder="0"
-                autoFocus={!isEdit}
-              />
-            </Field>
-            {priorAmount != null && (
-              <p className="text-muted-foreground flex items-center gap-1 text-[11px]">
-                <span>Currently {fmtMoney(priorAmount)}.</span>
-                {direction === "up" && (
-                  <span className="inline-flex items-center gap-0.5 font-semibold text-[#2E8B57]">
-                    <ArrowUpRight className="h-3 w-3" /> increase
-                  </span>
-                )}
-                {direction === "down" && (
-                  <span className="inline-flex items-center gap-0.5 font-semibold text-[#9A6A12]">
-                    <ArrowDownRight className="h-3 w-3" /> decrease
-                  </span>
-                )}
-              </p>
+            {/* End month (temporary only) */}
+            {mode === "temporary" && (
+              <Field
+                label="Until (last month)"
+                helper={`After this month it reverts to ${fmtMoney(priorAmount)}.`}>
+                <MonthPicker
+                  value={endMonth}
+                  onChange={(d) => setValue("endMonth", d)}
+                  open={endCalOpen}
+                  onOpenChange={setEndCalOpen}
+                />
+              </Field>
             )}
-          </div>
-        </div>
 
-        <DialogFooter className="gap-2 sm:justify-between">
-          <div>
-            {isEdit && onDelete && (
+            {/* New amount */}
+            <div className="space-y-2">
+              <Field label="New monthly amount" htmlFor="future-change-amount">
+                <Controller
+                  control={control}
+                  name="amount"
+                  render={({ field }) => (
+                    <MoneyInput
+                      id="future-change-amount"
+                      min={0}
+                      step="50"
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      onBlur={field.onBlur}
+                      className="font-display text-lg font-semibold"
+                      placeholder="0"
+                      autoFocus={!isEdit}
+                    />
+                  )}
+                />
+              </Field>
+              {priorAmount != null && (
+                <p className="text-muted-foreground flex items-center gap-1 text-[11px]">
+                  <span>Currently {fmtMoney(priorAmount)}.</span>
+                  {direction === "up" && (
+                    <span className="inline-flex items-center gap-0.5 font-semibold text-[#2E8B57]">
+                      <ArrowUpRight className="h-3 w-3" /> increase
+                    </span>
+                  )}
+                  {direction === "down" && (
+                    <span className="inline-flex items-center gap-0.5 font-semibold text-[#9A6A12]">
+                      <ArrowDownRight className="h-3 w-3" /> decrease
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:justify-between">
+            <div>
+              {isEdit && onDelete && (
+                <Button
+                  type="button"
+                  variant="destructiveGhost"
+                  onClick={() => {
+                    onDelete()
+                    onOpenChange(false)
+                  }}>
+                  Remove
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
               <Button
                 type="button"
-                variant="destructiveGhost"
-                onClick={() => {
-                  onDelete()
-                  onOpenChange(false)
-                }}>
-                Remove
+                variant="outline"
+                onClick={() => onOpenChange(false)}>
+                Cancel
               </Button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSave}
-              disabled={!canSave}
-              className="bg-brand-jungle hover:bg-brand-jungle/90 text-white">
-              {isEdit ? "Save" : "Apply change"}
-            </Button>
-          </div>
-        </DialogFooter>
+              <Button
+                type="submit"
+                disabled={!isValid}
+                className="bg-brand-jungle hover:bg-brand-jungle/90 text-white">
+                {isEdit ? "Save" : "Apply change"}
+              </Button>
+            </div>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
