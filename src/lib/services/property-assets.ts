@@ -9,8 +9,7 @@ import type {
 } from "@/lib/api-schemas/property-assets"
 import type { AuthContext } from "@/lib/auth-context"
 import { expenses, propertyAssets } from "@/db/schema"
-
-export type PropertyAssetRow = typeof propertyAssets.$inferSelect
+import type { PropertyAsset } from "@/db/types"
 
 export class PropertyAssetNotFoundError extends Error {
   constructor() {
@@ -19,8 +18,8 @@ export class PropertyAssetNotFoundError extends Error {
 }
 
 export type CreatePropertyAssetResult =
-  | { status: "created"; row: PropertyAssetRow }
-  | { status: "conflict"; row: PropertyAssetRow }
+  | { status: "created"; row: PropertyAsset }
+  | { status: "conflict"; row: PropertyAsset }
 
 function expenseNameFor(
   propertyName: string,
@@ -71,7 +70,7 @@ async function ensureLinkedExpense(opts: {
 export async function listPropertyAssets(
   ctx: AuthContext,
   filters: ListPropertyAssetsQuery = {}
-): Promise<PropertyAssetRow[]> {
+): Promise<PropertyAsset[]> {
   const conditions = [eq(propertyAssets.familyId, ctx.familyId)]
   if (filters.isActive !== undefined)
     conditions.push(eq(propertyAssets.isActive, filters.isActive))
@@ -85,7 +84,7 @@ export async function listPropertyAssets(
 export async function getPropertyAssetById(
   ctx: AuthContext,
   id: string
-): Promise<PropertyAssetRow | null> {
+): Promise<PropertyAsset | null> {
   const row = await db.query.propertyAssets.findFirst({
     where: and(
       eq(propertyAssets.id, id),
@@ -161,7 +160,7 @@ export async function updatePropertyAsset(
   ctx: AuthContext,
   id: string,
   patch: UpdatePropertyAssetBody
-): Promise<PropertyAssetRow> {
+): Promise<PropertyAsset> {
   const existing = await getPropertyAssetById(ctx, id)
   if (!existing) throw new PropertyAssetNotFoundError()
 

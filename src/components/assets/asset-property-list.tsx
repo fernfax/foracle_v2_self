@@ -7,6 +7,7 @@ import { Building2, Home } from "lucide-react"
 import { toast } from "sonner"
 
 import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
+import type { PropertyAsset } from "@/db/types"
 import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
@@ -15,25 +16,6 @@ import { AssetAddPropertyDialog } from "@/components/assets/asset-add-property-d
 import { AssetPropertyDetailsModal } from "@/components/assets/asset-property-details-modal"
 import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
 import { PortfolioProgress } from "@/components/portfolio/portfolio-progress"
-
-interface PropertyAsset {
-  id: string
-  propertyName: string
-  purchaseDate: string
-  originalPurchasePrice: string
-  loanAmountTaken: string | null
-  outstandingLoan: string
-  monthlyLoanPayment: string
-  interestRate: string
-  principalCpfWithdrawn: string | null
-  housingGrantTaken: string | null
-  accruedInterestToDate: string | null
-  linkedExpenseId: string | null
-  paidByCpf: boolean | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface PropertyListProps {
   initialProperties: PropertyAsset[]

@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Car, ChevronRight, Home, TrendingUp } from "lucide-react"
 
-import type { VehicleAsset } from "@/db/types"
+import type { PropertyAsset, VehicleAsset } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,15 +22,6 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-
-interface PropertyAsset {
-  id: string
-  propertyName: string
-  originalPurchasePrice: string
-  outstandingLoan: string
-  monthlyLoanPayment: string | null
-  isActive: boolean | null
-}
 
 interface AssetBreakdownModalProps {
   open: boolean

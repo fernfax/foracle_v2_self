@@ -4,18 +4,9 @@ import React, { useEffect, useMemo, useState } from "react"
 import { getUserPropertyAssets, getUserVehicleAssets } from "@/actions/user"
 import { Car, Home, TrendingUp } from "lucide-react"
 
-import type { VehicleAsset } from "@/db/types"
+import type { PropertyAsset, VehicleAsset } from "@/db/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardAssetBreakdownModal } from "@/components/dashboard/dashboard-asset-breakdown-modal"
-
-interface PropertyAsset {
-  id: string
-  propertyName: string
-  originalPurchasePrice: string
-  outstandingLoan: string
-  monthlyLoanPayment: string | null
-  isActive: boolean | null
-}
 
 interface TotalAssetsCardProps {
   totalAssets: number

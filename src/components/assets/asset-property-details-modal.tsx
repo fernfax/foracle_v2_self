@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { useTheme } from "next-themes"
 
+import type { PropertyAsset } from "@/db/types"
 import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
@@ -20,22 +21,6 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-
-interface PropertyAsset {
-  id: string
-  propertyName: string
-  purchaseDate: string
-  originalPurchasePrice: string
-  loanAmountTaken: string | null
-  outstandingLoan: string
-  monthlyLoanPayment: string
-  interestRate: string
-  principalCpfWithdrawn: string | null
-  housingGrantTaken: string | null
-  accruedInterestToDate: string | null
-  linkedExpenseId: string | null
-  paidByCpf: boolean | null
-}
 
 interface PropertyDetailsModalProps {
   open: boolean
