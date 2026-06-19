@@ -46,9 +46,9 @@ export async function createPropertyAsset(data: {
     expenseName: data.expenseName,
     expenditureAmount: data.expenditureAmount?.toString()
   })
-  revalidatePath("/assets")
+  revalidatePath("/assets", "layout")
   revalidatePath("/expenses")
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return result.row
 }
 
@@ -99,9 +99,9 @@ export async function updatePropertyAsset(
     expenseName: data.expenseName,
     expenditureAmount: data.expenditureAmount?.toString() ?? null
   })
-  revalidatePath("/assets")
+  revalidatePath("/assets", "layout")
   revalidatePath("/expenses")
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return row
 }
 
@@ -111,7 +111,7 @@ export async function updatePropertyAsset(
 export async function deletePropertyAsset(id: string) {
   const ctx = await getCurrentUserAndFamily()
   await deletePropertyAssetService(ctx, id)
-  revalidatePath("/assets")
+  revalidatePath("/assets", "layout")
   revalidatePath("/expenses")
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
 }

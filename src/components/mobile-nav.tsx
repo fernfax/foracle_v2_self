@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 import { useGlassRefraction } from "@/hooks/use-glass-refraction"
 
 // Top-level destinations only, with the compact mobile label. Sub-destinations
-// (e.g. Expenses under /user?tab=expenses) are reached via their parent — the
+// (e.g. Expenses under /user/expenses) are reached via their parent — the
 // bottom bar never surfaces them. Source of truth: configs/sidebar.config.ts.
 const mobileNavItems = NAV_ITEMS.map((item) => ({
   href: item.href,

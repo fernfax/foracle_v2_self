@@ -3,7 +3,7 @@ import path from "path"
 import { setupClerkTestingToken } from "@clerk/testing/playwright"
 import { expect, test } from "@playwright/test"
 
-const TARGET = "/user?tab=incomes"
+const TARGET = "/user/incomes"
 const ARTIFACTS_DIR = path.join(
   process.cwd(),
   "test-results",

@@ -149,7 +149,7 @@ const FAQS = [
 export default async function Home() {
   const { userId } = await auth()
   if (userId) {
-    redirect("/user")
+    redirect("/user/overview")
   }
 
   return (

@@ -69,7 +69,7 @@ const toNum = (s: string | null | undefined): number => {
 /**
  * CPF employee deduction ratio for a single income, derived from the stored
  * netTakeHome — identical to the formula in lib/cashflow-sankey.ts so the
- * HouseholdContextStrip and the Sankey always agree numerically.
+ * household summary and the Sankey always agree numerically.
  */
 function cpfRatioFor(income: IncomeRow): number {
   if (!income.subjectToCpf || income.netTakeHome == null) return 0

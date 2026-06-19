@@ -16,7 +16,7 @@ import {
 // server-rendered net worth / portfolio goes stale until a manual reload.
 function revalidateInvestmentSurfaces() {
   revalidatePath("/investments")
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   revalidatePath("/overview")
 }
 

@@ -11,6 +11,7 @@ import {
   Shield,
   Target,
   TrendingUp,
+  Trophy,
   User,
   Users,
   type LucideIcon
@@ -50,12 +51,12 @@ export const NAV_ITEMS: NavItem[] = [
     shortLabel: "User",
     icon: User,
     subItems: [
-      { href: "/user?tab=overview", label: "Overview", icon: Home },
-      { href: "/user?tab=family", label: "Family", icon: Users },
-      { href: "/user?tab=incomes", label: "Incomes", icon: DollarSign },
-      { href: "/user?tab=expenses", label: "Expenses", icon: Receipt },
-      { href: "/user?tab=cpf", label: "CPF", icon: Building2 },
-      { href: "/user?tab=current", label: "Holdings", icon: Briefcase }
+      { href: "/user/overview", label: "Overview", icon: Home },
+      { href: "/user/family", label: "Family", icon: Users },
+      { href: "/user/incomes", label: "Incomes", icon: DollarSign },
+      { href: "/user/expenses", label: "Expenses", icon: Receipt },
+      { href: "/user/cpf", label: "CPF", icon: Building2 },
+      { href: "/user/holdings", label: "Holdings", icon: Briefcase }
     ]
   },
   {
@@ -63,9 +64,9 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Assets",
     icon: TrendingUp,
     subItems: [
-      { href: "/assets?tab=property", label: "Property", icon: Home },
-      { href: "/assets?tab=vehicle", label: "Vehicle", icon: Car },
-      { href: "/assets?tab=others", label: "Others", icon: Package }
+      { href: "/assets/property", label: "Property", icon: Home },
+      { href: "/assets/vehicle", label: "Vehicle", icon: Car },
+      { href: "/assets/others", label: "Others", icon: Package }
     ]
   },
   { href: "/policies", label: "Insurance", icon: Shield },
@@ -75,7 +76,15 @@ export const NAV_ITEMS: NavItem[] = [
     shortLabel: "Invest",
     icon: LineChart
   },
-  { href: "/goals", label: "Goals", icon: Target },
+  {
+    href: "/goals",
+    label: "Goals",
+    icon: Target,
+    subItems: [
+      { href: "/goals/active", label: "Active Goals", icon: Target },
+      { href: "/goals/achieved", label: "Achieved", icon: Trophy }
+    ]
+  },
   { href: "/budget", label: "Budget", icon: Calculator }
   // Hidden for now — AI Assistant feature paused.
   // { href: "/assistant", label: "AI Assistant", shortLabel: "Assistant", icon: Sparkles },

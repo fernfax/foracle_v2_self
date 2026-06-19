@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Calculator,
   Compass,
@@ -50,32 +50,24 @@ const emptySubscribe = () => () => {}
 const TOUR_PATHNAMES: Record<TourName, string> = {
   overall: "/overview",
   dashboard: "/overview",
-  incomes: "/user",
-  expenses: "/user",
-  cpf: "/user",
-  holdings: "/user",
-  goals: "/goals",
+  incomes: "/user/incomes",
+  expenses: "/user/expenses",
+  cpf: "/user/cpf",
+  holdings: "/user/holdings",
+  goals: "/goals/active",
   budget: "/budget"
 }
 
-// Tours that live on a specific /user tab. We must also match the `?tab=`
-// param, not just the pathname, before a tour can start.
-const TOUR_TABS: Partial<Record<TourName, string>> = {
-  incomes: "incomes",
-  expenses: "expenses",
-  cpf: "cpf",
-  holdings: "holdings"
-}
-
-// Full URLs including query params for navigation
+// Navigation targets. Each tab tour is its own route now, so the pathname fully
+// identifies the tour's page — no ?tab= matching needed.
 const TOUR_ROUTES: Record<TourName, string> = {
   overall: "/overview",
   dashboard: "/overview",
-  incomes: "/user?tab=incomes",
-  expenses: "/user?tab=expenses",
-  cpf: "/user?tab=cpf",
-  holdings: "/user?tab=holdings",
-  goals: "/goals",
+  incomes: "/user/incomes",
+  expenses: "/user/expenses",
+  cpf: "/user/cpf",
+  holdings: "/user/holdings",
+  goals: "/goals/active",
   budget: "/budget"
 }
 
@@ -93,7 +85,6 @@ const TOUR_PAGE_NAMES: Record<TourName, string> = {
 export function HelpButton() {
   const { startTour } = useTourContext()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const router = useRouter()
   const startTourRef = useRef(startTour)
   const hasStartedPendingTour = useRef(false)
@@ -118,18 +109,7 @@ export function HelpButton() {
 
   // Check if user is on the correct page for a specific tour
   const isOnCorrectPage = (tourName: TourName): boolean => {
-    const targetPathname = TOUR_PATHNAMES[tourName]
-    if (pathname !== targetPathname) return false
-
-    // Tab-scoped tours (incomes, expenses, cpf, holdings) also need the right
-    // ?tab= param. The /user Overview tab is the default, so tours without an
-    // entry here just need the pathname to match.
-    const requiredTab = TOUR_TABS[tourName]
-    if (requiredTab) {
-      return searchParams.get("tab") === requiredTab
-    }
-
-    return true
+    return pathname === TOUR_PATHNAMES[tourName]
   }
 
   // Keep ref updated
@@ -156,7 +136,7 @@ export function HelpButton() {
 
   // Check for pending tour after navigation
   useEffect(() => {
-    // Reset the flag when pathname or searchParams change
+    // Reset the flag when the pathname changes
     hasStartedPendingTour.current = false
 
     const checkAndStartTour = () => {
@@ -166,15 +146,8 @@ export function HelpButton() {
         PENDING_TOUR_KEY
       ) as TourName | null
       const targetPathname = storedTour ? TOUR_PATHNAMES[storedTour] : null
-      const currentTab = searchParams.get("tab")
 
       if (storedTour && pathname === targetPathname) {
-        // Tab-scoped tours must also be on the right /user tab before starting.
-        const requiredTab = TOUR_TABS[storedTour]
-        if (requiredTab && currentTab !== requiredTab) {
-          return
-        }
-
         console.log("[Tour] Starting tour:", storedTour)
         // Clear the stored tour
         sessionStorage.removeItem(PENDING_TOUR_KEY)
@@ -194,7 +167,7 @@ export function HelpButton() {
     return () => {
       timers.forEach(clearTimeout)
     }
-  }, [pathname, searchParams])
+  }, [pathname])
 
   const handleTourClick = (tourName: TourName) => {
     // Always show welcome modal first for all tours

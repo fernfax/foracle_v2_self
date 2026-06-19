@@ -42,9 +42,9 @@ export async function createVehicleAsset(data: {
     addToExpenditures: data.addToExpenditures,
     expenseName: data.expenseName
   })
-  revalidatePath("/assets")
+  revalidatePath("/assets", "layout")
   revalidatePath("/expenses")
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return result.row
 }
 
@@ -91,9 +91,9 @@ export async function updateVehicleAsset(
     addToExpenditures: data.addToExpenditures,
     expenseName: data.expenseName
   })
-  revalidatePath("/assets")
+  revalidatePath("/assets", "layout")
   revalidatePath("/expenses")
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return row
 }
 
@@ -103,7 +103,7 @@ export async function updateVehicleAsset(
 export async function deleteVehicleAsset(id: string) {
   const ctx = await getCurrentUserAndFamily()
   await deleteVehicleAssetService(ctx, id)
-  revalidatePath("/assets")
+  revalidatePath("/assets", "layout")
   revalidatePath("/expenses")
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
 }

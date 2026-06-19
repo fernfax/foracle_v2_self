@@ -30,7 +30,7 @@ export async function createFamilyMember(data: {
     isContributing: data.isContributing,
     notes: data.notes
   })
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return row
 }
 
@@ -61,7 +61,7 @@ export async function updateFamilyMember(
   }
 
   const row = await updateFamilyMemberService(ctx, id, patch)
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return row
 }
 
@@ -79,7 +79,7 @@ export async function getFamilyMemberIncomes(id: string) {
 export async function deleteFamilyMember(id: string) {
   const ctx = await getCurrentUserAndFamily()
   const result = await deleteFamilyMemberService(ctx, id)
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return { success: true, deletedIncomes: result.deletedIncomes }
 }
 
@@ -92,7 +92,7 @@ export async function getOrCreateSelfMember(data: {
 }) {
   const ctx = await getCurrentUserAndFamily()
   const row = await getOrCreateSelfMemberService(ctx, data)
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return row
 }
 

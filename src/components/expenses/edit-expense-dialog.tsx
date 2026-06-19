@@ -97,8 +97,7 @@ const integrationConfig = {
       "This expense is linked to an insurance policy. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to an insurance policy.",
     linkText: "go to Insurance Policies",
-    linkHref: (expense: Expense) =>
-      `/dashboard/policies?edit=${expense.linkedPolicyId}`
+    linkHref: (expense: Expense) => `/policies?edit=${expense.linkedPolicyId}`
   },
   property: {
     icon: Home,
@@ -111,7 +110,7 @@ const integrationConfig = {
       "This expense is linked to a property asset. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a property asset.",
     linkText: "go to Assets",
-    linkHref: () => `/dashboard/user/assets?tab=property`
+    linkHref: () => `/assets/property`
   },
   vehicle: {
     icon: Car,
@@ -124,7 +123,7 @@ const integrationConfig = {
       "This expense is linked to a vehicle asset. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a vehicle asset.",
     linkText: "go to Assets",
-    linkHref: () => `/dashboard/user/assets?tab=vehicle`
+    linkHref: () => `/assets/vehicle`
   },
   goal: {
     icon: Target,
@@ -137,7 +136,7 @@ const integrationConfig = {
       "This expense is linked to a savings goal. Some fields cannot be edited here.",
     alertMessage: "This expense is linked to a savings goal.",
     linkText: "go to Goals",
-    linkHref: () => `/dashboard/goals`
+    linkHref: () => `/goals/active`
   }
 }
 

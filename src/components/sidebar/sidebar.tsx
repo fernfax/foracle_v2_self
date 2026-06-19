@@ -44,7 +44,7 @@ export function Sidebar() {
         {/* Logo lockup — both images mounted, swap via opacity to avoid mid-animation Image swap */}
         <div className="relative flex h-[70px] flex-shrink-0 items-center px-3">
           <Link
-            href="/user?tab=overview"
+            href="/user/overview"
             className="relative flex h-full w-full items-center">
             {/* Compact mark — centered in the same w-12 leading slot as every
                 nav icon, so it sits on the shared rail centerline when collapsed. */}

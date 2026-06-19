@@ -1,16 +1,7 @@
-import { getGoals } from "@/actions/goals"
+import { redirect } from "next/navigation"
 
-import { GoalsClient } from "@/app/(app)/goals/client"
-
-export const dynamic = "force-dynamic"
-
-export const metadata = {
-  title: "Goals | Foracle",
-  description: "Set and track your financial goals"
-}
-
-export default async function GoalsPage() {
-  const goals = await getGoals()
-
-  return <GoalsClient initialGoals={goals} />
+// /goals has no content of its own — it lands on the default tab. No ?tab=
+// back-compat (pre-release app); callers link straight to /goals/<tab>.
+export default function GoalsIndex() {
+  redirect("/goals/active")
 }

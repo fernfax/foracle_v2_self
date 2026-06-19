@@ -148,7 +148,7 @@ test(`onboarding walkthrough — scenario ${KEY} (${S.name})`, async ({
   const incomeWhole = S.incomeAmount.replace(/(\d)(?=(\d{3})+$)/g, "$1,") // 4000 -> 4,000
 
   // Incomes
-  await page.goto("/user?tab=incomes")
+  await page.goto("/user/incomes")
   await page.waitForLoadState("networkidle")
   await expect(page.getByText(new RegExp(incomeWhole)).first()).toBeVisible({
     timeout: 15_000
@@ -160,7 +160,7 @@ test(`onboarding walkthrough — scenario ${KEY} (${S.name})`, async ({
   })
 
   // Family — the Self member shows the name we entered
-  await page.goto("/user?tab=family")
+  await page.goto("/user/family")
   await page.waitForLoadState("networkidle")
   await expect(page.getByText(new RegExp(S.name, "i")).first()).toBeVisible({
     timeout: 15_000
@@ -172,7 +172,7 @@ test(`onboarding walkthrough — scenario ${KEY} (${S.name})`, async ({
   })
 
   // CPF
-  await page.goto("/user?tab=cpf")
+  await page.goto("/user/cpf")
   await page.waitForLoadState("networkidle")
   await page.waitForTimeout(1500)
   await page.screenshot({
@@ -181,7 +181,7 @@ test(`onboarding walkthrough — scenario ${KEY} (${S.name})`, async ({
   })
 
   // Holdings — the bank + amount we added
-  await page.goto("/user?tab=holdings")
+  await page.goto("/user/holdings")
   await page.waitForLoadState("networkidle")
   await expect(page.getByText(new RegExp(S.bank, "i")).first()).toBeVisible({
     timeout: 15_000
@@ -193,7 +193,7 @@ test(`onboarding walkthrough — scenario ${KEY} (${S.name})`, async ({
   })
 
   // Expenses
-  await page.goto("/user?tab=expenses")
+  await page.goto("/user/expenses")
   await page.waitForLoadState("networkidle")
   await page.waitForTimeout(1500)
   await page.screenshot({

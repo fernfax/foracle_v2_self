@@ -77,7 +77,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
                 safe-area top inset so content clears the notch on first paint.
                 Desktop uses the sidebar instead. */}
             <div className="desktop:hidden relative flex items-center justify-center pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-1">
-              <Link href="/user?tab=overview" className="flex items-center">
+              <Link href="/user/overview" className="flex items-center">
                 <Image
                   src="/wordmark-400.png"
                   alt="Foracle"

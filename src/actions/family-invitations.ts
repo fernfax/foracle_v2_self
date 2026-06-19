@@ -35,7 +35,7 @@ export async function inviteFamilyMember(input: InviteInput) {
     email: input.email,
     relationship: input.relationship
   })
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return result
 }
 
@@ -54,19 +54,19 @@ export async function convertFamilyMember(rowId: string, input: ConvertInput) {
     firstName: input.firstName,
     lastName: input.lastName
   })
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return result
 }
 
 export async function revokeInvitation(rowId: string) {
   const result = await revokeInvitationService(rowId)
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return result
 }
 
 export async function resendInvitation(rowId: string) {
   const result = await resendInvitationService(rowId)
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return result
 }
 

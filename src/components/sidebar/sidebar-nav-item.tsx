@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { ChevronRight, LucideIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -53,16 +53,12 @@ export function SidebarNavItem({
   comingSoon = false
 }: SidebarNavItemProps) {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
 
-  const isActive = pathname === href
-  const currentTab = searchParams.get("tab")
-
-  const getSubItemActive = (subHref: string) => {
-    const url = new URL(subHref, "http://localhost")
-    const subTab = url.searchParams.get("tab")
-    return pathname === url.pathname && currentTab === subTab
-  }
+  // Path-based active state (routes, not ?tab=). A parent highlights for its
+  // whole section (e.g. /user highlights on /user/incomes); a sub-item only on
+  // its exact route.
+  const isActive = pathname === href || pathname.startsWith(`${href}/`)
+  const getSubItemActive = (subHref: string) => pathname === subHref
 
   const hasSubItems = subItems && subItems.length > 0
 

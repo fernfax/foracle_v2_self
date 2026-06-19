@@ -264,8 +264,8 @@ export function CashflowSankey({
     null
   )
   const NAV_TARGET: Record<"incomes" | "expenses", string> = {
-    incomes: "/user?tab=incomes",
-    expenses: "/expenses"
+    incomes: "/user/incomes",
+    expenses: "/user/expenses"
   }
 
   // Inner toggle between the two views of the same card.

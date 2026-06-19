@@ -148,7 +148,7 @@ export function DashboardClient({
         ].map(({ tab, label, icon: Icon }) => (
           <Link
             key={tab}
-            href={`/user?tab=${tab}`}
+            href={`/user/${tab}`}
             className="border-border/50 text-muted-foreground hover:border-border hover:text-foreground inline-flex items-center gap-1 rounded-full border bg-transparent px-3 py-1 text-[11px] transition-colors">
             <Icon className="h-3 w-3" />
             {label}

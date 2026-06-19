@@ -38,7 +38,7 @@ export async function createGoal(data: {
     addToExpenditures: data.addToExpenditures,
     expenseName: data.expenseName
   })
-  revalidatePath("/goals")
+  revalidatePath("/goals", "layout")
   revalidatePath("/expenses")
   revalidatePath("/overview")
   return row
@@ -103,7 +103,7 @@ export async function updateGoal(
     addToExpenditures: data.addToExpenditures,
     expenseName: data.expenseName
   })
-  revalidatePath("/goals")
+  revalidatePath("/goals", "layout")
   revalidatePath("/expenses")
   revalidatePath("/overview")
   return row
@@ -115,7 +115,7 @@ export async function updateGoal(
 export async function markGoalAchieved(id: string) {
   const ctx = await getCurrentUserAndFamily()
   const row = await markGoalAchievedService(ctx, id)
-  revalidatePath("/goals")
+  revalidatePath("/goals", "layout")
   revalidatePath("/overview")
   return row
 }
@@ -126,7 +126,7 @@ export async function markGoalAchieved(id: string) {
 export async function deleteGoal(id: string) {
   const ctx = await getCurrentUserAndFamily()
   await deleteGoalService(ctx, id)
-  revalidatePath("/goals")
+  revalidatePath("/goals", "layout")
   revalidatePath("/expenses")
   revalidatePath("/overview")
 }

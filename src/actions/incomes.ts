@@ -90,7 +90,7 @@ export async function createIncome(data: {
     cpfSpecialAccount: data.cpfSpecialAccount?.toString(),
     cpfMedisaveAccount: data.cpfMedisaveAccount?.toString()
   })
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return row
 }
 
@@ -156,20 +156,20 @@ export async function updateIncome(
     patch.cpfMedisaveAccount = data.cpfMedisaveAccount.toString()
 
   const row = await updateIncomeService(ctx, id, patch)
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return row
 }
 
 export async function deleteIncome(id: string) {
   const ctx = await getCurrentUserAndFamily()
   await deleteIncomeService(ctx, id)
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return { success: true }
 }
 
 export async function toggleIncomeStatus(id: string) {
   const ctx = await getCurrentUserAndFamily()
   const row = await toggleIncomeActive(ctx, id)
-  revalidatePath("/user")
+  revalidatePath("/user", "layout")
   return row
 }

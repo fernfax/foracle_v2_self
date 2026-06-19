@@ -46,7 +46,7 @@ export const QUICK_LINK_OPTIONS: QuickLinkOption[] = [
   {
     key: "goals",
     label: "Goals",
-    href: "/goals",
+    href: "/goals/active",
     icon: "Target",
     category: "main"
   },
@@ -55,28 +55,28 @@ export const QUICK_LINK_OPTIONS: QuickLinkOption[] = [
   {
     key: "user-family",
     label: "User - Family",
-    href: "/user?tab=family",
+    href: "/user/family",
     icon: "Users",
     category: "user-tabs"
   },
   {
     key: "user-incomes",
     label: "User - Incomes",
-    href: "/user?tab=incomes",
+    href: "/user/incomes",
     icon: "DollarSign",
     category: "user-tabs"
   },
   {
     key: "user-cpf",
     label: "User - CPF",
-    href: "/user?tab=cpf",
+    href: "/user/cpf",
     icon: "Building",
     category: "user-tabs"
   },
   {
     key: "user-holdings",
     label: "User - Holdings",
-    href: "/user?tab=current",
+    href: "/user/holdings",
     icon: "Wallet",
     category: "user-tabs"
   },

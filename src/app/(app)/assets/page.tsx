@@ -1,25 +1,7 @@
-import { getPropertyAssets } from "@/actions/property-assets"
-import { getVehicleAssets } from "@/actions/vehicle-assets"
+import { redirect } from "next/navigation"
 
-import { AssetsClient } from "@/app/(app)/assets/client"
-
-export const dynamic = "force-dynamic"
-
-export const metadata = {
-  title: "Assets | Foracle",
-  description: "Manage your property, vehicle, and other assets"
-}
-
-export default async function AssetsPage() {
-  const [propertyAssets, vehicleAssets] = await Promise.all([
-    getPropertyAssets(),
-    getVehicleAssets()
-  ])
-
-  return (
-    <AssetsClient
-      initialPropertyAssets={propertyAssets}
-      initialVehicleAssets={vehicleAssets}
-    />
-  )
+// /assets has no content of its own — it lands on the default tab. No ?tab=
+// back-compat (pre-release app); callers link straight to /assets/<tab>.
+export default function AssetsIndex() {
+  redirect("/assets/property")
 }

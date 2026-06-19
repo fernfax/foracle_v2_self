@@ -188,7 +188,7 @@ export function AssetBreakdownModal({
     if (pendingNavigation) {
       onOpenChange(false)
       setConfirmDialogOpen(false)
-      router.push(`/dashboard/user/assets?tab=${pendingNavigation.type}`)
+      router.push(`/assets/${pendingNavigation.type}`)
       setPendingNavigation(null)
     }
   }

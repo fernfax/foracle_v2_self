@@ -123,7 +123,7 @@ const dashboardSteps: DriveStep[] = [
   }
 ]
 
-// Incomes — the "Projected Income River" timeline on /user?tab=incomes.
+// Incomes — the "Projected Income River" timeline on /user/incomes.
 const incomesSteps: DriveStep[] = [
   {
     element: '[data-tour="income-stat-band"]',
@@ -209,7 +209,7 @@ const incomesSteps: DriveStep[] = [
   }
 ]
 
-// Expenses — /user?tab=expenses (the standalone /expenses route redirects here).
+// Expenses — /user/expenses (the standalone /expenses route redirects here).
 const expensesSteps: DriveStep[] = [
   {
     element: '[data-tour="expected-expenses-card"]',
@@ -263,7 +263,7 @@ const expensesSteps: DriveStep[] = [
   }
 ]
 
-// CPF — /user?tab=cpf
+// CPF — /user/cpf
 const cpfSteps: DriveStep[] = [
   {
     element: '[data-tour="cpf-stat-band"]',
@@ -307,7 +307,7 @@ const cpfSteps: DriveStep[] = [
   }
 ]
 
-// Holdings / Net Worth — /user?tab=holdings
+// Holdings / Net Worth — /user/holdings
 const holdingsSteps: DriveStep[] = [
   {
     element: '[data-tour="net-worth-hero"]',
