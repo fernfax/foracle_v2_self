@@ -6,6 +6,7 @@ import { format, parseISO } from "date-fns"
 import { X } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/currency-utils"
 import {
   formatBudgetCurrency,
@@ -13,7 +14,6 @@ import {
   getCategoryIconColor,
   getDefaultCategoryIcon
 } from "@/lib/finance/budget-utils"
-import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,

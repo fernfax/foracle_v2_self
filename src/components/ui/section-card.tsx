@@ -1,7 +1,7 @@
 import * as React from "react"
 import { type LucideIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { Card } from "@/components/ui/card"
 
 export interface SectionCardProps extends Omit<

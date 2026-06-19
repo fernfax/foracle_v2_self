@@ -4,11 +4,11 @@ import { useState, useTransition } from "react"
 import { getTableRows } from "@/actions/developer"
 import { ChevronRight } from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import type {
   DeveloperTableScope,
   TableRowsResult
 } from "@/lib/developer/developer-tables"
-import { cn } from "@/lib/utils"
 
 interface DeveloperTableAccordionProps {
   name: string

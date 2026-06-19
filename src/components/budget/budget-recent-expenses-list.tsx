@@ -6,13 +6,13 @@ import { format, isToday, isYesterday, parseISO } from "date-fns"
 import { Clock, Pencil, Trash2 } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import {
   formatBudgetCurrency,
   getCategoryBgColor,
   getCategoryIconColor,
   getDefaultCategoryIcon
 } from "@/lib/finance/budget-utils"
-import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,

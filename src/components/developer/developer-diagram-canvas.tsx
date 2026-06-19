@@ -16,13 +16,13 @@ import "@xyflow/react/dist/style.css"
 
 import { X } from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import { CATEGORY_COLOR } from "@/lib/developer/developer-action-catalog"
 import type {
   Diagram,
   DiagramNode,
   DiagramNodeKind
 } from "@/lib/developer/developer-diagram"
-import { cn } from "@/lib/utils"
 
 interface DiagramCanvasProps {
   diagram: Diagram

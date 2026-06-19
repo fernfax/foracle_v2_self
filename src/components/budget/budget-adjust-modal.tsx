@@ -5,8 +5,8 @@ import type { BudgetVsActual } from "@/actions/budget-calculator"
 import { createBudgetShift } from "@/actions/budget-shifts"
 import { AlertCircle, ArrowRight, X } from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,

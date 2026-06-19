@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { StatCard, type StatCardProps } from "@/components/ui/stat-card"
 
 export interface StatBandProps {

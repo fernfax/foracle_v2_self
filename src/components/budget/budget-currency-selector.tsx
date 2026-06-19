@@ -4,12 +4,12 @@ import { useEffect, useState } from "react"
 import { getExchangeRates } from "@/actions/currency"
 import { RefreshCw, X } from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import {
   SUPPORTED_CURRENCIES,
   type CurrencyCode,
   type ExchangeRates
 } from "@/lib/currency-utils"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,

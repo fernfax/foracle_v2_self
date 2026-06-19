@@ -4,7 +4,7 @@ import * as React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { LucideIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 
 interface TabItem {
   value: string

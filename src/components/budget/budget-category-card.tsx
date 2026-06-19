@@ -3,12 +3,12 @@
 import { createElement } from "react"
 import * as LucideIcons from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import {
   getCategoryBgColor,
   getCategoryIconColor,
   getDefaultCategoryIcon
 } from "@/lib/finance/budget-utils"
-import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 
 interface CategoryBudgetCardProps {

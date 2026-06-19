@@ -9,13 +9,13 @@ import {
 import { ChevronDown, ChevronUp, Minus, X } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import {
   formatFrequency,
   getCategoryBgColor,
   getCategoryIconColor,
   getDefaultCategoryIcon
 } from "@/lib/finance/budget-utils"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {

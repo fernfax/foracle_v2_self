@@ -19,9 +19,9 @@ import {
 import { format } from "date-fns"
 import { Calendar, History, X } from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/currency-utils"
 import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import {

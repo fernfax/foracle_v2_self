@@ -5,7 +5,7 @@ import { Bot, ChevronDown, ChevronUp, Database } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 
 interface ChatMessageProps {
   role: "user" | "assistant"

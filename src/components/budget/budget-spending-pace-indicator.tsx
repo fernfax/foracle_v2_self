@@ -2,8 +2,8 @@
 
 import { AlertTriangle, CheckCircle, TrendingDown } from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import { formatBudgetCurrency, getMonthName } from "@/lib/finance/budget-utils"
-import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 
 interface SpendingPaceIndicatorProps {

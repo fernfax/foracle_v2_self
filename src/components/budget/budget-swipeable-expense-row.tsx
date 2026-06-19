@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { Trash2 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 
 interface SwipeableExpenseRowProps {
   children: React.ReactNode

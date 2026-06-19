@@ -12,7 +12,7 @@ import {
   YAxis
 } from "recharts"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import type { Investment } from "@/db/types"
 import {
   Card,

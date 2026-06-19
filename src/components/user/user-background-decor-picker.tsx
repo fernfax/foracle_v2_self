@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import { getBackgroundDecor, setBackgroundDecor } from "@/actions/singlish-mode"
 import { Check, Loader2 } from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import type { BackgroundDecor } from "@/lib/services/user-prefs"
-import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,

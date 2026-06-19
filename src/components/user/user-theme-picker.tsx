@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react"
 import { Check, Monitor, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import {
   Card,
   CardContent,

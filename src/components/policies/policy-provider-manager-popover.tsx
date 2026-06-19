@@ -9,7 +9,7 @@ import {
 } from "@/actions/insurance-providers"
 import { Pencil, Plus, Settings2, Trash2, X } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {

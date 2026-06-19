@@ -18,7 +18,7 @@ import { format, parseISO } from "date-fns"
 import { Controller, useForm, useWatch, type Control } from "react-hook-form"
 import { z } from "zod"
 
-import { policyFrequencyToExpenseFrequency } from "@/lib/utils"
+import { policyFrequencyToExpenseFrequency } from "@/lib/finance/policy-frequency"
 import type { Policy } from "@/db/types"
 import {
   AlertDialog,

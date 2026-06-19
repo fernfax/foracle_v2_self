@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import {
   AlertDialog,
   AlertDialogAction,

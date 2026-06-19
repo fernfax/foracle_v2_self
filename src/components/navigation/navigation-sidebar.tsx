@@ -7,7 +7,7 @@ import { NAV_ITEMS } from "@/configs/sidebar.config"
 import { useUser } from "@clerk/nextjs"
 import { PanelLeft, PanelLeftClose } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { NavigationClerkUserButton } from "@/components/navigation/navigation-clerk-user-button"
 import { useSidebar } from "@/components/navigation/navigation-sidebar-context"
 import { NavigationSidebarItem } from "@/components/navigation/navigation-sidebar-item"

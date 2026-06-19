@@ -11,7 +11,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { NAV_ITEMS } from "@/configs/sidebar.config"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { useGlassRefraction } from "@/hooks/use-glass-refraction"
 
 // Top-level destinations only, with the compact mobile label. Sub-destinations

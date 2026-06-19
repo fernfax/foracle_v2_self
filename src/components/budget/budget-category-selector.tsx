@@ -11,11 +11,11 @@ import type { ExpenseCategory } from "@/actions/expense-categories"
 import { ChevronDown } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import {
   getCategoryIconColor,
   getDefaultCategoryIcon
 } from "@/lib/finance/budget-utils"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,

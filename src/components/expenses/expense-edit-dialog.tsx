@@ -21,7 +21,7 @@ import {
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import type { Expense } from "@/db/types"
 import {
   AlertDialog,

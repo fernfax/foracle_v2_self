@@ -5,7 +5,7 @@ import { toggleIncomeStatus, updateIncome } from "@/actions/incomes"
 import { addMonths, format, parseISO } from "date-fns"
 import { Archive, Clock, Infinity as InfinityIcon, Target } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,

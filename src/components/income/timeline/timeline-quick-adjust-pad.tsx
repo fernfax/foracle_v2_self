@@ -10,6 +10,7 @@ import {
 } from "date-fns"
 import { CalendarDays, Info, Pencil, Plus, Trash2, X } from "lucide-react"
 
+import { cn } from "@/lib/cn"
 import {
   ANNUAL_WAGE_CEILING_AMOUNT,
   calculateCPF,
@@ -21,7 +22,6 @@ import {
   OW_CEILING_AMOUNT,
   OW_CEILING_YEAR
 } from "@/lib/cpf/cpf-calculator"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"

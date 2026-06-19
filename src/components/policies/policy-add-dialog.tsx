@@ -15,7 +15,7 @@ import { Controller, useForm, useWatch, type Control } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { policyFrequencyToExpenseFrequency } from "@/lib/utils"
+import { policyFrequencyToExpenseFrequency } from "@/lib/finance/policy-frequency"
 import {
   AlertDialog,
   AlertDialogAction,

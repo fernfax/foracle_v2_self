@@ -4,7 +4,7 @@ import { useState } from "react"
 import type { ExpenseSubcategory } from "@/actions/expense-subcategories"
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,

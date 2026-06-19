@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Loader2, Send } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { AssistantSinglishToggle } from "@/components/assistant/assistant-singlish-toggle"
 
 interface ChatComposerProps {

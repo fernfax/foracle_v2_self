@@ -1,7 +1,7 @@
 import * as React from "react"
 import { ArrowDown, ArrowUp, Minus, type LucideIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import { Card } from "@/components/ui/card"
 
 type StatAccent = "brand" | "jungle" | "teal" | "gold" | "neutral"

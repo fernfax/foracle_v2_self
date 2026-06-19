@@ -35,9 +35,9 @@ import {
 import { createPortal } from "react-dom"
 
 import { CHART_PALETTE } from "@/lib/charts/chart-palette"
+import { cn } from "@/lib/cn"
 import { computeAnnualBonusCpf } from "@/lib/cpf/cpf-calculator"
 import { bonusForMonth, grossForMonth } from "@/lib/finance/income-month"
-import { cn } from "@/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import {
   AlertDialog,

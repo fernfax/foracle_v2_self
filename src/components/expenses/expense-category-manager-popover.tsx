@@ -10,7 +10,7 @@ import {
 } from "@/actions/expense-categories"
 import { AlertTriangle, Pencil, Plus, Settings2, Trash2, X } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn"
 import {
   AlertDialog,
   AlertDialogCancel,
