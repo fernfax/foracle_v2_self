@@ -542,7 +542,12 @@ export function DashboardCashflowSankey({
   // left of node when it's a source (depth 0), right of node otherwise.
   // The hub is the only middle column, and we label it above its rectangle.
   function renderNode(props: SankeyNodeRenderProps) {
-    const { x, y, width, height, payload } = props
+    const { x, y, width, height: rawHeight, payload } = props
+    // Recharts' Sankey layout can hand back a negative height for degenerate
+    // (≈zero-value) nodes, which makes the <rect height> attribute throw
+    // "negative value is not valid". Clamp to 0 so such nodes simply don't
+    // paint instead of erroring.
+    const height = Math.max(0, rawHeight)
     const n = payload as unknown as SankeyInputNode & { depth: number }
     const isLeft = n.depth === 0
     const isHub = n.kind === "hub"
