@@ -186,6 +186,7 @@ export function LandingLifeStages() {
   const pinned = roomy && !reduced
 
   const trackRef = useRef<HTMLDivElement>(null)
+  const pinRef = useRef<HTMLDivElement>(null)
 
   // Scroll progress is driven MANUALLY from window.scrollY rather than
   // framer-motion's useScroll + useSpring. Those stalled on Safari (desktop +
@@ -199,19 +200,31 @@ export function LandingLifeStages() {
     if (!pinned) return
     let raf = 0
     let current = smooth.get()
+    let last: number | null = null
     const measure = () => {
       const track = trackRef.current
-      if (!track) return current
+      const pin = pinRef.current
+      if (!track || !pin) return current
       const trackTop = track.getBoundingClientRect().top + window.scrollY
-      const range = track.offsetHeight - window.innerHeight
+      // Divide by the pinned card's own height (same `svh` unit as the track
+      // runway) rather than window.innerHeight: innerHeight drifts as the
+      // mobile address bar shows/hides while the svh-based track does not, so
+      // mixing them made the scrub speed jump mid-scroll.
+      const range = track.offsetHeight - pin.offsetHeight
       if (range <= 0) return 0
       return Math.max(0, Math.min(1, (window.scrollY - trackTop) / range))
     }
-    const tick = () => {
+    const tick = (now: number) => {
+      // Frame-rate-independent exponential smoothing. A fixed per-frame factor
+      // eased ~2x faster on 120Hz displays than 60Hz, so the card visibly
+      // trailed the scrollbar; gating on elapsed time gives identical feel at
+      // any refresh rate. RATE 9 reproduces the old 0.14/frame @ 60Hz response.
+      if (last == null) last = now
+      const dt = Math.min(0.1, (now - last) / 1000) // clamp blur/long frames
+      last = now
+      const RATE = 9
       const target = measure()
-      // Calm-forward lerp smoothing — eases the pinned card's scroll-progress
-      // (replaces the old useSpring) without ever stalling.
-      current += (target - current) * 0.14
+      current += (target - current) * (1 - Math.exp(-dt * RATE))
       if (Math.abs(target - current) < 0.0003) current = target
       smooth.set(current)
       const i = Math.min(N - 1, Math.max(0, Math.floor(current * N)))
@@ -224,9 +237,12 @@ export function LandingLifeStages() {
 
   const scrollToStage = (i: number) => {
     const track = trackRef.current
-    if (!track) return
+    const pin = pinRef.current
+    if (!track || !pin) return
     const trackTop = track.getBoundingClientRect().top + window.scrollY
-    const travel = track.offsetHeight - window.innerHeight
+    // Match the rAF loop's range (pin height, not window.innerHeight) so a dot
+    // click lands the same progress the scrub would.
+    const travel = track.offsetHeight - pin.offsetHeight
     const y = trackTop + ((i + 0.5) / N) * travel
     window.scrollTo({ top: y, behavior: "smooth" })
   }
@@ -269,7 +285,9 @@ export function LandingLifeStages() {
           ref={trackRef}
           style={{ height: `${(N + 1) * 50}svh` }}
           className="relative">
-          <div className="desktop:gap-7 desktop:py-16 sticky top-0 flex h-svh flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 sm:px-6 lg:px-8 [@media(max-height:600px)]:gap-2 [@media(max-height:600px)]:py-3">
+          <div
+            ref={pinRef}
+            className="desktop:gap-7 desktop:py-16 sticky top-0 flex h-svh flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8 sm:px-6 lg:px-8 [@media(max-height:600px)]:gap-2 [@media(max-height:600px)]:py-3">
             <div className="mx-auto max-w-2xl text-center">{introInner}</div>
             <div className="mx-auto w-full max-w-5xl">
               <div className="glass-strong relative overflow-hidden rounded-3xl">
