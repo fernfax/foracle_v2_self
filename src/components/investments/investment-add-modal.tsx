@@ -2,7 +2,6 @@
 
 import { useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { HelpCircle } from "lucide-react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
@@ -29,12 +28,6 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/components/ui/tooltip"
 
 interface AddInvestmentModalProps {
   open: boolean
@@ -256,45 +249,29 @@ export function InvestmentAddModal({
                   <Field
                     htmlFor="projectedYield"
                     required
-                    label={
-                      <span className="inline-flex items-center gap-1">
-                        Projected Annual Yield %
-                        <TooltipProvider delayDuration={0}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                aria-label="Wealth projection formula"
-                                className="text-muted-foreground hover:text-foreground transition-colors">
-                                <HelpCircle className="h-3.5 w-3.5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="top"
-                              className="bg-card max-w-[320px] border p-3 text-xs shadow-lg">
-                              <p className="mb-2 font-semibold">
-                                Wealth Projection Formula
-                              </p>
-                              <p className="mb-2">
-                                <strong>With Contributions:</strong>
-                                <br />
-                                FV = C × (1 + r/12)<sup>n</sup> + PMT × ((1 +
-                                r/12)<sup>n</sup> - 1) / (r/12)
-                              </p>
-                              <p className="mb-2">
-                                <strong>Without Contributions:</strong>
-                                <br />
-                                FV = C × (1 + r/12)<sup>n</sup>
-                              </p>
-                              <p className="text-muted-foreground text-[10px]">
-                                Where C = capital, r = annual yield, n = months,
-                                PMT = monthly contribution. Interest compounds
-                                monthly.
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </span>
+                    label="Projected Annual Yield %"
+                    tooltipLabel="Wealth projection formula"
+                    tooltip={
+                      <>
+                        <p className="mb-2 font-semibold">
+                          Wealth Projection Formula
+                        </p>
+                        <p className="mb-2">
+                          <strong>With Contributions:</strong>
+                          <br />
+                          FV = C × (1 + r/12)<sup>n</sup> + PMT × ((1 + r/12)
+                          <sup>n</sup> - 1) / (r/12)
+                        </p>
+                        <p className="mb-2">
+                          <strong>Without Contributions:</strong>
+                          <br />
+                          FV = C × (1 + r/12)<sup>n</sup>
+                        </p>
+                        <p className="text-muted-foreground text-[10px]">
+                          Where C = capital, r = annual yield, n = months, PMT =
+                          monthly contribution. Interest compounds monthly.
+                        </p>
+                      </>
                     }>
                     <Controller
                       control={control}
