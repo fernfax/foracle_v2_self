@@ -19,6 +19,7 @@ import { LandingCursor } from "@/components/landing/landing-cursor"
 import { LandingGlassDefs } from "@/components/landing/landing-glass-defs"
 import { LandingHeroPreview } from "@/components/landing/landing-hero-preview"
 import { LandingLifeStages } from "@/components/landing/landing-life-stages"
+import { LandingLogoLink } from "@/components/landing/landing-logo-link"
 import { LandingMobileNav } from "@/components/landing/landing-mobile-nav"
 import { LandingReveal } from "@/components/landing/landing-reveal"
 import { LandingShader } from "@/components/landing/landing-shader"
@@ -160,16 +161,7 @@ export default async function Home() {
       {/* Navigation */}
       <nav className="glass-bar sticky top-0 z-50">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/wordmark-168.png"
-              alt="Foracle"
-              width={97}
-              height={28}
-              className="object-contain"
-              priority
-            />
-          </Link>
+          <LandingLogoLink />
 
           <div className="hidden items-center gap-8 md:flex">
             {NAV_LINKS.map((l) => (
