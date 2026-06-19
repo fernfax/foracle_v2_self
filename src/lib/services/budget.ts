@@ -2,7 +2,7 @@ import { db } from "@/db"
 import { and, eq, gte, lte, sql } from "drizzle-orm"
 
 import type { AuthContext } from "@/lib/auth-context"
-import { calculateMonthlyAmount } from "@/lib/expense-calculator"
+import { calculateMonthlyAmount } from "@/lib/finance/expense-calculator"
 import {
   budgetShifts,
   dailyExpenses,

@@ -12,17 +12,17 @@ import {
 import { DollarSign, LineChart, Percent, TrendingUp } from "lucide-react"
 import { toast } from "sonner"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { EmptyState } from "@/components/ui/empty-state"
-import { PageHeader } from "@/components/ui/page-header"
 import { Toolbar } from "@/components/ui/toolbar"
 import {
   AddInvestmentModal,
   WealthProjectionChart
 } from "@/components/investments"
-import { HoldingsTable } from "@/components/investments/holdings-table"
-import { ConfirmDialog } from "@/components/portfolio/confirm-dialog"
-import { StatBand } from "@/components/portfolio/stat-band"
+import { HoldingsTable } from "@/components/investments/investment-holdings-table"
+import { PageHeader } from "@/components/layout/layout-page-header"
+import { ConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
+import { StatBand } from "@/components/portfolio/portfolio-stat-band"
 
 interface InvestmentsClientProps {
   initialInvestments: Investment[]

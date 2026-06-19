@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { effectiveIncomeCategory } from "@/lib/income-category"
+import { effectiveIncomeCategory } from "@/lib/finance/income-category"
 
 // Fixed "today" so the tests are deterministic.
 const NOW = new Date(2026, 7, 15) // 15 Aug 2026 (month is 0-indexed)

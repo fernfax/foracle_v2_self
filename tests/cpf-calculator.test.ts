@@ -19,7 +19,7 @@ import {
   getCPFBracketIndex,
   getCPFRatesByAge,
   OW_CEILING_AMOUNT
-} from "@/lib/cpf-calculator"
+} from "@/lib/cpf/cpf-calculator"
 
 // Reference values pinned to the 1 Jan 2026 CPF rate/ceiling/allocation tables.
 // Maps to §5C of the Income QA plan (the "Unit" layer in §6). calculateCPF

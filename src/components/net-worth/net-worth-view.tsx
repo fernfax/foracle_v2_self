@@ -21,13 +21,13 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import {
   type AssetClassKey,
   type ClassKey,
   type NetWorthRow,
   type NetWorthSummary
-} from "@/lib/net-worth"
+} from "@/lib/finance/net-worth"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,7 +43,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { SectionCard } from "@/components/ui/section-card"
 import { StatCard } from "@/components/ui/stat-card"
-import { AddCurrentHoldingDialog } from "@/components/current-holdings/add-current-holding-dialog"
+import { AddCurrentHoldingDialog } from "@/components/current-holdings/current-holding-add-dialog"
 
 const CLASS_ICON: Record<ClassKey, LucideIcon> = {
   cash: Wallet,

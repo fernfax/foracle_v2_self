@@ -19,18 +19,18 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { PageHeader } from "@/components/ui/page-header"
 import { Toolbar } from "@/components/ui/toolbar"
-import { AddPolicyDialog } from "@/components/policies/add-policy-dialog"
-import { BenefitMatrix } from "@/components/policies/benefit-matrix"
-import { CoverageMatrix } from "@/components/policies/coverage-matrix"
-import { EditPolicyDialog } from "@/components/policies/edit-policy-dialog"
+import { PageHeader } from "@/components/layout/layout-page-header"
+import { AddPolicyDialog } from "@/components/policies/policy-add-dialog"
+import { BenefitMatrix } from "@/components/policies/policy-benefit-matrix"
 import { monthlyPremium, PolicyCard } from "@/components/policies/policy-card"
-import { ConfirmDialog } from "@/components/portfolio/confirm-dialog"
-import { StatBand } from "@/components/portfolio/stat-band"
+import { CoverageMatrix } from "@/components/policies/policy-coverage-matrix"
+import { EditPolicyDialog } from "@/components/policies/policy-edit-dialog"
+import { ConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
+import { StatBand } from "@/components/portfolio/portfolio-stat-band"
 
 interface Policy {
   id: string

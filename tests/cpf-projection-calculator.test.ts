@@ -5,7 +5,7 @@ import {
   calculateCpfProjection,
   extractCpfProjectionInputs,
   type CpfProjectionInput
-} from "@/lib/cpf-projection-calculator"
+} from "@/lib/cpf/cpf-projection-calculator"
 
 // Pin "now" so calendar-month assertions are deterministic: the projection
 // starts at the current month, and one-off bonuses match exact YYYY-MM keys.

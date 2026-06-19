@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { resolveCpfAge } from "@/lib/cpf-age"
+import { resolveCpfAge } from "@/lib/cpf/cpf-age"
 
 // Pin "now" to 15 Jun 2026 (mid-month/year, so the Asia/Singapore parts are the
 // same in any realistic test-runner timezone).

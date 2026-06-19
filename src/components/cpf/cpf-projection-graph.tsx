@@ -20,7 +20,7 @@ import {
   type CpfProjectionDataPoint,
   type CpfProjectionInput,
   type CpfPropertyAsset
-} from "@/lib/cpf-projection-calculator"
+} from "@/lib/cpf/cpf-projection-calculator"
 import { Button } from "@/components/ui/button"
 import {
   Card,

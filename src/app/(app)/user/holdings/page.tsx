@@ -1,4 +1,7 @@
-import { loadHoldings, loadNetWorthSummary } from "@/lib/user-page-data"
+import {
+  loadHoldings,
+  loadNetWorthSummary
+} from "@/lib/page-data/user-page-data"
 import { NetWorthView } from "@/components/net-worth/net-worth-view"
 
 export default async function HoldingsTab() {

@@ -26,12 +26,21 @@ Notes for Claude Code working in this repository. Keep brief; update when conven
 - `scripts/`, `tests/`, `public/`, `drizzle/` stay at the repo root.
 - Prose docs (CHANGELOG, TODOS, policies, QA plan, `design_guide/`) live in `docs/`; only `README.md` and this file stay at root.
 
+### File naming convention
+
+- **kebab-case** for every file.
+- **Component files are prefixed with their folder's singular stem** so a folder-name search surfaces every file in it: `assets/asset-vehicle-list.tsx`, `policies/policy-card.tsx`, `dashboard/dashboard-cashflow-sankey.tsx`, `family-members/family-member-grid.tsx`. Nested folders prefix with the immediate parent (`income/timeline/timeline-view.tsx`).
+- **`components/ui/` is exempt** — shadcn primitives keep bare names (`button.tsx`, `dialog.tsx`).
+- **`components/layout/`** holds the app frame (shell, theme provider, page header, background decor); **`components/navigation/`** holds nav controls (sidebar, mobile nav, overlay, account button, quick-links).
+- `lib/` is grouped into domain subfolders (`lib/cpf/`, `lib/finance/`, `lib/charts/`, `lib/developer/`, `lib/page-data/`, `lib/services/`, …).
+- **Component function names match the file name** (PascalCase of the kebab file): `asset-vehicle-list.tsx` → `AssetVehicleList`.
+
 ## Design system
 
 - Brand source of truth: `docs/design_guide/design_guide.md` (and the HTML reference alongside it).
 - Tokens live in `src/app/globals.css` (`:root` + `.dark`). Brand utilities (`brand-terracotta`, `brand-deep-forest`, etc.) and the `font-display` (Space Grotesk) / `font-editorial` (Lora italic) families are in `tailwind.config.ts`.
-- Chart palette helper: `src/lib/chart-palette.ts` — use `CHART_PALETTE`, `STATUS_COLORS`, `CHART_AXIS_STYLE` instead of inline hex.
-- Brand divider strip: `src/components/ui/tile-motif.tsx`.
+- Chart palette helper: `src/lib/charts/chart-palette.ts` — use `CHART_PALETTE`, `STATUS_COLORS`, `CHART_AXIS_STYLE` instead of inline hex.
+- Brand divider strip: `src/components/layout/layout-tile-motif.tsx`.
 - Avoid hardcoded Tailwind brand-color utilities (`bg-blue-*`, `text-emerald-*`, etc.). Use semantic tokens (`bg-primary`, `text-muted-foreground`, `border-border`) or the `brand-*` utilities.
 
 ## Commands

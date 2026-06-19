@@ -1,3 +1,3 @@
 export { InvestmentCard } from "@/components/investments/investment-card"
-export { AddInvestmentModal } from "@/components/investments/add-investment-modal"
-export { WealthProjectionChart } from "@/components/investments/wealth-projection-chart"
+export { AddInvestmentModal } from "@/components/investments/investment-add-modal"
+export { WealthProjectionChart } from "@/components/investments/investment-wealth-projection-chart"

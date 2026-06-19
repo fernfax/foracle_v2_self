@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { Coins, Crown, Layers, Wallet } from "lucide-react"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { StatCard } from "@/components/ui/stat-card"
 
 interface IncomeRow {

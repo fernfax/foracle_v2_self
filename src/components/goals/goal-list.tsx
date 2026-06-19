@@ -17,17 +17,17 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { brandColor } from "@/lib/portfolio-colors"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { Toolbar } from "@/components/ui/toolbar"
-import { AddGoalDialog } from "@/components/goals/add-goal-dialog"
+import { AddGoalDialog } from "@/components/goals/goal-add-dialog"
 import { GoalDetailsModal } from "@/components/goals/goal-details-modal"
-import { ConfirmDialog } from "@/components/portfolio/confirm-dialog"
-import { ProgressBar } from "@/components/portfolio/progress"
+import { ConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
+import { ProgressBar } from "@/components/portfolio/portfolio-progress"
 
 interface Goal {
   id: string

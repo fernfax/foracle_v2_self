@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 
 import { getCurrentUserAndFamily } from "@/lib/auth-context"
-import { effectiveIncomeCategory } from "@/lib/income-category"
+import { effectiveIncomeCategory } from "@/lib/finance/income-category"
 import {
   createIncome as createIncomeService,
   deleteIncome as deleteIncomeService,

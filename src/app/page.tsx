@@ -16,14 +16,14 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { TileMotif } from "@/components/ui/tile-motif"
-import { Cursor } from "@/components/landing/cursor"
-import { GlassDefs } from "@/components/landing/glass-defs"
-import { HeroPreview } from "@/components/landing/hero-preview"
+import { Cursor } from "@/components/landing/landing-cursor"
+import { GlassDefs } from "@/components/landing/landing-glass-defs"
+import { HeroPreview } from "@/components/landing/landing-hero-preview"
+import { LifeStages } from "@/components/landing/landing-life-stages"
+import { Reveal } from "@/components/landing/landing-reveal"
 import { LandingShader } from "@/components/landing/landing-shader"
-import { LifeStages } from "@/components/landing/life-stages"
-import { Reveal } from "@/components/landing/reveal"
-import { SmoothScroll } from "@/components/landing/smooth-scroll"
+import { SmoothScroll } from "@/components/landing/landing-smooth-scroll"
+import { TileMotif } from "@/components/layout/layout-tile-motif"
 
 const NAV_LINKS = [
   { href: "#how", label: "How it works" },

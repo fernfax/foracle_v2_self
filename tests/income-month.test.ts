@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest"
 import {
   buildCashflowModel,
   type CashflowIncomeInput
-} from "@/lib/cashflow-sankey"
+} from "@/lib/charts/cashflow-sankey"
 import {
   bonusDollarsForYear,
   bonusForMonth,
   grossForMonth,
   isMonthInIncomeWindow,
   type MonthAmountIncome
-} from "@/lib/income-month"
+} from "@/lib/finance/income-month"
 
 // A plain monthly beta income (no milestones, no bonus) starting Jan 2026.
 function income(overrides: Partial<MonthAmountIncome> = {}): MonthAmountIncome {

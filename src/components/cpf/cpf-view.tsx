@@ -7,15 +7,18 @@ import { updateIncome } from "@/actions/incomes"
 import { Building2, Landmark, PiggyBank, Target } from "lucide-react"
 import { toast } from "sonner"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
-import { cpfBalanceForMember, findPrimaryCpfIncome } from "@/lib/cpf-balances"
-import { FRS_2026 } from "@/lib/cpf-calculator"
+import {
+  cpfBalanceForMember,
+  findPrimaryCpfIncome
+} from "@/lib/cpf/cpf-balances"
+import { FRS_2026 } from "@/lib/cpf/cpf-calculator"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { SectionCard } from "@/components/ui/section-card"
 import { StatCard } from "@/components/ui/stat-card"
-import { AddCpfDetailsDialog } from "@/components/income/add-cpf-details-dialog"
+import { AddCpfDetailsDialog } from "@/components/income/income-add-cpf-details-dialog"
 
 interface CpfIncomeRow {
   id: string

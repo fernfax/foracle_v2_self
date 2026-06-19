@@ -19,7 +19,7 @@ import {
   Target
 } from "lucide-react"
 
-import { getCategoryColor } from "@/lib/expense-calculator"
+import { getCategoryColor } from "@/lib/finance/expense-calculator"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,12 +49,12 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog"
-import { EditExpenseDialog } from "@/components/expenses/edit-expense-dialog"
+import { AddExpenseDialog } from "@/components/expenses/expense-add-dialog"
 import { ExpenseBreakdownModal } from "@/components/expenses/expense-breakdown-modal"
+import { EditExpenseDialog } from "@/components/expenses/expense-edit-dialog"
+import { ManageCategoriesDialog } from "@/components/expenses/expense-manage-categories-dialog"
 import { ExpenseStatBand } from "@/components/expenses/expense-stat-band"
-import { ManageCategoriesDialog } from "@/components/expenses/manage-categories-dialog"
-import { TopCategoryModal } from "@/components/expenses/top-category-modal"
+import { TopCategoryModal } from "@/components/expenses/expense-top-category-modal"
 
 interface Expense {
   id: string

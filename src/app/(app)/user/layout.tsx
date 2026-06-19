@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { PageHeader } from "@/components/ui/page-header"
+import { PageHeader } from "@/components/layout/layout-page-header"
 import { UserTabBar } from "@/app/(app)/user/user-tab-bar"
 
 /**

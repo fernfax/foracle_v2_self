@@ -9,7 +9,7 @@ import { getCurrentUserAndFamily } from "@/lib/auth-context"
 import type {
   DeveloperTableScope,
   TableRowsResult
-} from "@/lib/developer-tables"
+} from "@/lib/developer/developer-tables"
 import {
   assets,
   budgetShifts,

@@ -1,4 +1,4 @@
-import { loadVisibleFamilyMembers } from "@/lib/user-page-data"
+import { loadVisibleFamilyMembers } from "@/lib/page-data/user-page-data"
 import { FamilyMemberGrid } from "@/components/family-members/family-member-grid"
 
 export default async function FamilyTab() {

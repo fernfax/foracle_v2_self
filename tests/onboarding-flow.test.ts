@@ -4,7 +4,7 @@ import { nanoid } from "nanoid"
 import { beforeEach, describe, expect, it } from "vitest"
 
 import type { AuthContext } from "@/lib/auth-context"
-import { computeHouseholdSummary } from "@/lib/household-summary"
+import { computeHouseholdSummary } from "@/lib/finance/household-summary"
 import { createIncome, listIncomes } from "@/lib/services/incomes"
 import {
   checkOnboardingStatus,

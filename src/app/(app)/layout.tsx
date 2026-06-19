@@ -4,7 +4,7 @@ import { getBackgroundDecor } from "@/actions/singlish-mode"
 import { auth } from "@clerk/nextjs/server"
 
 import { AddExpenseProvider } from "@/components/budget"
-import { DashboardShell } from "@/components/sidebar/dashboard-shell"
+import { DashboardShell } from "@/components/layout/layout-dashboard-shell"
 import { TourProvider } from "@/components/tour/tour-provider"
 
 export default async function AppLayout({

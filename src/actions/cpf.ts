@@ -9,9 +9,9 @@ import {
   computeAnnualBonusCpf,
   getCPFAllocationByAge,
   getCPFRatesByAge
-} from "@/lib/cpf-calculator"
-import { effectiveIncomeCategory } from "@/lib/income-category"
-import { bonusDollarsForYear } from "@/lib/income-month"
+} from "@/lib/cpf/cpf-calculator"
+import { effectiveIncomeCategory } from "@/lib/finance/income-category"
+import { bonusDollarsForYear } from "@/lib/finance/income-month"
 import { familyMembers, incomes } from "@/db/schema"
 
 export interface CpfByFamilyMember {

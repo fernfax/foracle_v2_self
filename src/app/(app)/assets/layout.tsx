@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { PageHeader } from "@/components/ui/page-header"
+import { PageHeader } from "@/components/layout/layout-page-header"
 import { AssetsTabBar } from "@/app/(app)/assets/assets-tab-bar"
 
 export const metadata = {

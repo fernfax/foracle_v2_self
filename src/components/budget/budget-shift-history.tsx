@@ -5,7 +5,7 @@ import { deleteBudgetShift, type BudgetShift } from "@/actions/budget-shifts"
 import { format } from "date-fns"
 import { ArrowRight, ChevronDown, ChevronUp, Trash2 } from "lucide-react"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"

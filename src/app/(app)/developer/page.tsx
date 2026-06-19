@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { IS_DEV } from "@/configs/env.config"
 
-import { DEVELOPER_TABLES } from "@/lib/developer-tables"
+import { DEVELOPER_TABLES } from "@/lib/developer/developer-tables"
 import { DeveloperNav } from "@/components/developer/developer-nav"
 import { DeveloperTableAccordion } from "@/components/developer/developer-table-accordion"
 

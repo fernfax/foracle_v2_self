@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
-import { getCategoryColor } from "@/lib/expense-calculator"
+import { getCategoryColor } from "@/lib/finance/expense-calculator"
 import {
   Dialog,
   DialogContent,

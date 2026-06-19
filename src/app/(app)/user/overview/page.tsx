@@ -3,8 +3,8 @@ import {
   loadHoldings,
   loadIncomes,
   loadInvestments
-} from "@/lib/user-page-data"
-import { CashflowSankey } from "@/components/dashboard/cashflow-sankey"
+} from "@/lib/page-data/user-page-data"
+import { CashflowSankey } from "@/components/dashboard/dashboard-cashflow-sankey"
 
 export default async function OverviewTab() {
   const [incomes, expenses, holdings, investments] = await Promise.all([

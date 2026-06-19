@@ -30,9 +30,11 @@ import {
   Wallet
 } from "lucide-react"
 
-import { formatBudgetCurrency, isCurrentMonth } from "@/lib/budget-utils"
+import {
+  formatBudgetCurrency,
+  isCurrentMonth
+} from "@/lib/finance/budget-utils"
 import { Button } from "@/components/ui/button"
-import { PageHeader } from "@/components/ui/page-header"
 import { StatCard } from "@/components/ui/stat-card"
 import {
   AddExpenseModal,
@@ -46,8 +48,9 @@ import {
   useAddExpense
 } from "@/components/budget"
 import { BudgetBreakdown } from "@/components/budget/budget-breakdown"
-import { DailySpendingChart } from "@/components/budget/daily-spending-chart"
-import { RecentExpensesList } from "@/components/budget/recent-expenses-list"
+import { DailySpendingChart } from "@/components/budget/budget-daily-spending-chart"
+import { RecentExpensesList } from "@/components/budget/budget-recent-expenses-list"
+import { PageHeader } from "@/components/layout/layout-page-header"
 
 interface BudgetClientProps {
   initialCategories: ExpenseCategory[]

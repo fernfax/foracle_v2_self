@@ -1,4 +1,4 @@
-import { OnboardingWizard } from "@/app/onboarding/OnboardingWizard"
+import { OnboardingWizard } from "@/app/onboarding/onboarding-wizard"
 
 export const dynamic = "force-dynamic"
 

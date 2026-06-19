@@ -12,7 +12,7 @@ import {
   Wallet
 } from "lucide-react"
 
-import { calculateBonusCPF } from "@/lib/cpf-calculator"
+import { calculateBonusCPF } from "@/lib/cpf/cpf-calculator"
 import { Button } from "@/components/ui/button"
 import {
   Card,

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { differenceInDays, format, parseISO } from "date-fns"
 import { Check, Pencil, Shield, Trash2, X } from "lucide-react"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"

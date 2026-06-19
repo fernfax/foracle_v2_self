@@ -13,15 +13,15 @@ import {
 } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PageHeader } from "@/components/ui/page-header"
 import {
   BudgetCategory,
   BudgetTrackerCard
-} from "@/components/dashboard/budget-tracker-card"
-import { CashflowSankey } from "@/components/dashboard/cashflow-sankey"
+} from "@/components/dashboard/dashboard-budget-tracker-card"
+import { CashflowSankey } from "@/components/dashboard/dashboard-cashflow-sankey"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { TotalAssetsCard } from "@/components/dashboard/total-assets-card"
-import { MonthlyBalanceGraph } from "@/components/expenses/monthly-balance-graph"
+import { TotalAssetsCard } from "@/components/dashboard/dashboard-total-assets-card"
+import { MonthlyBalanceGraph } from "@/components/expenses/expense-monthly-balance-graph"
+import { PageHeader } from "@/components/layout/layout-page-header"
 
 // No-op subscribe for the hydration-flag useSyncExternalStore below.
 const emptySubscribe = () => () => {}

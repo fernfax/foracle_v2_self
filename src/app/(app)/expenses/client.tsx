@@ -2,8 +2,8 @@
 
 import { useSyncExternalStore } from "react"
 
-import { PageHeader } from "@/components/ui/page-header"
 import { ExpenseList } from "@/components/expenses/expense-list"
+import { PageHeader } from "@/components/layout/layout-page-header"
 
 // No-op subscribe for the hydration-flag useSyncExternalStore below.
 const emptySubscribe = () => () => {}

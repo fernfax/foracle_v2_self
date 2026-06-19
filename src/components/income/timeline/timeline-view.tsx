@@ -35,9 +35,9 @@ import {
 } from "lucide-react"
 import { createPortal } from "react-dom"
 
-import { CHART_PALETTE } from "@/lib/chart-palette"
-import { computeAnnualBonusCpf } from "@/lib/cpf-calculator"
-import { bonusForMonth, grossForMonth } from "@/lib/income-month"
+import { CHART_PALETTE } from "@/lib/charts/chart-palette"
+import { computeAnnualBonusCpf } from "@/lib/cpf/cpf-calculator"
+import { bonusForMonth, grossForMonth } from "@/lib/finance/income-month"
 import { cn } from "@/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import {
@@ -71,21 +71,21 @@ import {
   DatePillEditor,
   EditablePill,
   TextPillEditor
-} from "@/components/income/timeline/editable-pill"
+} from "@/components/income/timeline/timeline-editable-pill"
 import {
   activeMilestoneAt,
   FutureChangeDialog,
   priorEffectiveAmount,
   resolveEffectiveAmount,
   type FutureMilestone
-} from "@/components/income/timeline/future-change-dialog"
-import { IncomeCreatorDrawer } from "@/components/income/timeline/income-creator-drawer"
-import { IncomeDetailDrawer } from "@/components/income/timeline/income-detail-drawer"
+} from "@/components/income/timeline/timeline-future-change-dialog"
+import { IncomeCreatorDrawer } from "@/components/income/timeline/timeline-income-creator-drawer"
+import { IncomeDetailDrawer } from "@/components/income/timeline/timeline-income-detail-drawer"
 import {
   IncomeBarPopup,
   QuickAdjustPad
-} from "@/components/income/timeline/quick-adjust-pad"
-import { useOptimisticIncomes } from "@/components/income/timeline/use-optimistic-incomes"
+} from "@/components/income/timeline/timeline-quick-adjust-pad"
+import { useOptimisticIncomes } from "@/components/income/timeline/timeline-use-optimistic-incomes"
 
 type Income = {
   id: string

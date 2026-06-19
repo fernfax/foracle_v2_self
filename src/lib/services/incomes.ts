@@ -9,8 +9,8 @@ import {
   type UpdateIncomeBody
 } from "@/lib/api-schemas/incomes"
 import type { AuthContext } from "@/lib/auth-context"
-import { resolveCpfAge } from "@/lib/cpf-age"
-import { calculateCPF, CPF_RATES_VERSION } from "@/lib/cpf-calculator"
+import { resolveCpfAge } from "@/lib/cpf/cpf-age"
+import { calculateCPF, CPF_RATES_VERSION } from "@/lib/cpf/cpf-calculator"
 import { familyMembers, incomes } from "@/db/schema"
 
 export type IncomeRow = typeof incomes.$inferSelect

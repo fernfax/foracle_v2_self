@@ -6,7 +6,7 @@ import { differenceInYears } from "date-fns"
 import { Users } from "lucide-react"
 import { toast } from "sonner"
 
-import { CHART_PALETTE } from "@/lib/chart-palette"
+import { CHART_PALETTE } from "@/lib/charts/chart-palette"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,8 +22,8 @@ import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { Toolbar } from "@/components/ui/toolbar"
-import { AddFamilyMemberDialog } from "@/components/family-members/add-family-member-dialog"
-import { EditFamilyMemberDialog } from "@/components/family-members/edit-family-member-dialog"
+import { AddFamilyMemberDialog } from "@/components/family-members/family-member-add-dialog"
+import { EditFamilyMemberDialog } from "@/components/family-members/family-member-edit-dialog"
 
 interface FamilyMember {
   id: string

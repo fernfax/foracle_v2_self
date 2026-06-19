@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { computeHouseholdSummary } from "@/lib/household-summary"
+import { computeHouseholdSummary } from "@/lib/finance/household-summary"
 
 // QA-verified household fixture (Alex Tan + Jamie Tan, 2026-06-07)
 // Alex: $7,500/mo salary, CPF employee $1,500, net $6,000

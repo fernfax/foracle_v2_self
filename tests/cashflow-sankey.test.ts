@@ -8,7 +8,7 @@ import {
   SHORTFALL_ID,
   type CashflowExpenseInput,
   type CashflowIncomeInput
-} from "@/lib/cashflow-sankey"
+} from "@/lib/charts/cashflow-sankey"
 
 // Minimal income / expense factories — only the fields the transform reads.
 const income = (

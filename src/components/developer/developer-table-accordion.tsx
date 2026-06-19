@@ -7,7 +7,7 @@ import { ChevronRight } from "lucide-react"
 import type {
   DeveloperTableScope,
   TableRowsResult
-} from "@/lib/developer-tables"
+} from "@/lib/developer/developer-tables"
 import { cn } from "@/lib/utils"
 
 interface DeveloperTableAccordionProps {

@@ -1,4 +1,4 @@
-import { loadAchievedGoals } from "@/lib/goals-page-data"
+import { loadAchievedGoals } from "@/lib/page-data/goals-page-data"
 import { GoalList } from "@/components/goals/goal-list"
 
 export default async function AchievedGoalsTab() {

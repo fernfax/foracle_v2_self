@@ -4,7 +4,7 @@ import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Fab } from "@/components/ui/fab-stack"
-import { useAddExpense } from "@/components/budget/add-expense-context"
+import { useAddExpense } from "@/components/budget/budget-add-expense-context"
 
 /**
  * Add-expense FAB for the Budget page, mounted from `budget/layout.tsx`.

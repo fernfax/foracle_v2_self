@@ -10,7 +10,7 @@ import type {
   CpfData,
   FamilyMemberData,
   IncomeData
-} from "@/app/onboarding/OnboardingWizard"
+} from "@/app/onboarding/onboarding-wizard"
 
 // Weighted distribution used when categoryAmounts isn't supplied for a given
 // category. Mirrors the original lib/actions/onboarding.ts mapping so the

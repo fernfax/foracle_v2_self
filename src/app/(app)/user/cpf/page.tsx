@@ -1,4 +1,8 @@
-import { loadCpf, loadIncomes, loadProperties } from "@/lib/user-page-data"
+import {
+  loadCpf,
+  loadIncomes,
+  loadProperties
+} from "@/lib/page-data/user-page-data"
 import { CpfProjectionGraph } from "@/components/cpf/cpf-projection-graph"
 import { CpfView } from "@/components/cpf/cpf-view"
 

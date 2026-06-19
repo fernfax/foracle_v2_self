@@ -3,13 +3,13 @@
 import type { BudgetVsActual } from "@/actions/budget-calculator"
 import { Wallet } from "lucide-react"
 
-import { formatBudgetCurrency, getMonthName } from "@/lib/budget-utils"
+import { formatBudgetCurrency, getMonthName } from "@/lib/finance/budget-utils"
 import { categoryColor } from "@/lib/portfolio-colors"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { SectionCard } from "@/components/ui/section-card"
 import { Toolbar } from "@/components/ui/toolbar"
-import { ProgressBar } from "@/components/portfolio/progress"
+import { ProgressBar } from "@/components/portfolio/portfolio-progress"
 
 interface BudgetBreakdownProps {
   budgetData: BudgetVsActual[]

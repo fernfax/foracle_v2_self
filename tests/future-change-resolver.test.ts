@@ -5,7 +5,7 @@ import {
   priorEffectiveAmount,
   resolveEffectiveAmount,
   type FutureMilestone
-} from "@/lib/future-change"
+} from "@/lib/finance/future-change"
 
 const BASE = 5000
 

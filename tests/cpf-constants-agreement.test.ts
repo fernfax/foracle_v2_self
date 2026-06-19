@@ -21,7 +21,7 @@ import {
   getCPFBracketIndex,
   getCPFRatesByAge,
   OW_CEILING_AMOUNT
-} from "@/lib/cpf-calculator"
+} from "@/lib/cpf/cpf-calculator"
 
 // The CPF audit found the engine on stale 2025 rates while the AI knowledge
 // base text already had 2026 — three copies of the same numbers, drifting.

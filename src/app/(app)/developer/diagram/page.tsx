@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 
+import { DiagramCanvas } from "@/components/developer/developer-diagram-canvas"
 import { DeveloperNav } from "@/components/developer/developer-nav"
-import { DiagramCanvas } from "@/components/developer/diagram-canvas"
 
 export const dynamic = "force-dynamic"
 
@@ -14,7 +14,7 @@ export default async function DeveloperDiagramPage() {
   // trace there. It stays reachable under `next dev` and a local `next start`
   // whose environment is development.
   if (process.env.NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT === "development") {
-    const { buildDiagram } = await import("@/lib/developer-diagram")
+    const { buildDiagram } = await import("@/lib/developer/developer-diagram")
     const diagram = await buildDiagram()
 
     return (

@@ -3,8 +3,8 @@
 import { useMemo } from "react"
 import { CalendarDays, PieChart, Receipt, Tags } from "lucide-react"
 
-import { formatBudgetCurrency } from "@/lib/budget-utils"
-import { calculateMonthlyAmount } from "@/lib/expense-calculator"
+import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
+import { calculateMonthlyAmount } from "@/lib/finance/expense-calculator"
 import { StatCard } from "@/components/ui/stat-card"
 
 interface ExpenseRow {

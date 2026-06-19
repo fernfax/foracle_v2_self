@@ -3,7 +3,7 @@ import {
   loadHoldings,
   loadIncomes,
   loadInvestments
-} from "@/lib/user-page-data"
+} from "@/lib/page-data/user-page-data"
 import { ExpensesClient } from "@/app/(app)/expenses/client"
 
 export default async function ExpensesTab() {

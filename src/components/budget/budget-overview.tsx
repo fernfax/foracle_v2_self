@@ -6,7 +6,7 @@ import {
   formatBudgetCurrency,
   getBudgetUsageStatus,
   getMonthName
-} from "@/lib/budget-utils"
+} from "@/lib/finance/budget-utils"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"

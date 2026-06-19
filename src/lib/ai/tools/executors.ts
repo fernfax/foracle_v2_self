@@ -14,7 +14,7 @@ import {
   type ToolName
 } from "@/lib/ai/tools/registry"
 import { getCurrentUserAndFamily } from "@/lib/auth-context"
-import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf-calculator"
+import { calculateCPF, getCPFAllocationByAge } from "@/lib/cpf/cpf-calculator"
 import { searchKnowledgeBase } from "@/lib/vectors"
 import {
   assets,

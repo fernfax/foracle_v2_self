@@ -1,7 +1,10 @@
 import type { ReactNode } from "react"
 
-import { loadAchievedGoals, loadActiveGoals } from "@/lib/goals-page-data"
-import { PageHeader } from "@/components/ui/page-header"
+import {
+  loadAchievedGoals,
+  loadActiveGoals
+} from "@/lib/page-data/goals-page-data"
+import { PageHeader } from "@/components/layout/layout-page-header"
 import { GoalsTabBar } from "@/app/(app)/goals/goals-tab-bar"
 
 export const metadata = {
