@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import { redirect } from "next/navigation"
 import { auth } from "@clerk/nextjs/server"
 import {
   ArrowRight,
@@ -20,6 +19,7 @@ import { LandingCursor } from "@/components/landing/landing-cursor"
 import { LandingGlassDefs } from "@/components/landing/landing-glass-defs"
 import { LandingHeroPreview } from "@/components/landing/landing-hero-preview"
 import { LandingLifeStages } from "@/components/landing/landing-life-stages"
+import { LandingMobileNav } from "@/components/landing/landing-mobile-nav"
 import { LandingReveal } from "@/components/landing/landing-reveal"
 import { LandingShader } from "@/components/landing/landing-shader"
 import { LandingSmoothScroll } from "@/components/landing/landing-smooth-scroll"
@@ -148,9 +148,9 @@ const FAQS = [
 
 export default async function Home() {
   const { userId } = await auth()
-  if (userId) {
-    redirect("/user/overview")
-  }
+  const isSignedIn = Boolean(userId)
+  // Primary CTA points signed-in visitors at the app, everyone else at sign-up.
+  const primaryCtaHref = isSignedIn ? "/user/overview" : "/sign-up"
 
   return (
     <main className="min-h-screen bg-transparent">
@@ -184,19 +184,26 @@ export default async function Home() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/sign-in" className="hidden sm:block">
-              <Button variant="ghost" size="sm">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/sign-up">
-              {/* 44px touch target on phones (WCAG 2.5.5); compact on desktop. */}
-              <Button size="sm" className="h-11 sm:h-8">
-                Get Started
-              </Button>
-            </Link>
+          {/* Desktop CTAs */}
+          <div className="hidden items-center gap-3 md:flex">
+            {isSignedIn ? (
+              <Link href="/user/overview">
+                <Button>Go to dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/sign-in">
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button>Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
+
+          {/* Mobile: inline primary CTA + hamburger sheet */}
+          <LandingMobileNav links={NAV_LINKS} isSignedIn={isSignedIn} />
         </div>
       </nav>
 
@@ -228,9 +235,9 @@ export default async function Home() {
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/sign-up" className="w-full sm:w-auto">
+            <Link href={primaryCtaHref} className="w-full sm:w-auto">
               <Button size="lg" className="w-full px-9 sm:w-auto">
-                Start your journey
+                {isSignedIn ? "Go to dashboard" : "Start your journey"}
                 <ArrowRight className="ml-2 size-4" />
               </Button>
             </Link>
@@ -433,20 +440,31 @@ export default async function Home() {
             required.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/sign-up" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full px-10 sm:w-auto">
-                Get started free
-                <ArrowRight className="ml-2 size-4" />
-              </Button>
-            </Link>
-            <Link href="/sign-in" className="w-full sm:w-auto">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-brand-cream/[0.2] text-brand-cream hover:bg-brand-cream/[0.08] hover:text-brand-cream w-full bg-transparent px-10 sm:w-auto">
-                Sign in
-              </Button>
-            </Link>
+            {isSignedIn ? (
+              <Link href="/user/overview" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full px-10 sm:w-auto">
+                  Go to dashboard
+                  <ArrowRight className="ml-2 size-4" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/sign-up" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full px-10 sm:w-auto">
+                    Get started free
+                    <ArrowRight className="ml-2 size-4" />
+                  </Button>
+                </Link>
+                <Link href="/sign-in" className="w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-brand-cream/[0.2] text-brand-cream hover:bg-brand-cream/[0.08] hover:text-brand-cream w-full bg-transparent px-10 sm:w-auto">
+                    Sign in
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
           <div className="mx-auto mt-12 max-w-xs">
             <LayoutTileMotif size="standard" />
