@@ -8,8 +8,7 @@ import type {
 } from "@/lib/api-schemas/expenses"
 import type { AuthContext } from "@/lib/auth-context"
 import { expenses } from "@/db/schema"
-
-export type ExpenseRow = typeof expenses.$inferSelect
+import type { Expense } from "@/db/types"
 
 export class ExpenseNotFoundError extends Error {
   constructor() {
@@ -25,7 +24,7 @@ export type ListExpensesOpts = {
 export async function listExpenses(
   ctx: AuthContext,
   opts: ListExpensesOpts = {}
-): Promise<ExpenseRow[]> {
+): Promise<Expense[]> {
   const conditions = [eq(expenses.familyId, ctx.familyId)]
   if (opts.isActive !== undefined) {
     conditions.push(eq(expenses.isActive, opts.isActive))
@@ -43,7 +42,7 @@ export async function listExpenses(
 export async function getExpenseById(
   ctx: AuthContext,
   id: string
-): Promise<ExpenseRow | null> {
+): Promise<Expense | null> {
   const row = await db.query.expenses.findFirst({
     where: and(eq(expenses.id, id), eq(expenses.familyId, ctx.familyId))
   })
@@ -51,8 +50,8 @@ export async function getExpenseById(
 }
 
 export type CreateExpenseResult =
-  | { status: "created"; row: ExpenseRow }
-  | { status: "conflict"; row: ExpenseRow }
+  | { status: "created"; row: Expense }
+  | { status: "conflict"; row: Expense }
 
 export async function createExpense(
   ctx: AuthContext,
@@ -105,7 +104,7 @@ export async function updateExpense(
   ctx: AuthContext,
   id: string,
   patch: UpdateExpenseBody
-): Promise<ExpenseRow> {
+): Promise<Expense> {
   const existing = await getExpenseById(ctx, id)
   if (!existing) throw new ExpenseNotFoundError()
 
@@ -142,7 +141,7 @@ export async function updateExpense(
 export async function softDeleteExpense(
   ctx: AuthContext,
   id: string
-): Promise<ExpenseRow> {
+): Promise<Expense> {
   const existing = await getExpenseById(ctx, id)
   if (!existing) throw new ExpenseNotFoundError()
   const [row] = await db

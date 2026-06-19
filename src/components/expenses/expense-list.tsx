@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 
 import { getCategoryColor } from "@/lib/finance/expense-calculator"
+import type { Expense } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,27 +56,6 @@ import { ExpenseEditDialog } from "@/components/expenses/expense-edit-dialog"
 import { ExpenseManageCategoriesDialog } from "@/components/expenses/expense-manage-categories-dialog"
 import { ExpenseStatBand } from "@/components/expenses/expense-stat-band"
 import { ExpenseTopCategoryModal } from "@/components/expenses/expense-top-category-modal"
-
-interface Expense {
-  id: string
-  userId?: string
-  linkedPolicyId?: string | null
-  linkedPropertyId?: string | null
-  linkedVehicleId?: string | null
-  linkedGoalId?: string | null
-  name: string
-  category: string
-  expenseCategory: string | null
-  amount: string
-  frequency: string
-  customMonths: string | null
-  startDate: string | null
-  endDate: string | null
-  description: string | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 // Helper function to check if expense is linked to any integration
 const isLinkedExpense = (expense: Expense) => {

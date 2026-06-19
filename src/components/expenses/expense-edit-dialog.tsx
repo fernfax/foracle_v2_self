@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import type { Expense } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,27 +52,6 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ExpenseCategoryManagerPopover } from "@/components/expenses/expense-category-manager-popover"
-
-interface Expense {
-  id: string
-  userId?: string
-  linkedPolicyId?: string | null
-  linkedPropertyId?: string | null
-  linkedVehicleId?: string | null
-  linkedGoalId?: string | null
-  name: string
-  category: string
-  expenseCategory: string | null
-  amount: string
-  frequency: string
-  customMonths: string | null
-  startDate: string | null
-  endDate: string | null
-  description: string | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 // Helper to get integration type info
 type IntegrationType = "policy" | "property" | "vehicle" | "goal" | null

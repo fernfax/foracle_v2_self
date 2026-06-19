@@ -2,29 +2,12 @@
 
 import { useSyncExternalStore } from "react"
 
+import type { Expense } from "@/db/types"
 import { ExpenseList } from "@/components/expenses/expense-list"
 import { LayoutPageHeader } from "@/components/layout/layout-page-header"
 
 // No-op subscribe for the hydration-flag useSyncExternalStore below.
 const emptySubscribe = () => () => {}
-
-interface Expense {
-  id: string
-  userId: string
-  linkedPolicyId: string | null
-  name: string
-  category: string
-  expenseCategory: string | null
-  amount: string
-  frequency: string
-  customMonths: string | null
-  startDate: string | null
-  endDate: string | null
-  description: string | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface Income {
   id: string

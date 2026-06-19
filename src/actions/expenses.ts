@@ -12,24 +12,7 @@ import {
   updateExpense as updateExpenseService
 } from "@/lib/services/expenses"
 import { expenseCategories, expenses } from "@/db/schema"
-
-export type Expense = {
-  id: string
-  userId: string
-  linkedPolicyId: string | null
-  name: string
-  category: string
-  expenseCategory: string | null
-  amount: string
-  frequency: string
-  customMonths: string | null
-  startDate: string | null
-  endDate: string | null
-  description: string | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
-}
+import type { Expense } from "@/db/types"
 
 /**
  * Get all expenses for the authenticated user
