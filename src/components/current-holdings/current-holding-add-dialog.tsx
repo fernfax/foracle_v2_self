@@ -1,13 +1,17 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import {
   addCurrentHolding,
   CurrentHolding,
   updateCurrentHolding
 } from "@/actions/current-holdings"
 import { getFamilyMembers } from "@/actions/family-members"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Controller, useForm } from "react-hook-form"
+import { z } from "zod"
 
+import type { FamilyMember } from "@/db/types"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -27,17 +31,34 @@ import {
   SelectValue
 } from "@/components/ui/select"
 
-type FamilyMember = {
-  id: string
-  name: string
-}
-
 interface AddCurrentHoldingDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onHoldingAdded: (holding: CurrentHolding) => void
   holding?: CurrentHolding | null
 }
+
+const holdingFormSchema = z.object({
+  familyMemberId: z.string(),
+  bankName: z.string().min(1, "Bank name is required"),
+  holdingAmount: z.string().min(1, "Holding amount is required")
+})
+type HoldingFormValues = z.infer<typeof holdingFormSchema>
+
+const emptyValues: HoldingFormValues = {
+  familyMemberId: "none",
+  bankName: "",
+  holdingAmount: ""
+}
+
+const toFormValues = (holding?: CurrentHolding | null): HoldingFormValues =>
+  holding
+    ? {
+        familyMemberId: holding.familyMemberId || "none",
+        bankName: holding.bankName,
+        holdingAmount: holding.holdingAmount
+      }
+    : emptyValues
 
 export function CurrentHoldingAddDialog({
   open,
@@ -46,69 +67,50 @@ export function CurrentHoldingAddDialog({
   holding
 }: AddCurrentHoldingDialogProps) {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
-  const [familyMemberId, setFamilyMemberId] = useState<string>("")
-  const [bankName, setBankName] = useState("")
-  const [holdingAmount, setHoldingAmount] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting }
+  } = useForm<HoldingFormValues>({
+    resolver: zodResolver(holdingFormSchema),
+    defaultValues: emptyValues
+  })
 
   // Fetch family members
   useEffect(() => {
-    getFamilyMembers().then((members) => {
-      setFamilyMembers(members)
-    })
+    getFamilyMembers().then(setFamilyMembers)
   }, [])
 
-  // Populate form when editing
+  // Populate form when editing / reset for add
   useEffect(() => {
-    if (holding) {
-      setFamilyMemberId(holding.familyMemberId || "none")
-      setBankName(holding.bankName)
-      setHoldingAmount(holding.holdingAmount)
-    } else {
-      // Reset form for add mode
-      setFamilyMemberId("none")
-      setBankName("")
-      setHoldingAmount("")
-    }
-  }, [holding])
+    if (open) reset(toFormValues(holding))
+  }, [open, holding, reset])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
+  const onSubmit = async (values: HoldingFormValues) => {
+    const finalFamilyMemberId =
+      values.familyMemberId === "none" ? null : values.familyMemberId || null
     try {
-      let resultHolding: CurrentHolding
-      const finalFamilyMemberId =
-        familyMemberId === "none" ? null : familyMemberId || null
-
-      if (holding && holding.id) {
-        // Edit mode - update existing holding
-        resultHolding = await updateCurrentHolding(holding.id, {
-          familyMemberId: finalFamilyMemberId,
-          bankName,
-          holdingAmount: parseFloat(holdingAmount)
-        })
-      } else {
-        // Create mode - add new holding
-        resultHolding = await addCurrentHolding({
-          familyMemberId: finalFamilyMemberId,
-          bankName,
-          holdingAmount: parseFloat(holdingAmount)
-        })
-      }
-
+      const resultHolding =
+        holding && holding.id
+          ? await updateCurrentHolding(holding.id, {
+              familyMemberId: finalFamilyMemberId,
+              bankName: values.bankName,
+              holdingAmount: parseFloat(values.holdingAmount)
+            })
+          : await addCurrentHolding({
+              familyMemberId: finalFamilyMemberId,
+              bankName: values.bankName,
+              holdingAmount: parseFloat(values.holdingAmount)
+            })
       onHoldingAdded(resultHolding)
-
-      // Reset form
-      setFamilyMemberId("none")
-      setBankName("")
-      setHoldingAmount("")
+      reset(emptyValues)
       onOpenChange(false)
     } catch (error) {
       console.error("Failed to save current holding:", error)
       alert("Failed to save current holding. Please try again.")
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -129,24 +131,30 @@ export function CurrentHoldingAddDialog({
           )}
           <form
             id="current-holding-form"
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="mt-4 space-y-4">
             {/* Account Holder */}
             <div className="space-y-2">
               <Label htmlFor="familyMember">Account Holder</Label>
-              <Select value={familyMemberId} onValueChange={setFamilyMemberId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select account holder" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {familyMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="familyMemberId"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="familyMember">
+                      <SelectValue placeholder="Select account holder" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {familyMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             {/* Bank Name */}
@@ -154,11 +162,14 @@ export function CurrentHoldingAddDialog({
               <Label htmlFor="bankName">Bank Name</Label>
               <Input
                 id="bankName"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
                 placeholder="e.g., DBS, OCBC, UOB"
-                required
+                {...register("bankName")}
               />
+              {errors.bankName && (
+                <p className="text-on-danger text-xs">
+                  {errors.bankName.message}
+                </p>
+              )}
             </div>
 
             {/* Holding Amount */}
@@ -173,13 +184,16 @@ export function CurrentHoldingAddDialog({
                   type="number"
                   step="0.01"
                   min="0"
-                  value={holdingAmount}
-                  onChange={(e) => setHoldingAmount(e.target.value)}
                   placeholder="0.00"
                   className="pl-7"
-                  required
+                  {...register("holdingAmount")}
                 />
               </div>
+              {errors.holdingAmount && (
+                <p className="text-on-danger text-xs">
+                  {errors.holdingAmount.message}
+                </p>
+              )}
             </div>
           </form>
         </DialogBody>

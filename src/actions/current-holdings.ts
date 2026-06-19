@@ -10,15 +10,12 @@ import {
   familyMembers,
   holdingAmountHistory
 } from "@/db/schema"
+import type { CurrentHolding as CurrentHoldingRow } from "@/db/types"
 
-export type CurrentHolding = {
-  id: string
-  userId: string
-  familyMemberId: string | null
-  bankName: string
-  holdingAmount: string
-  createdAt: Date
-  updatedAt: Date
+// Holdings are read back as a join projection: the schema-derived row minus
+// familyId (not selected) plus the joined account-holder name. Base columns stay
+// tied to the current_holdings table; familyMemberName is the join-only field.
+export type CurrentHolding = Omit<CurrentHoldingRow, "familyId"> & {
   familyMemberName?: string | null
 }
 
