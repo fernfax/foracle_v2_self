@@ -12,6 +12,7 @@ import { Car, Clock } from "lucide-react"
 import { toast } from "sonner"
 
 import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
+import type { VehicleAsset } from "@/db/types"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -21,24 +22,6 @@ import { AssetAddVehicleDialog } from "@/components/assets/asset-add-vehicle-dia
 import { AssetVehicleDetailsModal } from "@/components/assets/asset-vehicle-details-modal"
 import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
 import { PortfolioProgress } from "@/components/portfolio/portfolio-progress"
-
-interface VehicleAsset {
-  id: string
-  vehicleName: string
-  purchaseDate: string
-  coeExpiryDate: string | null
-  originalPurchasePrice: string
-  loanAmountTaken: string | null
-  loanInterestRate: string | null
-  loanTenureYears: number | null
-  loanTenureMonths: number | null
-  loanAmountRepaid: string | null
-  monthlyLoanPayment: string | null
-  linkedExpenseId: string | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface VehicleListProps {
   initialVehicles: VehicleAsset[]

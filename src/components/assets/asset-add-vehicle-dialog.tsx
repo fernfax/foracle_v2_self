@@ -7,6 +7,7 @@ import {
 } from "@/actions/vehicle-assets"
 import { differenceInMonths, format } from "date-fns"
 
+import type { VehicleAsset } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,21 +33,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MoneyInput } from "@/components/ui/money-input"
 import { Switch } from "@/components/ui/switch"
-
-interface VehicleAsset {
-  id: string
-  vehicleName: string
-  purchaseDate: string
-  coeExpiryDate: string | null
-  originalPurchasePrice: string
-  loanAmountTaken: string | null
-  loanInterestRate: string | null
-  loanTenureYears: number | null
-  loanTenureMonths: number | null
-  loanAmountRepaid: string | null
-  monthlyLoanPayment: string | null
-  linkedExpenseId: string | null
-}
 
 interface AddVehicleDialogProps {
   open: boolean

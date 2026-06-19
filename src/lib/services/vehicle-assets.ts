@@ -9,8 +9,7 @@ import type {
 } from "@/lib/api-schemas/vehicle-assets"
 import type { AuthContext } from "@/lib/auth-context"
 import { expenses, vehicleAssets } from "@/db/schema"
-
-export type VehicleAssetRow = typeof vehicleAssets.$inferSelect
+import type { VehicleAsset } from "@/db/types"
 
 export class VehicleAssetNotFoundError extends Error {
   constructor() {
@@ -19,8 +18,8 @@ export class VehicleAssetNotFoundError extends Error {
 }
 
 export type CreateVehicleAssetResult =
-  | { status: "created"; row: VehicleAssetRow }
-  | { status: "conflict"; row: VehicleAssetRow }
+  | { status: "created"; row: VehicleAsset }
+  | { status: "conflict"; row: VehicleAsset }
 
 function expenseNameFor(vehicleName: string, override?: string | null): string {
   return override?.trim() ? override : `${vehicleName} - Loan Payment`
@@ -68,7 +67,7 @@ async function ensureLinkedExpense(opts: {
 export async function listVehicleAssets(
   ctx: AuthContext,
   filters: ListVehicleAssetsQuery = {}
-): Promise<VehicleAssetRow[]> {
+): Promise<VehicleAsset[]> {
   const conditions = [eq(vehicleAssets.familyId, ctx.familyId)]
   if (filters.isActive !== undefined)
     conditions.push(eq(vehicleAssets.isActive, filters.isActive))
@@ -82,7 +81,7 @@ export async function listVehicleAssets(
 export async function getVehicleAssetById(
   ctx: AuthContext,
   id: string
-): Promise<VehicleAssetRow | null> {
+): Promise<VehicleAsset | null> {
   const row = await db.query.vehicleAssets.findFirst({
     where: and(
       eq(vehicleAssets.id, id),
@@ -160,7 +159,7 @@ export async function updateVehicleAsset(
   ctx: AuthContext,
   id: string,
   patch: UpdateVehicleAssetBody
-): Promise<VehicleAssetRow> {
+): Promise<VehicleAsset> {
   const existing = await getVehicleAssetById(ctx, id)
   if (!existing) throw new VehicleAssetNotFoundError()
 

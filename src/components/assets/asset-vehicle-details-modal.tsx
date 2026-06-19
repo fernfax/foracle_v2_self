@@ -10,6 +10,7 @@ import {
 import { Calendar, Car, Check, Clock, Wallet, X } from "lucide-react"
 import { useTheme } from "next-themes"
 
+import type { VehicleAsset } from "@/db/types"
 import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
@@ -17,21 +18,6 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-
-interface VehicleAsset {
-  id: string
-  vehicleName: string
-  purchaseDate: string
-  coeExpiryDate: string | null
-  originalPurchasePrice: string
-  loanAmountTaken: string | null
-  loanInterestRate: string | null
-  loanTenureYears: number | null
-  loanTenureMonths: number | null
-  loanAmountRepaid: string | null
-  monthlyLoanPayment: string | null
-  linkedExpenseId: string | null
-}
 
 interface VehicleDetailsModalProps {
   open: boolean

@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Car, ChevronRight, Home, TrendingUp } from "lucide-react"
 
+import type { VehicleAsset } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,16 +28,6 @@ interface PropertyAsset {
   propertyName: string
   originalPurchasePrice: string
   outstandingLoan: string
-  monthlyLoanPayment: string | null
-  isActive: boolean | null
-}
-
-interface VehicleAsset {
-  id: string
-  vehicleName: string
-  originalPurchasePrice: string
-  loanAmountTaken: string | null
-  loanAmountRepaid: string | null
   monthlyLoanPayment: string | null
   isActive: boolean | null
 }
