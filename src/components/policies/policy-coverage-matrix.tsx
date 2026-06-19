@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { CHART_PALETTE } from "@/lib/charts/chart-palette"
+import type { Policy } from "@/db/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,33 +33,6 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-
-interface Policy {
-  id: string
-  userId: string
-  familyMemberId: string | null
-  linkedExpenseId: string | null
-  provider: string
-  planName: string | null
-  policyNumber: string | null
-  policyType: string
-  status: string | null
-  startDate: string
-  maturityDate: string | null
-  coverageUntilAge: number | null
-  premiumAmount: string
-  premiumAmountCPF: string | null
-  premiumFrequency: string
-  customMonths: string | null
-  totalPremiumDuration: number | null
-  coverageOptions: string | null
-  cashValue: string | null
-  cashValueDate: string | null
-  isActive: boolean | null
-  description: string | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface FamilyMember {
   id: string

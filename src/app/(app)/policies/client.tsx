@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner"
 
 import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
+import type { Policy } from "@/db/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Toolbar } from "@/components/ui/toolbar"
@@ -31,33 +32,6 @@ import { PolicyCoverageMatrix } from "@/components/policies/policy-coverage-matr
 import { PolicyEditDialog } from "@/components/policies/policy-edit-dialog"
 import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
 import { PortfolioStatBand } from "@/components/portfolio/portfolio-stat-band"
-
-interface Policy {
-  id: string
-  userId: string
-  familyMemberId: string | null
-  linkedExpenseId: string | null
-  provider: string
-  planName: string | null
-  policyNumber: string | null
-  policyType: string
-  status: string | null
-  startDate: string
-  maturityDate: string | null
-  coverageUntilAge: number | null
-  premiumAmount: string
-  premiumAmountCPF: string | null
-  premiumFrequency: string
-  customMonths: string | null
-  totalPremiumDuration: number | null
-  coverageOptions: string | null
-  cashValue: string | null
-  cashValueDate: string | null
-  isActive: boolean | null
-  description: string | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface FamilyMember {
   id: string

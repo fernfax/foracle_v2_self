@@ -16,6 +16,7 @@ import { getUserFamilyMembers } from "@/actions/user"
 import { format, parseISO } from "date-fns"
 
 import { policyFrequencyToExpenseFrequency } from "@/lib/utils"
+import type { Policy } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,33 +53,6 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { PolicyProviderManagerPopover } from "@/components/policies/policy-provider-manager-popover"
-
-interface Policy {
-  id: string
-  userId: string
-  familyMemberId: string | null
-  linkedExpenseId: string | null
-  provider: string
-  planName: string | null
-  policyNumber: string | null
-  policyType: string
-  status: string | null
-  startDate: string
-  maturityDate: string | null
-  coverageUntilAge: number | null
-  premiumAmount: string
-  premiumAmountCPF: string | null
-  premiumFrequency: string
-  customMonths: string | null
-  totalPremiumDuration: number | null
-  coverageOptions: string | null
-  cashValue: string | null
-  cashValueDate: string | null
-  isActive: boolean | null
-  description: string | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface FamilyMember {
   id: string

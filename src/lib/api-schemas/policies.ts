@@ -1,4 +1,7 @@
+import { createInsertSchema } from "drizzle-zod"
 import { z } from "zod"
+
+import { policies } from "@/db/schema"
 
 const isoDate = z
   .string()
@@ -29,21 +32,26 @@ export const listPoliciesQuerySchema = z.object({
 })
 export type ListPoliciesQuery = z.infer<typeof listPoliciesQuerySchema>
 
-export const createPolicyBodySchema = z.object({
-  id: z.string().uuid().optional(),
+// Field schemas derived from the policies table — types and nullability flow
+// from the columns; domain rules (money/date format, status enum, age range)
+// layered per field. A provided schema replaces the column verbatim, so each
+// carries its own optionality (NOT NULL vs nullable). coverageOptions and
+// customMonths are JSON-encoded text columns, validated as opaque strings here
+// and shaped by the form layer.
+const policyInsert = createInsertSchema(policies, {
   familyMemberId: z.string().nullish(),
   linkedExpenseId: z.string().nullish(),
-  provider: z.string().min(1).max(255),
-  planName: z.string().max(255).nullish(),
+  provider: (s) => s.min(1).max(255),
+  planName: (s) => s.max(255).nullish(),
   policyNumber: z.string().nullish(),
-  policyType: z.string().min(1).max(100),
+  policyType: (s) => s.min(1).max(100),
   status: policyStatusEnum.optional(),
   startDate: isoDate,
   maturityDate: isoDate.nullish(),
   coverageUntilAge: z.number().int().min(0).max(150).nullish(),
   premiumAmount: moneyString,
   premiumAmountCPF: moneyString.nullish(),
-  premiumFrequency: z.string().min(1).max(50),
+  premiumFrequency: (s) => s.min(1).max(50),
   customMonths: z.string().nullish(),
   totalPremiumDuration: z.number().int().min(0).nullish(),
   coverageOptions: z.string().nullish(),
@@ -51,31 +59,36 @@ export const createPolicyBodySchema = z.object({
   cashValueDate: isoDate.nullish(),
   description: z.string().nullish()
 })
+
+export const createPolicyBodySchema = policyInsert
+  .pick({
+    familyMemberId: true,
+    linkedExpenseId: true,
+    provider: true,
+    planName: true,
+    policyNumber: true,
+    policyType: true,
+    status: true,
+    startDate: true,
+    maturityDate: true,
+    coverageUntilAge: true,
+    premiumAmount: true,
+    premiumAmountCPF: true,
+    premiumFrequency: true,
+    customMonths: true,
+    totalPremiumDuration: true,
+    coverageOptions: true,
+    cashValue: true,
+    cashValueDate: true,
+    description: true
+  })
+  .extend({ id: z.string().uuid().optional() })
 export type CreatePolicyBody = z.infer<typeof createPolicyBodySchema>
 
-export const updatePolicyBodySchema = z
-  .object({
-    familyMemberId: z.string().nullish(),
-    linkedExpenseId: z.string().nullish(),
-    provider: z.string().min(1).max(255).optional(),
-    planName: z.string().max(255).nullish(),
-    policyNumber: z.string().nullish(),
-    policyType: z.string().min(1).max(100).optional(),
-    status: policyStatusEnum.optional(),
-    startDate: isoDate.optional(),
-    maturityDate: isoDate.nullish(),
-    coverageUntilAge: z.number().int().min(0).max(150).nullish(),
-    premiumAmount: moneyString.optional(),
-    premiumAmountCPF: moneyString.nullish(),
-    premiumFrequency: z.string().min(1).max(50).optional(),
-    customMonths: z.string().nullish(),
-    totalPremiumDuration: z.number().int().min(0).nullish(),
-    coverageOptions: z.string().nullish(),
-    cashValue: moneyString.nullish(),
-    cashValueDate: isoDate.nullish(),
-    description: z.string().nullish(),
-    isActive: z.boolean().optional()
-  })
+export const updatePolicyBodySchema = createPolicyBodySchema
+  .omit({ id: true })
+  .partial()
+  .extend({ isActive: z.boolean().optional() })
   .refine((v) => Object.keys(v).length > 0, {
     message: "At least one field must be provided"
   })

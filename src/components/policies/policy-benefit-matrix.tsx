@@ -11,6 +11,7 @@ import {
   Users
 } from "lucide-react"
 
+import type { Policy } from "@/db/types"
 import {
   Table,
   TableBody,
@@ -19,13 +20,6 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-
-interface Policy {
-  id: string
-  familyMemberId: string | null
-  coverageOptions: string | null
-  policyType: string
-}
 
 interface FamilyMember {
   id: string

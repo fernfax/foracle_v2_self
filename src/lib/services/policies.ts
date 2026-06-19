@@ -9,8 +9,7 @@ import type {
 } from "@/lib/api-schemas/policies"
 import type { AuthContext } from "@/lib/auth-context"
 import { expenses, policies } from "@/db/schema"
-
-export type PolicyRow = typeof policies.$inferSelect
+import type { Policy } from "@/db/types"
 
 export class PolicyNotFoundError extends Error {
   constructor() {
@@ -19,13 +18,13 @@ export class PolicyNotFoundError extends Error {
 }
 
 export type CreatePolicyResult =
-  | { status: "created"; row: PolicyRow }
-  | { status: "conflict"; row: PolicyRow }
+  | { status: "created"; row: Policy }
+  | { status: "conflict"; row: Policy }
 
 export async function listPolicies(
   ctx: AuthContext,
   filters: ListPoliciesQuery = {}
-): Promise<PolicyRow[]> {
+): Promise<Policy[]> {
   const conditions = [eq(policies.familyId, ctx.familyId)]
   if (filters.status !== undefined)
     conditions.push(eq(policies.status, filters.status))
@@ -46,7 +45,7 @@ export async function listPolicies(
 export async function getPolicyById(
   ctx: AuthContext,
   id: string
-): Promise<PolicyRow | null> {
+): Promise<Policy | null> {
   const row = await db.query.policies.findFirst({
     where: and(eq(policies.id, id), eq(policies.familyId, ctx.familyId))
   })
@@ -113,7 +112,7 @@ export async function updatePolicy(
   ctx: AuthContext,
   id: string,
   patch: UpdatePolicyBody
-): Promise<PolicyRow> {
+): Promise<Policy> {
   const existing = await getPolicyById(ctx, id)
   if (!existing) throw new PolicyNotFoundError()
 
