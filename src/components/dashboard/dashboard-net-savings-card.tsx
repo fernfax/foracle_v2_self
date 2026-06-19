@@ -47,7 +47,7 @@ interface Expense {
   endDate?: string | null
 }
 
-export function NetSavingsCard({
+export function DashboardNetSavingsCard({
   netSavings,
   selectedMonth,
   slideDirection

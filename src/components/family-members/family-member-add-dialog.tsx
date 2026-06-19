@@ -48,7 +48,7 @@ interface AddFamilyMemberDialogProps {
   onContributingMemberAdded?: (member: FamilyMember) => void
 }
 
-export function AddFamilyMemberDialog({
+export function FamilyMemberAddDialog({
   open,
   onOpenChange,
   onMemberAdded,

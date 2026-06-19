@@ -26,7 +26,7 @@ export interface ProgressBarProps extends Omit<
  * Rendering rule (handoff §Interactions): the fill is visible at its base state
  * and only its WIDTH animates — never gated behind opacity:0.
  */
-export function ProgressBar({
+export function PortfolioProgress({
   value,
   color,
   size = 8,

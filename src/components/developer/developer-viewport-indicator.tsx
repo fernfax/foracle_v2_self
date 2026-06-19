@@ -4,7 +4,7 @@ import { IS_PROD } from "@/configs/env.config"
 // CSS-driven: each label toggles via responsive `block`/`hidden` utilities, so
 // it updates on resize with no JS. Anchored bottom-right; the Next.js dev tools
 // indicator is moved to bottom-left (next.config.ts) to keep them apart.
-export const ViewportIndicator = () => {
+export const DeveloperViewportIndicator = () => {
   if (IS_PROD) return null
 
   return (

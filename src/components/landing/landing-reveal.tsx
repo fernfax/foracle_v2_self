@@ -9,7 +9,7 @@ import { useReveal } from "@/hooks/use-reveal"
  * Lets `app/page.tsx` stay a server component — only this wrapper is client;
  * its children render on the server. Pass `delay` (ms) to stagger siblings.
  */
-export function Reveal({
+export function LandingReveal({
   children,
   className = "",
   delay = 0,

@@ -65,7 +65,9 @@ function getProgressColor(percentUsed: number): string {
   return "bg-brand-teal"
 }
 
-export function BudgetTrackerCard({ budgetData }: BudgetTrackerCardProps) {
+export function DashboardBudgetTrackerCard({
+  budgetData
+}: BudgetTrackerCardProps) {
   const hasCategories = budgetData.length > 0
 
   // Calculate totals

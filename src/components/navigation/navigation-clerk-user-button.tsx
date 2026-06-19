@@ -12,9 +12,9 @@ import { Code2, Moon, Palette, Sun, Users } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { applyThemeWithTransition } from "@/lib/theme-transition"
-import { FamilyAdminPanel } from "@/components/family-members/family-member-admin-panel"
-import { BackgroundDecorPicker } from "@/components/user/user-background-decor-picker"
-import { ThemePicker } from "@/components/user/user-theme-picker"
+import { FamilyMemberAdminPanel } from "@/components/family-members/family-member-admin-panel"
+import { UserBackgroundDecorPicker } from "@/components/user/user-background-decor-picker"
+import { UserThemePicker } from "@/components/user/user-theme-picker"
 
 type ClerkUserButtonProps = React.ComponentProps<typeof UserButton>
 
@@ -68,7 +68,7 @@ function FamilyProfilePage() {
         </div>
       )}
       {data && (
-        <FamilyAdminPanel
+        <FamilyMemberAdminPanel
           initialData={data}
           compact
           onPendingChanged={refresh}
@@ -78,7 +78,7 @@ function FamilyProfilePage() {
   )
 }
 
-export function ClerkUserButton(props: ClerkUserButtonProps) {
+export function NavigationClerkUserButton(props: ClerkUserButtonProps) {
   const mounted = useHydrated()
   const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
@@ -109,8 +109,8 @@ export function ClerkUserButton(props: ClerkUserButtonProps) {
             Set your color theme and the decorative wallpaper behind the app.
           </p>
           <div className="space-y-4">
-            <ThemePicker />
-            <BackgroundDecorPicker />
+            <UserThemePicker />
+            <UserBackgroundDecorPicker />
           </div>
         </div>
       </UserButton.UserProfilePage>

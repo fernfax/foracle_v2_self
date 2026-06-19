@@ -41,7 +41,7 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { CategoryManagerPopover } from "@/components/expenses/expense-category-manager-popover"
+import { ExpenseCategoryManagerPopover } from "@/components/expenses/expense-category-manager-popover"
 
 interface AddExpenseDialogProps {
   open: boolean
@@ -74,7 +74,7 @@ const MONTHS = [
   { value: 12, label: "Dec" }
 ]
 
-export function AddExpenseDialog({
+export function ExpenseAddDialog({
   open,
   onOpenChange,
   onExpenseAdded
@@ -289,7 +289,7 @@ export function AddExpenseDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    <CategoryManagerPopover
+                    <ExpenseCategoryManagerPopover
                       categories={categories}
                       onCategoriesChanged={loadCategories}
                     />

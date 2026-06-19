@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Fab } from "@/components/ui/fab-stack"
 import { useAddExpense } from "@/components/budget/budget-add-expense-context"
 
-export function FloatingAddButton() {
+export function BudgetFloatingAddButton() {
   const pathname = usePathname()
   const { openModal } = useAddExpense()
   const isBudgetPage = pathname === "/budget"

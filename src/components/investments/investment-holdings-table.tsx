@@ -68,7 +68,7 @@ export interface HoldingsTableProps {
  * w-[70px] actions, tabular-nums). Binds only to real fields — there is no cost
  * basis / units / gain, so no Gain or Cost-basis columns.
  */
-export function HoldingsTable({
+export function InvestmentHoldingsTable({
   investments,
   onEdit,
   onDelete

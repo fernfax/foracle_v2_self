@@ -33,7 +33,7 @@ const CURRENCY_LIST = Object.entries(SUPPORTED_CURRENCIES) as [
   { symbol: string; name: string }
 ][]
 
-export function CurrencySelector({
+export function BudgetCurrencySelector({
   selectedCurrency,
   onCurrencyChange,
   customRate,

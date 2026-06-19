@@ -66,7 +66,7 @@ function CustomTooltip({ active, payload }: any) {
   )
 }
 
-export function CategoryBudgetBarChart({
+export function BudgetCategoryBarChart({
   budgetData
 }: CategoryBudgetBarChartProps) {
   const chartData = useMemo(() => {

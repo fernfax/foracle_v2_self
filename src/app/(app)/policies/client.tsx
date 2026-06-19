@@ -23,14 +23,14 @@ import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Toolbar } from "@/components/ui/toolbar"
-import { PageHeader } from "@/components/layout/layout-page-header"
-import { AddPolicyDialog } from "@/components/policies/policy-add-dialog"
-import { BenefitMatrix } from "@/components/policies/policy-benefit-matrix"
+import { LayoutPageHeader } from "@/components/layout/layout-page-header"
+import { PolicyAddDialog } from "@/components/policies/policy-add-dialog"
+import { PolicyBenefitMatrix } from "@/components/policies/policy-benefit-matrix"
 import { monthlyPremium, PolicyCard } from "@/components/policies/policy-card"
-import { CoverageMatrix } from "@/components/policies/policy-coverage-matrix"
-import { EditPolicyDialog } from "@/components/policies/policy-edit-dialog"
-import { ConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
-import { StatBand } from "@/components/portfolio/portfolio-stat-band"
+import { PolicyCoverageMatrix } from "@/components/policies/policy-coverage-matrix"
+import { PolicyEditDialog } from "@/components/policies/policy-edit-dialog"
+import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
+import { PortfolioStatBand } from "@/components/portfolio/portfolio-stat-band"
 
 interface Policy {
   id: string
@@ -299,12 +299,12 @@ export function PoliciesClient({
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Insurance Policies" />
+      <LayoutPageHeader title="Insurance Policies" />
 
       {/* Stat band (3-up) + Toolbar — derived, UI-only */}
       {policies.length > 0 && (
         <>
-          <StatBand
+          <PortfolioStatBand
             items={[
               {
                 label: "Total coverage",
@@ -412,12 +412,12 @@ export function PoliciesClient({
           </Button>
         </div>
       ) : view === "benefit" ? (
-        <BenefitMatrix
+        <PolicyBenefitMatrix
           familyMembers={sortedFamilyMembers}
           policies={filteredPolicies}
         />
       ) : view === "matrix" ? (
-        <CoverageMatrix
+        <PolicyCoverageMatrix
           familyMembers={sortedFamilyMembers}
           policies={filteredPolicies}
           onEditPolicy={handleEditPolicy}
@@ -493,7 +493,7 @@ export function PoliciesClient({
       )}
 
       {/* Add Policy Dialog */}
-      <AddPolicyDialog
+      <PolicyAddDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         userId={userId}
@@ -502,7 +502,7 @@ export function PoliciesClient({
       />
 
       {/* Edit Policy Dialog */}
-      <EditPolicyDialog
+      <PolicyEditDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         policy={editingPolicy}
@@ -511,7 +511,7 @@ export function PoliciesClient({
       />
 
       {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
+      <PortfolioConfirmDialog
         open={deletingPolicy !== null}
         onOpenChange={(o) => !o && setDeletingPolicy(null)}
         title="Delete this policy?"

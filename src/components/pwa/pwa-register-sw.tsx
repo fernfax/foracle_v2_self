@@ -12,7 +12,7 @@ import { IS_DEV } from "@/configs/env.config"
  *
  * Renders nothing. Mounted once in the root layout body.
  */
-export function RegisterSW() {
+export function PwaRegisterSw() {
   useEffect(() => {
     if (IS_DEV) return
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator))

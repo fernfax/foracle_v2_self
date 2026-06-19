@@ -173,7 +173,7 @@ function getCoverageOptions(policy: Policy) {
   }
 }
 
-export function CoverageMatrix({
+export function PolicyCoverageMatrix({
   familyMembers,
   policies,
   onEditPolicy,

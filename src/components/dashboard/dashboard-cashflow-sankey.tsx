@@ -44,7 +44,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ResponsiveChart } from "@/components/ui/responsive-chart"
 import { SlidingTabs } from "@/components/ui/sliding-tabs"
-import { MonthlyBalanceGraph } from "@/components/expenses/expense-monthly-balance-graph"
+import { ExpenseMonthlyBalanceGraph } from "@/components/expenses/expense-monthly-balance-graph"
 
 // Recharts doesn't re-export `NodeProps`/`LinkProps` from its root entry, so
 // we mirror the shapes here (matches `recharts/chart/Sankey` exactly).
@@ -221,7 +221,7 @@ function truncateLabel(name: string, max: number): string {
   return name.length > max ? `${name.slice(0, max - 1).trimEnd()}…` : name
 }
 
-export function CashflowSankey({
+export function DashboardCashflowSankey({
   incomes,
   expenses,
   holdings = [],
@@ -996,7 +996,7 @@ export function CashflowSankey({
           // MBG provides its own controls (View Mode, Time Range, Investment
           // toggle), summary stats, and the chart. Rendering in embedded mode
           // skips the Card wrapper so it sits cleanly inside ours.
-          <MonthlyBalanceGraph
+          <ExpenseMonthlyBalanceGraph
             incomes={incomes}
             expenses={expenses}
             holdings={holdings}

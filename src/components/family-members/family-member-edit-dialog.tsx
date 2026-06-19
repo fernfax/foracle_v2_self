@@ -60,7 +60,7 @@ interface EditFamilyMemberDialogProps {
   onContributingMemberUpdated?: (member: FamilyMember) => void
 }
 
-export function EditFamilyMemberDialog({
+export function FamilyMemberEditDialog({
   open,
   onOpenChange,
   member,

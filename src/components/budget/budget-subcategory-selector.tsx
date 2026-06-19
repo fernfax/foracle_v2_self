@@ -14,7 +14,7 @@ interface SubcategorySelectorProps {
   disabled?: boolean
 }
 
-export function SubcategorySelector({
+export function BudgetSubcategorySelector({
   subcategories,
   selectedSubcategory,
   onSelect,

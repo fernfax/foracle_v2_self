@@ -8,11 +8,11 @@ import { useUser } from "@clerk/nextjs"
 import { PanelLeft, PanelLeftClose } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { ClerkUserButton } from "@/components/navigation/navigation-clerk-user-button"
+import { NavigationClerkUserButton } from "@/components/navigation/navigation-clerk-user-button"
 import { useSidebar } from "@/components/navigation/navigation-sidebar-context"
-import { SidebarNavItem } from "@/components/navigation/navigation-sidebar-item"
+import { NavigationSidebarItem } from "@/components/navigation/navigation-sidebar-item"
 
-export function Sidebar() {
+export function NavigationSidebar() {
   const { isPinned, setIsPinned, setIsHovered, isExpanded } = useSidebar()
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
   const { user, isLoaded } = useUser()
@@ -79,7 +79,7 @@ export function Sidebar() {
         {/* Navigation — overflow-x-hidden prevents label overflow from creating horizontal scroll */}
         <nav className="flex-1 space-y-0.5 overflow-x-hidden overflow-y-auto px-3 pt-6 pb-4 sm:pt-8">
           {NAV_ITEMS.map((item) => (
-            <SidebarNavItem
+            <NavigationSidebarItem
               key={item.href}
               {...item}
               isExpanded={isExpanded}
@@ -132,7 +132,7 @@ export function Sidebar() {
                 }}
                 className="group hover:bg-brand-forest-mid flex w-full cursor-pointer items-center overflow-hidden rounded-md py-1 transition-colors duration-150">
                 <span className="flex w-12 shrink-0 items-center justify-center">
-                  <ClerkUserButton
+                  <NavigationClerkUserButton
                     afterSignOutUrl="/"
                     appearance={{ elements: { avatarBox: "w-9 h-9" } }}
                   />

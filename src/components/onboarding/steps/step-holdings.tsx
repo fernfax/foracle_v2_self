@@ -13,7 +13,7 @@ import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MoneyInput } from "@/components/ui/money-input"
-import { WizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
+import { OnboardingWizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
 import type {
   FamilyMemberData,
   HoldingData
@@ -26,7 +26,7 @@ interface HoldingsStepProps {
   onSkip: () => void
 }
 
-export function HoldingsStep({
+export function StepHoldings({
   familyMember,
   onNext,
   onBack,
@@ -102,7 +102,7 @@ export function HoldingsStep({
         <div className="flex flex-1 items-center justify-center">
           <p className="text-muted-foreground">Loading holdings...</p>
         </div>
-        <WizardNavigation
+        <OnboardingWizardNavigation
           onBack={onBack}
           onNext={onNext}
           isOptional
@@ -222,7 +222,7 @@ export function HoldingsStep({
         </div>
       </div>
 
-      <WizardNavigation
+      <OnboardingWizardNavigation
         onBack={onBack}
         onNext={onNext}
         isOptional

@@ -48,7 +48,7 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { ProviderManagerPopover } from "@/components/policies/policy-provider-manager-popover"
+import { PolicyProviderManagerPopover } from "@/components/policies/policy-provider-manager-popover"
 
 interface FamilyMember {
   id: string
@@ -94,7 +94,7 @@ const MONTHS = [
   { value: 12, label: "Dec" }
 ]
 
-export function AddPolicyDialog({
+export function PolicyAddDialog({
   open,
   onOpenChange,
   userId,
@@ -470,7 +470,7 @@ export function AddPolicyDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                  <ProviderManagerPopover
+                  <PolicyProviderManagerPopover
                     providers={providers}
                     onProvidersChanged={loadProviders}
                   />

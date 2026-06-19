@@ -14,8 +14,8 @@ import {
 import { motion, useMotionValue, useReducedMotion } from "motion/react"
 
 import { useMediaQuery } from "@/hooks/use-media-query"
-import { NetWorthCanvas } from "@/components/landing/landing-net-worth-canvas"
-import { Reveal } from "@/components/landing/landing-reveal"
+import { LandingNetWorthCanvas } from "@/components/landing/landing-net-worth-canvas"
+import { LandingReveal } from "@/components/landing/landing-reveal"
 
 /**
  * LifeStages — a scroll-pinned life timeline (first job → retirement).
@@ -176,7 +176,7 @@ function StageDetails({ s }: { s: Stage }) {
   )
 }
 
-export function LifeStages() {
+export function LandingLifeStages() {
   const reduced = useReducedMotion()
   // Pinned scrollytelling when there's room: either a tall viewport (portrait
   // phones, desktop) OR a wide one (landscape phones lay the card out in two
@@ -289,7 +289,7 @@ export function LifeStages() {
                 <div className="grid md:grid-cols-2">
                   {/* Left: net-worth line-art */}
                   <div className="border-border/40 desktop:min-h-[460px] relative min-h-[200px] border-b md:border-b-0">
-                    <NetWorthCanvas
+                    <LandingNetWorthCanvas
                       values={VALUES}
                       colors={COLORS}
                       progress={smooth}
@@ -388,7 +388,7 @@ export function LifeStages() {
           {STAGES.map((s, i) => {
             const Icon = s.icon
             return (
-              <Reveal
+              <LandingReveal
                 key={s.title}
                 delay={(i % 4) * 60}
                 className="glass-panel rounded-2xl p-6">
@@ -418,7 +418,7 @@ export function LifeStages() {
                     </div>
                   </div>
                 </div>
-              </Reveal>
+              </LandingReveal>
             )
           })}
         </div>

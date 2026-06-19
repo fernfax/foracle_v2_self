@@ -33,7 +33,7 @@ import {
   DrawerHeader,
   DrawerTitle
 } from "@/components/ui/drawer"
-import { SwipeableExpenseRow } from "@/components/budget/budget-swipeable-expense-row"
+import { BudgetSwipeableExpenseRow } from "@/components/budget/budget-swipeable-expense-row"
 
 interface ExpenseHistoryModalProps {
   open: boolean
@@ -82,7 +82,7 @@ function calculateDayTotal(expenses: DailyExpense[]): number {
   return expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
 }
 
-export function ExpenseHistoryModal({
+export function BudgetExpenseHistoryModal({
   open,
   onOpenChange,
   expenses,
@@ -183,7 +183,7 @@ export function ExpenseHistoryModal({
                           const createdAt = new Date(expense.createdAt)
 
                           return (
-                            <SwipeableExpenseRow
+                            <BudgetSwipeableExpenseRow
                               key={expense.id}
                               onDelete={() => setDeleteId(expense.id)}
                               isOpen={swipedRowId === expense.id}
@@ -267,7 +267,7 @@ export function ExpenseHistoryModal({
                                   )}
                                 </div>
                               </div>
-                            </SwipeableExpenseRow>
+                            </BudgetSwipeableExpenseRow>
                           )
                         })}
                       </div>

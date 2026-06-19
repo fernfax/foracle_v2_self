@@ -106,7 +106,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   return null
 }
 
-export function WealthProjectionChart({
+export function InvestmentWealthProjectionChart({
   investments
 }: WealthProjectionChartProps) {
   const [selectedRange, setSelectedRange] = useState(10)

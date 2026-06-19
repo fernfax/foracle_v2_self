@@ -18,7 +18,7 @@ interface WizardNavigationProps {
   backLabel?: string
 }
 
-export function WizardNavigation({
+export function OnboardingWizardNavigation({
   onBack,
   onNext,
   onSkip,

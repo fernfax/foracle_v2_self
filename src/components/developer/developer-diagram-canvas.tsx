@@ -76,7 +76,7 @@ const NODE_WIDTH = 240
 const NODE_HEIGHT = 36
 const ROW_GAP = 12
 
-export function DiagramCanvas({ diagram }: DiagramCanvasProps) {
+export function DeveloperDiagramCanvas({ diagram }: DiagramCanvasProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   // The mobile sheet is portaled to <body> so it escapes the app shell's

@@ -6,13 +6,16 @@ import Link from "next/link"
 
 import type { BackgroundDecor } from "@/lib/services/user-prefs"
 import { FabStackHost } from "@/components/ui/fab-stack"
-import { FloatingAddButton, GlobalAddExpenseModal } from "@/components/budget"
-import { PeranakanTilesDecor } from "@/components/layout/layout-peranakan-tiles-decor"
-import { RadialDecor } from "@/components/layout/layout-radial-decor"
-import { ClerkUserButton } from "@/components/navigation/navigation-clerk-user-button"
-import { MobileNav } from "@/components/navigation/navigation-mobile-nav"
+import {
+  BudgetFloatingAddButton,
+  BudgetGlobalAddExpenseModal
+} from "@/components/budget"
+import { LayoutPeranakanTilesDecor } from "@/components/layout/layout-peranakan-tiles-decor"
+import { LayoutRadialDecor } from "@/components/layout/layout-radial-decor"
+import { NavigationClerkUserButton } from "@/components/navigation/navigation-clerk-user-button"
+import { NavigationMobileNav } from "@/components/navigation/navigation-mobile-nav"
 import { NavigationOverlay } from "@/components/navigation/navigation-overlay"
-import { Sidebar } from "@/components/navigation/navigation-sidebar"
+import { NavigationSidebar } from "@/components/navigation/navigation-sidebar"
 import {
   SidebarProvider,
   useSidebar
@@ -21,7 +24,7 @@ import {
 // intact in `components/header/*` and `lib/actions/quick-links.ts`. To restore,
 // re-enable the import and the `<HeaderQuickLinks />` block below.
 // import { HeaderQuickLinks } from "@/components/navigation/navigation-quick-links";
-import { HelpButton } from "@/components/tour/tour-help-button"
+import { TourHelpButton } from "@/components/tour/tour-help-button"
 
 interface DashboardShellProps {
   children: ReactNode
@@ -56,7 +59,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
       {/* Sidebar is always rendered; it hides itself on mobile via CSS
           (`hidden desktop:flex`), so SSR/first paint is correct without a JS
           viewport check. display:none keeps it out of the grid on mobile. */}
-      <Sidebar />
+      <NavigationSidebar />
 
       {/* Main column — the min-w-0 prevents grid items from refusing to shrink below their content size */}
       <div className="flex min-w-0 flex-col">
@@ -92,7 +95,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
                   menu (sign-out + Family/Display). Vertically aligned with the
                   wordmark by sharing the same safe-area top inset. */}
               <div className="absolute top-[calc(env(safe-area-inset-top)+0.5rem)] right-0 flex items-center">
-                <ClerkUserButton
+                <NavigationClerkUserButton
                   afterSignOutUrl="/"
                   appearance={{
                     elements: {
@@ -115,7 +118,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileNav />
+      <NavigationMobileNav />
 
       <div className="bottom-spacer h-24"></div>
 
@@ -123,15 +126,15 @@ function DashboardContent({ children }: { children: ReactNode }) {
           contained content box); HelpButton/FloatingAddButton and any
           page-level FABs (budget add, timeline edit) portal into it. */}
       <FabStackHost />
-      <HelpButton />
-      <FloatingAddButton />
-      <GlobalAddExpenseModal />
+      <TourHelpButton />
+      <BudgetFloatingAddButton />
+      <BudgetGlobalAddExpenseModal />
       <NavigationOverlay />
     </div>
   )
 }
 
-export function DashboardShell({
+export function LayoutDashboardShell({
   children,
   backgroundDecor = "radial"
 }: DashboardShellProps) {
@@ -142,8 +145,8 @@ export function DashboardShell({
             so it stays put as the page scrolls. `isolate` on this wrapper
             creates a stacking context so `-z-10` lands below normal-flow
             content but above the parent's bg-background fill. */}
-        {backgroundDecor === "radial" && <RadialDecor />}
-        {backgroundDecor === "peranakan" && <PeranakanTilesDecor />}
+        {backgroundDecor === "radial" && <LayoutRadialDecor />}
+        {backgroundDecor === "peranakan" && <LayoutPeranakanTilesDecor />}
         <DashboardContent>{children}</DashboardContent>
       </div>
     </SidebarProvider>

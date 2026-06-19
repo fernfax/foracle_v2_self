@@ -42,7 +42,7 @@ interface SidebarNavItemProps {
  * - Label and chevron animate via opacity + transform only (GPU-friendly).
  * - Submenu DOM stays mounted across toggles; visibility gated via classes.
  */
-export function SidebarNavItem({
+export function NavigationSidebarItem({
   href,
   label,
   icon: Icon,

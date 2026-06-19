@@ -69,7 +69,7 @@ const INVESTMENT_TYPES = [
   { value: "reit", label: "REIT" }
 ]
 
-export function AddInvestmentModal({
+export function InvestmentAddModal({
   open,
   onOpenChange,
   investment,

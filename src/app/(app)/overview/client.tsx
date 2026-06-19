@@ -15,13 +15,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   BudgetCategory,
-  BudgetTrackerCard
+  DashboardBudgetTrackerCard
 } from "@/components/dashboard/dashboard-budget-tracker-card"
-import { CashflowSankey } from "@/components/dashboard/dashboard-cashflow-sankey"
+import { DashboardCashflowSankey } from "@/components/dashboard/dashboard-cashflow-sankey"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { TotalAssetsCard } from "@/components/dashboard/dashboard-total-assets-card"
-import { MonthlyBalanceGraph } from "@/components/expenses/expense-monthly-balance-graph"
-import { PageHeader } from "@/components/layout/layout-page-header"
+import { DashboardTotalAssetsCard } from "@/components/dashboard/dashboard-total-assets-card"
+import { ExpenseMonthlyBalanceGraph } from "@/components/expenses/expense-monthly-balance-graph"
+import { LayoutPageHeader } from "@/components/layout/layout-page-header"
 
 // No-op subscribe for the hydration-flag useSyncExternalStore below.
 const emptySubscribe = () => () => {}
@@ -130,7 +130,7 @@ export function DashboardClient({
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Overview" />
+      <LayoutPageHeader title="Overview" />
 
       {/* Navigation bridge — quick access to User Homepage tabs */}
       <div
@@ -157,7 +157,7 @@ export function DashboardClient({
       </div>
 
       {view === "cashflow" ? (
-        <CashflowSankey
+        <DashboardCashflowSankey
           incomes={incomes}
           expenses={expenses}
           holdings={holdings}
@@ -177,7 +177,7 @@ export function DashboardClient({
               />
 
               {/* Monthly Balance Projection */}
-              <MonthlyBalanceGraph
+              <ExpenseMonthlyBalanceGraph
                 incomes={incomes}
                 expenses={expenses}
                 holdings={holdings}
@@ -188,7 +188,7 @@ export function DashboardClient({
             {/* Right column - Budget Tracker (height constrained to left column) */}
             <div className="relative lg:col-span-1">
               <div className="lg:absolute lg:inset-0">
-                <BudgetTrackerCard budgetData={budgetData} />
+                <DashboardBudgetTrackerCard budgetData={budgetData} />
               </div>
             </div>
           </div>
@@ -198,7 +198,7 @@ export function DashboardClient({
             className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
             data-tour="secondary-metrics">
             {/* Total Assets */}
-            <TotalAssetsCard totalAssets={metrics.totalAssets} />
+            <DashboardTotalAssetsCard totalAssets={metrics.totalAssets} />
 
             {/* Active Goals */}
             <Card className="relative overflow-hidden" data-tour="goals-card">

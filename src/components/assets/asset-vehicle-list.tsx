@@ -17,10 +17,10 @@ import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { Toolbar } from "@/components/ui/toolbar"
-import { AddVehicleDialog } from "@/components/assets/asset-add-vehicle-dialog"
-import { VehicleDetailsModal } from "@/components/assets/asset-vehicle-details-modal"
-import { ConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
-import { ProgressBar } from "@/components/portfolio/portfolio-progress"
+import { AssetAddVehicleDialog } from "@/components/assets/asset-add-vehicle-dialog"
+import { AssetVehicleDetailsModal } from "@/components/assets/asset-vehicle-details-modal"
+import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
+import { PortfolioProgress } from "@/components/portfolio/portfolio-progress"
 
 interface VehicleAsset {
   id: string
@@ -48,7 +48,7 @@ interface VehicleListProps {
 const VEHICLE_TINT = "rgba(212,168,67,0.16)"
 const VEHICLE_ICON = "#7A5A00"
 
-export function VehicleList({ initialVehicles }: VehicleListProps) {
+export function AssetVehicleList({ initialVehicles }: VehicleListProps) {
   const [vehicles, setVehicles] = useState<VehicleAsset[]>(initialVehicles)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<VehicleAsset | null>(
@@ -139,7 +139,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
           }}
         />
 
-        <AddVehicleDialog
+        <AssetAddVehicleDialog
           open={addDialogOpen}
           onOpenChange={setAddDialogOpen}
           onSuccess={() => window.location.reload()}
@@ -277,7 +277,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
                             {progress.toFixed(1)}% paid
                           </span>
                         </div>
-                        <ProgressBar
+                        <PortfolioProgress
                           value={progress}
                           color="linear-gradient(90deg, #00C4AA 0%, #5A9470 100%)"
                         />
@@ -338,14 +338,14 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
       </div>
 
       {/* Add Vehicle Dialog */}
-      <AddVehicleDialog
+      <AssetAddVehicleDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={() => window.location.reload()}
       />
 
       {/* Edit Vehicle Dialog */}
-      <AddVehicleDialog
+      <AssetAddVehicleDialog
         open={!!editingVehicle}
         onOpenChange={(open) => !open && setEditingVehicle(null)}
         vehicle={editingVehicle}
@@ -353,7 +353,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
       />
 
       {/* Delete Confirmation */}
-      <ConfirmDialog
+      <PortfolioConfirmDialog
         open={vehicleToDelete !== null}
         onOpenChange={(open) => !open && setVehicleToDelete(null)}
         title="Delete this vehicle?"
@@ -370,7 +370,7 @@ export function VehicleList({ initialVehicles }: VehicleListProps) {
       />
 
       {/* Vehicle Details Modal */}
-      <VehicleDetailsModal
+      <AssetVehicleDetailsModal
         open={!!selectedVehicle}
         onOpenChange={(open) => !open && setSelectedVehicle(null)}
         vehicle={selectedVehicle}

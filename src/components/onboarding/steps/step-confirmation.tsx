@@ -15,7 +15,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { WizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
+import { OnboardingWizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
 import type {
   HoldingData,
   OnboardingData
@@ -34,7 +34,7 @@ interface ExpenseData {
   amount: string
 }
 
-export function ConfirmationStep({
+export function StepConfirmation({
   data,
   onComplete,
   onBack
@@ -215,7 +215,7 @@ export function ConfirmationStep({
         </div>
       </div>
 
-      <WizardNavigation
+      <OnboardingWizardNavigation
         onBack={onBack}
         onNext={handleComplete}
         isLastStep

@@ -1,6 +1,6 @@
 import { ArrowUpRight, TrendingUp } from "lucide-react"
 
-import { TileMotif } from "@/components/layout/layout-tile-motif"
+import { LayoutTileMotif } from "@/components/layout/layout-tile-motif"
 
 /**
  * HeroPreview — a static, on-brand dashboard mockup for the landing hero.
@@ -44,7 +44,7 @@ const CATEGORIES = [
   { name: "Saved", value: "S$3,280", pct: 39, color: "#00C4AA", delay: "0.8s" }
 ]
 
-export function HeroPreview() {
+export function LandingHeroPreview() {
   return (
     <div className="relative mx-auto w-full max-w-4xl">
       {/* Ambient glow behind the card */}
@@ -55,7 +55,7 @@ export function HeroPreview() {
 
       {/* Main dashboard card */}
       <div className="glass-strong relative overflow-hidden rounded-[1.75rem]">
-        <TileMotif size="standard" />
+        <LayoutTileMotif size="standard" />
 
         <div className="grid gap-0 sm:grid-cols-5">
           {/* Left: net worth + animated line chart */}

@@ -27,7 +27,7 @@ export function calculateExpressionTotal(value: string): number {
   return parts.reduce((sum, part) => sum + (parseFloat(part) || 0), 0)
 }
 
-export function ExpenseNumpad({
+export function BudgetExpenseNumpad({
   value,
   onChange,
   onSubmit,

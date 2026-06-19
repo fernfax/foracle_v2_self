@@ -34,7 +34,7 @@ interface PageHeaderProps {
  * Mobile: the inner overflow-x-auto wrapper lets the tab strip scroll
  * horizontally on narrow viewports (D6).
  */
-export function PageHeader({ title, actions, tabs }: PageHeaderProps) {
+export function LayoutPageHeader({ title, actions, tabs }: PageHeaderProps) {
   return (
     <div className="desktop:top-0 bg-background border-border/20 desktop:mt-0 sticky top-[env(safe-area-inset-top)] z-30 -mx-4 -mt-6 border-b px-4 sm:-mx-6 sm:-mt-8 sm:px-6 lg:-mx-8 lg:px-8">
       {/* min-h keeps the title row a uniform height across all tabs whether or

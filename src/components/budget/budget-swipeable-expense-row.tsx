@@ -12,7 +12,7 @@ interface SwipeableExpenseRowProps {
   onSwipeStart: () => void
 }
 
-export function SwipeableExpenseRow({
+export function BudgetSwipeableExpenseRow({
   children,
   onDelete,
   isOpen,

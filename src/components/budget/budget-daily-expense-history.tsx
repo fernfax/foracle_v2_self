@@ -70,7 +70,7 @@ function groupExpensesByDate(
   )
 }
 
-export function DailyExpenseHistory({
+export function BudgetDailyExpenseHistory({
   expenses,
   onEdit,
   onDelete

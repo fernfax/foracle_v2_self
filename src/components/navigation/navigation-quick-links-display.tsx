@@ -110,7 +110,7 @@ interface QuickLinksDisplayProps {
   onEditClick: () => void
 }
 
-export function QuickLinksDisplay({
+export function NavigationQuickLinksDisplay({
   links,
   onReorder,
   onEditClick

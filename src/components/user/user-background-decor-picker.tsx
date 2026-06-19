@@ -44,7 +44,7 @@ const OPTIONS: {
   }
 ]
 
-export function BackgroundDecorPicker({
+export function UserBackgroundDecorPicker({
   initialValue
 }: BackgroundDecorPickerProps) {
   const router = useRouter()

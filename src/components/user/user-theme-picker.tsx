@@ -44,7 +44,7 @@ const OPTIONS: {
 // Mount gate: `false` during SSR and first client paint, `true` afterwards.
 const emptySubscribe = () => () => {}
 
-export function ThemePicker() {
+export function UserThemePicker() {
   const { theme, setTheme } = useTheme()
 
   // next-themes can't resolve the active theme until the client mounts, so the

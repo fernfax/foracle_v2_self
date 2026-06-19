@@ -39,7 +39,7 @@ interface AddCurrentHoldingDialogProps {
   holding?: CurrentHolding | null
 }
 
-export function AddCurrentHoldingDialog({
+export function CurrentHoldingAddDialog({
   open,
   onOpenChange,
   onHoldingAdded,

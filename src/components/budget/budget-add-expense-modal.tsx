@@ -32,16 +32,16 @@ import {
   DrawerTitle
 } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
-import { AdjustBudgetModal } from "@/components/budget/budget-adjust-modal"
-import { CategorySelector } from "@/components/budget/budget-category-selector"
-import { CurrencySelector } from "@/components/budget/budget-currency-selector"
-import { ExpenseHistoryModal } from "@/components/budget/budget-expense-history-modal"
+import { BudgetAdjustModal } from "@/components/budget/budget-adjust-modal"
+import { BudgetCategorySelector } from "@/components/budget/budget-category-selector"
+import { BudgetCurrencySelector } from "@/components/budget/budget-currency-selector"
+import { BudgetExpenseHistoryModal } from "@/components/budget/budget-expense-history-modal"
 import {
-  calculateExpressionTotal,
-  ExpenseNumpad
+  BudgetExpenseNumpad,
+  calculateExpressionTotal
 } from "@/components/budget/budget-expense-numpad"
-import { SubcategoryManageModal } from "@/components/budget/budget-subcategory-manage-modal"
-import { SubcategorySelector } from "@/components/budget/budget-subcategory-selector"
+import { BudgetSubcategoryManageModal } from "@/components/budget/budget-subcategory-manage-modal"
+import { BudgetSubcategorySelector } from "@/components/budget/budget-subcategory-selector"
 
 // Local storage key for persisting currency preference
 const CURRENCY_PREFERENCE_KEY = "foracle_preferred_currency"
@@ -59,7 +59,7 @@ interface AddExpenseModalProps {
   month?: number
 }
 
-export function AddExpenseModal({
+export function BudgetAddExpenseModal({
   open,
   onOpenChange,
   categories,
@@ -295,7 +295,7 @@ export function AddExpenseModal({
             </Button>
           </DrawerClose>
           <div className="flex flex-1 justify-center">
-            <CategorySelector
+            <BudgetCategorySelector
               categories={categories}
               selectedCategory={selectedCategory}
               onSelect={setSelectedCategory}
@@ -315,7 +315,7 @@ export function AddExpenseModal({
           {/* Currency and Date selectors row */}
           <div className="mb-4 flex items-start justify-between">
             {/* Currency Selector - Left side */}
-            <CurrencySelector
+            <BudgetCurrencySelector
               selectedCurrency={selectedCurrency}
               onCurrencyChange={handleCurrencyChange}
               customRate={customRate}
@@ -390,7 +390,7 @@ export function AddExpenseModal({
           {/* Subcategory Selector - only show when category is selected */}
           {selectedCategory && (
             <div className="mt-4">
-              <SubcategorySelector
+              <BudgetSubcategorySelector
                 subcategories={subcategories}
                 selectedSubcategory={selectedSubcategory}
                 onSelect={setSelectedSubcategory}
@@ -466,7 +466,7 @@ export function AddExpenseModal({
 
         {/* Numpad */}
         <div className="px-4 pb-10">
-          <ExpenseNumpad
+          <BudgetExpenseNumpad
             value={amount}
             onChange={setAmount}
             onSubmit={handleSubmit}
@@ -477,7 +477,7 @@ export function AddExpenseModal({
       </DrawerContent>
 
       {/* Expense History Modal - filtered by selected category */}
-      <ExpenseHistoryModal
+      <BudgetExpenseHistoryModal
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         expenses={
@@ -491,7 +491,7 @@ export function AddExpenseModal({
 
       {/* Subcategory Manage Modal */}
       {selectedCategory && (
-        <SubcategoryManageModal
+        <BudgetSubcategoryManageModal
           open={subcategoryModalOpen}
           onOpenChange={setSubcategoryModalOpen}
           categoryName={selectedCategory.name}
@@ -506,7 +506,7 @@ export function AddExpenseModal({
 
       {/* Adjust Budget Modal */}
       {selectedCategory && (
-        <AdjustBudgetModal
+        <BudgetAdjustModal
           open={adjustBudgetModalOpen}
           onOpenChange={setAdjustBudgetModalOpen}
           targetCategory={selectedCategory.name}

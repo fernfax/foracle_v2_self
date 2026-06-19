@@ -88,7 +88,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export function ManageCategoriesModal({
+export function BudgetManageCategoriesModal({
   open,
   onOpenChange,
   categories,

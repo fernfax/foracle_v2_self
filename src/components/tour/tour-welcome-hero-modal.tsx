@@ -288,7 +288,7 @@ interface WelcomeHeroModalProps {
   tourName?: TourName
 }
 
-export function WelcomeHeroModal({
+export function TourWelcomeHeroModal({
   open,
   onOpenChange,
   onGetStarted,

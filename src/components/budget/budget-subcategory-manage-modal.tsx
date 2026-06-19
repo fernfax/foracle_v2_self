@@ -28,7 +28,7 @@ interface SubcategoryManageModalProps {
   onDelete: (id: string) => Promise<void>
 }
 
-export function SubcategoryManageModal({
+export function BudgetSubcategoryManageModal({
   open,
   onOpenChange,
   categoryName,

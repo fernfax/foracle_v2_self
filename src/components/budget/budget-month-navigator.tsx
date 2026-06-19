@@ -15,7 +15,7 @@ interface MonthNavigatorProps {
   onMonthChange: (year: number, month: number) => void
 }
 
-export function MonthNavigator({
+export function BudgetMonthNavigator({
   year,
   month,
   onMonthChange

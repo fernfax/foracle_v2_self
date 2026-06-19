@@ -66,7 +66,7 @@ interface IncomeCreatorDrawerProps {
   onCreated?: () => void
 }
 
-export function IncomeCreatorDrawer({
+export function TimelineIncomeCreatorDrawer({
   open,
   onOpenChange,
   familyMembers,

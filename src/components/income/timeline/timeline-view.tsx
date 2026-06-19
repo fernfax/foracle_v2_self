@@ -69,21 +69,21 @@ import {
 import { Slider } from "@/components/ui/slider"
 import {
   DatePillEditor,
-  EditablePill,
-  TextPillEditor
+  TextPillEditor,
+  TimelineEditablePill
 } from "@/components/income/timeline/timeline-editable-pill"
 import {
   activeMilestoneAt,
-  FutureChangeDialog,
   priorEffectiveAmount,
   resolveEffectiveAmount,
+  TimelineFutureChangeDialog,
   type FutureMilestone
 } from "@/components/income/timeline/timeline-future-change-dialog"
-import { IncomeCreatorDrawer } from "@/components/income/timeline/timeline-income-creator-drawer"
-import { IncomeDetailDrawer } from "@/components/income/timeline/timeline-income-detail-drawer"
+import { TimelineIncomeCreatorDrawer } from "@/components/income/timeline/timeline-income-creator-drawer"
+import { TimelineIncomeDetailDrawer } from "@/components/income/timeline/timeline-income-detail-drawer"
 import {
   IncomeBarPopup,
-  QuickAdjustPad
+  TimelineQuickAdjustPad
 } from "@/components/income/timeline/timeline-quick-adjust-pad"
 import { useOptimisticIncomes } from "@/components/income/timeline/timeline-use-optimistic-incomes"
 
@@ -2085,7 +2085,7 @@ export function TimelineView({
         incomeCount={incomes.length}
       />
 
-      <IncomeCreatorDrawer
+      <TimelineIncomeCreatorDrawer
         open={creatorOpen}
         onOpenChange={setCreatorOpen}
         familyMembers={familyMembers.map((m) => ({
@@ -2095,7 +2095,7 @@ export function TimelineView({
         }))}
       />
 
-      <IncomeDetailDrawer
+      <TimelineIncomeDetailDrawer
         open={detailIncome !== null}
         onOpenChange={(o) => !o && setDetailIncomeId(null)}
         income={detailIncome}
@@ -2154,7 +2154,7 @@ export function TimelineView({
         onCreate={handleCreateAddIncome}
       />
 
-      <FutureChangeDialog
+      <TimelineFutureChangeDialog
         open={futureChangeContext !== null}
         onOpenChange={(o) => !o && setFutureChangeContext(null)}
         incomeName={futureChangeIncome?.name ?? ""}
@@ -5608,11 +5608,11 @@ function AmountPill({
   className: string
 }) {
   return (
-    <EditablePill
+    <TimelineEditablePill
       ariaLabel={`Adjust amount, currently ${formatCurrency(value)}`}
       className={className}
       renderEditor={(close) => (
-        <QuickAdjustPad
+        <TimelineQuickAdjustPad
           initialAmount={value}
           onConfirm={(n) => {
             onConfirm(n)
@@ -5622,7 +5622,7 @@ function AmountPill({
         />
       )}>
       {formatCurrency(value)}
-    </EditablePill>
+    </TimelineEditablePill>
   )
 }
 
@@ -5642,7 +5642,7 @@ function DatePill({
   className: string
 }) {
   return (
-    <EditablePill
+    <TimelineEditablePill
       ariaLabel={label}
       className={className}
       renderEditor={(close) => (
@@ -5663,7 +5663,7 @@ function DatePill({
         />
       )}>
       {formatPillDate(value)}
-    </EditablePill>
+    </TimelineEditablePill>
   )
 }
 
@@ -5728,7 +5728,7 @@ function SentenceCard({
             <Icon className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <EditablePill
+            <TimelineEditablePill
               ariaLabel={`Edit name, currently ${income.name}`}
               className="font-display text-foreground hover:bg-muted/60 hover:border-border/40 border-transparent bg-transparent px-1 py-0 text-base font-semibold"
               renderEditor={(close) => (
@@ -5743,7 +5743,7 @@ function SentenceCard({
                 />
               )}>
               {income.name}
-            </EditablePill>
+            </TimelineEditablePill>
             {income.familyMember && (
               <p className="text-muted-foreground mt-0.5 pl-1 text-xs">
                 {income.familyMember.name}

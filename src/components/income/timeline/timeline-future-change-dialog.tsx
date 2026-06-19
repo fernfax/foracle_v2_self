@@ -54,7 +54,7 @@ interface FutureChangeDialogProps {
   onDelete?: () => void
 }
 
-export function FutureChangeDialog({
+export function TimelineFutureChangeDialog({
   open,
   onOpenChange,
   incomeName,

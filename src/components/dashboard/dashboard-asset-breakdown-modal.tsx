@@ -48,7 +48,7 @@ interface AssetBreakdownModalProps {
   vehicleAssets: VehicleAsset[]
 }
 
-export function AssetBreakdownModal({
+export function DashboardAssetBreakdownModal({
   open,
   onOpenChange,
   propertyAssets,

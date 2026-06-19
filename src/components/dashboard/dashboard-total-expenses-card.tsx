@@ -28,7 +28,7 @@ interface Expense {
   isActive: boolean | null
 }
 
-export function TotalExpensesCard({
+export function DashboardTotalExpensesCard({
   totalExpenses,
   selectedMonth,
   slideDirection

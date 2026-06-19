@@ -41,7 +41,7 @@ const mobileNavItems = NAV_ITEMS.map((item) => ({
  * which swaps in the sidebar at ≥ 768×600. The left/right offsets use
  * max(…, env(safe-area-inset-*)) so it clears the home indicator in landscape.
  */
-export function MobileNav() {
+export function NavigationMobileNav() {
   const pathname = usePathname()
   // Gate the Chromium-only edge refraction; false on WebKit/SSR (baseline glass).
   const glassRefract = useGlassRefraction()

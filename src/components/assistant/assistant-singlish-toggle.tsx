@@ -16,7 +16,7 @@ interface SinglishToggleProps {
   disabled?: boolean
 }
 
-export function SinglishToggle({
+export function AssistantSinglishToggle({
   enabled,
   onToggle,
   disabled

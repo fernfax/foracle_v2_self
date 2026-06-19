@@ -15,7 +15,7 @@ import { useEffect, useRef } from "react"
 const INTERACTIVE =
   "a,button,[role='button'],summary,label,input,select,textarea,[data-cursor='grow']"
 
-export function Cursor() {
+export function LandingCursor() {
   const dotRef = useRef<HTMLDivElement>(null)
   const ringRef = useRef<HTMLDivElement>(null)
 

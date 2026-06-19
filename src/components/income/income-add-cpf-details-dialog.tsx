@@ -40,7 +40,7 @@ interface AddCpfDetailsDialogProps {
   isStandalone?: boolean // When true, hides Back button and step indicator
 }
 
-export function AddCpfDetailsDialog({
+export function IncomeAddCpfDetailsDialog({
   open,
   onOpenChange,
   onBack,

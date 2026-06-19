@@ -19,7 +19,7 @@ interface ChatMessageProps {
   timestamp?: Date
 }
 
-export function ChatMessage({
+export function AssistantChatMessage({
   role,
   content,
   toolsUsed,

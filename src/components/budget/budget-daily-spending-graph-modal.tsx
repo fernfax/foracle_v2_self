@@ -30,7 +30,7 @@ interface DailySpendingGraphModalProps {
   year: number
 }
 
-export function DailySpendingGraphModal({
+export function BudgetDailySpendingGraphModal({
   open,
   onOpenChange,
   dailySpendingData,

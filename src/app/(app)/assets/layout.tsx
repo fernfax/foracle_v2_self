@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { PageHeader } from "@/components/layout/layout-page-header"
+import { LayoutPageHeader } from "@/components/layout/layout-page-header"
 import { AssetsTabBar } from "@/app/(app)/assets/assets-tab-bar"
 
 export const metadata = {
@@ -16,7 +16,7 @@ export const metadata = {
 export default function AssetsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="space-y-4">
-      <PageHeader title="Assets" tabs={<AssetsTabBar />} />
+      <LayoutPageHeader title="Assets" tabs={<AssetsTabBar />} />
       {children}
     </div>
   )

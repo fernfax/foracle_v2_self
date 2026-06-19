@@ -60,7 +60,7 @@ interface AddGoalDialogProps {
   onSuccess?: () => void
 }
 
-export function AddGoalDialog({
+export function GoalAddDialog({
   open,
   onOpenChange,
   goal,

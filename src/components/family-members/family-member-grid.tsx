@@ -22,8 +22,8 @@ import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { Toolbar } from "@/components/ui/toolbar"
-import { AddFamilyMemberDialog } from "@/components/family-members/family-member-add-dialog"
-import { EditFamilyMemberDialog } from "@/components/family-members/family-member-edit-dialog"
+import { FamilyMemberAddDialog } from "@/components/family-members/family-member-add-dialog"
+import { FamilyMemberEditDialog } from "@/components/family-members/family-member-edit-dialog"
 
 interface FamilyMember {
   id: string
@@ -191,13 +191,13 @@ export function FamilyMemberGrid({ initialMembers }: FamilyMemberGridProps) {
         </div>
       )}
 
-      <AddFamilyMemberDialog
+      <FamilyMemberAddDialog
         open={addOpen}
         onOpenChange={setAddOpen}
         onMemberAdded={handleAdded}
       />
 
-      <EditFamilyMemberDialog
+      <FamilyMemberEditDialog
         open={memberToEdit !== null}
         onOpenChange={(open) => !open && setMemberToEdit(null)}
         member={memberToEdit}

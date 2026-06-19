@@ -39,7 +39,7 @@ interface VehicleDetailsModalProps {
   vehicle: VehicleAsset | null
 }
 
-export function VehicleDetailsModal({
+export function AssetVehicleDetailsModal({
   open,
   onOpenChange,
   vehicle

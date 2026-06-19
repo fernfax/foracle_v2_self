@@ -12,9 +12,9 @@ import {
 } from "@/actions/expense-categories"
 
 import { useAddExpense } from "@/components/budget/budget-add-expense-context"
-import { AddExpenseModal } from "@/components/budget/budget-add-expense-modal"
+import { BudgetAddExpenseModal } from "@/components/budget/budget-add-expense-modal"
 
-export function GlobalAddExpenseModal() {
+export function BudgetGlobalAddExpenseModal() {
   const pathname = usePathname()
   const router = useRouter()
   const { isOpen, closeModal } = useAddExpense()
@@ -52,7 +52,7 @@ export function GlobalAddExpenseModal() {
   }
 
   return (
-    <AddExpenseModal
+    <BudgetAddExpenseModal
       open={isOpen}
       onOpenChange={(open) => {
         if (!open) closeModal()

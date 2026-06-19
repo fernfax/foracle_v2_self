@@ -20,7 +20,7 @@ const COLS: Record<number, string> = {
  * income/expense stat bands exactly (`grid-cols-2 gap-3` base, `lg:grid-cols-N`)
  * so Insurance/Investments read identically to the User Homepage tabs.
  */
-export function StatBand({ items, className }: StatBandProps) {
+export function PortfolioStatBand({ items, className }: StatBandProps) {
   const cols = COLS[items.length] ?? "lg:grid-cols-4"
   return (
     <div className={cn("grid grid-cols-2 gap-3", cols, className)}>

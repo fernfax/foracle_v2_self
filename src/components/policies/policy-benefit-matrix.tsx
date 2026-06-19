@@ -112,7 +112,10 @@ function memberHasPolicies(memberId: string, policies: Policy[]): boolean {
   return policies.some((p) => p.familyMemberId === memberId)
 }
 
-export function BenefitMatrix({ familyMembers, policies }: BenefitMatrixProps) {
+export function PolicyBenefitMatrix({
+  familyMembers,
+  policies
+}: BenefitMatrixProps) {
   // memberId → benefitKey → total sum assured
   const memberBenefits = useMemo(() => {
     const map = new Map<string, Record<BenefitKey, number>>()

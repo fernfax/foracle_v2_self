@@ -14,14 +14,14 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { WizardContainer } from "@/components/onboarding/onboarding-wizard-container"
-import { ConfirmationStep } from "@/components/onboarding/steps/step-confirmation"
-import { CpfStep } from "@/components/onboarding/steps/step-cpf"
-import { ExpensesStep } from "@/components/onboarding/steps/step-expenses"
-import { HoldingsStep } from "@/components/onboarding/steps/step-holdings"
-import { IncomeStep } from "@/components/onboarding/steps/step-income"
-import { UserDetailsStep } from "@/components/onboarding/steps/step-user-details"
-import { WelcomeStep } from "@/components/onboarding/steps/step-welcome"
+import { OnboardingWizardContainer } from "@/components/onboarding/onboarding-wizard-container"
+import { StepConfirmation } from "@/components/onboarding/steps/step-confirmation"
+import { StepCpf } from "@/components/onboarding/steps/step-cpf"
+import { StepExpenses } from "@/components/onboarding/steps/step-expenses"
+import { StepHoldings } from "@/components/onboarding/steps/step-holdings"
+import { StepIncome } from "@/components/onboarding/steps/step-income"
+import { StepUserDetails } from "@/components/onboarding/steps/step-user-details"
+import { StepWelcome } from "@/components/onboarding/steps/step-welcome"
 
 // Type definitions for wizard data
 export interface FamilyMemberData {
@@ -257,10 +257,10 @@ export function OnboardingWizard({
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <WelcomeStep onNext={handleNext} />
+        return <StepWelcome onNext={handleNext} />
       case 2:
         return (
-          <UserDetailsStep
+          <StepUserDetails
             data={onboardingData.familyMember}
             onSave={updateFamilyMember}
             onNext={handleNext}
@@ -269,7 +269,7 @@ export function OnboardingWizard({
         )
       case 3:
         return (
-          <IncomeStep
+          <StepIncome
             familyMember={onboardingData.familyMember}
             data={onboardingData.income}
             onSave={updateIncome}
@@ -279,7 +279,7 @@ export function OnboardingWizard({
         )
       case 4:
         return (
-          <CpfStep
+          <StepCpf
             income={onboardingData.income}
             data={onboardingData.cpf}
             onSave={updateCpf}
@@ -290,7 +290,7 @@ export function OnboardingWizard({
         )
       case 5:
         return (
-          <HoldingsStep
+          <StepHoldings
             familyMember={onboardingData.familyMember}
             onNext={handleNext}
             onBack={handleBack}
@@ -299,7 +299,7 @@ export function OnboardingWizard({
         )
       case 6:
         return (
-          <ExpensesStep
+          <StepExpenses
             data={onboardingData.expenses}
             onSave={updateExpenses}
             onNext={handleNext}
@@ -309,14 +309,14 @@ export function OnboardingWizard({
         )
       case 7:
         return (
-          <ConfirmationStep
+          <StepConfirmation
             data={onboardingData}
             onComplete={handleComplete}
             onBack={handleBack}
           />
         )
       default:
-        return <WelcomeStep onNext={handleNext} />
+        return <StepWelcome onNext={handleNext} />
     }
   }
 
@@ -324,7 +324,7 @@ export function OnboardingWizard({
   // empty form (e.g. submit income before its saved id loads — re-inserting it).
   if (isHydrating) {
     return (
-      <WizardContainer
+      <OnboardingWizardContainer
         currentStep={config.displayStep}
         totalSteps={DISPLAYED_STEPS}
         title={config.title}
@@ -336,7 +336,7 @@ export function OnboardingWizard({
         <div className="flex flex-1 items-center justify-center py-12">
           <p className="text-muted-foreground text-sm">Loading…</p>
         </div>
-      </WizardContainer>
+      </OnboardingWizardContainer>
     )
   }
 
@@ -353,7 +353,7 @@ export function OnboardingWizard({
             pointer-events-none. */}
         <div className="pt-10">
           <div className="pointer-events-none select-none">
-            <WizardContainer
+            <OnboardingWizardContainer
               currentStep={config.displayStep}
               totalSteps={DISPLAYED_STEPS}
               title={config.title}
@@ -363,7 +363,7 @@ export function OnboardingWizard({
               iconBgColor={config.iconBgColor}
               iconColor={config.iconColor}>
               {renderStep()}
-            </WizardContainer>
+            </OnboardingWizardContainer>
           </div>
         </div>
         {/* External navigation — sole interactive surface in preview mode. */}
@@ -389,7 +389,7 @@ export function OnboardingWizard({
   }
 
   return (
-    <WizardContainer
+    <OnboardingWizardContainer
       currentStep={config.displayStep}
       totalSteps={DISPLAYED_STEPS}
       title={config.title}
@@ -399,6 +399,6 @@ export function OnboardingWizard({
       iconBgColor={config.iconBgColor}
       iconColor={config.iconColor}>
       {renderStep()}
-    </WizardContainer>
+    </OnboardingWizardContainer>
   )
 }

@@ -36,7 +36,7 @@ interface TopCategoryModalProps {
  * spending category for the month plus a ranked Top-5 bar list. Opened by
  * clicking the Top Category card in the expense stat band.
  */
-export function TopCategoryModal({
+export function ExpenseTopCategoryModal({
   open,
   onOpenChange,
   topCategory,

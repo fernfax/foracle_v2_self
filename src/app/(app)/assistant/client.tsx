@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react"
 import { setSinglishMode } from "@/actions/singlish-mode"
 
-import { ChatView } from "@/components/assistant"
+import { AssistantChatView } from "@/components/assistant"
 
 interface Message {
   id: string
@@ -118,7 +118,7 @@ export function AssistantClient({
   )
 
   return (
-    <ChatView
+    <AssistantChatView
       messages={messages}
       onSend={handleSendMessage}
       isLoading={isSending}

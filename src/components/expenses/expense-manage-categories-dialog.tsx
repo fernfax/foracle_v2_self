@@ -36,7 +36,7 @@ interface ManageCategoriesDialogProps {
   onCategoriesUpdated?: () => void
 }
 
-export function ManageCategoriesDialog({
+export function ExpenseManageCategoriesDialog({
   open,
   onOpenChange,
   onCategoriesUpdated

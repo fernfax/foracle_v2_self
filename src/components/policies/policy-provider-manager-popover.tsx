@@ -23,7 +23,7 @@ interface ProviderManagerPopoverProps {
   onProvidersChanged: () => Promise<void>
 }
 
-export function ProviderManagerPopover({
+export function PolicyProviderManagerPopover({
   providers,
   onProvidersChanged
 }: ProviderManagerPopoverProps) {

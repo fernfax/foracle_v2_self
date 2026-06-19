@@ -14,7 +14,7 @@ import { useGlassRefraction } from "@/hooks/use-glass-refraction"
  * The filter is a low-frequency fractal-noise displacement: a calm, liquid
  * warp of the backdrop (tuned subtle to suit a finance brand, not watery).
  */
-export function GlassDefs() {
+export function LandingGlassDefs() {
   const refract = useGlassRefraction()
 
   useEffect(() => {

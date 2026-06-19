@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Fab } from "@/components/ui/fab-stack"
 import { useTourContext } from "@/components/tour/tour-provider"
-import { WelcomeHeroModal } from "@/components/tour/tour-welcome-hero-modal"
+import { TourWelcomeHeroModal } from "@/components/tour/tour-welcome-hero-modal"
 
 const PENDING_TOUR_KEY = "foracle_pending_tour"
 const NEW_USER_TOUR_KEY = "foracle_new_user_tour"
@@ -82,7 +82,7 @@ const TOUR_PAGE_NAMES: Record<TourName, string> = {
   budget: "Budget"
 }
 
-export function HelpButton() {
+export function TourHelpButton() {
   const { startTour } = useTourContext()
   const pathname = usePathname()
   const router = useRouter()
@@ -330,7 +330,7 @@ export function HelpButton() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <WelcomeHeroModal
+      <TourWelcomeHeroModal
         open={showWelcomeModal}
         onOpenChange={setShowWelcomeModal}
         onGetStarted={handleWelcomeGetStarted}

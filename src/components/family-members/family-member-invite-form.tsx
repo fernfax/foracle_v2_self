@@ -30,7 +30,7 @@ type Status = "idle" | "submitting" | "success" | "error"
 // lib/services/family.ts where the error is thrown.
 const EXISTING_USER_SENTINEL = "already has a Foracle account"
 
-export function InviteFamilyMemberForm({
+export function FamilyMemberInviteForm({
   className,
   onSuccess
 }: {

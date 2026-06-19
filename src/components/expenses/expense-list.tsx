@@ -49,12 +49,12 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { AddExpenseDialog } from "@/components/expenses/expense-add-dialog"
+import { ExpenseAddDialog } from "@/components/expenses/expense-add-dialog"
 import { ExpenseBreakdownModal } from "@/components/expenses/expense-breakdown-modal"
-import { EditExpenseDialog } from "@/components/expenses/expense-edit-dialog"
-import { ManageCategoriesDialog } from "@/components/expenses/expense-manage-categories-dialog"
+import { ExpenseEditDialog } from "@/components/expenses/expense-edit-dialog"
+import { ExpenseManageCategoriesDialog } from "@/components/expenses/expense-manage-categories-dialog"
 import { ExpenseStatBand } from "@/components/expenses/expense-stat-band"
-import { TopCategoryModal } from "@/components/expenses/expense-top-category-modal"
+import { ExpenseTopCategoryModal } from "@/components/expenses/expense-top-category-modal"
 
 interface Expense {
   id: string
@@ -793,14 +793,14 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       )}
 
       {/* Add Dialog */}
-      <AddExpenseDialog
+      <ExpenseAddDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onExpenseAdded={handleExpenseAdded}
       />
 
       {/* Edit Dialog */}
-      <EditExpenseDialog
+      <ExpenseEditDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         expense={selectedExpense}
@@ -829,7 +829,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       </AlertDialog>
 
       {/* Manage Categories Dialog */}
-      <ManageCategoriesDialog
+      <ExpenseManageCategoriesDialog
         open={manageCategoriesOpen}
         onOpenChange={setManageCategoriesOpen}
         onCategoriesUpdated={() => {
@@ -847,7 +847,7 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
       />
 
       {/* Top Category Modal - opened from the Top Category stat card */}
-      <TopCategoryModal
+      <ExpenseTopCategoryModal
         open={isTopCategoryModalOpen}
         onOpenChange={setIsTopCategoryModalOpen}
         topCategory={summaryStats.topCategory}

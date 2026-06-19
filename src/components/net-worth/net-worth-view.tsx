@@ -43,7 +43,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { SectionCard } from "@/components/ui/section-card"
 import { StatCard } from "@/components/ui/stat-card"
-import { AddCurrentHoldingDialog } from "@/components/current-holdings/current-holding-add-dialog"
+import { CurrentHoldingAddDialog } from "@/components/current-holdings/current-holding-add-dialog"
 
 const CLASS_ICON: Record<ClassKey, LucideIcon> = {
   cash: Wallet,
@@ -252,7 +252,7 @@ export function NetWorthView({ summary, initialHoldings }: NetWorthViewProps) {
         </>
       )}
 
-      <AddCurrentHoldingDialog
+      <CurrentHoldingAddDialog
         open={addOpen}
         onOpenChange={(open) => {
           setAddOpen(open)

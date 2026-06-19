@@ -24,7 +24,7 @@ interface DailySpendingChartProps {
   gradientId?: string
 }
 
-export function DailySpendingChart({
+export function BudgetDailySpendingChart({
   dailySpendingData,
   dailyBudget,
   month,

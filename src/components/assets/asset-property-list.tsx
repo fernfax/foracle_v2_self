@@ -11,10 +11,10 @@ import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { Toolbar } from "@/components/ui/toolbar"
-import { AddPropertyDialog } from "@/components/assets/asset-add-property-dialog"
-import { PropertyDetailsModal } from "@/components/assets/asset-property-details-modal"
-import { ConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
-import { ProgressBar } from "@/components/portfolio/portfolio-progress"
+import { AssetAddPropertyDialog } from "@/components/assets/asset-add-property-dialog"
+import { AssetPropertyDetailsModal } from "@/components/assets/asset-property-details-modal"
+import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
+import { PortfolioProgress } from "@/components/portfolio/portfolio-progress"
 
 interface PropertyAsset {
   id: string
@@ -43,7 +43,7 @@ interface PropertyListProps {
 const PROPERTY_TINT = "rgba(184,98,42,0.12)"
 const PROPERTY_ICON = "#7A3A0A"
 
-export function PropertyList({ initialProperties }: PropertyListProps) {
+export function AssetPropertyList({ initialProperties }: PropertyListProps) {
   const [properties, setProperties] =
     useState<PropertyAsset[]>(initialProperties)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -103,7 +103,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
           }}
         />
 
-        <AddPropertyDialog
+        <AssetAddPropertyDialog
           open={addDialogOpen}
           onOpenChange={setAddDialogOpen}
           onSuccess={() => window.location.reload()}
@@ -220,7 +220,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                             {progress.toFixed(1)}% paid
                           </span>
                         </div>
-                        <ProgressBar
+                        <PortfolioProgress
                           value={progress}
                           color="linear-gradient(90deg, #00C4AA 0%, #5A9470 100%)"
                         />
@@ -295,14 +295,14 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
       </div>
 
       {/* Add Property Dialog */}
-      <AddPropertyDialog
+      <AssetAddPropertyDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={() => window.location.reload()}
       />
 
       {/* Edit Property Dialog */}
-      <AddPropertyDialog
+      <AssetAddPropertyDialog
         open={!!editingProperty}
         onOpenChange={(open) => !open && setEditingProperty(null)}
         property={editingProperty}
@@ -310,7 +310,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
       />
 
       {/* Delete Confirmation */}
-      <ConfirmDialog
+      <PortfolioConfirmDialog
         open={propertyToDelete !== null}
         onOpenChange={(open) => !open && setPropertyToDelete(null)}
         title="Delete this property?"
@@ -327,7 +327,7 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
       />
 
       {/* Property Details Modal */}
-      <PropertyDetailsModal
+      <AssetPropertyDetailsModal
         open={!!selectedProperty}
         onOpenChange={(open) => !open && setSelectedProperty(null)}
         property={selectedProperty}

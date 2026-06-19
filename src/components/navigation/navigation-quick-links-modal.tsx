@@ -55,7 +55,7 @@ interface QuickLinksModalProps {
   isSaving?: boolean
 }
 
-export function QuickLinksModal({
+export function NavigationQuickLinksModal({
   open,
   onOpenChange,
   selectedKeys,

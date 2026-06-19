@@ -7,7 +7,7 @@ import { toast } from "sonner"
 
 import { Field } from "@/components/ui/field"
 import { MoneyInput } from "@/components/ui/money-input"
-import { WizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
+import { OnboardingWizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
 import type { CpfData, IncomeData } from "@/app/onboarding/onboarding-wizard"
 
 interface CpfStepProps {
@@ -19,7 +19,7 @@ interface CpfStepProps {
   onSkip: () => void
 }
 
-export function CpfStep({
+export function StepCpf({
   income,
   data,
   onSave,
@@ -90,7 +90,7 @@ export function CpfStep({
           </p>
         </div>
 
-        <WizardNavigation
+        <OnboardingWizardNavigation
           onBack={onBack}
           onNext={onSkip}
           isOptional
@@ -173,7 +173,7 @@ export function CpfStep({
         </div>
       </div>
 
-      <WizardNavigation
+      <OnboardingWizardNavigation
         onBack={onBack}
         onNext={handleSubmit}
         isOptional

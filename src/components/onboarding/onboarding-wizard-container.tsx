@@ -15,7 +15,7 @@ interface WizardContainerProps {
   iconColor?: string
 }
 
-export function WizardContainer({
+export function OnboardingWizardContainer({
   currentStep,
   totalSteps,
   title,

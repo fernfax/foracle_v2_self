@@ -14,7 +14,7 @@ interface SpendingPaceIndicatorProps {
   month: number
 }
 
-export function SpendingPaceIndicator({
+export function BudgetSpendingPaceIndicator({
   totalSpent,
   expectedSpent,
   pacingStatus,

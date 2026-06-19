@@ -43,7 +43,7 @@ interface PropertyDetailsModalProps {
   property: PropertyAsset | null
 }
 
-export function PropertyDetailsModal({
+export function AssetPropertyDetailsModal({
   open,
   onOpenChange,
   property

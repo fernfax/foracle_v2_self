@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { WizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
+import { OnboardingWizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
 import type { FamilyMemberData } from "@/app/onboarding/onboarding-wizard"
 
 interface UserDetailsStepProps {
@@ -19,7 +19,7 @@ interface UserDetailsStepProps {
   onBack: () => void
 }
 
-export function UserDetailsStep({
+export function StepUserDetails({
   data,
   onSave,
   onNext,
@@ -131,7 +131,7 @@ export function UserDetailsStep({
         </div>
       </div>
 
-      <WizardNavigation
+      <OnboardingWizardNavigation
         onBack={onBack}
         onNext={handleSubmit}
         canProceed={!!isFormValid}

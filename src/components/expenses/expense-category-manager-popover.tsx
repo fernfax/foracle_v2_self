@@ -33,7 +33,7 @@ interface CategoryManagerPopoverProps {
   onCategoriesChanged: () => Promise<void>
 }
 
-export function CategoryManagerPopover({
+export function ExpenseCategoryManagerPopover({
   categories,
   onCategoriesChanged
 }: CategoryManagerPopoverProps) {

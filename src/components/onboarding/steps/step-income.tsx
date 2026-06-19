@@ -19,7 +19,7 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { WizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
+import { OnboardingWizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
 import type {
   BonusGroup,
   FamilyMemberData,
@@ -66,7 +66,7 @@ const FREQUENCIES = [
   { value: "bi-weekly", label: "Bi-weekly" }
 ]
 
-export function IncomeStep({
+export function StepIncome({
   familyMember,
   data,
   onSave,
@@ -421,7 +421,7 @@ export function IncomeStep({
         </div>
       </div>
 
-      <WizardNavigation
+      <OnboardingWizardNavigation
         onBack={onBack}
         onNext={handleSubmit}
         canProceed={!!isFormValid}

@@ -35,7 +35,7 @@ const SIZE_STYLES = {
   thick: { height: 12, radius: 4 }
 } as const
 
-export function TileMotif({ size = "thin", className }: TileMotifProps) {
+export function LayoutTileMotif({ size = "thin", className }: TileMotifProps) {
   const { height, radius } = SIZE_STYLES[size]
 
   return (

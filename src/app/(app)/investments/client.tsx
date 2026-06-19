@@ -16,13 +16,13 @@ import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Toolbar } from "@/components/ui/toolbar"
 import {
-  AddInvestmentModal,
-  WealthProjectionChart
+  InvestmentAddModal,
+  InvestmentWealthProjectionChart
 } from "@/components/investments"
-import { HoldingsTable } from "@/components/investments/investment-holdings-table"
-import { PageHeader } from "@/components/layout/layout-page-header"
-import { ConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
-import { StatBand } from "@/components/portfolio/portfolio-stat-band"
+import { InvestmentHoldingsTable } from "@/components/investments/investment-holdings-table"
+import { LayoutPageHeader } from "@/components/layout/layout-page-header"
+import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
+import { PortfolioStatBand } from "@/components/portfolio/portfolio-stat-band"
 
 interface InvestmentsClientProps {
   initialInvestments: Investment[]
@@ -119,10 +119,10 @@ export function InvestmentsClient({
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Investments" />
+      <LayoutPageHeader title="Investments" />
 
       {/* Stat band — reuse the server summary, do not recompute */}
-      <StatBand
+      <PortfolioStatBand
         items={[
           {
             label: "Portfolio value",
@@ -166,7 +166,7 @@ export function InvestmentsClient({
           }}
         />
       ) : (
-        <HoldingsTable
+        <InvestmentHoldingsTable
           investments={investments}
           onEdit={(investment) => setEditingInvestment(investment)}
           onDelete={(investment) => setDeletingInvestment(investment)}
@@ -174,17 +174,17 @@ export function InvestmentsClient({
       )}
 
       {/* Wealth projection — the chart is already a titled card; render directly to avoid nesting */}
-      <WealthProjectionChart investments={investments} />
+      <InvestmentWealthProjectionChart investments={investments} />
 
       {/* Add Investment Modal */}
-      <AddInvestmentModal
+      <InvestmentAddModal
         open={addModalOpen}
         onOpenChange={setAddModalOpen}
         onSubmit={handleAddInvestment}
       />
 
       {/* Edit Investment Modal */}
-      <AddInvestmentModal
+      <InvestmentAddModal
         open={!!editingInvestment}
         onOpenChange={(open) => !open && setEditingInvestment(null)}
         investment={editingInvestment}
@@ -192,7 +192,7 @@ export function InvestmentsClient({
       />
 
       {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
+      <PortfolioConfirmDialog
         open={deletingInvestment !== null}
         onOpenChange={(open) => !open && setDeletingInvestment(null)}
         title="Delete this holding?"

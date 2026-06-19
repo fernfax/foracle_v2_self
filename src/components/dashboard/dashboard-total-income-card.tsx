@@ -52,7 +52,7 @@ interface Income {
   futureMilestones?: string | null
 }
 
-export function TotalIncomeCard({
+export function DashboardTotalIncomeCard({
   totalIncome,
   selectedMonth,
   slideDirection

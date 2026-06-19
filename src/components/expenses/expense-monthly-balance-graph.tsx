@@ -507,7 +507,7 @@ function CustomTooltip({ active, payload, viewMode }: CustomTooltipProps) {
 
 const INCLUDE_INVESTMENTS_KEY = "foracle_include_investments"
 
-export function MonthlyBalanceGraph({
+export function ExpenseMonthlyBalanceGraph({
   incomes,
   expenses,
   holdings,

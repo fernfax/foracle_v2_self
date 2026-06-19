@@ -38,7 +38,7 @@ interface AdjustBudgetModalProps {
   onSuccess?: () => void
 }
 
-export function AdjustBudgetModal({
+export function BudgetAdjustModal({
   open,
   onOpenChange,
   targetCategory,

@@ -19,7 +19,7 @@
  * (≈100×100 each) without rewriting every coordinate.
  * Opacity tuned low (~0.18) so it never competes with content.
  */
-export function PeranakanTilesDecor() {
+export function LayoutPeranakanTilesDecor() {
   return (
     <div
       aria-hidden

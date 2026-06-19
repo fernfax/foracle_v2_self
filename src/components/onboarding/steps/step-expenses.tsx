@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field } from "@/components/ui/field"
 import { MoneyInput } from "@/components/ui/money-input"
-import { WizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
+import { OnboardingWizardNavigation } from "@/components/onboarding/onboarding-wizard-navigation"
 import type { ExpenseSetupData } from "@/app/onboarding/onboarding-wizard"
 
 // Default expense categories with display info
@@ -56,7 +56,7 @@ interface ExpensesStepProps {
   onSkip: () => void
 }
 
-export function ExpensesStep({
+export function StepExpenses({
   data,
   onSave,
   onNext,
@@ -318,7 +318,7 @@ export function ExpensesStep({
         </div>
       </div>
 
-      <WizardNavigation
+      <OnboardingWizardNavigation
         onBack={onBack}
         onNext={handleSubmit}
         isOptional

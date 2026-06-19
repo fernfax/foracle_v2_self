@@ -22,7 +22,7 @@
  * wallpaper carries through to dark mode at a slightly higher opacity, since
  * cream-on-nightfall needs a touch more presence than forest-on-cream.)
  */
-export function RadialDecor() {
+export function LayoutRadialDecor() {
   return (
     <div
       aria-hidden

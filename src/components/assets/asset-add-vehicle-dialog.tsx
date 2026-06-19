@@ -55,7 +55,7 @@ interface AddVehicleDialogProps {
   onSuccess?: () => void
 }
 
-export function AddVehicleDialog({
+export function AssetAddVehicleDialog({
   open,
   onOpenChange,
   vehicle,

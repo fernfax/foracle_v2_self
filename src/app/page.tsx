@@ -16,14 +16,14 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Cursor } from "@/components/landing/landing-cursor"
-import { GlassDefs } from "@/components/landing/landing-glass-defs"
-import { HeroPreview } from "@/components/landing/landing-hero-preview"
-import { LifeStages } from "@/components/landing/landing-life-stages"
-import { Reveal } from "@/components/landing/landing-reveal"
+import { LandingCursor } from "@/components/landing/landing-cursor"
+import { LandingGlassDefs } from "@/components/landing/landing-glass-defs"
+import { LandingHeroPreview } from "@/components/landing/landing-hero-preview"
+import { LandingLifeStages } from "@/components/landing/landing-life-stages"
+import { LandingReveal } from "@/components/landing/landing-reveal"
 import { LandingShader } from "@/components/landing/landing-shader"
-import { SmoothScroll } from "@/components/landing/landing-smooth-scroll"
-import { TileMotif } from "@/components/layout/layout-tile-motif"
+import { LandingSmoothScroll } from "@/components/landing/landing-smooth-scroll"
+import { LayoutTileMotif } from "@/components/layout/layout-tile-motif"
 
 const NAV_LINKS = [
   { href: "#how", label: "How it works" },
@@ -155,9 +155,9 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-transparent">
       <LandingShader />
-      <GlassDefs />
-      <SmoothScroll />
-      <Cursor />
+      <LandingGlassDefs />
+      <LandingSmoothScroll />
+      <LandingCursor />
 
       {/* Navigation */}
       <nav className="glass-bar sticky top-0 z-50">
@@ -250,7 +250,7 @@ export default async function Home() {
 
           {/* Product preview */}
           <div className="mt-16 sm:mt-20">
-            <HeroPreview />
+            <LandingHeroPreview />
           </div>
         </div>
       </section>
@@ -259,16 +259,16 @@ export default async function Home() {
       <section
         id="how"
         className="relative z-10 mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
-        <Reveal className="mb-14 max-w-2xl">
+        <LandingReveal className="mb-14 max-w-2xl">
           <p className="sec-num mb-3">How it works</p>
           <h2 className="font-display text-foreground text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
             From scattered to settled, in three steps
           </h2>
-        </Reveal>
+        </LandingReveal>
 
         <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
           {STEPS.map((s, i) => (
-            <Reveal
+            <LandingReveal
               key={s.n}
               delay={i * 80}
               className="glass-panel rounded-2xl p-7 sm:p-8">
@@ -281,19 +281,19 @@ export default async function Home() {
               <p className="text-muted-foreground mt-2.5 text-[15px] leading-relaxed">
                 {s.body}
               </p>
-            </Reveal>
+            </LandingReveal>
           ))}
         </div>
       </section>
 
       {/* Life stages — companion through life */}
-      <LifeStages />
+      <LandingLifeStages />
 
       {/* Features */}
       <section
         id="features"
         className="relative z-10 mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
-        <Reveal className="mb-14 max-w-2xl">
+        <LandingReveal className="mb-14 max-w-2xl">
           <p className="sec-num mb-3">Features</p>
           <h2 className="font-display text-foreground text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
             Everything you need, nothing you don&apos;t
@@ -301,12 +301,12 @@ export default async function Home() {
           <p className="text-muted-foreground mt-4 text-base sm:text-lg">
             A complete set of calm, considered tools for the whole household.
           </p>
-        </Reveal>
+        </LandingReveal>
 
         <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {FEATURES.map(
             ({ n, icon: Icon, title, description, color, tint }, i) => (
-              <Reveal key={n} delay={(i % 3) * 80} className="h-full">
+              <LandingReveal key={n} delay={(i % 3) * 80} className="h-full">
                 <div className="group glass-panel h-full rounded-2xl p-7 transition-transform duration-300 hover:-translate-y-1 sm:p-8">
                   <div className="flex items-center justify-between">
                     <div
@@ -325,7 +325,7 @@ export default async function Home() {
                     {description}
                   </p>
                 </div>
-              </Reveal>
+              </LandingReveal>
             )
           )}
         </div>
@@ -336,14 +336,14 @@ export default async function Home() {
         id="compare"
         className="bg-brand-deep-forest relative z-10 scroll-mt-20 py-20 sm:py-28">
         <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
-          <Reveal className="mb-12 max-w-2xl">
+          <LandingReveal className="mb-12 max-w-2xl">
             <p className="font-display text-brand-coral mb-3 text-[11px] font-semibold tracking-[0.2em] uppercase">
               Why Foracle
             </p>
             <h2 className="font-display text-brand-cream text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
               There&apos;s a calmer way to hold your money
             </h2>
-          </Reveal>
+          </LandingReveal>
 
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
             {/* Old way */}
@@ -391,14 +391,14 @@ export default async function Home() {
       <section
         id="faq"
         className="relative z-10 mx-auto max-w-3xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
-        <Reveal className="mb-12 text-center">
+        <LandingReveal className="mb-12 text-center">
           <p className="sec-num mb-3">FAQ</p>
           <h2 className="font-display text-foreground text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
             Questions, answered
           </h2>
-        </Reveal>
+        </LandingReveal>
 
-        <Reveal className="glass-panel divide-y divide-[rgba(28,43,42,0.08)] overflow-hidden rounded-2xl dark:divide-[rgba(240,235,224,0.08)]">
+        <LandingReveal className="glass-panel divide-y divide-[rgba(28,43,42,0.08)] overflow-hidden rounded-2xl dark:divide-[rgba(240,235,224,0.08)]">
           {FAQS.map((f) => (
             <details key={f.q} className="group">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 sm:p-6 [&::-webkit-details-marker]:hidden">
@@ -412,7 +412,7 @@ export default async function Home() {
               </p>
             </details>
           ))}
-        </Reveal>
+        </LandingReveal>
       </section>
 
       {/* Final CTA */}
@@ -449,7 +449,7 @@ export default async function Home() {
             </Link>
           </div>
           <div className="mx-auto mt-12 max-w-xs">
-            <TileMotif size="standard" />
+            <LayoutTileMotif size="standard" />
           </div>
         </div>
       </section>
@@ -476,7 +476,7 @@ export default async function Home() {
               ))}
             </nav>
           </div>
-          <TileMotif size="thin" className="my-7" />
+          <LayoutTileMotif size="thin" className="my-7" />
           <p className="text-muted-foreground text-center text-[13px]">
             &copy; 2026 Foracle. Made in Singapore.
           </p>

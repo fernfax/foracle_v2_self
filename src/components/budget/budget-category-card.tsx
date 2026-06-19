@@ -53,7 +53,7 @@ function CategoryIcon({
   return createElement(getIconComponent(iconName, categoryName), { className })
 }
 
-export function CategoryBudgetCard({
+export function BudgetCategoryCard({
   categoryName,
   icon,
   spent,

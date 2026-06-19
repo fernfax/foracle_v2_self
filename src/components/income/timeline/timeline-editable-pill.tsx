@@ -20,7 +20,7 @@ interface EditablePillProps {
   disabled?: boolean
 }
 
-export function EditablePill({
+export function TimelineEditablePill({
   className,
   ariaLabel,
   children,

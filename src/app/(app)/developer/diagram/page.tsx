@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 
-import { DiagramCanvas } from "@/components/developer/developer-diagram-canvas"
+import { DeveloperDiagramCanvas } from "@/components/developer/developer-diagram-canvas"
 import { DeveloperNav } from "@/components/developer/developer-nav"
 
 export const dynamic = "force-dynamic"
@@ -45,7 +45,7 @@ export default async function DeveloperDiagramPage() {
           </span>
         </div>
 
-        <DiagramCanvas diagram={diagram} />
+        <DeveloperDiagramCanvas diagram={diagram} />
       </div>
     )
   }

@@ -76,7 +76,7 @@ function deriveArchetype(income: IncomeForDrawer): Archetype {
   return "recurring"
 }
 
-export function IncomeDetailDrawer({
+export function TimelineIncomeDetailDrawer({
   open,
   onOpenChange,
   income,

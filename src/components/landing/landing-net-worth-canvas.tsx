@@ -11,7 +11,7 @@ import { type MotionValue } from "motion/react"
  * the mesh-gradient owns the WebGL context); dpr-crisp, paused offscreen, and
  * drawn once in its final state under reduced-motion.
  */
-export function NetWorthCanvas({
+export function LandingNetWorthCanvas({
   values,
   colors,
   progress,

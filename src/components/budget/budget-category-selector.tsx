@@ -121,7 +121,7 @@ function CategoryIcon({
   return createElement(getIconComponent(iconName, categoryName), { className })
 }
 
-export function CategorySelector({
+export function BudgetCategorySelector({
   categories,
   selectedCategory,
   onSelect

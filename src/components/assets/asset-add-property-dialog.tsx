@@ -56,7 +56,7 @@ interface AddPropertyDialogProps {
   onSuccess?: () => void
 }
 
-export function AddPropertyDialog({
+export function AssetAddPropertyDialog({
   open,
   onOpenChange,
   property,

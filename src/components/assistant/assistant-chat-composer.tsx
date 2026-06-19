@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Loader2, Send } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { SinglishToggle } from "@/components/assistant/assistant-singlish-toggle"
+import { AssistantSinglishToggle } from "@/components/assistant/assistant-singlish-toggle"
 
 interface ChatComposerProps {
   onSend: (message: string) => Promise<void>
@@ -14,7 +14,7 @@ interface ChatComposerProps {
   onSinglishToggle?: (enabled: boolean) => Promise<void>
 }
 
-export function ChatComposer({
+export function AssistantChatComposer({
   onSend,
   disabled = false,
   placeholder = "Ask about your budget, spending, or financial goals...",
@@ -90,7 +90,7 @@ export function ChatComposer({
           />
 
           {onSinglishToggle && (
-            <SinglishToggle
+            <AssistantSinglishToggle
               enabled={singlishEnabled}
               onToggle={onSinglishToggle}
               disabled={isDisabled}

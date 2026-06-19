@@ -33,7 +33,7 @@ export interface ConfirmDialogProps {
  * consequence + Cancel / red Delete. Matches the app's existing AlertDialog copy
  * pattern (red `#E05555` action, specific past-tense label).
  */
-export function ConfirmDialog({
+export function PortfolioConfirmDialog({
   open,
   onOpenChange,
   title,

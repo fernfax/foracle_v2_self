@@ -3,9 +3,9 @@ import { DM_Sans, Lora, Space_Grotesk } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Toaster } from "sonner"
 
-import { ViewportIndicator } from "@/components/developer/developer-viewport-indicator"
+import { DeveloperViewportIndicator } from "@/components/developer/developer-viewport-indicator"
 import { ThemeProvider } from "@/components/layout/layout-theme-provider"
-import { RegisterSW } from "@/components/pwa/pwa-register-sw"
+import { PwaRegisterSw } from "@/components/pwa/pwa-register-sw"
 
 import "./globals.css"
 
@@ -104,8 +104,8 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange>
             {children}
-            <ViewportIndicator />
-            <RegisterSW />
+            <DeveloperViewportIndicator />
+            <PwaRegisterSw />
             <Toaster
               position="bottom-right"
               toastOptions={{

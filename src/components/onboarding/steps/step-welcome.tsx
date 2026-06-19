@@ -45,7 +45,7 @@ const FEATURES = [
   }
 ]
 
-export function WelcomeStep({ onNext }: WelcomeStepProps) {
+export function StepWelcome({ onNext }: WelcomeStepProps) {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-10 text-center">
       {/* Status pill — mirrors the landing hero badge */}

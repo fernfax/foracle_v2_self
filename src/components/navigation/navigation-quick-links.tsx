@@ -9,10 +9,10 @@ import {
 } from "@/actions/quick-links"
 import { QUICK_LINK_OPTIONS } from "@/configs/quick-links.config"
 
-import { QuickLinksDisplay } from "@/components/navigation/navigation-quick-links-display"
-import { QuickLinksModal } from "@/components/navigation/navigation-quick-links-modal"
+import { NavigationQuickLinksDisplay } from "@/components/navigation/navigation-quick-links-display"
+import { NavigationQuickLinksModal } from "@/components/navigation/navigation-quick-links-modal"
 
-export function HeaderQuickLinks() {
+export function NavigationQuickLinks() {
   const [links, setLinks] = useState<QuickLink[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -84,12 +84,12 @@ export function HeaderQuickLinks() {
 
   return (
     <div data-tour="header-quick-links">
-      <QuickLinksDisplay
+      <NavigationQuickLinksDisplay
         links={links}
         onReorder={handleReorder}
         onEditClick={() => setIsModalOpen(true)}
       />
-      <QuickLinksModal
+      <NavigationQuickLinksModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         selectedKeys={selectedKeys}

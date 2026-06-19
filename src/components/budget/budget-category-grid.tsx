@@ -2,14 +2,14 @@
 
 import type { BudgetVsActual } from "@/actions/budget-calculator"
 
-import { CategoryBudgetCard } from "@/components/budget/budget-category-card"
+import { BudgetCategoryCard } from "@/components/budget/budget-category-card"
 
 interface CategoryGridProps {
   budgetData: BudgetVsActual[]
   onCategoryClick?: (categoryName: string) => void
 }
 
-export function CategoryGrid({
+export function BudgetCategoryGrid({
   budgetData,
   onCategoryClick
 }: CategoryGridProps) {
@@ -32,7 +32,7 @@ export function CategoryGrid({
   return (
     <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-5">
       {activeCategories.map((budget) => (
-        <CategoryBudgetCard
+        <BudgetCategoryCard
           key={budget.categoryName}
           categoryName={budget.categoryName}
           icon={budget.icon}

@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react"
 
 import { ExpenseList } from "@/components/expenses/expense-list"
-import { PageHeader } from "@/components/layout/layout-page-header"
+import { LayoutPageHeader } from "@/components/layout/layout-page-header"
 
 // No-op subscribe for the hydration-flag useSyncExternalStore below.
 const emptySubscribe = () => () => {}
@@ -95,7 +95,7 @@ export function ExpensesClient({
   // just the stat band + the expense table. (Sub-tabs can come back later.)
   return (
     <div className="space-y-4">
-      {!embedded && <PageHeader title="Expenses" />}
+      {!embedded && <LayoutPageHeader title="Expenses" />}
 
       {!mounted ? (
         <div className="bg-muted h-[500px] animate-pulse rounded-lg" />

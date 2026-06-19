@@ -5,7 +5,7 @@ import { getUserPropertyAssets, getUserVehicleAssets } from "@/actions/user"
 import { Car, Home, TrendingUp } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AssetBreakdownModal } from "@/components/dashboard/dashboard-asset-breakdown-modal"
+import { DashboardAssetBreakdownModal } from "@/components/dashboard/dashboard-asset-breakdown-modal"
 
 interface PropertyAsset {
   id: string
@@ -30,7 +30,9 @@ interface TotalAssetsCardProps {
   totalAssets: number
 }
 
-export function TotalAssetsCard({ totalAssets }: TotalAssetsCardProps) {
+export function DashboardTotalAssetsCard({
+  totalAssets
+}: TotalAssetsCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [propertyAssets, setPropertyAssets] = useState<PropertyAsset[]>([])
   const [vehicleAssets, setVehicleAssets] = useState<VehicleAsset[]>([])
@@ -131,7 +133,7 @@ export function TotalAssetsCard({ totalAssets }: TotalAssetsCardProps) {
         </CardContent>
       </Card>
 
-      <AssetBreakdownModal
+      <DashboardAssetBreakdownModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         propertyAssets={propertyAssets}

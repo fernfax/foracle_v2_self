@@ -36,7 +36,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { InviteFamilyMemberForm } from "@/components/family-members/family-member-invite-form"
+import { FamilyMemberInviteForm } from "@/components/family-members/family-member-invite-form"
 
 interface FamilyAdminPanelProps {
   initialData: FamilyAdminData
@@ -60,7 +60,7 @@ function formatRelativeDate(iso: string): string {
   return sent.toLocaleDateString()
 }
 
-export function FamilyAdminPanel({
+export function FamilyMemberAdminPanel({
   initialData,
   className,
   compact = false,
@@ -363,7 +363,7 @@ export function FamilyAdminPanel({
               </p>
             </div>
           )}
-          <InviteFamilyMemberForm onSuccess={handleInviteSuccess} />
+          <FamilyMemberInviteForm onSuccess={handleInviteSuccess} />
         </div>
       ) : (
         <div className="border-border/60 bg-muted/40 rounded-lg border px-4 py-3">

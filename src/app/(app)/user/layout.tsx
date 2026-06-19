@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { PageHeader } from "@/components/layout/layout-page-header"
+import { LayoutPageHeader } from "@/components/layout/layout-page-header"
 import { UserTabBar } from "@/app/(app)/user/user-tab-bar"
 
 /**
@@ -11,7 +11,7 @@ import { UserTabBar } from "@/app/(app)/user/user-tab-bar"
 export default function UserLayout({ children }: { children: ReactNode }) {
   return (
     <div className="space-y-4">
-      <PageHeader title="User Homepage" tabs={<UserTabBar />} />
+      <LayoutPageHeader title="User Homepage" tabs={<UserTabBar />} />
       {children}
     </div>
   )

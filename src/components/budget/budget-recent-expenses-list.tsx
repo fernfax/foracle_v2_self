@@ -74,7 +74,7 @@ function groupExpensesByDate(
   )
 }
 
-export function RecentExpensesList({
+export function BudgetRecentExpensesList({
   expenses,
   onEdit,
   onDelete,

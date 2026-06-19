@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { AlertCircle, Bot, Sparkles } from "lucide-react"
 
-import { ChatComposer } from "@/components/assistant/assistant-chat-composer"
-import { ChatMessage } from "@/components/assistant/assistant-chat-message"
+import { AssistantChatComposer } from "@/components/assistant/assistant-chat-composer"
+import { AssistantChatMessage } from "@/components/assistant/assistant-chat-message"
 import { useSidebar } from "@/components/navigation/navigation-sidebar-context"
 
 interface Message {
@@ -28,7 +28,7 @@ interface ChatViewProps {
   onSinglishToggle?: (enabled: boolean) => Promise<void>
 }
 
-export function ChatView({
+export function AssistantChatView({
   messages,
   onSend,
   isLoading = false,
@@ -97,7 +97,7 @@ export function ChatView({
                 <div
                   key={msg.id}
                   ref={isLastUserMessage ? latestUserMsgRef : null}>
-                  <ChatMessage
+                  <AssistantChatMessage
                     role={msg.role}
                     content={msg.content}
                     toolsUsed={msg.toolsUsed}
@@ -166,7 +166,7 @@ export function ChatView({
           </div>
         )}
 
-        <ChatComposer
+        <AssistantChatComposer
           onSend={onSend}
           disabled={
             isLoading || (quotaInfo && quotaInfo.used >= quotaInfo.limit)

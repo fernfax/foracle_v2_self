@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { SectionCard } from "@/components/ui/section-card"
 import { Toolbar } from "@/components/ui/toolbar"
-import { ProgressBar } from "@/components/portfolio/portfolio-progress"
+import { PortfolioProgress } from "@/components/portfolio/portfolio-progress"
 
 interface BudgetBreakdownProps {
   budgetData: BudgetVsActual[]
@@ -110,7 +110,7 @@ export function BudgetBreakdown({
                 </div>
 
                 {/* 2. Progress — full muted bar when there's no limit */}
-                <ProgressBar
+                <PortfolioProgress
                   value={pct === null ? 100 : Math.min(pct, 100)}
                   color={barColor}
                 />

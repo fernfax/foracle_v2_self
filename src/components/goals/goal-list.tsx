@@ -24,10 +24,10 @@ import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { Toolbar } from "@/components/ui/toolbar"
-import { AddGoalDialog } from "@/components/goals/goal-add-dialog"
+import { GoalAddDialog } from "@/components/goals/goal-add-dialog"
 import { GoalDetailsModal } from "@/components/goals/goal-details-modal"
-import { ConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
-import { ProgressBar } from "@/components/portfolio/portfolio-progress"
+import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
+import { PortfolioProgress } from "@/components/portfolio/portfolio-progress"
 
 interface Goal {
   id: string
@@ -120,7 +120,7 @@ export function GoalList({
           }
         />
 
-        <AddGoalDialog
+        <GoalAddDialog
           open={addDialogOpen}
           onOpenChange={setAddDialogOpen}
           onSuccess={() => {
@@ -207,7 +207,7 @@ export function GoalList({
                 </div>
 
                 {/* Progress */}
-                <ProgressBar value={pct} color={color} />
+                <PortfolioProgress value={pct} color={color} />
 
                 {/* Footer */}
                 <div className="border-border/40 flex items-center justify-between border-t pt-3 text-sm">
@@ -240,7 +240,7 @@ export function GoalList({
       </div>
 
       {/* Add Goal Dialog */}
-      <AddGoalDialog
+      <GoalAddDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={() => {
@@ -250,7 +250,7 @@ export function GoalList({
       />
 
       {/* Edit Goal Dialog */}
-      <AddGoalDialog
+      <GoalAddDialog
         open={!!editingGoal}
         onOpenChange={(open) => !open && setEditingGoal(null)}
         goal={editingGoal}
@@ -261,7 +261,7 @@ export function GoalList({
       />
 
       {/* Delete Confirmation */}
-      <ConfirmDialog
+      <PortfolioConfirmDialog
         open={goalToDelete !== null}
         onOpenChange={(open) => !open && setGoalToDelete(null)}
         title="Delete this goal?"

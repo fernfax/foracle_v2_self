@@ -18,7 +18,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { RowActions } from "@/components/ui/row-actions"
 import { SectionCard } from "@/components/ui/section-card"
 import { StatCard } from "@/components/ui/stat-card"
-import { AddCpfDetailsDialog } from "@/components/income/income-add-cpf-details-dialog"
+import { IncomeAddCpfDetailsDialog } from "@/components/income/income-add-cpf-details-dialog"
 
 interface CpfIncomeRow {
   id: string
@@ -208,7 +208,7 @@ export function CpfView({ cpfData, incomes }: CpfViewProps) {
       </div>
 
       {edit && (
-        <AddCpfDetailsDialog
+        <IncomeAddCpfDetailsDialog
           open={edit !== null}
           onOpenChange={(open) => !open && setEdit(null)}
           onBack={() => setEdit(null)}

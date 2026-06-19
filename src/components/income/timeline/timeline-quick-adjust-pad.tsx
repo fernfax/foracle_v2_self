@@ -92,7 +92,7 @@ interface QuickAdjustPadProps {
 
 const SLIDER_STEP = 50
 
-export function QuickAdjustPad({
+export function TimelineQuickAdjustPad({
   initialAmount,
   label = "Adjust Amount",
   onConfirm,

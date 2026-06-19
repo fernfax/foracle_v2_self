@@ -4,7 +4,7 @@ import {
   loadAchievedGoals,
   loadActiveGoals
 } from "@/lib/page-data/goals-page-data"
-import { PageHeader } from "@/components/layout/layout-page-header"
+import { LayoutPageHeader } from "@/components/layout/layout-page-header"
 import { GoalsTabBar } from "@/app/(app)/goals/goals-tab-bar"
 
 export const metadata = {
@@ -29,7 +29,7 @@ export default async function GoalsLayout({
 
   return (
     <div className="space-y-4">
-      <PageHeader
+      <LayoutPageHeader
         title="Goals"
         tabs={
           <GoalsTabBar

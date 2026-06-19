@@ -37,20 +37,20 @@ import {
 import { Button } from "@/components/ui/button"
 import { StatCard } from "@/components/ui/stat-card"
 import {
-  AddExpenseModal,
+  BudgetAddExpenseModal,
+  BudgetCategoryGrid,
+  BudgetDailySpendingGraphModal,
+  BudgetExpenseHistoryModal,
+  BudgetManageCategoriesModal,
+  BudgetMonthNavigator,
   BudgetOverview,
   BudgetShiftHistory,
-  CategoryGrid,
-  DailySpendingGraphModal,
-  ExpenseHistoryModal,
-  ManageCategoriesModal,
-  MonthNavigator,
   useAddExpense
 } from "@/components/budget"
 import { BudgetBreakdown } from "@/components/budget/budget-breakdown"
-import { DailySpendingChart } from "@/components/budget/budget-daily-spending-chart"
-import { RecentExpensesList } from "@/components/budget/budget-recent-expenses-list"
-import { PageHeader } from "@/components/layout/layout-page-header"
+import { BudgetDailySpendingChart } from "@/components/budget/budget-daily-spending-chart"
+import { BudgetRecentExpensesList } from "@/components/budget/budget-recent-expenses-list"
+import { LayoutPageHeader } from "@/components/layout/layout-page-header"
 
 interface BudgetClientProps {
   initialCategories: ExpenseCategory[]
@@ -285,7 +285,7 @@ export function BudgetClient({
     <div className="desktop:max-w-none desktop:px-0 desktop:pb-8 desktop:space-y-0 mx-auto max-w-lg space-y-4 pb-24">
       {/* ── MOBILE LAYOUT (unchanged) ── */}
       <div className="desktop:hidden space-y-4">
-        <MonthNavigator
+        <BudgetMonthNavigator
           year={year}
           month={month}
           onMonthChange={handleMonthChange}
@@ -317,7 +317,7 @@ export function BudgetClient({
         {/* Row 2: Category Grid + Manage Categories + Budget Shift History */}
         <div className="space-y-4">
           <div data-tour="budget-categories" className="pt-2">
-            <CategoryGrid
+            <BudgetCategoryGrid
               budgetData={budgetData}
               onCategoryClick={handleCategoryClick}
             />
@@ -347,10 +347,10 @@ export function BudgetClient({
       {/* ── DESKTOP LAYOUT (read-only, data-rich) ── */}
       <div className="desktop:block hidden space-y-5">
         {/* Sticky page header with month navigator in actions */}
-        <PageHeader
+        <LayoutPageHeader
           title="Budget"
           actions={
-            <MonthNavigator
+            <BudgetMonthNavigator
               year={year}
               month={month}
               onMonthChange={handleMonthChange}
@@ -422,7 +422,7 @@ export function BudgetClient({
               onAddCategory={handleAddCategory}
               readOnly
             />
-            <DailySpendingChart
+            <BudgetDailySpendingChart
               dailySpendingData={dailySpendingData}
               dailyBudget={budgetSummary.dailyBudget}
               month={month}
@@ -433,7 +433,7 @@ export function BudgetClient({
 
           {/* Right: Recent Expenses + Budget Adjustments */}
           <div data-tour="budget-recent" className="space-y-4">
-            <RecentExpensesList
+            <BudgetRecentExpensesList
               expenses={dailyExpenses}
               onEdit={handleEdit}
               onDelete={handleDelete}
@@ -451,7 +451,7 @@ export function BudgetClient({
       </div>
 
       {/* Modals — shared state, triggered from mobile layout */}
-      <AddExpenseModal
+      <BudgetAddExpenseModal
         open={addExpenseOpen}
         onOpenChange={(open) => {
           setAddExpenseOpen(open)
@@ -469,7 +469,7 @@ export function BudgetClient({
         month={month}
       />
 
-      <DailySpendingGraphModal
+      <BudgetDailySpendingGraphModal
         open={graphModalOpen}
         onOpenChange={setGraphModalOpen}
         dailySpendingData={dailySpendingData}
@@ -478,7 +478,7 @@ export function BudgetClient({
         year={year}
       />
 
-      <ExpenseHistoryModal
+      <BudgetExpenseHistoryModal
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         expenses={dailyExpenses}
@@ -486,7 +486,7 @@ export function BudgetClient({
         onDelete={handleDelete}
       />
 
-      <ManageCategoriesModal
+      <BudgetManageCategoriesModal
         open={manageCategoriesOpen}
         onOpenChange={setManageCategoriesOpen}
         categories={categories}

@@ -20,7 +20,7 @@ declare global {
   }
 }
 
-export function SmoothScroll() {
+export function LandingSmoothScroll() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
     if (!window.matchMedia("(pointer: fine)").matches) return
