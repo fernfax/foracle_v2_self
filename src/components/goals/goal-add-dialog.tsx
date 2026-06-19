@@ -1,8 +1,11 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { createGoal, updateGoal } from "@/actions/goals"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { differenceInMonths, format } from "date-fns"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
 
 import type { Goal } from "@/db/types"
 import {
@@ -39,6 +42,41 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 
+// Form-layer schema: validates what the inputs hold (money fields are strings
+// from MoneyInput, targetDate is a Date from DatePicker). Distinct from the
+// drizzle-zod service schema in lib/api-schemas/goals.ts, which validates the
+// string-based server payload. onSubmit maps these values to the action input.
+const goalFormSchema = z.object({
+  goalName: z.string().trim().min(1, "Goal name is required").max(255),
+  goalType: z.enum(["primary", "secondary"]),
+  targetAmount: z
+    .string()
+    .min(1, "Target amount is required")
+    .refine((v) => parseFloat(v) > 0, "Must be greater than 0"),
+  targetDate: z.date({ message: "Target date is required" }),
+  currentAmountSaved: z.string().optional(),
+  monthlyContribution: z.string().optional(),
+  description: z.string().max(1000).optional(),
+  addToExpenditures: z.boolean(),
+  expenseName: z.string().optional()
+})
+type GoalFormValues = z.infer<typeof goalFormSchema>
+
+const toFormValues = (goal?: Goal | null): GoalFormValues => ({
+  goalName: goal?.goalName ?? "",
+  goalType: (goal?.goalType as "primary" | "secondary") ?? "primary",
+  targetAmount: goal?.targetAmount ?? "",
+  // undefined until picked; the schema flags it on submit.
+  targetDate: goal?.targetDate
+    ? new Date(goal.targetDate)
+    : (undefined as unknown as Date),
+  currentAmountSaved: goal?.currentAmountSaved ?? "",
+  monthlyContribution: goal?.monthlyContribution ?? "",
+  description: goal?.description ?? "",
+  addToExpenditures: !!goal?.linkedExpenseId,
+  expenseName: ""
+})
+
 interface AddGoalDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -52,170 +90,121 @@ export function GoalAddDialog({
   goal,
   onSuccess
 }: AddGoalDialogProps) {
-  // Basic Details
-  const [goalName, setGoalName] = useState(goal?.goalName || "")
-  const [goalType, setGoalType] = useState<"primary" | "secondary">(
-    (goal?.goalType as "primary" | "secondary") || "primary"
-  )
-  const [targetAmount, setTargetAmount] = useState(goal?.targetAmount || "")
-  const [targetDate, setTargetDate] = useState<Date | undefined>(
-    goal?.targetDate ? new Date(goal.targetDate) : undefined
-  )
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    getValues,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm<GoalFormValues>({
+    resolver: zodResolver(goalFormSchema),
+    defaultValues: toFormValues(goal)
+  })
 
-  // Progress Tracking
-  const [currentAmountSaved, setCurrentAmountSaved] = useState(
-    goal?.currentAmountSaved || ""
-  )
-  const [monthlyContribution, setMonthlyContribution] = useState(
-    goal?.monthlyContribution || ""
-  )
-  const [description, setDescription] = useState(goal?.description || "")
-
-  // Expenditure Integration
-  const [addToExpenditures, setAddToExpenditures] = useState(
-    !!goal?.linkedExpenseId
-  )
+  // Confirmation modal for the "add to expenditures" flow (UX gate, not a field).
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false)
-  const [expenseName, setExpenseName] = useState("")
-  const [validationError, setValidationError] = useState("")
+  const [toggleError, setToggleError] = useState("")
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Re-hydrate on edit / reopen.
+  useEffect(() => {
+    if (open) reset(toFormValues(goal))
+  }, [open, goal, reset])
 
-  // Auto-calculated fields
+  const targetAmount = useWatch({ control, name: "targetAmount" })
+  const currentAmountSaved = useWatch({ control, name: "currentAmountSaved" })
+  const monthlyContribution = useWatch({ control, name: "monthlyContribution" })
+  const targetDate = useWatch({ control, name: "targetDate" })
+  const goalName = useWatch({ control, name: "goalName" })
+  const addToExpenditures = useWatch({ control, name: "addToExpenditures" })
+
   const monthsUntilTarget = useMemo(() => {
     if (!targetDate) return 0
     return Math.max(0, differenceInMonths(targetDate, new Date()))
   }, [targetDate])
 
   const suggestedMonthlyContribution = useMemo(() => {
-    const target = parseFloat(targetAmount) || 0
-    const current = parseFloat(currentAmountSaved) || 0
-    const remaining = target - current
+    const remaining =
+      (parseFloat(targetAmount) || 0) -
+      (parseFloat(currentAmountSaved ?? "") || 0)
     if (monthsUntilTarget <= 0 || remaining <= 0) return 0
     return remaining / monthsUntilTarget
   }, [targetAmount, currentAmountSaved, monthsUntilTarget])
 
   const projectedCompletion = useMemo(() => {
-    const target = parseFloat(targetAmount) || 0
-    const current = parseFloat(currentAmountSaved) || 0
-    const monthly = parseFloat(monthlyContribution) || 0
-    const remaining = target - current
+    const remaining =
+      (parseFloat(targetAmount) || 0) -
+      (parseFloat(currentAmountSaved ?? "") || 0)
+    const monthly = parseFloat(monthlyContribution ?? "") || 0
     if (monthly <= 0 || remaining <= 0) return null
     const monthsNeeded = Math.ceil(remaining / monthly)
-    const completionDate = new Date()
-    completionDate.setMonth(completionDate.getMonth() + monthsNeeded)
-    return completionDate
+    const date = new Date()
+    date.setMonth(date.getMonth() + monthsNeeded)
+    return date
   }, [targetAmount, currentAmountSaved, monthlyContribution])
 
-  const resetForm = () => {
-    setGoalName("")
-    setGoalType("primary")
-    setTargetAmount("")
-    setTargetDate(undefined)
-    setCurrentAmountSaved("")
-    setMonthlyContribution("")
-    setDescription("")
-    setAddToExpenditures(false)
-    setConfirmationModalOpen(false)
-    setExpenseName("")
-    setValidationError("")
-  }
-
-  // Handle toggle change with validation
+  // Switching ON requires a monthly contribution and a confirmation; switching
+  // OFF is immediate. The switch only commits to `true` after confirmation.
   const handleToggleChange = (checked: boolean) => {
-    if (checked) {
-      // Validate required fields before allowing toggle
-      if (!monthlyContribution || parseFloat(monthlyContribution) <= 0) {
-        setValidationError(
-          "Please set a monthly contribution amount before adding to expenses."
-        )
-        return
-      }
-      setValidationError("")
-      // Generate default expense name
-      setExpenseName(
+    if (!checked) {
+      setValue("addToExpenditures", false)
+      return
+    }
+    const monthly = parseFloat(getValues("monthlyContribution") || "")
+    if (!monthly || monthly <= 0) {
+      setToggleError(
+        "Please set a monthly contribution amount before adding to expenses."
+      )
+      return
+    }
+    setToggleError("")
+    if (!getValues("expenseName")) {
+      setValue(
+        "expenseName",
         goalName ? `${goalName} - Monthly Savings` : "Goal Savings"
       )
-      setConfirmationModalOpen(true)
-    } else {
-      setAddToExpenditures(false)
-      setExpenseName("")
     }
+    setConfirmationModalOpen(true)
   }
-
-  // Confirm adding to expenditures
-  const handleConfirmAddToExpenditures = () => {
-    setAddToExpenditures(true)
-    setConfirmationModalOpen(false)
-  }
-
-  // Cancel adding to expenditures
-  const handleCancelAddToExpenditures = () => {
-    setConfirmationModalOpen(false)
-    setExpenseName("")
-  }
-
-  // Update form fields when goal prop changes (for edit mode)
-  useEffect(() => {
-    if (goal) {
-      setGoalName(goal.goalName)
-      setGoalType((goal.goalType as "primary" | "secondary") || "primary")
-      setTargetAmount(goal.targetAmount)
-      setTargetDate(new Date(goal.targetDate))
-      setCurrentAmountSaved(goal.currentAmountSaved || "")
-      setMonthlyContribution(goal.monthlyContribution || "")
-      setDescription(goal.description || "")
-      setAddToExpenditures(!!goal.linkedExpenseId)
-    }
-  }, [goal])
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
-      resetForm()
+      reset(toFormValues(null))
+      setToggleError("")
+      setConfirmationModalOpen(false)
     }
     onOpenChange(isOpen)
   }
 
-  const handleSubmit = async () => {
-    if (!goalName || !targetAmount || !targetDate) {
-      return
+  const onSubmit = async (values: GoalFormValues) => {
+    const payload = {
+      goalName: values.goalName,
+      goalType: values.goalType,
+      targetAmount: parseFloat(values.targetAmount),
+      targetDate: format(values.targetDate, "yyyy-MM-dd"),
+      currentAmountSaved: values.currentAmountSaved
+        ? parseFloat(values.currentAmountSaved)
+        : undefined,
+      monthlyContribution: values.monthlyContribution
+        ? parseFloat(values.monthlyContribution)
+        : undefined,
+      description: values.description || undefined,
+      addToExpenditures: values.addToExpenditures,
+      expenseName: values.addToExpenditures ? values.expenseName : undefined
     }
-
-    setIsSubmitting(true)
-
     try {
-      const data = {
-        goalName,
-        goalType,
-        targetAmount: parseFloat(targetAmount),
-        targetDate: format(targetDate, "yyyy-MM-dd"),
-        currentAmountSaved: currentAmountSaved
-          ? parseFloat(currentAmountSaved)
-          : undefined,
-        monthlyContribution: monthlyContribution
-          ? parseFloat(monthlyContribution)
-          : undefined,
-        description: description || undefined,
-        addToExpenditures,
-        expenseName: addToExpenditures ? expenseName : undefined
-      }
-
       if (goal) {
-        await updateGoal(goal.id, data)
+        await updateGoal(goal.id, payload)
       } else {
-        await createGoal(data)
+        await createGoal(payload)
       }
-
       handleClose(false)
       onSuccess?.()
     } catch (error) {
       console.error("Failed to save goal:", error)
-    } finally {
-      setIsSubmitting(false)
     }
   }
-
-  const isFormValid = goalName && targetAmount && targetDate
 
   return (
     <>
@@ -225,202 +214,243 @@ export function GoalAddDialog({
             <DialogTitle>{goal ? "Edit Goal" : "Add Goal"}</DialogTitle>
           </DialogHeader>
 
-          <DialogBody>
-            <div className="space-y-6 py-4">
-              {/* Basic Details */}
-              <div className="space-y-4">
-                <div className="border-border border-b pb-3">
-                  <h3 className="text-foreground text-sm font-semibold">
-                    Goal Details
-                  </h3>
-                </div>
-                <div className="bg-muted space-y-4 rounded-lg p-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="Goal Name" htmlFor="goalName" required>
-                      <Input
-                        id="goalName"
-                        placeholder="e.g. Emergency Fund, Vacation, House Down Payment"
-                        value={goalName}
-                        onChange={(e) => setGoalName(e.target.value)}
-                        aria-required="true"
-                      />
-                    </Field>
-                    <Field label="Goal Type" htmlFor="goalType" required>
-                      <Select
-                        value={goalType}
-                        onValueChange={(v) =>
-                          setGoalType(v as "primary" | "secondary")
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogBody>
+              <div className="space-y-6 py-4">
+                {/* Basic Details */}
+                <div className="space-y-4">
+                  <div className="border-border border-b pb-3">
+                    <h3 className="text-foreground text-sm font-semibold">
+                      Goal Details
+                    </h3>
+                  </div>
+                  <div className="bg-muted space-y-4 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field
+                        label="Goal Name"
+                        htmlFor="goalName"
+                        required
+                        error={errors.goalName?.message}>
+                        <Input
+                          id="goalName"
+                          placeholder="e.g. Emergency Fund, Vacation, House Down Payment"
+                          aria-required="true"
+                          {...register("goalName")}
+                        />
+                      </Field>
+                      <Field label="Goal Type" htmlFor="goalType" required>
+                        <Controller
+                          control={control}
+                          name="goalType"
+                          render={({ field }) => (
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}>
+                              <SelectTrigger id="goalType" aria-required="true">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="primary">Primary</SelectItem>
+                                <SelectItem value="secondary">
+                                  Secondary
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field
+                        label="Target Amount"
+                        htmlFor="targetAmount"
+                        required
+                        error={errors.targetAmount?.message}>
+                        <Controller
+                          control={control}
+                          name="targetAmount"
+                          render={({ field }) => (
+                            <MoneyInput
+                              id="targetAmount"
+                              type="number"
+                              placeholder="0.00"
+                              min="0"
+                              step="0.01"
+                              aria-required="true"
+                              value={field.value}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              onBlur={field.onBlur}
+                            />
+                          )}
+                        />
+                      </Field>
+                      <Field
+                        label="Target Date"
+                        htmlFor="targetDate"
+                        required
+                        error={errors.targetDate?.message}
+                        helper={
+                          monthsUntilTarget > 0
+                            ? `${monthsUntilTarget} months until target date`
+                            : undefined
                         }>
-                        <SelectTrigger id="goalType" aria-required="true">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="primary">Primary</SelectItem>
-                          <SelectItem value="secondary">Secondary</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </div>
+                        <Controller
+                          control={control}
+                          name="targetDate"
+                          render={({ field }) => (
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              id="targetDate"
+                              displayFormat="dd/MM/yyyy"
+                              placeholder="Select date"
+                              disablePast
+                            />
+                          )}
+                        />
+                      </Field>
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field
-                      label="Target Amount"
-                      htmlFor="targetAmount"
-                      required>
-                      <MoneyInput
-                        id="targetAmount"
-                        type="number"
-                        placeholder="0.00"
-                        value={targetAmount}
-                        onChange={(e) => setTargetAmount(e.target.value)}
-                        min="0"
-                        step="0.01"
-                        aria-required="true"
-                      />
-                    </Field>
-                    <Field
-                      label="Target Date"
-                      htmlFor="targetDate"
-                      required
-                      helper={
-                        monthsUntilTarget > 0
-                          ? `${monthsUntilTarget} months until target date`
-                          : undefined
-                      }>
-                      <DatePicker
-                        value={targetDate}
-                        onChange={setTargetDate}
-                        id="targetDate"
-                        displayFormat="dd/MM/yyyy"
-                        placeholder="Select date"
-                        disablePast
+                    <Field label="Description" htmlFor="description" optional>
+                      <Textarea
+                        id="description"
+                        placeholder="Add any notes or details about this goal..."
+                        className="resize-none"
+                        rows={2}
+                        {...register("description")}
                       />
                     </Field>
                   </div>
+                </div>
 
-                  <Field label="Description" htmlFor="description" optional>
-                    <Textarea
-                      id="description"
-                      placeholder="Add any notes or details about this goal..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="resize-none"
-                      rows={2}
-                    />
-                  </Field>
+                {/* Progress Tracking */}
+                <div className="space-y-4">
+                  <div className="border-border border-b pb-3">
+                    <h3 className="text-foreground text-sm font-semibold">
+                      Progress Tracking
+                    </h3>
+                  </div>
+                  <div className="bg-muted space-y-4 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field
+                        label="Current Amount Saved"
+                        htmlFor="currentAmountSaved"
+                        helper="How much have you already saved?">
+                        <Controller
+                          control={control}
+                          name="currentAmountSaved"
+                          render={({ field }) => (
+                            <MoneyInput
+                              id="currentAmountSaved"
+                              type="number"
+                              placeholder="0.00"
+                              min="0"
+                              step="0.01"
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              onBlur={field.onBlur}
+                            />
+                          )}
+                        />
+                      </Field>
+                      <Field
+                        label="Monthly Contribution"
+                        htmlFor="monthlyContribution"
+                        helper={
+                          suggestedMonthlyContribution > 0
+                            ? `Suggested: $${suggestedMonthlyContribution.toLocaleString(
+                                undefined,
+                                { maximumFractionDigits: 0 }
+                              )}/month to reach target`
+                            : undefined
+                        }>
+                        <Controller
+                          control={control}
+                          name="monthlyContribution"
+                          render={({ field }) => (
+                            <MoneyInput
+                              id="monthlyContribution"
+                              type="number"
+                              placeholder="0.00"
+                              min="0"
+                              step="0.01"
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              onBlur={field.onBlur}
+                            />
+                          )}
+                        />
+                      </Field>
+                    </div>
+
+                    {projectedCompletion && (
+                      <div className="border-brand-teal/[0.25] bg-brand-teal/[0.12] rounded-lg border p-3">
+                        <p className="text-on-success text-sm">
+                          At $
+                          {parseFloat(
+                            monthlyContribution || "0"
+                          ).toLocaleString()}
+                          /month, you&apos;ll reach your goal by{" "}
+                          <span className="font-semibold">
+                            {format(projectedCompletion, "MMMM yyyy")}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expenditure Integration */}
+                <div className="space-y-4">
+                  <div className="border-border border-b pb-3">
+                    <h3 className="text-foreground text-sm font-semibold">
+                      Expenditure Integration
+                    </h3>
+                  </div>
+                  <div className="bg-muted rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <Label
+                          htmlFor="addToExpenditures"
+                          className="text-foreground text-sm font-semibold">
+                          Add to expenditures
+                        </Label>
+                        <p className="text-foreground/400 mt-1 text-xs">
+                          Automatically track your monthly contribution as a
+                          recurring expenditure
+                        </p>
+                      </div>
+                      <Switch
+                        id="addToExpenditures"
+                        checked={addToExpenditures}
+                        onCheckedChange={handleToggleChange}
+                      />
+                    </div>
+                    {toggleError && (
+                      <div className="text-on-danger bg-brand-alert-red/[0.12] mt-3 rounded p-2 text-sm">
+                        {toggleError}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+            </DialogBody>
 
-              {/* Progress Tracking */}
-              <div className="space-y-4">
-                <div className="border-border border-b pb-3">
-                  <h3 className="text-foreground text-sm font-semibold">
-                    Progress Tracking
-                  </h3>
-                </div>
-                <div className="bg-muted space-y-4 rounded-lg p-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field
-                      label="Current Amount Saved"
-                      htmlFor="currentAmountSaved"
-                      helper="How much have you already saved?">
-                      <MoneyInput
-                        id="currentAmountSaved"
-                        type="number"
-                        placeholder="0.00"
-                        value={currentAmountSaved}
-                        onChange={(e) => setCurrentAmountSaved(e.target.value)}
-                        min="0"
-                        step="0.01"
-                      />
-                    </Field>
-                    <Field
-                      label="Monthly Contribution"
-                      htmlFor="monthlyContribution"
-                      helper={
-                        suggestedMonthlyContribution > 0
-                          ? `Suggested: $${suggestedMonthlyContribution.toLocaleString(
-                              undefined,
-                              { maximumFractionDigits: 0 }
-                            )}/month to reach target`
-                          : undefined
-                      }>
-                      <MoneyInput
-                        id="monthlyContribution"
-                        type="number"
-                        placeholder="0.00"
-                        value={monthlyContribution}
-                        onChange={(e) => setMonthlyContribution(e.target.value)}
-                        min="0"
-                        step="0.01"
-                      />
-                    </Field>
-                  </div>
-
-                  {projectedCompletion && (
-                    <div className="border-brand-teal/[0.25] bg-brand-teal/[0.12] rounded-lg border p-3">
-                      <p className="text-on-success text-sm">
-                        At ${parseFloat(monthlyContribution).toLocaleString()}
-                        /month, you&apos;ll reach your goal by{" "}
-                        <span className="font-semibold">
-                          {format(projectedCompletion, "MMMM yyyy")}
-                        </span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Expenditure Integration */}
-              <div className="space-y-4">
-                <div className="border-border border-b pb-3">
-                  <h3 className="text-foreground text-sm font-semibold">
-                    Expenditure Integration
-                  </h3>
-                </div>
-                <div className="bg-muted rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <Label
-                        htmlFor="addToExpenditures"
-                        className="text-foreground text-sm font-semibold">
-                        Add to expenditures
-                      </Label>
-                      <p className="text-foreground/400 mt-1 text-xs">
-                        Automatically track your monthly contribution as a
-                        recurring expenditure
-                      </p>
-                    </div>
-                    <Switch
-                      id="addToExpenditures"
-                      checked={addToExpenditures}
-                      onCheckedChange={handleToggleChange}
-                    />
-                  </div>
-                  {validationError && (
-                    <div className="text-on-danger bg-brand-alert-red/[0.12] mt-3 rounded p-2 text-sm">
-                      {validationError}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </DialogBody>
-
-          {/* Footer */}
-          <DialogFooterSticky>
-            <Button
-              variant="ghost"
-              onClick={() => handleClose(false)}
-              disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!isFormValid || isSubmitting}>
-              {isSubmitting ? "Saving..." : goal ? "Update Goal" : "Add Goal"}
-            </Button>
-          </DialogFooterSticky>
+            {/* Footer */}
+            <DialogFooterSticky>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => handleClose(false)}
+                disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : goal ? "Update Goal" : "Add Goal"}
+              </Button>
+            </DialogFooterSticky>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -437,18 +467,15 @@ export function GoalAddDialog({
           </AlertDialogHeader>
 
           <div className="my-4 space-y-4">
-            {/* Expense Name Input - Editable */}
             <Field label="Expense Name" htmlFor="expenseName">
               <Input
                 id="expenseName"
-                value={expenseName}
-                onChange={(e) => setExpenseName(e.target.value)}
                 placeholder="Enter expense name"
                 className="w-full"
+                {...register("expenseName")}
               />
             </Field>
 
-            {/* Display-only Details */}
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-foreground">Goal:</div>
               <div className="font-medium">{goalName || "-"}</div>
@@ -470,10 +497,18 @@ export function GoalAddDialog({
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelAddToExpenditures}>
+            <AlertDialogCancel
+              onClick={() => {
+                setConfirmationModalOpen(false)
+                setValue("expenseName", "")
+              }}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmAddToExpenditures}>
+            <AlertDialogAction
+              onClick={() => {
+                setValue("addToExpenditures", true)
+                setConfirmationModalOpen(false)
+              }}>
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

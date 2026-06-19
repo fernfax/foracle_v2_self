@@ -9,8 +9,7 @@ import type {
 } from "@/lib/api-schemas/goals"
 import type { AuthContext } from "@/lib/auth-context"
 import { expenses, goals } from "@/db/schema"
-
-export type GoalRow = typeof goals.$inferSelect
+import type { Goal } from "@/db/types"
 
 export class GoalNotFoundError extends Error {
   constructor() {
@@ -61,7 +60,7 @@ async function ensureLinkedExpense(opts: {
 export async function listGoals(
   ctx: AuthContext,
   filters: ListGoalsQuery = {}
-): Promise<GoalRow[]> {
+): Promise<Goal[]> {
   const conditions = [eq(goals.familyId, ctx.familyId)]
   if (filters.isActive !== undefined)
     conditions.push(eq(goals.isActive, filters.isActive))
@@ -79,7 +78,7 @@ export async function listGoals(
 export async function getGoalById(
   ctx: AuthContext,
   id: string
-): Promise<GoalRow | null> {
+): Promise<Goal | null> {
   const row = await db.query.goals.findFirst({
     where: and(eq(goals.id, id), eq(goals.familyId, ctx.familyId))
   })
@@ -89,7 +88,7 @@ export async function getGoalById(
 export async function createGoal(
   ctx: AuthContext,
   body: CreateGoalBody
-): Promise<GoalRow> {
+): Promise<Goal> {
   const goalId = nanoid()
   let linkedExpenseId: string | null = null
 
@@ -133,7 +132,7 @@ export async function updateGoal(
   ctx: AuthContext,
   id: string,
   patch: UpdateGoalBody
-): Promise<GoalRow> {
+): Promise<Goal> {
   const existing = await getGoalById(ctx, id)
   if (!existing) throw new GoalNotFoundError()
 
@@ -196,7 +195,7 @@ export async function updateGoal(
 export async function markGoalAchieved(
   ctx: AuthContext,
   id: string
-): Promise<GoalRow> {
+): Promise<Goal> {
   const existing = await getGoalById(ctx, id)
   if (!existing) throw new GoalNotFoundError()
   const [row] = await db
