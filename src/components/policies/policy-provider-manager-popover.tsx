@@ -86,8 +86,8 @@ export function PolicyProviderManagerPopover({
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted-foreground hover:text-foreground h-auto p-0 text-xs">
-          <Settings2 className="mr-1 size-3" />
+          className="text-muted-foreground hover:text-foreground h-7 gap-1.5 rounded-full px-3 text-xs">
+          <Settings2 className="size-3.5" />
           Manage Providers
         </Button>
       </PopoverTrigger>
