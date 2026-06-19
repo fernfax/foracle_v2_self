@@ -34,6 +34,8 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "Foracle - Personal Finance Management",
   description: "Take control of your financial future with Foracle",
+  // Site-wide noindex, inherited by every route. Remove when ready to launch.
+  robots: { index: false, follow: false },
   // Linked via Next's Metadata API (no raw <head> tag). PWA icons live in the
   // manifest; these <link> icons cover favicons + the iOS apple-touch-icon.
   manifest: "/manifest.json",
