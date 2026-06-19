@@ -20,10 +20,6 @@ import {
   SidebarProvider,
   useSidebar
 } from "@/components/navigation/navigation-sidebar-context"
-// Header quick-links are temporarily hidden across the app. The feature is
-// intact in `components/header/*` and `lib/actions/quick-links.ts`. To restore,
-// re-enable the import and the `<HeaderQuickLinks />` block below.
-// import { HeaderQuickLinks } from "@/components/navigation/navigation-quick-links";
 import { TourHelpButton } from "@/components/tour/tour-help-button"
 
 interface DashboardShellProps {

@@ -30,8 +30,7 @@ import {
   Settings2,
   Target,
   Trash2,
-  TrendingUp,
-  X
+  TrendingUp
 } from "lucide-react"
 import { createPortal } from "react-dom"
 
@@ -59,7 +58,6 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { Fab } from "@/components/ui/fab-stack"
-import { MoneyInput } from "@/components/ui/money-input"
 import { MonthYearPicker } from "@/components/ui/month-year-picker"
 import {
   Popover,
@@ -68,23 +66,14 @@ import {
 } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
 import {
-  DatePillEditor,
-  TextPillEditor,
-  TimelineEditablePill
-} from "@/components/income/timeline/timeline-editable-pill"
-import {
   activeMilestoneAt,
   priorEffectiveAmount,
   resolveEffectiveAmount,
   TimelineFutureChangeDialog,
   type FutureMilestone
 } from "@/components/income/timeline/timeline-future-change-dialog"
-import { TimelineIncomeCreatorDrawer } from "@/components/income/timeline/timeline-income-creator-drawer"
 import { TimelineIncomeDetailDrawer } from "@/components/income/timeline/timeline-income-detail-drawer"
-import {
-  IncomeBarPopup,
-  TimelineQuickAdjustPad
-} from "@/components/income/timeline/timeline-quick-adjust-pad"
+import { IncomeBarPopup } from "@/components/income/timeline/timeline-quick-adjust-pad"
 import { useOptimisticIncomes } from "@/components/income/timeline/timeline-use-optimistic-incomes"
 
 type Income = {
@@ -298,10 +287,6 @@ function safeParseMilestones(json: string | null): FutureMilestoneRaw[] {
   } catch {
     return []
   }
-}
-
-function formatPillDate(monthDate: Date) {
-  return format(monthDate, "MMM yy")
 }
 
 function formatCurrency(value: number) {
@@ -739,18 +724,6 @@ interface TimelineViewProps {
   familyMembers: FamilyMember[]
 }
 
-type ViewMode = "timeline" | "cards"
-
-// In-page draft state for Action Cards. Lives in TimelineView; flows down
-// to ActionCardsView, which renders a DraftSentenceCard in place of the
-// dashed "+ New Income Rule" tile while a draft is active. Replaces the
-// IncomeCreatorDrawer modal for the cards-view "Add Income" entry points.
-type DraftIncome = {
-  name: string
-  amount: string
-  archetype: "recurring" | "one-off" | "temporary"
-}
-
 // Two-step dialog for the timeline "Add Income Stream" CTA: first assign the
 // income to a family member (or leave it Unassigned), then fill in the
 // new-income form (with the same Permanent/Temporary choice as a drawn bar).
@@ -1022,11 +995,6 @@ export function TimelineView({
   incomes: rawIncomes,
   familyMembers
 }: TimelineViewProps) {
-  // Timeline Studio is the default (and currently only) view. The Action Cards
-  // view is hidden for now — the toggle is removed below. `view`/`_setView`
-  // stay wired so re-enabling the toggle later is a one-line change.
-  const [view, _setView] = useState<ViewMode>("timeline")
-  const effectiveView: ViewMode = view
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
   // Clearing hover is deferred by a tick so the pointer can travel from an axis
   // cell into the (interactive, edit-mode) tooltip without the tooltip blinking
@@ -1096,13 +1064,10 @@ export function TimelineView({
   const subMonthFraction = windowOffset - windowOffsetMonths
 
   // Modal/drawer state
-  const [creatorOpen, setCreatorOpen] = useState(false)
 
   // Inline draft for the cards-view "Add Income" flow. Non-null while the
   // user is filling out a DraftSentenceCard on the page. Timeline view uses
   // editMode instead, so this stays null there.
-  const [draftIncome, setDraftIncome] = useState<DraftIncome | null>(null)
-  const [draftSaving, setDraftSaving] = useState(false)
   // Timeline "Add Income Stream" flow: pick an assigned member (or Unassigned)
   // then fill in the new-income form. Self-contained two-step dialog.
   const [addOpen, setAddOpen] = useState(false)
@@ -1414,42 +1379,6 @@ export function TimelineView({
       }
     },
     [mutate, handleAmountChange]
-  )
-
-  const handleNameChange = useCallback(
-    (income: Income, name: string) => {
-      mutate({ kind: "update", id: income.id, patch: { name } }, () =>
-        updateIncome(income.id, { name })
-      )
-    },
-    [mutate]
-  )
-
-  const handleStartDateChange = useCallback(
-    (income: Income, next: Date) => {
-      const iso = format(startOfMonth(next), "yyyy-MM-dd")
-      mutate({ kind: "update", id: income.id, patch: { startDate: iso } }, () =>
-        updateIncome(income.id, { startDate: iso })
-      )
-    },
-    [mutate]
-  )
-
-  const handleEndDateChange = useCallback(
-    (income: Income, next: Date | null) => {
-      const iso = next ? format(startOfMonth(next), "yyyy-MM-dd") : null
-      const archetypeAfter = next ? "temporary" : "recurring"
-      mutate({ kind: "update", id: income.id, patch: { endDate: iso } }, () =>
-        updateIncome(income.id, {
-          endDate: iso,
-          incomeCategory:
-            archetypeAfter === "recurring"
-              ? "current-recurring"
-              : "current-recurring"
-        })
-      )
-    },
-    [mutate]
   )
 
   // Bar drag commit handlers — fired on pointerup, after the live preview
@@ -1775,15 +1704,7 @@ export function TimelineView({
   // an inline DraftSentenceCard; Timeline view flips into draw/edit mode so
   // the user can sketch a bar. Either way, no modal.
   const handleOpenAddIncome = useCallback(() => {
-    if (effectiveView === "timeline") {
-      setAddOpen(true)
-    } else {
-      setDraftIncome({ name: "", amount: "", archetype: "recurring" })
-    }
-  }, [effectiveView])
-
-  const handleCancelDraft = useCallback(() => {
-    setDraftIncome(null)
+    setAddOpen(true)
   }, [])
 
   // "Add Income Stream" dialog → create. Mirrors the draw-save category rules:
@@ -1828,32 +1749,6 @@ export function TimelineView({
     },
     []
   )
-
-  const handleSaveDraft = useCallback(async () => {
-    if (!draftIncome) return
-    const name = draftIncome.name.trim()
-    const amount = Number(draftIncome.amount)
-    if (!name || !(amount > 0)) return
-    setDraftSaving(true)
-    try {
-      const startKey = format(startOfMonth(new Date()), "yyyy-MM-dd")
-      await createIncome({
-        name,
-        category: "salary",
-        incomeCategory:
-          draftIncome.archetype === "one-off" ? "one-off" : "current-recurring",
-        amount,
-        subjectToCpf: false,
-        startDate: startKey,
-        // One-off collapses to a single-month bar. Temporary needs an end
-        // date but we don't collect it inline — user sets it on the card.
-        endDate: draftIncome.archetype === "one-off" ? startKey : undefined
-      })
-      setDraftIncome(null)
-    } finally {
-      setDraftSaving(false)
-    }
-  }, [draftIncome])
 
   // Called by the dashed bar's drag handles (lateral move + resize-left +
   // resize-right). The row computes the new keys from the cursor; we just
@@ -1934,7 +1829,7 @@ export function TimelineView({
         </div>
       )}
 
-      {incomes.length === 0 && !editMode && !draftIncome ? (
+      {incomes.length === 0 && !editMode ? (
         <div className="relative">
           {/* Backdrop: a faded, non-interactive preview of whichever view the
               user has selected, populated with placeholder incomes.
@@ -1943,65 +1838,37 @@ export function TimelineView({
           <div
             aria-hidden
             className="pointer-events-none opacity-40 blur-[1.5px] select-none">
-            {effectiveView === "timeline" ? (
-              <TimelineStudio
-                cells={cells}
-                incomes={placeholderIncomes}
-                monthlyTotals={placeholderMonthlyTotals}
-                peakTotal={placeholderPeak}
-                hoverIndex={null}
-                onHover={() => {}}
-                windowOffsetMonths={windowOffsetMonths}
-                subMonthFraction={subMonthFraction}
-                tlConfig={tlConfig}
-                onScrollPrev={() => {}}
-                onScrollNext={() => {}}
-                onScrollToToday={() => {}}
-                onShiftWindow={() => {}}
-                onAmountChange={() => {}}
-                onRequestDelete={() => {}}
-                onOpenCreator={() => {}}
-                onOpenDetail={() => {}}
-                onDragPreview={() => {}}
-                dragHighlight={null}
-                onMoveBar={() => {}}
-                onResizeStart={() => {}}
-                onResizeEnd={() => {}}
-              />
-            ) : (
-              <ActionCardsView
-                cells={cells}
-                incomes={placeholderIncomes}
-                monthlyTotals={placeholderMonthlyTotals}
-                peakTotal={placeholderPeak}
-                hoverIndex={null}
-                onHover={() => {}}
-                windowOffsetMonths={windowOffsetMonths}
-                subMonthFraction={subMonthFraction}
-                tlConfig={tlConfig}
-                onScrollPrev={() => {}}
-                onScrollNext={() => {}}
-                onScrollToToday={() => {}}
-                onShiftWindow={() => {}}
-                onAmountChange={() => {}}
-                onNameChange={() => {}}
-                onStartDateChange={() => {}}
-                onEndDateChange={() => {}}
-                onAddMilestone={() => {}}
-                onEditMilestone={() => {}}
-                onDeleteMilestone={() => {}}
-                onRequestDelete={() => {}}
-                onOpenCreator={() => {}}
-                onOpenDetail={() => {}}
-              />
-            )}
+            <TimelineStudio
+              cells={cells}
+              incomes={placeholderIncomes}
+              monthlyTotals={placeholderMonthlyTotals}
+              peakTotal={placeholderPeak}
+              hoverIndex={null}
+              onHover={() => {}}
+              windowOffsetMonths={windowOffsetMonths}
+              subMonthFraction={subMonthFraction}
+              tlConfig={tlConfig}
+              onScrollPrev={() => {}}
+              onScrollNext={() => {}}
+              onScrollToToday={() => {}}
+              onShiftWindow={() => {}}
+              onAmountChange={() => {}}
+              onRequestDelete={() => {}}
+              onOpenCreator={() => {}}
+              onOpenDetail={() => {}}
+              onDragPreview={() => {}}
+              dragHighlight={null}
+              onMoveBar={() => {}}
+              onResizeStart={() => {}}
+              onResizeEnd={() => {}}
+            />
           </div>
           {/* Foreground: the real empty-state CTA, centered over the backdrop. */}
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <EmptyState onCreate={handleOpenAddIncome} />
           </div>
         </div>
-      ) : effectiveView === "timeline" ? (
+      ) : (
         <TimelineStudio
           cells={cells}
           incomes={effectiveIncomes}
@@ -2043,56 +1910,11 @@ export function TimelineView({
           windowYears={windowYears}
           onWindowYearsChange={setWindowYears}
         />
-      ) : (
-        <ActionCardsView
-          cells={cells}
-          incomes={effectiveIncomes}
-          monthlyTotals={monthlyTotals}
-          peakTotal={peakTotal}
-          hoverIndex={hoverIndex}
-          onHover={setHoverIndex}
-          windowOffsetMonths={windowOffsetMonths}
-          subMonthFraction={subMonthFraction}
-          tlConfig={tlConfig}
-          onScrollPrev={scrollPrev}
-          onScrollNext={scrollNext}
-          onScrollToToday={scrollToToday}
-          onShiftWindow={shiftWindowMonths}
-          onAmountChange={handleAmountChange}
-          onNameChange={handleNameChange}
-          onStartDateChange={handleStartDateChange}
-          onEndDateChange={handleEndDateChange}
-          onAddMilestone={(income) =>
-            setFutureChangeContext({ incomeId: income.id })
-          }
-          onEditMilestone={(income, milestone) =>
-            setFutureChangeContext({ incomeId: income.id, milestone })
-          }
-          onDeleteMilestone={handleDeleteMilestone}
-          onRequestDelete={setDeleteContext}
-          onOpenCreator={handleOpenAddIncome}
-          onOpenDetail={setDetailIncomeId}
-          draftIncome={draftIncome}
-          draftSaving={draftSaving}
-          onDraftChange={setDraftIncome}
-          onDraftSave={handleSaveDraft}
-          onDraftCancel={handleCancelDraft}
-        />
       )}
 
       <TimelineFooter
         familyMembers={familyMembers}
         incomeCount={incomes.length}
-      />
-
-      <TimelineIncomeCreatorDrawer
-        open={creatorOpen}
-        onOpenChange={setCreatorOpen}
-        familyMembers={familyMembers.map((m) => ({
-          id: m.id,
-          name: m.name,
-          dateOfBirth: m.dateOfBirth
-        }))}
       />
 
       <TimelineIncomeDetailDrawer
@@ -2374,80 +2196,6 @@ function useTouchPanScroll(
       el.removeEventListener("touchcancel", onEnd)
     }
   }, [ref, headerPx, monthCount, enabled])
-}
-
-function TimelineHeader({
-  cells,
-  windowOffsetMonths,
-  onScrollPrev,
-  onScrollNext,
-  onScrollToToday,
-  editMode: _editMode,
-  onToggleEditMode: _onToggleEditMode
-}: {
-  cells: MonthCell[]
-  windowOffsetMonths: number
-  onScrollPrev: () => void
-  onScrollNext: () => void
-  onScrollToToday: () => void
-  editMode?: boolean
-  onToggleEditMode?: () => void
-}) {
-  const first = cells[0]
-  const last = cells[cells.length - 1]
-  const rangeLabel =
-    first && last
-      ? `${format(first.date, "MMM yy")} – ${format(last.date, "MMM yy")}`
-      : ""
-  const atToday = windowOffsetMonths === 0
-
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
-        <TrendingUp className="text-brand-jungle h-5 w-5 shrink-0" />
-        <h2 className="font-display text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
-          Projected Income River
-        </h2>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="font-display text-muted-foreground hidden min-w-[140px] text-right text-xs font-semibold tracking-[0.16em] uppercase sm:inline-block">
-          {rangeLabel}
-        </span>
-        {/* The edit toggle now floats at the bottom of the viewport (see
-            FloatingEditButton), so it's removed from this header row. */}
-        <div className="border-border/40 bg-card inline-flex items-center rounded-full border p-0.5 shadow-sm">
-          <button
-            type="button"
-            onClick={onScrollPrev}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground flex h-7 w-7 items-center justify-center rounded-full transition-colors"
-            aria-label="Scroll timeline 6 months earlier">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onScrollToToday}
-            disabled={atToday}
-            className={cn(
-              "inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold tracking-wider uppercase transition-colors",
-              atToday
-                ? "text-muted-foreground/50 cursor-not-allowed"
-                : "text-brand-terracotta hover:bg-brand-terracotta/10"
-            )}
-            aria-label="Reset timeline to today">
-            <LocateFixed className="h-3.5 w-3.5" />
-            Today
-          </button>
-          <button
-            type="button"
-            onClick={onScrollNext}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground flex h-7 w-7 items-center justify-center rounded-full transition-colors"
-            aria-label="Scroll timeline 6 months later">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function TimelineStudio({
@@ -5309,580 +5057,6 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
     </div>
   )
 })
-
-interface ActionCardsViewProps {
-  cells: MonthCell[]
-  incomes: Income[]
-  monthlyTotals: ReturnType<typeof Object>
-  peakTotal: number
-  hoverIndex: number | null
-  onHover: (i: number | null) => void
-  windowOffsetMonths: number
-  subMonthFraction: number
-  tlConfig: TimelineConfig
-  onScrollPrev: () => void
-  onScrollNext: () => void
-  onScrollToToday: () => void
-  onShiftWindow: (delta: number) => void
-  onAmountChange: (
-    income: Income,
-    amount: number,
-    extra?: {
-      accountForBonus?: boolean
-      bonusGroups?: string | null
-      subjectToCpf?: boolean
-      familyMemberAge?: number
-    }
-  ) => void
-  onNameChange: (income: Income, name: string) => void
-  onStartDateChange: (income: Income, next: Date) => void
-  onEndDateChange: (income: Income, next: Date | null) => void
-  onAddMilestone: (income: Income) => void
-  onEditMilestone: (income: Income, milestone: FutureMilestone) => void
-  onDeleteMilestone: (income: Income, milestoneId: string) => void
-  onRequestDelete: (income: Income) => void
-  onOpenCreator: () => void
-  onOpenDetail: (id: string) => void
-  // Optional inline-draft props — when set, the dashed "+ New Income Rule"
-  // tile renders as an editable DraftSentenceCard. Optional so the empty-
-  // state placeholder render path (which doesn't track draft state) can
-  // skip them.
-  draftIncome?: DraftIncome | null
-  draftSaving?: boolean
-  onDraftChange?: (next: DraftIncome | null) => void
-  onDraftSave?: () => void
-  onDraftCancel?: () => void
-}
-
-function ActionCardsView({
-  cells,
-  incomes,
-  monthlyTotals,
-  peakTotal,
-  hoverIndex,
-  onHover,
-  windowOffsetMonths,
-  subMonthFraction,
-  tlConfig,
-  onScrollPrev,
-  onScrollNext,
-  onScrollToToday,
-  onShiftWindow,
-  onAmountChange,
-  onNameChange,
-  onStartDateChange,
-  onEndDateChange,
-  onAddMilestone,
-  onEditMilestone,
-  onDeleteMilestone,
-  onRequestDelete,
-  onOpenCreator,
-  onOpenDetail,
-  draftIncome,
-  draftSaving,
-  onDraftChange,
-  onDraftSave,
-  onDraftCancel
-}: ActionCardsViewProps) {
-  const totals = monthlyTotals as Array<{
-    cell: MonthCell
-    breakdown: Array<{ income: Income; amount: number }>
-    total: number
-  }>
-
-  const riverRef = useRef<HTMLDivElement | null>(null)
-  // ActionCards river card has no fixed track-header, so use 0 for headerPx.
-  useHorizontalWheelScroll(riverRef, onShiftWindow, 0, tlConfig.monthCount)
-  useTouchPanScroll(riverRef, onShiftWindow, 0, tlConfig.monthCount, true)
-
-  const translatePct = -(subMonthFraction / cells.length) * 100
-  const tsStyle = {
-    "--ts-x": `${translatePct}%`
-  } as React.CSSProperties
-
-  return (
-    <div className="space-y-6">
-      <TimelineHeader
-        cells={cells}
-        windowOffsetMonths={windowOffsetMonths}
-        onScrollPrev={onScrollPrev}
-        onScrollNext={onScrollNext}
-        onScrollToToday={onScrollToToday}
-      />
-
-      <div
-        ref={riverRef}
-        style={tsStyle}
-        className="bg-card shadow-card border-brand-deep-forest/[0.06] dark:border-brand-cream/[0.08] relative touch-pan-y overflow-hidden overscroll-x-contain rounded-2xl border p-6 dark:shadow-none">
-        <div className="overflow-hidden" style={EDGE_FADE_STYLE}>
-          <div
-            className="will-change-transform"
-            style={{ transform: "translateX(var(--ts-x, 0))" }}>
-            <RiverChart
-              cells={cells}
-              totals={totals}
-              peakTotal={peakTotal}
-              hoverIndex={hoverIndex}
-              incomes={incomes}
-              isMobile={tlConfig.isMobile}
-            />
-            <MonthAxis
-              cells={cells}
-              hoverIndex={hoverIndex}
-              onHover={onHover}
-              totals={totals}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {incomes.map((income) => (
-          <SentenceCard
-            key={income.id}
-            income={income}
-            onAmountChange={onAmountChange}
-            onNameChange={onNameChange}
-            onStartDateChange={onStartDateChange}
-            onEndDateChange={onEndDateChange}
-            onAddMilestone={onAddMilestone}
-            onEditMilestone={onEditMilestone}
-            onDeleteMilestone={onDeleteMilestone}
-            onRequestDelete={onRequestDelete}
-            onOpenDetail={onOpenDetail}
-          />
-        ))}
-        {draftIncome && onDraftChange && onDraftSave && onDraftCancel ? (
-          <DraftSentenceCard
-            draft={draftIncome}
-            saving={draftSaving ?? false}
-            onChange={onDraftChange}
-            onSave={onDraftSave}
-            onCancel={onDraftCancel}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={onOpenCreator}
-            className="border-border/40 text-muted-foreground hover:border-brand-terracotta/60 hover:bg-brand-terracotta/5 hover:text-brand-terracotta flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed bg-transparent text-sm font-medium transition-colors">
-            <span className="bg-muted flex h-10 w-10 items-center justify-center rounded-full">
-              <Plus className="h-5 w-5" />
-            </span>
-            New Income Rule
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-/**
- * Inline draft card — the cards-view replacement for the IncomeCreatorDrawer
- * modal. Owns no state of its own; the parent TimelineView holds the
- * DraftIncome and decides when to persist via createIncome. Submitting
- * needs only name + amount + archetype; other fields (dates, family member,
- * CPF, category) are filled in afterwards via the resulting SentenceCard's
- * inline editors.
- */
-const DRAFT_ARCHETYPES: Array<{
-  value: DraftIncome["archetype"]
-  label: string
-  hint: string
-}> = [
-  { value: "recurring", label: "Recurring", hint: "Monthly, no end date" },
-  { value: "one-off", label: "One-off", hint: "Single payment this month" },
-  { value: "temporary", label: "Temporary", hint: "Monthly, with an end date" }
-]
-
-function DraftSentenceCard({
-  draft,
-  saving,
-  onChange,
-  onSave,
-  onCancel
-}: {
-  draft: DraftIncome
-  saving: boolean
-  onChange: (next: DraftIncome) => void
-  onSave: () => void
-  onCancel: () => void
-}) {
-  const canSave =
-    draft.name.trim().length > 0 && Number(draft.amount) > 0 && !saving
-
-  return (
-    <div
-      className="border-brand-terracotta/60 bg-card rounded-2xl border-2 p-5 shadow-sm"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onCancel()
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSave) onSave()
-      }}>
-      <div className="flex items-center justify-between">
-        <p className="font-display text-brand-terracotta text-[11px] font-semibold tracking-[0.18em] uppercase">
-          New income
-        </p>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Cancel new income">
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {DRAFT_ARCHETYPES.map((opt) => {
-          const active = draft.archetype === opt.value
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => onChange({ ...draft, archetype: opt.value })}
-              className={cn(
-                "rounded-lg border px-2.5 py-2 text-left transition-colors",
-                active
-                  ? "border-brand-terracotta bg-brand-terracotta/10"
-                  : "border-border/40 bg-background hover:border-border/70 hover:bg-muted/60"
-              )}>
-              <p
-                className={cn(
-                  "font-display text-xs font-semibold",
-                  active ? "text-brand-terracotta" : "text-foreground"
-                )}>
-                {opt.label}
-              </p>
-              <p className="text-muted-foreground mt-0.5 text-[10px] leading-tight">
-                {opt.hint}
-              </p>
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="mt-3 space-y-2">
-        <input
-          type="text"
-          autoFocus
-          value={draft.name}
-          onChange={(e) => onChange({ ...draft, name: e.target.value })}
-          placeholder="Name — e.g. Salary, Annual Bonus"
-          className="border-border/40 bg-background font-display text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/10 w-full rounded-lg border px-3 py-2 text-sm font-medium focus:ring-[3px] focus:outline-none"
-        />
-        <MoneyInput
-          min={0}
-          step="50"
-          inputMode="decimal"
-          value={draft.amount}
-          onChange={(e) => onChange({ ...draft, amount: e.target.value })}
-          placeholder="0"
-          className="border-border/40 bg-background font-display text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/10 h-auto w-full rounded-lg border py-2 pr-3 text-lg font-semibold"
-        />
-      </div>
-
-      <div className="mt-4 flex items-center justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-          disabled={saving}>
-          Cancel
-        </Button>
-        <Button size="sm" onClick={onSave} disabled={!canSave}>
-          {saving ? "Saving…" : "Add income"}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-// Inline editable amount pill used in the SentenceCard's natural-language
-// sentence. Hoisted to module scope so it isn't recreated each render; the
-// owning archetype's pill styling is threaded through `className`.
-function AmountPill({
-  value,
-  onConfirm,
-  className
-}: {
-  value: number
-  onConfirm: (n: number) => void
-  className: string
-}) {
-  return (
-    <TimelineEditablePill
-      ariaLabel={`Adjust amount, currently ${formatCurrency(value)}`}
-      className={className}
-      renderEditor={(close) => (
-        <TimelineQuickAdjustPad
-          initialAmount={value}
-          onConfirm={(n) => {
-            onConfirm(n)
-            close()
-          }}
-          onCancel={close}
-        />
-      )}>
-      {formatCurrency(value)}
-    </TimelineEditablePill>
-  )
-}
-
-// Inline editable date pill used in the SentenceCard's sentence. Hoisted to
-// module scope; pill styling is threaded through `className`.
-function DatePill({
-  value,
-  onPick,
-  onClear,
-  label,
-  className
-}: {
-  value: Date
-  onPick: (d: Date) => void
-  onClear?: () => void
-  label: string
-  className: string
-}) {
-  return (
-    <TimelineEditablePill
-      ariaLabel={label}
-      className={className}
-      renderEditor={(close) => (
-        <DatePillEditor
-          initial={value}
-          onCommit={(d) => {
-            onPick(d)
-            close()
-          }}
-          onClear={
-            onClear
-              ? () => {
-                  onClear()
-                  close()
-                }
-              : undefined
-          }
-        />
-      )}>
-      {formatPillDate(value)}
-    </TimelineEditablePill>
-  )
-}
-
-interface SentenceCardProps {
-  income: Income
-  onAmountChange: (
-    income: Income,
-    amount: number,
-    extra?: {
-      accountForBonus?: boolean
-      bonusGroups?: string | null
-      subjectToCpf?: boolean
-      familyMemberAge?: number
-    }
-  ) => void
-  onNameChange: (income: Income, name: string) => void
-  onStartDateChange: (income: Income, next: Date) => void
-  onEndDateChange: (income: Income, next: Date | null) => void
-  onAddMilestone: (income: Income) => void
-  onEditMilestone: (income: Income, milestone: FutureMilestone) => void
-  onDeleteMilestone: (income: Income, milestoneId: string) => void
-  onRequestDelete: (income: Income) => void
-  onOpenDetail: (id: string) => void
-}
-
-function SentenceCard({
-  income,
-  onAmountChange,
-  onNameChange,
-  onStartDateChange,
-  onEndDateChange,
-  onAddMilestone,
-  onEditMilestone,
-  onDeleteMilestone,
-  onRequestDelete,
-  onOpenDetail
-}: SentenceCardProps) {
-  const archetype = getArchetype(income)
-  const meta = ARCHETYPE_META[archetype]
-  const Icon = meta.icon
-
-  const amount = Number(income.amount) || 0
-  const startDate = parseISO(income.startDate)
-  const endDate = income.endDate ? parseISO(income.endDate) : null
-  const milestones = income.accountForFutureChange
-    ? safeParseMilestones(income.futureMilestones)
-    : []
-  const firstMilestone = milestones[0]
-
-  const pillCls = meta.pill
-
-  return (
-    <div className="bg-card shadow-card border-brand-deep-forest/[0.06] dark:border-brand-cream/[0.08] relative overflow-hidden rounded-2xl border p-5 dark:shadow-none">
-      <div className={cn("absolute inset-y-0 left-0 w-1", meta.rail)} />
-      <div className="flex items-start justify-between gap-3 pl-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <span
-            className={cn(
-              "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border",
-              meta.pill
-            )}>
-            <Icon className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <TimelineEditablePill
-              ariaLabel={`Edit name, currently ${income.name}`}
-              className="font-display text-foreground hover:bg-muted/60 hover:border-border/40 border-transparent bg-transparent px-1 py-0 text-base font-semibold"
-              renderEditor={(close) => (
-                <TextPillEditor
-                  initial={income.name}
-                  placeholder="Income name"
-                  onCommit={(next) => {
-                    onNameChange(income, next)
-                    close()
-                  }}
-                  onCancel={close}
-                />
-              )}>
-              {income.name}
-            </TimelineEditablePill>
-            {income.familyMember && (
-              <p className="text-muted-foreground mt-0.5 pl-1 text-xs">
-                {income.familyMember.name}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => onOpenDetail(income.id)}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={`Open details for ${income.name}`}>
-            <Settings2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="destructiveGhost"
-            size="icon-sm"
-            onClick={() => onRequestDelete(income)}
-            aria-label={`Delete ${income.name}`}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      <p className="text-foreground/85 mt-4 pl-2 text-[15px] leading-relaxed">
-        {archetype === "one-off" ? (
-          <>
-            I will receive{" "}
-            <AmountPill
-              value={amount}
-              onConfirm={(n) => onAmountChange(income, n)}
-              className={pillCls}
-            />{" "}
-            once in{" "}
-            <DatePill
-              value={startDate}
-              onPick={(d) => onStartDateChange(income, d)}
-              label="Edit payment month"
-              className={pillCls}
-            />
-            .
-          </>
-        ) : archetype === "temporary" && endDate ? (
-          <>
-            I earn{" "}
-            <AmountPill
-              value={amount}
-              onConfirm={(n) => onAmountChange(income, n)}
-              className={pillCls}
-            />{" "}
-            from{" "}
-            <DatePill
-              value={startDate}
-              onPick={(d) => onStartDateChange(income, d)}
-              label="Edit start month"
-              className={pillCls}
-            />{" "}
-            until{" "}
-            <DatePill
-              value={endDate}
-              onPick={(d) => onEndDateChange(income, d)}
-              onClear={() => onEndDateChange(income, null)}
-              label="Edit end month"
-              className={pillCls}
-            />
-            .
-          </>
-        ) : (
-          <>
-            I earn{" "}
-            <AmountPill
-              value={amount}
-              onConfirm={(n) => onAmountChange(income, n)}
-              className={pillCls}
-            />{" "}
-            continuously starting from{" "}
-            <DatePill
-              value={startDate}
-              onPick={(d) => onStartDateChange(income, d)}
-              label="Edit start month"
-              className={pillCls}
-            />
-            .
-          </>
-        )}
-      </p>
-
-      {firstMilestone && (
-        <div className="border-border/30 bg-muted/60 mt-3 ml-2 flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
-          <p className="text-foreground/85 flex-1 text-sm">
-            <TrendingUp className="text-muted-foreground -mt-0.5 mr-1 inline h-3.5 w-3.5" />
-            Then, it changes to{" "}
-            <button
-              type="button"
-              onClick={() => onEditMilestone(income, firstMilestone)}
-              className={cn(
-                "font-display mx-0.5 inline-flex items-center rounded-md border px-2 py-0.5 text-sm font-semibold transition-all hover:scale-[1.02] hover:shadow-sm",
-                pillCls
-              )}>
-              {formatCurrency(firstMilestone.amount)}
-            </button>{" "}
-            starting in{" "}
-            <button
-              type="button"
-              onClick={() => onEditMilestone(income, firstMilestone)}
-              className={cn(
-                "font-display mx-0.5 inline-flex items-center rounded-md border px-2 py-0.5 text-sm font-semibold transition-all hover:scale-[1.02] hover:shadow-sm",
-                pillCls
-              )}>
-              {format(parseISO(firstMilestone.targetMonth + "-01"), "MMM yy")}
-            </button>
-            .
-          </p>
-          <Button
-            variant="destructiveGhost"
-            size="icon-sm"
-            onClick={() => onDeleteMilestone(income, firstMilestone.id)}
-            className="flex-shrink-0"
-            aria-label="Remove future change">
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      )}
-
-      {archetype === "recurring" && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onAddMilestone(income)}
-          className="bg-muted text-muted-foreground hover:border-brand-jungle/50 hover:bg-brand-jungle/5 hover:text-brand-jungle mt-4 ml-2 gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
-          Add Future Change
-        </Button>
-      )}
-    </div>
-  )
-}
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (

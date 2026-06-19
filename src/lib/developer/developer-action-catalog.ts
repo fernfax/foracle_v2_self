@@ -494,27 +494,6 @@ export const ACTION_CATALOG: Record<string, ActionInfo> = {
     category: "Preferences",
     description: "Set the background wallpaper."
   },
-  "quick-links.getQuickLinks": {
-    category: "Preferences",
-    description: "List the user's pinned dashboard shortcuts."
-  },
-  "quick-links.addQuickLink": {
-    category: "Preferences",
-    description: "Pin a dashboard shortcut (within the max limit)."
-  },
-  "quick-links.removeQuickLink": {
-    category: "Preferences",
-    description: "Unpin a dashboard shortcut."
-  },
-  "quick-links.updateQuickLinksOrder": {
-    category: "Preferences",
-    description: "Reorder pinned shortcuts."
-  },
-  "quick-links.syncQuickLinks": {
-    category: "Preferences",
-    description: "Sync the pinned-shortcut set in one call."
-  },
-
   // ---- Currency ----
   "currency.getExchangeRates": {
     category: "Currency",

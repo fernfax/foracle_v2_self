@@ -38,7 +38,6 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
 
 // A bonus draft is a discriminated union persisted to the `bonusGroups` JSON
 // string. Recurring entries carry a calendar `month` (1-12) whose `amount` is a
@@ -81,87 +80,6 @@ function serializeBonusDraft(
   return g.kind === "one-off"
     ? { date: g.date, amount: g.amount }
     : { month: g.month, amount: g.amount }
-}
-
-interface QuickAdjustPadProps {
-  initialAmount: number
-  label?: string
-  onConfirm: (next: number) => void
-  onCancel?: () => void
-}
-
-const SLIDER_STEP = 50
-
-export function TimelineQuickAdjustPad({
-  initialAmount,
-  label = "Adjust Amount",
-  onConfirm,
-  onCancel
-}: QuickAdjustPadProps) {
-  const [value, setValue] = useState<number>(initialAmount)
-
-  useEffect(() => {
-    setValue(initialAmount)
-  }, [initialAmount])
-
-  const min = 0
-  const max = Math.max(initialAmount * 2, initialAmount + 5000, 1000)
-
-  const handleConfirm = () => {
-    if (value <= 0) return
-    onConfirm(Math.max(0, Math.round(value / SLIDER_STEP) * SLIDER_STEP))
-  }
-
-  const dirty = value !== initialAmount
-  const canConfirm = dirty && value > 0
-
-  return (
-    <div className="border-border/40 bg-popover text-popover-foreground w-72 rounded-2xl border p-5 shadow-xl">
-      <p className="text-muted-foreground text-center text-xs font-semibold tracking-[0.18em] uppercase">
-        {label}
-      </p>
-      <p className="font-display mt-3 text-center text-4xl font-bold tracking-tight">
-        ${Math.round(value).toLocaleString()}
-      </p>
-
-      <div className="mt-5 px-1">
-        <Slider
-          value={[value]}
-          min={min}
-          max={max}
-          step={SLIDER_STEP}
-          onValueChange={(vals) => setValue(vals[0] ?? value)}
-          aria-label="Amount slider"
-        />
-        <div className="text-muted-foreground mt-1 flex justify-between text-[10px] font-medium tracking-wider uppercase">
-          <span>${min.toLocaleString()}</span>
-          <span>${max.toLocaleString()}</span>
-        </div>
-      </div>
-
-      <div className="mt-5 flex gap-2">
-        {onCancel && (
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1"
-            onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-        <Button
-          type="button"
-          className={cn(
-            "bg-brand-jungle hover:bg-brand-jungle/90 flex-1 font-semibold text-white",
-            !canConfirm && "cursor-not-allowed opacity-60"
-          )}
-          disabled={!canConfirm}
-          onClick={handleConfirm}>
-          Confirm Changes
-        </Button>
-      </div>
-    </div>
-  )
 }
 
 // ---------------------------------------------------------------------------
