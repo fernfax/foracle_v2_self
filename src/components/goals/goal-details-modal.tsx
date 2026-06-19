@@ -11,6 +11,7 @@ import {
   Wallet
 } from "lucide-react"
 
+import type { Goal } from "@/db/types"
 import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
@@ -18,23 +19,6 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-
-interface Goal {
-  id: string
-  userId: string
-  linkedExpenseId: string | null
-  goalName: string
-  goalType: string
-  targetAmount: string
-  targetDate: string
-  currentAmountSaved: string | null
-  monthlyContribution: string | null
-  description: string | null
-  isAchieved: boolean | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface GoalDetailsModalProps {
   open: boolean

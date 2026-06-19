@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { createGoal, updateGoal } from "@/actions/goals"
 import { differenceInMonths, format } from "date-fns"
 
+import type { Goal } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,21 +38,6 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-
-interface Goal {
-  id: string
-  userId: string
-  linkedExpenseId: string | null
-  goalName: string
-  goalType: string
-  targetAmount: string
-  targetDate: string
-  currentAmountSaved: string | null
-  monthlyContribution: string | null
-  description: string | null
-  isAchieved: boolean | null
-  isActive: boolean | null
-}
 
 interface AddGoalDialogProps {
   open: boolean

@@ -19,6 +19,7 @@ import { toast } from "sonner"
 
 import { formatBudgetCurrency } from "@/lib/finance/budget-utils"
 import { brandColor } from "@/lib/portfolio-colors"
+import type { Goal } from "@/db/types"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -28,23 +29,6 @@ import { GoalAddDialog } from "@/components/goals/goal-add-dialog"
 import { GoalDetailsModal } from "@/components/goals/goal-details-modal"
 import { PortfolioConfirmDialog } from "@/components/portfolio/portfolio-confirm-dialog"
 import { PortfolioProgress } from "@/components/portfolio/portfolio-progress"
-
-interface Goal {
-  id: string
-  userId: string
-  linkedExpenseId: string | null
-  goalName: string
-  goalType: string
-  targetAmount: string
-  targetDate: string
-  currentAmountSaved: string | null
-  monthlyContribution: string | null
-  description: string | null
-  isAchieved: boolean | null
-  isActive: boolean | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface GoalListProps {
   initialGoals: Goal[]
