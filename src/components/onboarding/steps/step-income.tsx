@@ -59,13 +59,6 @@ const CATEGORIES = [
   { value: "other", label: "Other" }
 ]
 
-const FREQUENCIES = [
-  { value: "monthly", label: "Monthly" },
-  { value: "yearly", label: "Yearly" },
-  { value: "weekly", label: "Weekly" },
-  { value: "bi-weekly", label: "Bi-weekly" }
-]
-
 export function StepIncome({
   familyMember,
   data,
@@ -76,7 +69,6 @@ export function StepIncome({
   const [name, setName] = useState(data?.name || "")
   const [category, setCategory] = useState(data?.category || "salary")
   const [amount, setAmount] = useState(data?.amount || "")
-  const [frequency, setFrequency] = useState(data?.frequency || "monthly")
   const [subjectToCpf, setSubjectToCpf] = useState(data?.subjectToCpf ?? true)
   const [accountForBonus, setAccountForBonus] = useState(
     data?.accountForBonus ?? false
@@ -93,7 +85,6 @@ export function StepIncome({
       setName(data.name)
       setCategory(data.category)
       setAmount(data.amount)
-      setFrequency(data.frequency)
       setSubjectToCpf(data.subjectToCpf)
       setIncomeId(data.id || "")
       setAccountForBonus(data.accountForBonus ?? false)
@@ -198,7 +189,6 @@ export function StepIncome({
         name: trimmedName,
         category,
         amount,
-        frequency,
         subjectToCpf,
         startDate,
         accountForBonus,
@@ -229,45 +219,28 @@ export function StepIncome({
           />
         </Field>
 
-        {/* Category and Frequency Row */}
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Category" htmlFor="income-category" required>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger id="income-category" aria-required="true">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          <Field label="Frequency" htmlFor="income-frequency" required>
-            <Select value={frequency} onValueChange={setFrequency}>
-              <SelectTrigger id="income-frequency" aria-required="true">
-                <SelectValue placeholder="Select frequency" />
-              </SelectTrigger>
-              <SelectContent>
-                {FREQUENCIES.map((freq) => (
-                  <SelectItem key={freq.value} value={freq.value}>
-                    {freq.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
+        {/* Category */}
+        <Field label="Category" htmlFor="income-category" required>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger id="income-category" aria-required="true">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
 
         {/* Amount */}
         <Field
           label="Amount (SGD)"
           htmlFor="amount"
           required
-          helper={`Enter your gross ${frequency} income before deductions`}>
+          helper="Enter your gross monthly income before deductions">
           <MoneyInput
             id="amount"
             placeholder="0.00"

@@ -43,7 +43,6 @@ export interface IncomeData {
   name: string
   category: string
   amount: string
-  frequency: string
   subjectToCpf: boolean
   startDate: string
   accountForBonus?: boolean

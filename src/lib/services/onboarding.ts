@@ -127,8 +127,6 @@ export async function getOnboardingData(ctx: AuthContext): Promise<{
         name: incomeRow.name,
         category: incomeRow.category,
         amount: incomeRow.amount,
-        // Incomes are monthly-only by design (see actions/incomes.ts).
-        frequency: "monthly",
         subjectToCpf: incomeRow.subjectToCpf ?? false,
         startDate: incomeRow.startDate,
         accountForBonus: incomeRow.accountForBonus ?? false,

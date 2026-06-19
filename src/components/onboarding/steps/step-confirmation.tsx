@@ -103,7 +103,7 @@ export function StepConfirmation({
       label: "Income",
       value: data.income?.name || "Not set",
       subValue: data.income
-        ? `$${parseFloat(data.income.amount).toLocaleString("en-SG")} / ${data.income.frequency}`
+        ? `$${parseFloat(data.income.amount).toLocaleString("en-SG")} / month`
         : undefined,
       isSet: !!data.income,
       bgColor: "bg-brand-teal/[0.12]",
