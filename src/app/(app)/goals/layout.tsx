@@ -12,6 +12,9 @@ export const metadata = {
   description: "Set and track your financial goals"
 }
 
+// Auth-gated, per-user data — never static. Cascades to all child tab routes.
+export const dynamic = "force-dynamic"
+
 /**
  * Shared chrome for the Goals tabs. Fetches both goal sets to populate the tab
  * badge counts; `cache()` ensures the child route's own fetch reuses the same
