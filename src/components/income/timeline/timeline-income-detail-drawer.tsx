@@ -128,13 +128,11 @@ export function TimelineIncomeDetailDrawer({
     if (next === "recurring") {
       runUpdate("archetype", {
         incomeCategory: "current-recurring",
-        frequency: "monthly",
         endDate: null
       })
     } else if (next === "one-off") {
       runUpdate("archetype", {
         incomeCategory: "one-off",
-        frequency: "one-time",
         endDate: null
       })
     } else if (next === "temporary") {
@@ -143,7 +141,6 @@ export function TimelineIncomeDetailDrawer({
       const ed = income.endDate ?? fallbackEnd
       runUpdate("archetype", {
         incomeCategory: "current-recurring",
-        frequency: "monthly",
         endDate: ed
       })
     }

@@ -154,7 +154,6 @@ export function TimelineIncomeCreatorDrawer({
         incomeCategory:
           archetype === "one-off" ? "one-off" : "current-recurring",
         amount: parsedAmount,
-        frequency: archetype === "one-off" ? "one-time" : "monthly",
         subjectToCpf,
         startDate: format(startDate, "yyyy-MM-dd"),
         endDate:

@@ -12,8 +12,7 @@ import type { AuthContext } from "@/lib/auth-context"
 import { resolveCpfAge } from "@/lib/cpf/cpf-age"
 import { calculateCPF, CPF_RATES_VERSION } from "@/lib/cpf/cpf-calculator"
 import { familyMembers, incomes } from "@/db/schema"
-
-export type IncomeRow = typeof incomes.$inferSelect
+import type { Income } from "@/db/types"
 
 export class IncomeNotFoundError extends Error {
   constructor() {
@@ -72,7 +71,7 @@ export async function resolveCpfFields(opts: {
 // member of the family, not just the caller.
 export async function listIncomes(ctx: AuthContext): Promise<
   Array<
-    IncomeRow & {
+    Income & {
       familyMember: {
         id: string
         name: string
@@ -127,7 +126,7 @@ export async function listIncomes(ctx: AuthContext): Promise<
 export async function getIncomeById(
   ctx: AuthContext,
   id: string
-): Promise<IncomeRow | null> {
+): Promise<Income | null> {
   const row = await db.query.incomes.findFirst({
     where: and(eq(incomes.id, id), eq(incomes.familyId, ctx.familyId))
   })
@@ -137,7 +136,7 @@ export async function getIncomeById(
 export async function createIncome(
   ctx: AuthContext,
   body: CreateIncomeBody
-): Promise<IncomeRow> {
+): Promise<Income> {
   // Enforce the wire contract at runtime: positive amount, valid dates/enums,
   // no negatives/NaN/$0. The schema was previously type-only and never ran.
   createIncomeBodySchema.parse(body)
@@ -186,7 +185,7 @@ export async function updateIncome(
   ctx: AuthContext,
   id: string,
   patch: UpdateIncomeBody
-): Promise<IncomeRow> {
+): Promise<Income> {
   updateIncomeBodySchema.parse(patch)
 
   const existing = await getIncomeById(ctx, id)
@@ -261,7 +260,7 @@ export async function updateIncome(
 export async function toggleIncomeActive(
   ctx: AuthContext,
   id: string
-): Promise<IncomeRow> {
+): Promise<Income> {
   const existing = await getIncomeById(ctx, id)
   if (!existing) throw new IncomeNotFoundError()
   const [row] = await db

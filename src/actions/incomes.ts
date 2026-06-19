@@ -25,11 +25,12 @@ function normalizeIncomeCategory(
 }
 
 /**
- * Read all incomes for the caller's family. Synthesizes `frequency: 'monthly'`
- * and `customMonths: null` on each row so the existing inline `Income` type in
- * `TimelineView` (which still references those fields) continues to
- * compile. Income rows are always monthly recurring; "one-off" income is
- * modelled as start_date == end_date.
+ * Read all incomes for the caller's family. Income rows are always monthly
+ * recurring; "one-off" income is modelled as start_date == end_date. The
+ * monthly `frequency`/`customMonths` are synthesized so income rows satisfy the
+ * shared monthly-allocation calculators (income-month, balance-calculator,
+ * cashflow-sankey, household-summary) that also serve expenses — those fields
+ * are load-bearing on the read path, never user-set on the income write path.
  */
 export async function getIncomes() {
   const ctx = await getCurrentUserAndFamily()
@@ -49,11 +50,6 @@ export async function createIncome(data: {
   category: string
   incomeCategory?: string
   amount: number
-  // Accepted-and-ignored — the existing creator drawer still has a frequency
-  // picker. Incomes are monthly-only by design (see plan), so these are dropped
-  // here. Removing them from the drawer is a separate UI task.
-  frequency?: string
-  customMonths?: string | null
   subjectToCpf: boolean
   accountForBonus?: boolean
   bonusGroups?: string
@@ -101,9 +97,6 @@ export async function updateIncome(
     category?: string
     incomeCategory?: string
     amount?: number
-    // Accepted-and-ignored. See createIncome.
-    frequency?: string
-    customMonths?: string | null
     subjectToCpf?: boolean
     accountForBonus?: boolean
     bonusGroups?: string | null

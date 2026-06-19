@@ -1,4 +1,7 @@
+import { createInsertSchema } from "drizzle-zod"
 import { z } from "zod"
+
+import { incomes } from "@/db/schema"
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 // Non-negative decimal string (the leading "-?" was a bug — it accepted
@@ -18,11 +21,14 @@ const positiveMoneyString = moneyString.refine(
 // and normalizes them. For the v1 API we expose only the new taxonomy.
 const incomeCategoryEnum = z.enum(["past", "current", "future"])
 
-// Amount and CPF fields are sent as decimal strings on the wire to preserve
-// precision (Drizzle returns them as strings; never quietly coerce).
-export const createIncomeBodySchema = z.object({
-  name: z.string().min(1).max(255),
-  category: z.string().min(1).max(100),
+// Field schemas derived from the incomes table — types and nullability flow from
+// the columns; domain rules (money/date format, income-category enum) layered per
+// field. subjectToCpf is required on create even though the column is defaulted.
+// Amount and CPF fields are decimal strings on the wire to preserve precision
+// (Drizzle returns them as strings; never quietly coerce).
+const incomeInsert = createInsertSchema(incomes, {
+  name: (s) => s.min(1).max(255),
+  category: (s) => s.min(1).max(100),
   incomeCategory: incomeCategoryEnum.optional(),
   amount: positiveMoneyString,
   startDate: isoDate,
@@ -32,42 +38,44 @@ export const createIncomeBodySchema = z.object({
   bonusGroups: z.string().nullish(),
   description: z.string().nullish(),
   familyMemberId: z.string().nullish(),
-  // Optional override of the family member's age for CPF computation. If
-  // omitted, the service derives age from the family member's date_of_birth.
-  familyMemberAge: z.number().int().min(0).max(150).optional(),
   pastIncomeHistory: z.string().nullish(),
   futureMilestones: z.string().nullish(),
   accountForFutureChange: z.boolean().optional(),
-  // CPF account allocations are user-provided (optional). Server auto-computes
-  // employee/employer contributions + net take-home from subjectToCpf + age.
   cpfOrdinaryAccount: moneyString.nullish(),
   cpfSpecialAccount: moneyString.nullish(),
   cpfMedisaveAccount: moneyString.nullish()
 })
+
+export const createIncomeBodySchema = incomeInsert
+  .pick({
+    name: true,
+    category: true,
+    incomeCategory: true,
+    amount: true,
+    startDate: true,
+    endDate: true,
+    subjectToCpf: true,
+    accountForBonus: true,
+    bonusGroups: true,
+    description: true,
+    familyMemberId: true,
+    pastIncomeHistory: true,
+    futureMilestones: true,
+    accountForFutureChange: true,
+    cpfOrdinaryAccount: true,
+    cpfSpecialAccount: true,
+    cpfMedisaveAccount: true
+  })
+  .extend({
+    // Optional override of the family member's age for CPF computation (not a
+    // column). If omitted, the service derives age from date_of_birth.
+    familyMemberAge: z.number().int().min(0).max(150).optional()
+  })
 export type CreateIncomeBody = z.infer<typeof createIncomeBodySchema>
 
-export const updateIncomeBodySchema = z
-  .object({
-    name: z.string().min(1).max(255).optional(),
-    category: z.string().min(1).max(100).optional(),
-    incomeCategory: incomeCategoryEnum.optional(),
-    amount: positiveMoneyString.optional(),
-    startDate: isoDate.optional(),
-    endDate: isoDate.nullish(),
-    subjectToCpf: z.boolean().optional(),
-    accountForBonus: z.boolean().optional(),
-    bonusGroups: z.string().nullish(),
-    description: z.string().nullish(),
-    isActive: z.boolean().optional(),
-    familyMemberId: z.string().nullish(),
-    familyMemberAge: z.number().int().min(0).max(150).optional(),
-    pastIncomeHistory: z.string().nullish(),
-    futureMilestones: z.string().nullish(),
-    accountForFutureChange: z.boolean().optional(),
-    cpfOrdinaryAccount: moneyString.nullish(),
-    cpfSpecialAccount: moneyString.nullish(),
-    cpfMedisaveAccount: moneyString.nullish()
-  })
+export const updateIncomeBodySchema = createIncomeBodySchema
+  .partial()
+  .extend({ isActive: z.boolean().optional() })
   .refine((v) => Object.keys(v).length > 0, {
     message: "At least one field must be provided"
   })
