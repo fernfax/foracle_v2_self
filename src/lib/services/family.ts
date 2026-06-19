@@ -17,8 +17,7 @@ import type { AuthContext } from "@/lib/auth-context"
 import { assertCallerIsMaster } from "@/lib/auth-context"
 import { isFutureIsoDate } from "@/lib/date-helpers"
 import { familyMembers, incomes, users } from "@/db/schema"
-
-export type FamilyMemberRow = typeof familyMembers.$inferSelect
+import type { FamilyMember } from "@/db/types"
 
 export class FutureDateOfBirthError extends Error {
   constructor() {
@@ -62,7 +61,7 @@ export class InvitationError extends Error {
 
 export async function listFamilyMembers(
   ctx: AuthContext
-): Promise<FamilyMemberRow[]> {
+): Promise<FamilyMember[]> {
   return db.query.familyMembers.findMany({
     where: eq(familyMembers.familyId, ctx.familyId),
     orderBy: [desc(familyMembers.createdAt)]
@@ -72,7 +71,7 @@ export async function listFamilyMembers(
 export async function getFamilyMemberById(
   ctx: AuthContext,
   id: string
-): Promise<FamilyMemberRow | null> {
+): Promise<FamilyMember | null> {
   const row = await db.query.familyMembers.findFirst({
     where: and(
       eq(familyMembers.id, id),
@@ -85,7 +84,7 @@ export async function getFamilyMemberById(
 export async function createFamilyMember(
   ctx: AuthContext,
   body: CreateFamilyMemberBody
-): Promise<FamilyMemberRow> {
+): Promise<FamilyMember> {
   assertDobNotInFuture(body.dateOfBirth)
   const [row] = await db
     .insert(familyMembers)
@@ -107,7 +106,7 @@ export async function updateFamilyMember(
   ctx: AuthContext,
   id: string,
   patch: UpdateFamilyMemberBody
-): Promise<FamilyMemberRow> {
+): Promise<FamilyMember> {
   const existing = await getFamilyMemberById(ctx, id)
   if (!existing) throw new FamilyMemberNotFoundError()
 
@@ -205,7 +204,7 @@ export async function getFamilyMemberIncomes(
 // without re-implementing the same dedupe logic.
 async function findCallerSelfRow(
   ctx: AuthContext
-): Promise<FamilyMemberRow | null> {
+): Promise<FamilyMember | null> {
   const row = await db.query.familyMembers.findFirst({
     where: and(
       eq(familyMembers.familyId, ctx.familyId),
@@ -227,7 +226,7 @@ async function findCallerSelfRow(
 export async function getOrCreateSelfMember(
   ctx: AuthContext,
   data: { name: string; dateOfBirth: string }
-): Promise<FamilyMemberRow> {
+): Promise<FamilyMember> {
   assertDobNotInFuture(data.dateOfBirth)
   const existing = await findCallerSelfRow(ctx)
 
@@ -270,7 +269,7 @@ export async function getOrCreateSelfMember(
 // backs this up at the DB layer.
 export async function listFamilyMembersOrSelf(
   ctx: AuthContext
-): Promise<FamilyMemberRow[]> {
+): Promise<FamilyMember[]> {
   const members = await listFamilyMembers(ctx)
   const existing = members.find(
     (m) =>

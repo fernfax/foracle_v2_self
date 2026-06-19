@@ -3,9 +3,13 @@
 import { useEffect, useState } from "react"
 import { updateFamilyMember } from "@/actions/family-members"
 import { RELATIONSHIPS } from "@/data/family-relationships.data"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { format, parse } from "date-fns"
 import { Info } from "lucide-react"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
 
+import type { FamilyMember } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,23 +45,35 @@ import {
 import { StepIndicator } from "@/components/ui/step-indicator"
 import { Textarea } from "@/components/ui/textarea"
 
-interface FamilyMember {
-  id: string
-  name: string
-  relationship: string | null
-  dateOfBirth: string | null
-  isContributing: boolean | null
-  notes: string | null
-  createdAt: Date
-  updatedAt: Date
-}
-
 interface EditFamilyMemberDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   member: FamilyMember | null
   onMemberUpdated: (member: FamilyMember) => void
   onContributingMemberUpdated?: (member: FamilyMember) => void
+}
+
+// Edit requires name + relationship (date of birth is optional here); the
+// disabled-until-valid submit is preserved via mode:"onChange" + isValid.
+const editMemberFormSchema = z.object({
+  name: z.string().min(1),
+  relationship: z.string().min(1),
+  dateOfBirth: z.date().optional(),
+  isContributing: z.boolean(),
+  notes: z.string()
+})
+type EditMemberFormValues = z.infer<typeof editMemberFormSchema>
+
+function toFormValues(member: FamilyMember): EditMemberFormValues {
+  return {
+    name: member.name,
+    relationship: member.relationship || "",
+    dateOfBirth: member.dateOfBirth
+      ? parse(member.dateOfBirth, "yyyy-MM-dd", new Date())
+      : undefined,
+    isContributing: member.isContributing || false,
+    notes: member.notes || ""
+  }
 }
 
 export function FamilyMemberEditDialog({
@@ -67,103 +83,72 @@ export function FamilyMemberEditDialog({
   onMemberUpdated,
   onContributingMemberUpdated
 }: EditFamilyMemberDialogProps) {
-  const [name, setName] = useState("")
-  const [relationship, setRelationship] = useState("")
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined)
-  const [isContributing, setIsContributing] = useState(false)
-  const [notes, setNotes] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [_wasContributingInitially, setWasContributingInitially] =
-    useState(false)
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
-  // Populate form when member changes
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { isValid, isDirty, isSubmitting }
+  } = useForm<EditMemberFormValues>({
+    resolver: zodResolver(editMemberFormSchema),
+    mode: "onChange"
+  })
+
+  const isContributing = useWatch({ control, name: "isContributing" })
+
+  // Populate form when the member changes
   useEffect(() => {
-    if (member) {
-      setName(member.name)
-      setRelationship(member.relationship || "")
-      setDateOfBirth(
-        member.dateOfBirth
-          ? parse(member.dateOfBirth, "yyyy-MM-dd", new Date())
-          : undefined
-      )
-      const contributing = member.isContributing || false
-      setIsContributing(contributing)
-      setWasContributingInitially(contributing)
-      setNotes(member.notes || "")
-      setHasUnsavedChanges(false)
-    }
-  }, [member])
+    if (member) reset(toFormValues(member))
+  }, [member, reset])
 
-  // Track changes to form fields
-  useEffect(() => {
-    if (!member) return
-
-    const hasChanges =
-      name !== member.name ||
-      relationship !== (member.relationship || "") ||
-      (dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null) !==
-        member.dateOfBirth ||
-      isContributing !== (member.isContributing || false) ||
-      notes !== (member.notes || "")
-
-    setHasUnsavedChanges(hasChanges)
-  }, [member, name, relationship, dateOfBirth, isContributing, notes])
-
-  const handleClose = (open: boolean) => {
-    if (!open && hasUnsavedChanges) {
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen && isDirty) {
       setShowUnsavedWarning(true)
     } else {
-      onOpenChange(open)
+      onOpenChange(isOpen)
     }
   }
 
   const handleConfirmClose = () => {
     setShowUnsavedWarning(false)
-    setHasUnsavedChanges(false)
+    if (member) reset(toFormValues(member))
     onOpenChange(false)
   }
 
-  const handleSubmit = async () => {
-    if (!member || !name || !relationship) {
-      return
-    }
+  const onSubmit = async (values: EditMemberFormValues) => {
+    if (!member) return
+    const dob = values.dateOfBirth
+      ? format(values.dateOfBirth, "yyyy-MM-dd")
+      : null
 
-    // If contributing member, don't save yet - pass data to wizard
-    if (isContributing && onContributingMemberUpdated) {
-      const pendingData = {
+    // Contributing members defer the save to the wizard — hand back the merged
+    // row and let the parent drive the transition (don't close here).
+    if (values.isContributing && onContributingMemberUpdated) {
+      onContributingMemberUpdated({
         ...member,
-        name,
-        relationship,
-        dateOfBirth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
-        isContributing,
-        notes: notes || null
-      }
-      setHasUnsavedChanges(false)
-      onContributingMemberUpdated(pendingData)
-      // Don't close here - let parent handle transition
+        name: values.name,
+        relationship: values.relationship,
+        dateOfBirth: dob,
+        isContributing: values.isContributing,
+        notes: values.notes || null
+      })
       return
     }
 
-    // Otherwise, save immediately for non-contributing members
-    setIsSubmitting(true)
     try {
       const updatedMember = await updateFamilyMember(member.id, {
-        name,
-        relationship,
-        dateOfBirth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
-        isContributing,
-        notes: notes || null
+        name: values.name,
+        relationship: values.relationship,
+        dateOfBirth: dob,
+        isContributing: values.isContributing,
+        notes: values.notes || null
       })
-
       onMemberUpdated(updatedMember)
-      setHasUnsavedChanges(false)
       onOpenChange(false)
     } catch (error) {
       console.error("Failed to update family member:", error)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -181,109 +166,135 @@ export function FamilyMemberEditDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <DialogBody>
-            <div className="grid gap-6 py-4">
-              {/* Row 1: Full Name */}
-              <Field label="Full Name" htmlFor="edit-name" required>
-                <Input
-                  id="edit-name"
-                  placeholder="e.g., John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  aria-required="true"
-                />
-              </Field>
-
-              {/* Row 2: Relationship */}
-              <Field label="Relationship" htmlFor="edit-relationship" required>
-                <Select value={relationship} onValueChange={setRelationship}>
-                  <SelectTrigger id="edit-relationship" aria-required="true">
-                    <SelectValue placeholder="Select relationship" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RELATIONSHIPS.map((rel) => (
-                      <SelectItem key={rel.value} value={rel.value}>
-                        {rel.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-
-              {/* Row 3: Date of Birth */}
-              <Field
-                label="Date of Birth"
-                htmlFor="edit-dob"
-                helper="Used to calculate age for CPF and other calculations">
-                <DatePicker
-                  id="edit-dob"
-                  value={dateOfBirth}
-                  onChange={setDateOfBirth}
-                  fromYear={1900}
-                  disableFuture
-                />
-              </Field>
-
-              {/* Row 4: Contributing Member */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="edit-contributing"
-                    checked={isContributing}
-                    onCheckedChange={(checked) =>
-                      setIsContributing(checked === true)
-                    }
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogBody>
+              <div className="grid gap-6 py-4">
+                {/* Row 1: Full Name */}
+                <Field label="Full Name" htmlFor="edit-name" required>
+                  <Input
+                    id="edit-name"
+                    placeholder="e.g., John Doe"
+                    aria-required="true"
+                    {...register("name")}
                   />
-                  <div className="grid gap-1.5 leading-none">
-                    <Label
-                      htmlFor="edit-contributing"
-                      className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Contributing member
-                    </Label>
-                    <p className="text-muted-foreground text-xs">
-                      Consider this member&apos;s income into the total income
-                    </p>
+                </Field>
+
+                {/* Row 2: Relationship */}
+                <Field
+                  label="Relationship"
+                  htmlFor="edit-relationship"
+                  required>
+                  <Controller
+                    control={control}
+                    name="relationship"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}>
+                        <SelectTrigger
+                          id="edit-relationship"
+                          aria-required="true">
+                          <SelectValue placeholder="Select relationship" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {RELATIONSHIPS.map((rel) => (
+                            <SelectItem key={rel.value} value={rel.value}>
+                              {rel.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </Field>
+
+                {/* Row 3: Date of Birth */}
+                <Field
+                  label="Date of Birth"
+                  htmlFor="edit-dob"
+                  helper="Used to calculate age for CPF and other calculations">
+                  <Controller
+                    control={control}
+                    name="dateOfBirth"
+                    render={({ field }) => (
+                      <DatePicker
+                        id="edit-dob"
+                        value={field.value}
+                        onChange={field.onChange}
+                        fromYear={1900}
+                        disableFuture
+                      />
+                    )}
+                  />
+                </Field>
+
+                {/* Row 4: Contributing Member */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Controller
+                      control={control}
+                      name="isContributing"
+                      render={({ field }) => (
+                        <Checkbox
+                          id="edit-contributing"
+                          checked={field.value}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
+                        />
+                      )}
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label
+                        htmlFor="edit-contributing"
+                        className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Contributing member
+                      </Label>
+                      <p className="text-muted-foreground text-xs">
+                        Consider this member&apos;s income into the total income
+                      </p>
+                    </div>
                   </div>
                 </div>
+
+                {/* Row 5: Notes */}
+                <Field
+                  label="Notes"
+                  htmlFor="edit-notes"
+                  helper="Add any additional notes about this family member">
+                  <Textarea
+                    id="edit-notes"
+                    placeholder="e.g., Currently studying, works at..."
+                    rows={3}
+                    {...register("notes")}
+                  />
+                </Field>
               </div>
+            </DialogBody>
 
-              {/* Row 5: Notes */}
-              <Field
-                label="Notes"
-                htmlFor="edit-notes"
-                helper="Add any additional notes about this family member">
-                <Textarea
-                  id="edit-notes"
-                  placeholder="e.g., Currently studying, works at..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                />
-              </Field>
-            </div>
-          </DialogBody>
-
-          {/* Footer */}
-          <DialogFooterSticky className="flex-col gap-4">
-            {isContributing && <StepIndicator currentStep={1} totalSteps={3} />}
-            <div className="flex w-full justify-end gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => handleClose(false)}
-                disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={!name || !relationship || isSubmitting}>
-                {isSubmitting
-                  ? "Saving..."
-                  : isContributing
-                    ? "Next"
-                    : "Save Changes"}
-              </Button>
-            </div>
-          </DialogFooterSticky>
+            {/* Footer */}
+            <DialogFooterSticky className="flex-col gap-4">
+              {isContributing && (
+                <StepIndicator currentStep={1} totalSteps={3} />
+              )}
+              <div className="flex w-full justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => handleClose(false)}
+                  disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={!isValid || isSubmitting}>
+                  {isSubmitting
+                    ? "Saving..."
+                    : isContributing
+                      ? "Next"
+                      : "Save Changes"}
+                </Button>
+              </div>
+            </DialogFooterSticky>
+          </form>
         </DialogContent>
       </Dialog>
 

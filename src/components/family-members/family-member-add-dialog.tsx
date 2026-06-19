@@ -1,11 +1,14 @@
 "use client"
 
-import { useState } from "react"
 import { createFamilyMember } from "@/actions/family-members"
 import { RELATIONSHIPS } from "@/data/family-relationships.data"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { Info } from "lucide-react"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
 
+import type { FamilyMember } from "@/db/types"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DatePicker } from "@/components/ui/date-picker"
@@ -30,22 +33,30 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-interface FamilyMember {
-  id: string
-  name: string
-  relationship: string | null
-  dateOfBirth: string | null
-  isContributing: boolean | null
-  notes: string | null
-  createdAt: Date
-  updatedAt: Date
-}
-
 interface AddFamilyMemberDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onMemberAdded: (member: FamilyMember) => void
   onContributingMemberAdded?: (member: FamilyMember) => void
+}
+
+// name, relationship and date of birth are all required to add a member; the
+// disabled-until-valid submit is preserved via mode:"onChange" + isValid.
+const addMemberFormSchema = z.object({
+  name: z.string().min(1),
+  relationship: z.string().min(1),
+  dateOfBirth: z.date(),
+  isContributing: z.boolean(),
+  notes: z.string()
+})
+type AddMemberFormValues = z.infer<typeof addMemberFormSchema>
+
+const defaultValues: AddMemberFormValues = {
+  name: "",
+  relationship: "",
+  dateOfBirth: undefined as unknown as Date,
+  isContributing: false,
+  notes: ""
 }
 
 export function FamilyMemberAddDialog({
@@ -54,54 +65,49 @@ export function FamilyMemberAddDialog({
   onMemberAdded,
   onContributingMemberAdded
 }: AddFamilyMemberDialogProps) {
-  const [name, setName] = useState("")
-  const [relationship, setRelationship] = useState("")
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined)
-  const [isContributing, setIsContributing] = useState(false)
-  const [notes, setNotes] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { isValid, isSubmitting }
+  } = useForm<AddMemberFormValues>({
+    resolver: zodResolver(addMemberFormSchema),
+    mode: "onChange",
+    defaultValues
+  })
 
-  const resetForm = () => {
-    setName("")
-    setRelationship("")
-    setDateOfBirth(undefined)
-    setIsContributing(false)
-    setNotes("")
+  const isContributing = useWatch({ control, name: "isContributing" })
+
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) reset(defaultValues)
+    onOpenChange(isOpen)
   }
 
-  const handleSubmit = async () => {
-    if (!name || !relationship || !dateOfBirth) {
-      return
-    }
-
-    setIsSubmitting(true)
+  const onSubmit = async (values: AddMemberFormValues) => {
     try {
       const newMember = await createFamilyMember({
-        name,
-        relationship,
-        dateOfBirth: dateOfBirth
-          ? format(dateOfBirth, "yyyy-MM-dd")
-          : undefined,
-        isContributing,
-        notes: notes || undefined
+        name: values.name,
+        relationship: values.relationship,
+        dateOfBirth: format(values.dateOfBirth, "yyyy-MM-dd"),
+        isContributing: values.isContributing,
+        notes: values.notes || undefined
       })
 
-      if (isContributing && onContributingMemberAdded) {
+      if (values.isContributing && onContributingMemberAdded) {
         onContributingMemberAdded(newMember)
       } else {
         onMemberAdded(newMember)
       }
-      resetForm()
+      reset(defaultValues)
       onOpenChange(false)
     } catch (error) {
       console.error("Failed to create family member:", error)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -113,109 +119,126 @@ export function FamilyMemberAddDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <DialogBody>
-          <div className="grid gap-6 py-4">
-            {/* Row 1: Full Name */}
-            <Field label="Full Name" htmlFor="name" required>
-              <Input
-                id="name"
-                placeholder="e.g., John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                aria-required="true"
-              />
-            </Field>
-
-            {/* Row 2: Relationship */}
-            <Field label="Relationship" htmlFor="relationship" required>
-              <Select value={relationship} onValueChange={setRelationship}>
-                <SelectTrigger id="relationship" aria-required="true">
-                  <SelectValue placeholder="Select relationship" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RELATIONSHIPS.map((rel) => (
-                    <SelectItem key={rel.value} value={rel.value}>
-                      {rel.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-
-            {/* Row 3: Date of Birth */}
-            <Field
-              label="Date of Birth"
-              htmlFor="dob"
-              required
-              helper="Used to calculate age for CPF and other calculations">
-              <DatePicker
-                id="dob"
-                value={dateOfBirth}
-                onChange={setDateOfBirth}
-                fromYear={1900}
-                disableFuture
-              />
-            </Field>
-
-            {/* Row 4: Contributing Member */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="contributing"
-                  checked={isContributing}
-                  onCheckedChange={(checked) =>
-                    setIsContributing(checked === true)
-                  }
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogBody>
+            <div className="grid gap-6 py-4">
+              {/* Row 1: Full Name */}
+              <Field label="Full Name" htmlFor="name" required>
+                <Input
+                  id="name"
+                  placeholder="e.g., John Doe"
+                  aria-required="true"
+                  {...register("name")}
                 />
-                <div className="grid gap-1.5 leading-none">
-                  <Label
-                    htmlFor="contributing"
-                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Contributing member
-                  </Label>
-                  <p className="text-muted-foreground text-xs">
-                    Consider this member&apos;s income into the total income
-                  </p>
+              </Field>
+
+              {/* Row 2: Relationship */}
+              <Field label="Relationship" htmlFor="relationship" required>
+                <Controller
+                  control={control}
+                  name="relationship"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="relationship" aria-required="true">
+                        <SelectValue placeholder="Select relationship" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RELATIONSHIPS.map((rel) => (
+                          <SelectItem key={rel.value} value={rel.value}>
+                            {rel.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </Field>
+
+              {/* Row 3: Date of Birth */}
+              <Field
+                label="Date of Birth"
+                htmlFor="dob"
+                required
+                helper="Used to calculate age for CPF and other calculations">
+                <Controller
+                  control={control}
+                  name="dateOfBirth"
+                  render={({ field }) => (
+                    <DatePicker
+                      id="dob"
+                      value={field.value}
+                      onChange={field.onChange}
+                      fromYear={1900}
+                      disableFuture
+                    />
+                  )}
+                />
+              </Field>
+
+              {/* Row 4: Contributing Member */}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Controller
+                    control={control}
+                    name="isContributing"
+                    render={({ field }) => (
+                      <Checkbox
+                        id="contributing"
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                    )}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label
+                      htmlFor="contributing"
+                      className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Contributing member
+                    </Label>
+                    <p className="text-muted-foreground text-xs">
+                      Consider this member&apos;s income into the total income
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* Row 5: Notes */}
+              <Field
+                label="Notes"
+                htmlFor="notes"
+                helper="Add any additional notes about this family member">
+                <Textarea
+                  id="notes"
+                  placeholder="e.g., Currently studying, works at..."
+                  rows={3}
+                  {...register("notes")}
+                />
+              </Field>
             </div>
+          </DialogBody>
 
-            {/* Row 5: Notes */}
-            <Field
-              label="Notes"
-              htmlFor="notes"
-              helper="Add any additional notes about this family member">
-              <Textarea
-                id="notes"
-                placeholder="e.g., Currently studying, works at..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-              />
-            </Field>
-          </div>
-        </DialogBody>
-
-        {/* Footer */}
-        <DialogFooterSticky>
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!name || !relationship || !dateOfBirth || isSubmitting}>
-            {isSubmitting
-              ? isContributing
-                ? "Saving..."
-                : "Adding..."
-              : isContributing
-                ? "Next"
-                : "Add Member"}
-          </Button>
-        </DialogFooterSticky>
+          {/* Footer */}
+          <DialogFooterSticky>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleClose(false)}
+              disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!isValid || isSubmitting}>
+              {isSubmitting
+                ? isContributing
+                  ? "Saving..."
+                  : "Adding..."
+                : isContributing
+                  ? "Next"
+                  : "Add Member"}
+            </Button>
+          </DialogFooterSticky>
+        </form>
       </DialogContent>
     </Dialog>
   )

@@ -7,6 +7,7 @@ import { Users } from "lucide-react"
 import { toast } from "sonner"
 
 import { CHART_PALETTE } from "@/lib/charts/chart-palette"
+import type { FamilyMember } from "@/db/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,17 +25,6 @@ import { RowActions } from "@/components/ui/row-actions"
 import { Toolbar } from "@/components/ui/toolbar"
 import { FamilyMemberAddDialog } from "@/components/family-members/family-member-add-dialog"
 import { FamilyMemberEditDialog } from "@/components/family-members/family-member-edit-dialog"
-
-interface FamilyMember {
-  id: string
-  name: string
-  relationship: string | null
-  dateOfBirth: string | null
-  isContributing: boolean | null
-  notes: string | null
-  createdAt: Date
-  updatedAt: Date
-}
 
 interface FamilyMemberGridProps {
   initialMembers: FamilyMember[]
