@@ -252,6 +252,15 @@
     scrollbar-gutter: stable;
   }
 
+  /* Native smooth scrolling for in-page anchor jumps (landing nav links). The
+     per-section `scroll-mt-16` keeps targets clear of the sticky 64px navbar in
+     every viewport. Disabled for users who prefer reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));

@@ -209,8 +209,8 @@ export function LandingLifeStages() {
     }
     const tick = () => {
       const target = measure()
-      // Calm-forward lerp smoothing — absorbs Lenis sub-frame lag (replaces the
-      // old useSpring) without ever stalling.
+      // Calm-forward lerp smoothing — eases the pinned card's scroll-progress
+      // (replaces the old useSpring) without ever stalling.
       current += (target - current) * 0.14
       if (Math.abs(target - current) < 0.0003) current = target
       smooth.set(current)
@@ -228,9 +228,7 @@ export function LandingLifeStages() {
     const trackTop = track.getBoundingClientRect().top + window.scrollY
     const travel = track.offsetHeight - window.innerHeight
     const y = trackTop + ((i + 0.5) / N) * travel
-    if (typeof window !== "undefined" && window.__lenis)
-      window.__lenis.scrollTo(y)
-    else window.scrollTo({ top: y, behavior: "smooth" })
+    window.scrollTo({ top: y, behavior: "smooth" })
   }
 
   const introInner = (

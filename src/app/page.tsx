@@ -22,7 +22,6 @@ import { LandingLifeStages } from "@/components/landing/landing-life-stages"
 import { LandingMobileNav } from "@/components/landing/landing-mobile-nav"
 import { LandingReveal } from "@/components/landing/landing-reveal"
 import { LandingShader } from "@/components/landing/landing-shader"
-import { LandingSmoothScroll } from "@/components/landing/landing-smooth-scroll"
 import { LayoutTileMotif } from "@/components/layout/layout-tile-motif"
 
 const NAV_LINKS = [
@@ -156,7 +155,6 @@ export default async function Home() {
     <main className="min-h-screen bg-transparent">
       <LandingShader />
       <LandingGlassDefs />
-      <LandingSmoothScroll />
       <LandingCursor />
 
       {/* Navigation */}
@@ -265,7 +263,7 @@ export default async function Home() {
       {/* How it works */}
       <section
         id="how"
-        className="relative z-10 mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
+        className="relative z-10 mx-auto max-w-7xl scroll-mt-16 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
         <LandingReveal className="mb-14 max-w-2xl">
           <p className="sec-num mb-3">How it works</p>
           <h2 className="font-display text-foreground text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
@@ -299,7 +297,7 @@ export default async function Home() {
       {/* Features */}
       <section
         id="features"
-        className="relative z-10 mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
+        className="relative z-10 mx-auto max-w-7xl scroll-mt-16 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
         <LandingReveal className="mb-14 max-w-2xl">
           <p className="sec-num mb-3">Features</p>
           <h2 className="font-display text-foreground text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
@@ -341,7 +339,7 @@ export default async function Home() {
       {/* Comparison */}
       <section
         id="compare"
-        className="bg-brand-deep-forest relative z-10 scroll-mt-20 py-20 sm:py-28">
+        className="bg-brand-deep-forest relative z-10 scroll-mt-16 py-20 sm:py-28">
         <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
           <LandingReveal className="mb-12 max-w-2xl">
             <p className="font-display text-brand-coral mb-3 text-[11px] font-semibold tracking-[0.2em] uppercase">
@@ -397,7 +395,7 @@ export default async function Home() {
       {/* FAQ */}
       <section
         id="faq"
-        className="relative z-10 mx-auto max-w-3xl scroll-mt-20 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
+        className="relative z-10 mx-auto max-w-3xl scroll-mt-16 px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
         <LandingReveal className="mb-12 text-center">
           <p className="sec-num mb-3">FAQ</p>
           <h2 className="font-display text-foreground text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
