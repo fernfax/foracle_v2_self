@@ -3,63 +3,14 @@
 import { useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { NAV_ITEMS } from "@/configs/sidebar.config"
 import { useUser } from "@clerk/nextjs"
-import {
-  Briefcase,
-  Building2,
-  Calculator,
-  Car,
-  DollarSign,
-  Home,
-  LineChart,
-  Package,
-  PanelLeft,
-  PanelLeftClose,
-  Home as PropertyIcon,
-  Receipt,
-  Shield,
-  Target,
-  TrendingUp,
-  User,
-  Users
-} from "lucide-react"
+import { PanelLeft, PanelLeftClose } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { ClerkUserButton } from "@/components/clerk-user-button"
 import { useSidebar } from "@/components/sidebar/sidebar-context"
 import { SidebarNavItem } from "@/components/sidebar/sidebar-nav-item"
-
-const mainNavItems = [
-  {
-    href: "/user",
-    label: "User Homepage",
-    icon: User,
-    subItems: [
-      { href: "/user?tab=overview", label: "Overview", icon: Home },
-      { href: "/user?tab=family", label: "Family", icon: Users },
-      { href: "/user?tab=incomes", label: "Incomes", icon: DollarSign },
-      { href: "/user?tab=expenses", label: "Expenses", icon: Receipt },
-      { href: "/user?tab=cpf", label: "CPF", icon: Building2 },
-      { href: "/user?tab=current", label: "Holdings", icon: Briefcase }
-    ]
-  },
-  {
-    href: "/assets",
-    label: "Assets",
-    icon: TrendingUp,
-    subItems: [
-      { href: "/assets?tab=property", label: "Property", icon: PropertyIcon },
-      { href: "/assets?tab=vehicle", label: "Vehicle", icon: Car },
-      { href: "/assets?tab=others", label: "Others", icon: Package }
-    ]
-  },
-  { href: "/policies", label: "Insurance", icon: Shield },
-  { href: "/investments", label: "Investments", icon: LineChart },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/budget", label: "Budget", icon: Calculator }
-  // Hidden for now — AI Assistant feature paused.
-  // { href: "/assistant", label: "AI Assistant", icon: Sparkles },
-]
 
 export function Sidebar() {
   const { isPinned, setIsPinned, setIsHovered, isExpanded } = useSidebar()
@@ -127,7 +78,7 @@ export function Sidebar() {
 
         {/* Navigation — overflow-x-hidden prevents label overflow from creating horizontal scroll */}
         <nav className="flex-1 space-y-0.5 overflow-x-hidden overflow-y-auto px-3 pt-6 pb-4 sm:pt-8">
-          {mainNavItems.map((item) => (
+          {NAV_ITEMS.map((item) => (
             <SidebarNavItem
               key={item.href}
               {...item}

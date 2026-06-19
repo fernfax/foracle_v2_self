@@ -66,17 +66,13 @@ export function SidebarNavItem({
 
   const hasSubItems = subItems && subItems.length > 0
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (hasSubItems && onToggleSubmenu) {
-      e.preventDefault()
-      onToggleSubmenu()
-    }
-  }
+  // Stable id linking a parent disclosure button to its submenu (aria-controls).
+  const submenuId = `sidebar-submenu-${href.replace(/[^a-zA-Z0-9]+/g, "-")}`
 
   const itemBaseClasses = cn(
     // pr-3 keeps the label/chevron off the pill's right edge (the left side is
     // spaced by the w-12 icon slot). Clipped away in the collapsed rail.
-    "group flex items-center rounded-md py-2 pr-3 font-display text-sm transition-colors duration-150 overflow-hidden",
+    "group flex w-full items-center rounded-md py-2 pr-3 font-display text-sm transition-colors duration-150 overflow-hidden",
     isActive
       ? "bg-brand-terracotta text-brand-warm-white shadow-sm shadow-brand-terracotta/20"
       : "text-brand-cream/[0.55] hover:bg-brand-forest-mid hover:text-brand-cream"
@@ -89,12 +85,8 @@ export function SidebarNavItem({
       : "text-brand-cream/[0.55] group-hover:text-brand-cream"
   )
 
-  const trigger = (
-    <Link
-      href={href}
-      onClick={handleClick}
-      className={itemBaseClasses}
-      aria-label={label}>
+  const itemInner = (
+    <>
       {/* Fixed-width leading slot (= collapsed rail inner width) centers every
           icon on the same x as the rail center, and aligns all labels. */}
       <span className="flex w-12 shrink-0 items-center justify-center">
@@ -125,6 +117,26 @@ export function SidebarNavItem({
           )}
         />
       )}
+    </>
+  )
+
+  // Parents with a submenu are disclosure BUTTONS — they only toggle the submenu
+  // open, never navigate. Leaf items are navigation LINKS. (Previously parents
+  // were Links that called preventDefault, which mis-announced as links and let
+  // middle/⌘-click still open the page.)
+  const trigger = hasSubItems ? (
+    <button
+      type="button"
+      onClick={onToggleSubmenu}
+      aria-expanded={isSubmenuOpen}
+      aria-controls={submenuId}
+      aria-label={label}
+      className={itemBaseClasses}>
+      {itemInner}
+    </button>
+  ) : (
+    <Link href={href} className={itemBaseClasses} aria-label={label}>
+      {itemInner}
     </Link>
   )
 
@@ -152,6 +164,7 @@ export function SidebarNavItem({
       */}
       {hasSubItems && (
         <div
+          id={submenuId}
           className={cn(
             "grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
             isExpanded && isSubmenuOpen

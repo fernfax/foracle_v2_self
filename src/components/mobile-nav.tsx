@@ -9,31 +9,19 @@ import {
 } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  Calculator,
-  LineChart,
-  Shield,
-  Target,
-  TrendingUp,
-  User
-} from "lucide-react"
+import { NAV_ITEMS } from "@/configs/sidebar.config"
 
 import { cn } from "@/lib/utils"
 import { useGlassRefraction } from "@/hooks/use-glass-refraction"
 
-const mobileNavItems = [
-  { href: "/user", label: "User", icon: User },
-  // Expenses lives as a tab under the User homepage (/user?tab=expenses), so it
-  // is reached via User — not surfaced as its own bottom-nav entry. Only
-  // top-level pages (or single pages with no children) belong here.
-  { href: "/assets", label: "Assets", icon: TrendingUp },
-  { href: "/policies", label: "Insurance", icon: Shield },
-  { href: "/investments", label: "Invest", icon: LineChart },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/budget", label: "Budget", icon: Calculator }
-  // Hidden for now — AI Assistant feature paused.
-  // { href: "/assistant", label: "Assistant", icon: Sparkles },
-]
+// Top-level destinations only, with the compact mobile label. Sub-destinations
+// (e.g. Expenses under /user?tab=expenses) are reached via their parent — the
+// bottom bar never surfaces them. Source of truth: configs/sidebar.config.ts.
+const mobileNavItems = NAV_ITEMS.map((item) => ({
+  href: item.href,
+  label: item.shortLabel ?? item.label,
+  icon: item.icon
+}))
 
 /**
  * Floating bottom navigation (Whoop-style).
