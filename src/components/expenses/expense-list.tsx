@@ -581,7 +581,6 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
           {(selectedCategory || selectedFrequency) && (
             <Button
               variant="ghost"
-              size="sm"
               onClick={() => {
                 setSelectedCategory(null)
                 setSelectedFrequency(null)
@@ -593,18 +592,16 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => setManageCategoriesOpen(true)}
-            className="border-border/60 hover:bg-muted hover:border-border h-8 rounded-full bg-transparent px-4 text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm dark:hover:bg-white/10"
+            className="border-border/60 hover:bg-muted hover:border-border bg-transparent transition-all duration-200 hover:scale-[1.02] hover:shadow-sm dark:hover:bg-white/10"
             data-tour="manage-categories-btn">
-            <Settings2 className="mr-1.5 h-4 w-4" />
+            <Settings2 className="mr-1.5 size-4" />
             Manage Categories
           </Button>
           <Button
-            size="sm"
             onClick={() => setAddDialogOpen(true)}
             data-tour="add-expense-btn">
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="mr-1.5 size-4" />
             Add Expense
           </Button>
         </div>
@@ -636,36 +633,36 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
                   <Button
                     variant="ghost"
                     onClick={() => handleSort("name")}
-                    className="h-auto p-0 font-semibold">
+                    className="h-6 px-3.5 font-semibold">
                     Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-2 size-4" />
                   </Button>
                 </TableHead>
                 <TableHead>
                   <Button
                     variant="ghost"
                     onClick={() => handleSort("category")}
-                    className="h-auto p-0 font-semibold">
+                    className="h-6 px-3.5 font-semibold">
                     Category
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-2 size-4" />
                   </Button>
                 </TableHead>
                 <TableHead className="text-right">
                   <Button
                     variant="ghost"
                     onClick={() => handleSort("amount")}
-                    className="h-auto p-0 font-semibold">
+                    className="h-6 px-3.5 font-semibold">
                     Amount
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-2 size-4" />
                   </Button>
                 </TableHead>
                 <TableHead>
                   <Button
                     variant="ghost"
                     onClick={() => handleSort("frequency")}
-                    className="h-auto p-0 font-semibold">
+                    className="h-6 px-3.5 font-semibold">
                     Frequency
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-2 size-4" />
                   </Button>
                 </TableHead>
                 <TableHead className="w-[70px]">Actions</TableHead>
@@ -752,20 +749,18 @@ export function ExpenseList({ initialExpenses }: ExpenseListProps) {
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}>
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="size-4" />
               </Button>
               <span className="text-muted-foreground px-2 text-sm">
                 Page {currentPage} of {totalPages}
               </span>
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages || totalPages === 0}>
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="size-4" />
               </Button>
             </div>
           </div>
