@@ -12,3 +12,10 @@ export const IS_STAGING =
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT === "staging"
 export const IS_DEV =
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT === "development"
+
+// Hard WIP lock — when "true", every route redirects to /coming-soon (see
+// src/proxy.ts). Set PER INSTANCE, decoupled from the deployment-env flags
+// above: foracle.io (production) sets NEXT_PUBLIC_SITE_LOCKED=true to stay
+// sealed, while demo.foracle.io (a clone of main) leaves it unset so beta
+// testers can use the app. NEXT_PUBLIC_ so the middleware can read it.
+export const IS_SITE_LOCKED = process.env.NEXT_PUBLIC_SITE_LOCKED === "true"
