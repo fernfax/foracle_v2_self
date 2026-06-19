@@ -340,7 +340,7 @@ export function TourWelcomeHeroModal({
             onClick={onGetStarted}
             className="h-12 w-full text-base font-medium transition-all duration-200">
             Get Started
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowRight className="ml-2 size-4" />
           </Button>
 
           {/* Skip option */}

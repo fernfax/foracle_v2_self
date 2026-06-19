@@ -92,7 +92,7 @@ export function BudgetDailySpendingGraphModal({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <BarChart3 className="text-primary h-5 w-5" />
+            <BarChart3 className="text-primary size-5" />
             Daily Spending Graph
           </DialogTitle>
         </DialogHeader>
@@ -100,7 +100,7 @@ export function BudgetDailySpendingGraphModal({
         {/* Legend */}
         <div className="mb-2 flex items-center justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <div className="bg-brand-terracotta h-3 w-3 rounded-full" />
+            <div className="bg-brand-terracotta size-3 rounded-full" />
             <span className="text-muted-foreground">Daily Spending</span>
           </div>
           <div className="flex items-center gap-2">

@@ -91,7 +91,7 @@ export function BudgetCategoryBarChart({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base font-semibold">
-            <TrendingUp className="text-primary h-4 w-4" />
+            <TrendingUp className="text-primary size-4" />
             Budget vs Actual
           </CardTitle>
         </CardHeader>
@@ -110,7 +110,7 @@ export function BudgetCategoryBarChart({
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
-          <TrendingUp className="text-primary h-4 w-4" />
+          <TrendingUp className="text-primary size-4" />
           Budget vs Actual
         </CardTitle>
       </CardHeader>

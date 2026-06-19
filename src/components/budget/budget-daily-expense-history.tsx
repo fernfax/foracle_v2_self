@@ -128,8 +128,8 @@ export function BudgetDailyExpenseHistory({
                     key={expense.id}
                     className="hover:bg-muted/50 group flex items-center gap-3 p-3">
                     {/* Icon */}
-                    <div className="bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
-                      <Icon className="text-muted-foreground h-5 w-5" />
+                    <div className="bg-muted flex size-10 flex-shrink-0 items-center justify-center rounded-full">
+                      <Icon className="text-muted-foreground size-5" />
                     </div>
 
                     {/* Details */}
@@ -156,16 +156,16 @@ export function BudgetDailyExpenseHistory({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="size-8"
                         onClick={() => onEdit?.(expense)}>
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="size-4" />
                       </Button>
                       <Button
                         variant="destructiveGhost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="size-8"
                         onClick={() => setDeleteId(expense.id)}>
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="size-4" />
                       </Button>
                     </div>
                   </div>

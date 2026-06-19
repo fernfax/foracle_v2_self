@@ -81,7 +81,7 @@ export function BudgetDailySpendingChart({
     <Card className="flex h-full flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
-          <BarChart3 className="text-primary h-4 w-4" />
+          <BarChart3 className="text-primary size-4" />
           Daily Spending Trend
         </CardTitle>
       </CardHeader>

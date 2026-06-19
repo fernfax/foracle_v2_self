@@ -155,7 +155,7 @@ export function NavigationSidebar() {
             ) : (
               <div className="flex items-center py-1">
                 <span className="flex w-12 shrink-0 items-center justify-center">
-                  <div className="bg-brand-forest-mid h-9 w-9 animate-pulse rounded-full" />
+                  <div className="bg-brand-forest-mid size-9 animate-pulse rounded-full" />
                 </span>
               </div>
             )}

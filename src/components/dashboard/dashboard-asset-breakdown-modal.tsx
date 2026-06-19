@@ -192,7 +192,7 @@ export function DashboardAssetBreakdownModal({
       <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <TrendingUp className="text-on-brand h-5 w-5" />
+            <TrendingUp className="text-on-brand size-5" />
             Asset Breakdown
           </DialogTitle>
           <DialogDescription>
@@ -229,8 +229,8 @@ export function DashboardAssetBreakdownModal({
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="bg-brand-teal/[0.12] flex h-8 w-8 items-center justify-center rounded-lg">
-                    <Home className="text-on-success h-4 w-4" />
+                  <div className="bg-brand-teal/[0.12] flex size-8 items-center justify-center rounded-lg">
+                    <Home className="text-on-success size-4" />
                   </div>
                   <h3 className="text-lg font-semibold">Properties</h3>
                   <span className="text-muted-foreground text-sm">
@@ -265,7 +265,7 @@ export function DashboardAssetBreakdownModal({
                         }>
                         <div className="mb-3 flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Home className="text-on-success h-5 w-5" />
+                            <Home className="text-on-success size-5" />
                             <div>
                               <h4 className="font-semibold">
                                 {property.propertyName}
@@ -284,7 +284,7 @@ export function DashboardAssetBreakdownModal({
                                 Equity
                               </p>
                             </div>
-                            <ChevronRight className="text-muted-foreground h-4 w-4" />
+                            <ChevronRight className="text-muted-foreground size-4" />
                           </div>
                         </div>
 
@@ -329,8 +329,8 @@ export function DashboardAssetBreakdownModal({
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="bg-brand-gold/[0.15] flex h-8 w-8 items-center justify-center rounded-lg">
-                    <Car className="text-on-warning h-4 w-4" />
+                  <div className="bg-brand-gold/[0.15] flex size-8 items-center justify-center rounded-lg">
+                    <Car className="text-on-warning size-4" />
                   </div>
                   <h3 className="text-lg font-semibold">Vehicles</h3>
                   <span className="text-muted-foreground text-sm">
@@ -369,7 +369,7 @@ export function DashboardAssetBreakdownModal({
                         }>
                         <div className="mb-3 flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Car className="text-on-warning h-5 w-5" />
+                            <Car className="text-on-warning size-5" />
                             <div>
                               <h4 className="font-semibold">
                                 {vehicle.vehicleName}
@@ -388,7 +388,7 @@ export function DashboardAssetBreakdownModal({
                                 Equity
                               </p>
                             </div>
-                            <ChevronRight className="text-muted-foreground h-4 w-4" />
+                            <ChevronRight className="text-muted-foreground size-4" />
                           </div>
                         </div>
 

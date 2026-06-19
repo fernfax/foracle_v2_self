@@ -176,7 +176,7 @@ export function PolicyBenefitMatrix({
               <TableHead key={col.key} className="min-w-[130px] text-left">
                 <div className="flex items-center gap-2">
                   <span
-                    className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
+                    className="inline-block size-2 flex-shrink-0 rounded-full"
                     style={{ backgroundColor: col.color }}
                   />
                   {col.label}
@@ -198,9 +198,9 @@ export function PolicyBenefitMatrix({
                 <TableCell className="bg-background border-border sticky left-0 z-10 border-r py-3">
                   <div className="flex items-center gap-2.5">
                     <div
-                      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${avatarConfig.bgColor}`}>
+                      className={`flex size-8 flex-shrink-0 items-center justify-center rounded-full ${avatarConfig.bgColor}`}>
                       <AvatarIcon
-                        className={`h-4 w-4 ${avatarConfig.iconColor}`}
+                        className={`size-4 ${avatarConfig.iconColor}`}
                       />
                     </div>
                     <div className="min-w-0">
@@ -233,7 +233,7 @@ export function PolicyBenefitMatrix({
                         <div className="flex flex-col gap-0.5">
                           {isSentinel ? (
                             <div className="flex items-center gap-1.5">
-                              <Check className="text-on-success h-4 w-4" />
+                              <Check className="text-on-success size-4" />
                               <span className="text-on-success text-xs font-medium">
                                 Covered
                               </span>

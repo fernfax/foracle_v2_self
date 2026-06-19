@@ -126,8 +126,8 @@ export function StepHoldings({
                   key={holding.id || index}
                   className="border-border/60 bg-card flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-3">
-                    <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
-                      <Building2 className="text-muted-foreground h-5 w-5" />
+                    <div className="bg-muted flex size-10 items-center justify-center rounded-lg">
+                      <Building2 className="text-muted-foreground size-5" />
                     </div>
                     <div>
                       <p className="font-medium">{holding.bankName}</p>
@@ -162,7 +162,7 @@ export function StepHoldings({
         {/* Add New Holding Form */}
         <div className="border-border/60 space-y-4 rounded-lg border p-4">
           <h3 className="flex items-center gap-2 font-medium">
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             Add Bank Account
           </h3>
 
@@ -207,8 +207,8 @@ export function StepHoldings({
 
         {/* Add More Later Info Box */}
         <div className="border-brand-terracotta/[0.25] bg-brand-terracotta/[0.06] flex gap-3 rounded-xl border p-4">
-          <div className="bg-brand-terracotta/[0.1] flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-            <Lightbulb className="text-on-warning h-4 w-4" />
+          <div className="bg-brand-terracotta/[0.1] flex size-8 shrink-0 items-center justify-center rounded-full">
+            <Lightbulb className="text-on-warning size-4" />
           </div>
           <div>
             <p className="text-foreground text-sm font-medium">

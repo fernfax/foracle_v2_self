@@ -183,7 +183,7 @@ export function ExpenseManageCategoriesDialog({
                   onClick={handleAdd}
                   disabled={!newCategoryName.trim() || isAdding}
                   size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-2 size-4" />
                   Add
                 </Button>
               </div>
@@ -191,7 +191,7 @@ export function ExpenseManageCategoriesDialog({
 
             {/* Search */}
             <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 placeholder="Search categories..."
                 value={searchQuery}
@@ -238,7 +238,7 @@ export function ExpenseManageCategoriesDialog({
                             size="sm"
                             variant="ghost"
                             onClick={cancelEdit}>
-                            <X className="h-4 w-4" />
+                            <X className="size-4" />
                           </Button>
                         </>
                       ) : (
@@ -250,14 +250,14 @@ export function ExpenseManageCategoriesDialog({
                             size="sm"
                             variant="ghost"
                             onClick={() => startEdit(category)}>
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="size-4" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDeleteClick(category)}
                             className="text-on-danger hover:text-on-danger hover:bg-brand-alert-red/[0.12]">
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="size-4" />
                           </Button>
                         </>
                       )}
@@ -279,7 +279,7 @@ export function ExpenseManageCategoriesDialog({
             <AlertDialogTitle>
               {linkedExpenses.length > 0 ? (
                 <span className="flex items-center gap-2">
-                  <AlertTriangle className="text-on-warning h-5 w-5" />
+                  <AlertTriangle className="text-on-warning size-5" />
                   Cannot Delete Category
                 </span>
               ) : (

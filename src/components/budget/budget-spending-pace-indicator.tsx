@@ -84,7 +84,7 @@ export function BudgetSpendingPaceIndicator({
           "mt-2 flex items-center gap-2 text-sm",
           config.textColor
         )}>
-        <Icon className="h-4 w-4" />
+        <Icon className="size-4" />
         <span>{config.message}</span>
       </div>
     </Card>

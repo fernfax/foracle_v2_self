@@ -244,8 +244,8 @@ export function BudgetManageCategoriesModal({
                       className="relative flex cursor-pointer items-center justify-center"
                       onClick={() => handleToggleCategory(categoryExpenses)}>
                       {checkState === "indeterminate" ? (
-                        <div className="border-primary bg-primary flex h-4 w-4 items-center justify-center rounded-sm border">
-                          <Minus className="text-primary-foreground h-3 w-3" />
+                        <div className="border-primary bg-primary flex size-4 items-center justify-center rounded-sm border">
+                          <Minus className="text-primary-foreground size-3" />
                         </div>
                       ) : (
                         <Checkbox
@@ -264,12 +264,12 @@ export function BudgetManageCategoriesModal({
                   {/* Icon */}
                   <div
                     className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-full",
+                      "flex size-10 items-center justify-center rounded-full",
                       checkState === "unchecked" ? "bg-muted" : bgColor
                     )}>
                     <Icon
                       className={cn(
-                        "h-5 w-5",
+                        "size-5",
                         checkState === "unchecked"
                           ? "text-muted-foreground"
                           : iconColor
@@ -325,15 +325,15 @@ export function BudgetManageCategoriesModal({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="size-8"
                       onClick={(e) => {
                         e.stopPropagation()
                         toggleExpanded(category.id)
                       }}>
                       {isExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
+                        <ChevronUp className="size-4" />
                       ) : (
-                        <ChevronDown className="h-4 w-4" />
+                        <ChevronDown className="size-4" />
                       )}
                     </Button>
                   )}
@@ -440,8 +440,8 @@ export function BudgetManageCategoriesModal({
             Manage Categories
           </DrawerTitle>
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="size-8">
+              <X className="size-4" />
             </Button>
           </DrawerClose>
         </DrawerHeader>

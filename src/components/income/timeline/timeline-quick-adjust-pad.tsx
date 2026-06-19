@@ -143,7 +143,7 @@ function OWCeilingInfo({
         <button
           type="button"
           aria-label="About the Ordinary Wage ceiling"
-          className="text-muted-foreground hover:text-foreground inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors">
+          className="text-muted-foreground hover:text-foreground inline-flex size-4 items-center justify-center rounded-full transition-colors">
           <Info className="h-3.5 w-3.5" />
         </button>
       </PopoverTrigger>
@@ -253,7 +253,7 @@ function AWCeilingInfo({
         <button
           type="button"
           aria-label="About the Annual Wage ceiling"
-          className="text-muted-foreground hover:text-foreground inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors">
+          className="text-muted-foreground hover:text-foreground inline-flex size-4 items-center justify-center rounded-full transition-colors">
           <Info className="h-3.5 w-3.5" />
         </button>
       </PopoverTrigger>
@@ -401,7 +401,7 @@ function OneOffBonusRow({
         type="button"
         onClick={onRemove}
         aria-label="Remove bonus"
-        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex h-5 w-5 shrink-0 items-center justify-center rounded">
+        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex size-5 shrink-0 items-center justify-center rounded">
         <X className="h-3.5 w-3.5" />
       </button>
     </div>
@@ -496,7 +496,7 @@ function DetailRow({
             onClick={onEdit}
             className="text-muted-foreground hover:bg-muted hover:text-brand-jungle"
             aria-label={editLabel ?? `Edit ${k.toLowerCase()}`}>
-            <Pencil className="h-3 w-3" />
+            <Pencil className="size-3" />
           </Button>
         )}
       </span>
@@ -1063,7 +1063,7 @@ export function IncomeBarPopup({
                         type="button"
                         onClick={() => removeBonusGroup(i)}
                         aria-label="Remove bonus"
-                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex h-5 w-5 shrink-0 items-center justify-center rounded">
+                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex size-5 shrink-0 items-center justify-center rounded">
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -1075,7 +1075,7 @@ export function IncomeBarPopup({
                   size="sm"
                   onClick={addRecurringBonus}
                   className="h-8 w-full text-xs">
-                  <Plus className="mr-1 h-3 w-3" />
+                  <Plus className="mr-1 size-3" />
                   Add recurring bonus
                 </Button>
               </div>
@@ -1113,7 +1113,7 @@ export function IncomeBarPopup({
                   size="sm"
                   onClick={addOneOffBonus}
                   className="h-8 w-full text-xs">
-                  <Plus className="mr-1 h-3 w-3" />
+                  <Plus className="mr-1 size-3" />
                   Add one-off bonus
                 </Button>
               </div>

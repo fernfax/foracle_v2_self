@@ -2536,7 +2536,7 @@ function TimelineStudio({
             card sit flush under the page tabs. */}
           <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-3 pb-1 sm:px-6 sm:pt-4">
             <div className="flex items-center gap-1.5">
-              <TrendingUp className="text-brand-jungle h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+              <TrendingUp className="text-brand-jungle size-4 shrink-0 sm:h-5 sm:w-5" />
               <h2 className="font-display text-foreground text-sm font-semibold tracking-tight sm:text-base">
                 Projected Income River
               </h2>
@@ -2590,9 +2590,9 @@ function TimelineStudio({
                 <button
                   type="button"
                   onClick={onScrollPrev}
-                  className="text-muted-foreground hover:bg-muted hover:text-foreground flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+                  className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-7 items-center justify-center rounded-full transition-colors"
                   aria-label="Scroll timeline 6 months earlier">
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="size-4" />
                 </button>
                 <button
                   type="button"
@@ -2611,9 +2611,9 @@ function TimelineStudio({
                 <button
                   type="button"
                   onClick={onScrollNext}
-                  className="text-muted-foreground hover:bg-muted hover:text-foreground flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+                  className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-7 items-center justify-center rounded-full transition-colors"
                   aria-label="Scroll timeline 6 months later">
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="size-4" />
                 </button>
               </div>
             </div>
@@ -2942,7 +2942,7 @@ function TimelineStudio({
             data-tour="add-income-stream-btn"
             onClick={onOpenCreator}
             className="border-border/30 bg-muted/30 text-muted-foreground hover:bg-brand-terracotta/5 hover:text-brand-terracotta flex w-full items-center justify-center gap-2 border-t py-3 text-sm font-medium transition-colors">
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             Add Income Stream
           </button>
         </div>
@@ -3052,7 +3052,7 @@ function FloatingEditButton({
             ? "bg-brand-terracotta hover:bg-brand-terracotta/90 ring-brand-terracotta/40 text-white ring-2"
             : "border-border/40 bg-background/95 text-foreground hover:bg-accent border"
         )}>
-        <Pencil className="h-4 w-4" />
+        <Pencil className="size-4" />
         {editMode ? "Editing…" : "Edit"}
       </button>
     </Fab>
@@ -3452,7 +3452,7 @@ function HoverTooltip({
                       onClick={() => onEditIncome?.(income.id, cell.key)}
                       className="text-muted-foreground hover:bg-muted hover:text-brand-jungle"
                       aria-label={`Adjust ${income.name} from ${format(cell.date, "MMMM yyyy")}`}>
-                      <Pencil className="h-3 w-3" />
+                      <Pencil className="size-3" />
                     </Button>
                   )}
                 </span>
@@ -4459,7 +4459,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                     "flex items-center gap-1.5 text-[9px] font-bold tracking-[0.16em] uppercase",
                     meta.tone
                   )}>
-                  <Icon className="h-3 w-3" />
+                  <Icon className="size-3" />
                   {meta.label}
                 </div>
                 <div className="mt-0.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
@@ -4469,14 +4469,14 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                     onClick={() => onOpenDetail(income.id)}
                     className="text-muted-foreground hover:bg-muted hover:text-foreground"
                     aria-label={`Open details for ${income.name}`}>
-                    <Settings2 className="h-3 w-3" />
+                    <Settings2 className="size-3" />
                   </Button>
                   <Button
                     variant="destructiveGhost"
                     size="icon-sm"
                     onClick={() => onRequestDelete(income)}
                     aria-label={`Delete ${income.name}`}>
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="size-3" />
                   </Button>
                 </div>
               </>
@@ -4939,7 +4939,7 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         )}
                         style={{ left: `${centerPct}%` }}
                         aria-label={`${income.name} bonus, ${formatCurrency(bonusDisplay)}`}>
-                        <Gift className="h-3 w-3" />
+                        <Gift className="size-3" />
                         {formatCurrency(bonusDisplay)}
                       </button>
                     </PopoverTrigger>
@@ -5072,7 +5072,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
         type="button"
         onClick={onCreate}
         className="bg-brand-terracotta hover:bg-brand-terracotta/90 mt-6 text-white">
-        <Plus className="mr-1.5 h-4 w-4" />
+        <Plus className="mr-1.5 size-4" />
         Add Income
       </Button>
     </div>

@@ -355,13 +355,13 @@ export function ExpenseEditDialog({
             <DialogTitle className="flex items-center gap-2">
               {isLinked && config ? (
                 <>
-                  <config.icon className={`h-5 w-5 ${config.color}`} />
+                  <config.icon className={`size-5 ${config.color}`} />
                   {config.title}
                 </>
               ) : (
                 <>
                   Edit Expense
-                  <Info className="text-muted-foreground h-4 w-4" />
+                  <Info className="text-muted-foreground size-4" />
                 </>
               )}
             </DialogTitle>
@@ -379,7 +379,7 @@ export function ExpenseEditDialog({
                 <div
                   className={`flex gap-3 rounded-lg p-4 ${config.bgColor} border ${config.borderColor}`}>
                   <Lock
-                    className={`h-4 w-4 ${config.color} mt-0.5 flex-shrink-0`}
+                    className={`size-4 ${config.color} mt-0.5 flex-shrink-0`}
                   />
                   <div className={config.textColor}>
                     <span className="font-medium">{config.alertMessage}</span>
@@ -405,7 +405,7 @@ export function ExpenseEditDialog({
                   <>
                     Expense Type
                     {isLinked && (
-                      <Lock className="text-muted-foreground h-3 w-3" />
+                      <Lock className="text-muted-foreground size-3" />
                     )}
                   </>
                 }
@@ -467,7 +467,7 @@ export function ExpenseEditDialog({
                         <>
                           Expense Name
                           {isLinked && (
-                            <Lock className="text-muted-foreground h-3 w-3" />
+                            <Lock className="text-muted-foreground size-3" />
                           )}
                         </>
                       }
@@ -491,7 +491,7 @@ export function ExpenseEditDialog({
                         <>
                           Category
                           {isLinked && (
-                            <Lock className="text-muted-foreground h-3 w-3" />
+                            <Lock className="text-muted-foreground size-3" />
                           )}
                         </>
                       }
@@ -543,7 +543,7 @@ export function ExpenseEditDialog({
                         <>
                           Expense Amount
                           {isLinked && (
-                            <Lock className="text-muted-foreground h-3 w-3" />
+                            <Lock className="text-muted-foreground size-3" />
                           )}
                         </>
                       }
@@ -570,7 +570,7 @@ export function ExpenseEditDialog({
                         <>
                           Expense Frequency
                           {isLinked && (
-                            <Lock className="text-muted-foreground h-3 w-3" />
+                            <Lock className="text-muted-foreground size-3" />
                           )}
                         </>
                       }
@@ -625,7 +625,7 @@ export function ExpenseEditDialog({
                         <>
                           Select Months
                           {isLinked && (
-                            <Lock className="text-muted-foreground h-3 w-3" />
+                            <Lock className="text-muted-foreground size-3" />
                           )}
                         </>
                       }
@@ -698,7 +698,7 @@ export function ExpenseEditDialog({
                               ? "Expense Date"
                               : "Start Date"}
                             {isLinked && (
-                              <Lock className="text-muted-foreground h-3 w-3" />
+                              <Lock className="text-muted-foreground size-3" />
                             )}
                           </>
                         }
@@ -715,7 +715,7 @@ export function ExpenseEditDialog({
                                 variant="outline"
                                 disabled
                                 className="bg-muted w-full cursor-not-allowed justify-start text-left font-normal">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                <CalendarIcon className="mr-2 size-4" />
                                 {field.value
                                   ? format(field.value, "MMMM do, yyyy")
                                   : "Pick a date"}
@@ -737,7 +737,7 @@ export function ExpenseEditDialog({
                             <>
                               End Date
                               {isLinked && (
-                                <Lock className="text-muted-foreground h-3 w-3" />
+                                <Lock className="text-muted-foreground size-3" />
                               )}
                             </>
                           }
@@ -757,7 +757,7 @@ export function ExpenseEditDialog({
                                   variant="outline"
                                   disabled
                                   className="bg-muted w-full cursor-not-allowed justify-start text-left font-normal">
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  <CalendarIcon className="mr-2 size-4" />
                                   {field.value
                                     ? format(field.value, "MMMM do, yyyy")
                                     : "No end date"}

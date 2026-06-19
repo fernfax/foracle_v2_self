@@ -31,7 +31,7 @@ export function BudgetSubcategorySelector({
         className="h-8 gap-1 rounded-full px-3 text-xs"
         onClick={onManageClick}
         disabled={disabled}>
-        <Plus className="h-3 w-3" />
+        <Plus className="size-3" />
         Add
       </Button>
 

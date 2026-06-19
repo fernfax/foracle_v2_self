@@ -117,15 +117,15 @@ export function GoalDetailsModal({
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div
-              className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+              className={`flex size-12 items-center justify-center rounded-xl ${
                 goal.isAchieved
                   ? "bg-brand-teal/[0.12]"
                   : "bg-brand-teal/[0.12]"
               }`}>
               {goal.isAchieved ? (
-                <Trophy className="text-on-success h-6 w-6" />
+                <Trophy className="text-on-success size-6" />
               ) : (
-                <Target className="text-on-success h-6 w-6" />
+                <Target className="text-on-success size-6" />
               )}
             </div>
             <div>
@@ -194,7 +194,7 @@ export function GoalDetailsModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-muted rounded-lg p-4">
               <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="size-4" />
                 <span className="text-sm">Target Date</span>
               </div>
               <p className="font-semibold">
@@ -212,7 +212,7 @@ export function GoalDetailsModal({
 
             <div className="bg-muted rounded-lg p-4">
               <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                <Wallet className="h-4 w-4" />
+                <Wallet className="size-4" />
                 <span className="text-sm">Monthly Contribution</span>
               </div>
               <p className="font-semibold">
@@ -238,7 +238,7 @@ export function GoalDetailsModal({
               }`}>
               <div className="mb-2 flex items-center gap-2">
                 <TrendingUp
-                  className={`h-4 w-4 ${onTrack ? "text-on-success" : "text-on-warning"}`}
+                  className={`size-4 ${onTrack ? "text-on-success" : "text-on-warning"}`}
                 />
                 <span
                   className={`text-sm font-medium ${
@@ -278,7 +278,7 @@ export function GoalDetailsModal({
           {/* Metadata */}
           <div className="text-muted-foreground border-t pt-4 text-xs">
             <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
+              <Clock className="size-3" />
               <span>
                 Created {format(new Date(goal.createdAt), "MMM d, yyyy")}
                 {goal.updatedAt !== goal.createdAt && (

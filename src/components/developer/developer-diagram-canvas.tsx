@@ -280,7 +280,7 @@ function NodeDetails({
         <button
           onClick={onClose}
           className="text-muted-foreground hover:bg-muted/60 hover:text-foreground rounded-full p-1">
-          <X className="h-4 w-4" />
+          <X className="size-4" />
         </button>
       </div>
 

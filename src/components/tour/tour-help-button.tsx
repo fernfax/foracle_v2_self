@@ -234,7 +234,7 @@ export function TourHelpButton() {
               className="bg-background/95 hover:bg-accent rounded-full shadow-lg backdrop-blur-sm"
               aria-label="Help & Tours"
               data-tour="help-button">
-              <HelpCircle className="h-5 w-5" />
+              <HelpCircle className="size-5" />
             </Button>
           </DropdownMenuTrigger>
         </Fab>
@@ -244,63 +244,63 @@ export function TourHelpButton() {
           <DropdownMenuItem
             onClick={() => handleTourClick("overall")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <Compass className="mr-2 h-4 w-4" />
+            <Compass className="mr-2 size-4" />
             App Overview
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleTourClick("dashboard")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <LayoutDashboard className="mr-2 h-4 w-4" />
+            <LayoutDashboard className="mr-2 size-4" />
             Dashboard Tour
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleTourClick("incomes")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <DollarSign className="mr-2 h-4 w-4" />
+            <DollarSign className="mr-2 size-4" />
             Incomes Tour
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleTourClick("expenses")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <Receipt className="mr-2 h-4 w-4" />
+            <Receipt className="mr-2 size-4" />
             Expenses Tour
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleTourClick("cpf")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <Landmark className="mr-2 h-4 w-4" />
+            <Landmark className="mr-2 size-4" />
             CPF Tour
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleTourClick("holdings")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <Wallet className="mr-2 h-4 w-4" />
+            <Wallet className="mr-2 size-4" />
             Net Worth Tour
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleTourClick("goals")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <Target className="mr-2 h-4 w-4" />
+            <Target className="mr-2 size-4" />
             Goals Tour
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleTourClick("budget")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <Calculator className="mr-2 h-4 w-4" />
+            <Calculator className="mr-2 size-4" />
             Budget Tour
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => router.push("/onboarding-preview")}
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <GraduationCap className="mr-2 h-4 w-4" />
+            <GraduationCap className="mr-2 size-4" />
             Onboarding View
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => router.push("/mobile-guide")}
             data-tour="mobile-guide-btn"
             className="hover:bg-accent focus:bg-accent transition-colors">
-            <Smartphone className="mr-2 h-4 w-4" />
+            <Smartphone className="mr-2 size-4" />
             Install on iPhone
           </DropdownMenuItem>
         </DropdownMenuContent>

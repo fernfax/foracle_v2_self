@@ -76,15 +76,15 @@ export function AssetPropertyDetailsModal({
         }}>
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="bg-brand-terracotta/[0.1] flex h-12 w-12 items-center justify-center rounded-xl">
-              <Home className="text-on-brand h-6 w-6" />
+            <div className="bg-brand-terracotta/[0.1] flex size-12 items-center justify-center rounded-xl">
+              <Home className="text-on-brand size-6" />
             </div>
             <div>
               <DialogTitle className="text-xl">
                 {property.propertyName}
               </DialogTitle>
               <p className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
-                <Calendar className="h-3 w-3" />
+                <Calendar className="size-3" />
                 Purchased{" "}
                 {format(new Date(property.purchaseDate), "MMMM d, yyyy")}
               </p>
@@ -92,9 +92,9 @@ export function AssetPropertyDetailsModal({
                 variant="outline"
                 className={`mt-2 text-xs font-medium ${property.linkedExpenseId ? "text-on-success border-brand-teal/[0.25]" : "text-muted-foreground border-border"}`}>
                 {property.linkedExpenseId ? (
-                  <Check className="mr-1 h-3 w-3" />
+                  <Check className="mr-1 size-3" />
                 ) : (
-                  <X className="mr-1 h-3 w-3" />
+                  <X className="mr-1 size-3" />
                 )}
                 {property.linkedExpenseId ? "In Expenses" : "Not in Expenses"}
               </Badge>
@@ -109,7 +109,7 @@ export function AssetPropertyDetailsModal({
               className="border-border rounded-lg border p-4"
               style={{ backgroundColor: cardBg }}>
               <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
+                <Building2 className="size-4" />
                 <span className="text-sm">Purchase Price</span>
               </div>
               <p className="text-foreground text-2xl font-semibold tabular-nums">
@@ -120,7 +120,7 @@ export function AssetPropertyDetailsModal({
               className="border-border rounded-lg border p-4"
               style={{ backgroundColor: cardBg }}>
               <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                <Wallet className="h-4 w-4" />
+                <Wallet className="size-4" />
                 <span className="text-sm">Loan Amount</span>
               </div>
               <p className="text-foreground text-2xl font-semibold tabular-nums">
@@ -180,7 +180,7 @@ export function AssetPropertyDetailsModal({
           {/* Monthly Payment Breakdown */}
           <div className="space-y-3">
             <h3 className="text-foreground flex items-center gap-2 font-semibold">
-              <TrendingUp className="h-4 w-4" />
+              <TrendingUp className="size-4" />
               Monthly Payment Breakdown
             </h3>
             <div

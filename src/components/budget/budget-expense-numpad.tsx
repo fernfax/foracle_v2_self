@@ -135,7 +135,7 @@ export function BudgetExpenseNumpad({
                 className="bg-muted/50 relative h-14 touch-manipulation overflow-hidden text-lg font-medium transition-transform active:scale-[0.97]"
                 onPointerDown={() => flash(btn)}
                 onClick={handleDelete}>
-                <Delete className="h-5 w-5" />
+                <Delete className="size-5" />
                 <span
                   aria-hidden
                   className={flashOverlayClass}

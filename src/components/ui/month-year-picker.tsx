@@ -41,7 +41,7 @@ export function MonthYearPicker({
           onClick={() => setViewYear((y) => y - 1)}
           className="hover:bg-muted rounded p-1 transition-colors"
           aria-label="Previous year">
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
         </button>
         <span className="text-sm font-semibold tabular-nums">{viewYear}</span>
         <button
@@ -49,7 +49,7 @@ export function MonthYearPicker({
           onClick={() => setViewYear((y) => y + 1)}
           className="hover:bg-muted rounded p-1 transition-colors"
           aria-label="Next year">
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="size-4" />
         </button>
       </div>
       <div className="grid grid-cols-3 gap-1">

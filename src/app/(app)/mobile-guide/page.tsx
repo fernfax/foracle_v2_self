@@ -47,7 +47,7 @@ export default function MobileGuidePage() {
       <div className="mb-8">
         <Link href="/overview">
           <Button variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 size-4" />
             Back to Dashboard
           </Button>
         </Link>
@@ -65,19 +65,19 @@ export default function MobileGuidePage() {
         <h2 className="mb-3 text-lg font-semibold">Why add to home screen?</h2>
         <ul className="text-muted-foreground space-y-2 text-sm">
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="text-on-success h-4 w-4" />
+            <CheckCircle2 className="text-on-success size-4" />
             Full-screen experience without browser UI
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="text-on-success h-4 w-4" />
+            <CheckCircle2 className="text-on-success size-4" />
             Quick access from your home screen
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="text-on-success h-4 w-4" />
+            <CheckCircle2 className="text-on-success size-4" />
             Feels like a native app
           </li>
           <li className="flex items-center gap-2">
-            <CheckCircle2 className="text-on-success h-4 w-4" />A dedicated app
+            <CheckCircle2 className="text-on-success size-4" />A dedicated app
             icon and its own window
           </li>
         </ul>
@@ -94,7 +94,7 @@ export default function MobileGuidePage() {
             {/* Step Header */}
             <div className="border-border/60 bg-muted/50 border-b p-4">
               <div className="flex items-center gap-3">
-                <div className="bg-primary text-primary-foreground font-display flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold">
+                <div className="bg-primary text-primary-foreground font-display flex size-8 items-center justify-center rounded-full text-sm font-semibold">
                   {step.number}
                 </div>
                 <h3 className="font-display text-lg font-semibold">

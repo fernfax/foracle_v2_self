@@ -50,9 +50,9 @@ export function StepWelcome({ onNext }: WelcomeStepProps) {
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-10 text-center">
       {/* Status pill — mirrors the landing hero badge */}
       <div className="border-brand-terracotta/[0.18] bg-brand-terracotta/[0.07] mb-7 inline-flex items-center gap-2 rounded-full border px-4 py-1.5">
-        <span className="relative flex h-2 w-2">
+        <span className="relative flex size-2">
           <span className="bg-brand-teal absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
-          <span className="bg-brand-teal relative inline-flex h-2 w-2 rounded-full" />
+          <span className="bg-brand-teal relative inline-flex size-2 rounded-full" />
         </span>
         <span className="font-display text-on-brand text-[11px] font-semibold tracking-[0.16em] uppercase">
           Welcome to Foracle
@@ -80,9 +80,9 @@ export function StepWelcome({ onNext }: WelcomeStepProps) {
             key={title}
             className="bg-card flex items-start gap-4 p-6 text-left">
             <div
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl"
               style={{ backgroundColor: tint, color }}>
-              <Icon className="h-5 w-5" />
+              <Icon className="size-5" />
             </div>
             <div>
               <h3 className="font-display text-foreground text-[15px] font-semibold tracking-tight">
@@ -100,7 +100,7 @@ export function StepWelcome({ onNext }: WelcomeStepProps) {
       <div className="mt-10">
         <Button size="lg" onClick={onNext} className="px-10">
           Start your journey
-          <ArrowRight className="ml-2 h-4 w-4" />
+          <ArrowRight className="ml-2 size-4" />
         </Button>
       </div>
 

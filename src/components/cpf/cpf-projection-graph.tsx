@@ -405,7 +405,7 @@ export function CpfProjectionGraph({
                       size="icon-sm"
                       aria-label="About this projection"
                       className="text-muted-foreground hover:text-foreground">
-                      <Info className="h-4 w-4" />
+                      <Info className="size-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent

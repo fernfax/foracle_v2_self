@@ -144,7 +144,7 @@ export function ExpenseCategoryManagerPopover({
             variant="ghost"
             size="sm"
             className="text-muted-foreground hover:text-foreground h-auto p-0 text-xs">
-            <Settings2 className="mr-1 h-3 w-3" />
+            <Settings2 className="mr-1 size-3" />
             Manage Categories
           </Button>
         </PopoverTrigger>
@@ -175,7 +175,7 @@ export function ExpenseCategoryManagerPopover({
                   disabled={!newCategoryName.trim() || isAdding}
                   size="sm"
                   className="h-8">
-                  <Plus className="mr-1 h-3 w-3" />
+                  <Plus className="mr-1 size-3" />
                   Add
                 </Button>
               </div>
@@ -238,7 +238,7 @@ export function ExpenseCategoryManagerPopover({
                           variant="ghost"
                           onClick={cancelEdit}
                           className="h-7 px-2">
-                          <X className="h-3 w-3" />
+                          <X className="size-3" />
                         </Button>
                       </>
                     ) : (
@@ -251,14 +251,14 @@ export function ExpenseCategoryManagerPopover({
                           variant="ghost"
                           onClick={() => startEdit(category)}
                           className="h-7 px-2">
-                          <Pencil className="h-3 w-3" />
+                          <Pencil className="size-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteClick(category)}
                           className="text-on-danger hover:text-on-danger hover:bg-brand-alert-red/[0.12] h-7 px-2">
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="size-3" />
                         </Button>
                       </>
                     )}
@@ -279,7 +279,7 @@ export function ExpenseCategoryManagerPopover({
             <AlertDialogTitle>
               {linkedExpenses.length > 0 ? (
                 <span className="flex items-center gap-2">
-                  <AlertTriangle className="text-on-warning h-5 w-5" />
+                  <AlertTriangle className="text-on-warning size-5" />
                   Cannot Delete Category
                 </span>
               ) : (

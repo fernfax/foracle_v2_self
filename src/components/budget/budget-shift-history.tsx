@@ -63,9 +63,9 @@ export function BudgetShiftHistory({
           </div>
         </div>
         {isExpanded ? (
-          <ChevronUp className="text-muted-foreground h-4 w-4" />
+          <ChevronUp className="text-muted-foreground size-4" />
         ) : (
-          <ChevronDown className="text-muted-foreground h-4 w-4" />
+          <ChevronDown className="text-muted-foreground size-4" />
         )}
       </button>
 
@@ -81,7 +81,7 @@ export function BudgetShiftHistory({
                   <span className="truncate font-medium">
                     {shift.fromCategoryName}
                   </span>
-                  <ArrowRight className="text-muted-foreground h-3 w-3 flex-shrink-0" />
+                  <ArrowRight className="text-muted-foreground size-3 flex-shrink-0" />
                   <span className="truncate font-medium">
                     {shift.toCategoryName}
                   </span>
@@ -103,12 +103,12 @@ export function BudgetShiftHistory({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground hover:text-on-danger h-8 w-8"
+                  className="text-muted-foreground hover:text-on-danger size-8"
                   onClick={() => handleDelete(shift.id)}
                   disabled={deletingId === shift.id}>
                   <Trash2
                     className={cn(
-                      "h-4 w-4",
+                      "size-4",
                       deletingId === shift.id && "animate-pulse"
                     )}
                   />

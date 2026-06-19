@@ -123,7 +123,7 @@ export function InvestmentCard({
         {/* Header with Icon */}
         <div className="mb-3 flex items-start gap-3 pr-6">
           <div className={`rounded-lg p-2.5 ${config.bgColor}`}>
-            <Icon className={`h-5 w-5 ${config.color}`} />
+            <Icon className={`size-5 ${config.color}`} />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-foreground truncate font-semibold">
@@ -180,7 +180,7 @@ export function InvestmentCard({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
               <div className={`rounded-lg p-2 ${config.bgColor}`}>
-                <Icon className={`h-5 w-5 ${config.color}`} />
+                <Icon className={`size-5 ${config.color}`} />
               </div>
               {investment.name}
             </DialogTitle>
@@ -286,7 +286,7 @@ export function InvestmentCard({
                   setIsModalOpen(false)
                   onEdit?.()
                 }}>
-                <Pencil className="mr-2 h-4 w-4" />
+                <Pencil className="mr-2 size-4" />
                 Edit
               </Button>
               <Button
@@ -296,7 +296,7 @@ export function InvestmentCard({
                   setIsModalOpen(false)
                   onDelete?.()
                 }}>
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="mr-2 size-4" />
                 Delete
               </Button>
             </div>

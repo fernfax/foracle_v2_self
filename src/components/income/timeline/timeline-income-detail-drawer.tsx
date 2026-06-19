@@ -290,7 +290,7 @@ export function TimelineIncomeDetailDrawer({
             variant="destructiveGhost"
             onClick={handleArchive}
             disabled={pending === "archive"}>
-            <Archive className="mr-2 h-4 w-4" />
+            <Archive className="mr-2 size-4" />
             {pending === "archive" ? "Archiving…" : "Archive"}
           </Button>
           <Button
@@ -332,7 +332,7 @@ function ArchetypeButton({
           : "border-border/40 text-muted-foreground hover:border-border/70 hover:text-foreground",
         pending && "cursor-wait opacity-60"
       )}>
-      <Icon className="h-4 w-4" />
+      <Icon className="size-4" />
       {label}
     </button>
   )

@@ -137,7 +137,7 @@ export function DashboardBudgetTrackerCard({
                     <div className="flex items-center gap-2">
                       <div
                         className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded-md",
+                          "flex size-6 items-center justify-center rounded-md",
                           bgColor
                         )}>
                         <Icon className={cn("h-3.5 w-3.5", iconColor)} />
@@ -177,7 +177,7 @@ export function DashboardBudgetTrackerCard({
           </div>
         ) : (
           <div className="flex h-full flex-col items-center justify-center py-8 text-center">
-            <LucideIcons.PieChart className="text-muted-foreground/50 mb-3 h-10 w-10" />
+            <LucideIcons.PieChart className="text-muted-foreground/50 mb-3 size-10" />
             <p className="text-muted-foreground text-sm">
               No categories tracked
             </p>

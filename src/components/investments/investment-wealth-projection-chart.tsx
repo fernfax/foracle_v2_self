@@ -75,14 +75,14 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <p className="text-foreground mb-2 font-semibold">{label}</p>
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
-            <div className="bg-brand-teal h-3 w-3 rounded-sm" />
+            <div className="bg-brand-teal size-3 rounded-sm" />
             <span className="text-foreground">With Contributions:</span>
             <span className="font-medium">
               {formatCurrencyFull(payload[0]?.value || 0)}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="bg-muted h-3 w-3 rounded-sm" />
+            <div className="bg-muted size-3 rounded-sm" />
             <span className="text-foreground">Without Contributions:</span>
             <span className="font-medium">
               {formatCurrencyFull(payload[1]?.value || 0)}
@@ -246,7 +246,7 @@ export function InvestmentWealthProjectionChart({
                     type="button"
                     aria-label="How the projection is calculated"
                     className="text-muted-foreground hover:text-foreground transition-colors">
-                    <HelpCircle className="h-4 w-4" />
+                    <HelpCircle className="size-4" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent
@@ -307,7 +307,7 @@ export function InvestmentWealthProjectionChart({
                     <button
                       type="button"
                       className="text-muted-foreground hover:text-foreground transition-colors">
-                      <HelpCircle className="h-4 w-4" />
+                      <HelpCircle className="size-4" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent

@@ -110,8 +110,8 @@ export function AssistantChatView({
             {/* Loading indicator */}
             {isLoading && (
               <div className="flex gap-3 px-4 py-3">
-                <div className="text-on-success bg-brand-teal/[0.12] flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                  <Bot className="h-4 w-4" />
+                <div className="text-on-success bg-brand-teal/[0.12] flex size-8 shrink-0 items-center justify-center rounded-full">
+                  <Bot className="size-4" />
                 </div>
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   <span className="inline-flex gap-1">
@@ -139,7 +139,7 @@ export function AssistantChatView({
             {/* Error message */}
             {error && (
               <div className="border-destructive/30 bg-destructive/10 mx-4 my-2 flex items-start gap-2 rounded-lg border p-3">
-                <AlertCircle className="text-destructive mt-0.5 h-4 w-4" />
+                <AlertCircle className="text-destructive mt-0.5 size-4" />
                 <p className="text-destructive text-sm">{error}</p>
               </div>
             )}
@@ -188,7 +188,7 @@ function EmptyState() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
       <div className="bg-brand-teal/[0.12] flex h-16 w-16 items-center justify-center rounded-full">
-        <Sparkles className="text-on-success h-8 w-8" />
+        <Sparkles className="text-on-success size-8" />
       </div>
 
       <h2 className="mt-4 text-xl font-semibold">Foracle Assistant</h2>

@@ -39,7 +39,7 @@ export function AssistantSinglishToggle({
             onClick={handleClick}
             disabled={disabled || isPending}
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-md text-lg transition-all",
+              "flex size-8 items-center justify-center rounded-md text-lg transition-all",
               enabled
                 ? "bg-brand-teal/[0.12] ring-brand-teal ring-2"
                 : "bg-muted hover:bg-muted/80 opacity-50 grayscale",

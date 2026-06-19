@@ -262,12 +262,12 @@ export function TimelineFutureChangeDialog({
                   <span>Currently {fmtMoney(priorAmount)}.</span>
                   {direction === "up" && (
                     <span className="inline-flex items-center gap-0.5 font-semibold text-[#2E8B57]">
-                      <ArrowUpRight className="h-3 w-3" /> increase
+                      <ArrowUpRight className="size-3" /> increase
                     </span>
                   )}
                   {direction === "down" && (
                     <span className="inline-flex items-center gap-0.5 font-semibold text-[#9A6A12]">
-                      <ArrowDownRight className="h-3 w-3" /> decrease
+                      <ArrowDownRight className="size-3" /> decrease
                     </span>
                   )}
                 </p>
@@ -356,7 +356,7 @@ function MonthPicker({
           type="button"
           variant="outline"
           className="font-display w-full justify-start">
-          <CalendarDays className="text-muted-foreground mr-2 h-4 w-4" />
+          <CalendarDays className="text-muted-foreground mr-2 size-4" />
           {format(value, "MMMM yyyy")}
         </Button>
       </PopoverTrigger>

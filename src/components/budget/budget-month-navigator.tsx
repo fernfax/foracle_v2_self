@@ -43,11 +43,11 @@ export function BudgetMonthNavigator({
         onClick={handlePrevious}
         aria-label="Previous month"
         className="text-muted-foreground hover:bg-foreground/[0.06] rounded-full p-1.5 transition-colors">
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="size-4" />
       </button>
 
       <div className="flex items-center gap-1.5 px-2">
-        <CalendarDays className="text-muted-foreground h-4 w-4" />
+        <CalendarDays className="text-muted-foreground size-4" />
         <span className="text-sm font-medium tabular-nums">
           {getMonthName(month, "long")} {year}
         </span>
@@ -59,7 +59,7 @@ export function BudgetMonthNavigator({
         disabled={!canGoNext}
         aria-label="Next month"
         className="text-muted-foreground hover:bg-foreground/[0.06] rounded-full p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent">
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="size-4" />
       </button>
     </div>
   )

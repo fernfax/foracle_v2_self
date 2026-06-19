@@ -589,7 +589,7 @@ export function PolicyEditDialog({
 
         {isDataLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="border-border h-8 w-8 animate-spin rounded-full border-b-2"></div>
+            <div className="border-border size-8 animate-spin rounded-full border-b-2"></div>
             <span className="text-muted-foreground ml-3">
               Loading policy details...
             </span>

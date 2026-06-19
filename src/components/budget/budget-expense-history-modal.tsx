@@ -124,8 +124,8 @@ export function BudgetExpenseHistoryModal({
           {/* Header */}
           <DrawerHeader>
             <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <X className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="size-8">
+                <X className="size-4" />
               </Button>
             </DrawerClose>
             <DrawerTitle className="flex-1 text-center text-lg font-semibold">
@@ -197,10 +197,10 @@ export function BudgetExpenseHistoryModal({
                                 {/* Icon */}
                                 <div
                                   className={cn(
-                                    "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full",
+                                    "flex size-12 flex-shrink-0 items-center justify-center rounded-full",
                                     bgColor
                                   )}>
-                                  <Icon className={cn("h-5 w-5", iconColor)} />
+                                  <Icon className={cn("size-5", iconColor)} />
                                 </div>
 
                                 {/* Details */}

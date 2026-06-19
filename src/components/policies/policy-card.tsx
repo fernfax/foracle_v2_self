@@ -328,7 +328,7 @@ export function PolicyCard({
                   setIsModalOpen(false)
                   onEdit?.()
                 }}>
-                <Pencil className="mr-2 h-4 w-4" />
+                <Pencil className="mr-2 size-4" />
                 Edit Policy
               </Button>
             </div>
@@ -340,9 +340,9 @@ export function PolicyCard({
               <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
               <Badge variant={isInExpenses ? "success" : "neutral"}>
                 {isInExpenses ? (
-                  <Check className="mr-1 h-3 w-3" />
+                  <Check className="mr-1 size-3" />
                 ) : (
-                  <X className="mr-1 h-3 w-3" />
+                  <X className="mr-1 size-3" />
                 )}
                 {isInExpenses ? "In Expenses" : "Not in Expenses"}
               </Badge>
@@ -484,7 +484,7 @@ export function PolicyCard({
                   onDelete?.()
                 }}
                 className="text-on-danger hover:text-on-danger dark:text-brand-alert-red-dark dark:hover:text-brand-alert-red-dark w-full">
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="mr-2 size-4" />
                 Delete Policy
               </Button>
             </div>

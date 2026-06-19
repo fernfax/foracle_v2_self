@@ -159,7 +159,7 @@ export function FamilyMemberEditDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Edit Family Member
-              <Info className="text-muted-foreground h-4 w-4" />
+              <Info className="text-muted-foreground size-4" />
             </DialogTitle>
             <DialogDescription>
               Update the family member details.

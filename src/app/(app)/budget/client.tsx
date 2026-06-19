@@ -329,7 +329,7 @@ export function BudgetClient({
               variant="outline"
               className="w-full gap-2"
               onClick={() => setManageCategoriesOpen(true)}>
-              <Settings2 className="h-4 w-4" />
+              <Settings2 className="size-4" />
               Manage Categories
             </Button>
           </div>

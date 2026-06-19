@@ -90,9 +90,9 @@ export function BudgetOverview({
           <Button
             variant="ghost"
             size="icon"
-            className="-mt-2 -mr-2 h-8 w-8"
+            className="-mt-2 -mr-2 size-8"
             onClick={onHistoryClick}>
-            <History className="text-muted-foreground h-4 w-4" />
+            <History className="text-muted-foreground size-4" />
           </Button>
         )}
       </div>
@@ -184,7 +184,7 @@ export function BudgetOverview({
               "mt-2 flex items-center gap-2 text-sm",
               pacing.textColor
             )}>
-            <PacingIcon className="h-4 w-4" />
+            <PacingIcon className="size-4" />
             <span>{pacing.message}</span>
           </div>
         </div>

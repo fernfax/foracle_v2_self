@@ -906,7 +906,7 @@ export function DashboardCashflowSankey({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             <CardTitle className="font-display flex items-center gap-2 text-base">
-              <Layers className="text-primary h-4 w-4" />
+              <Layers className="text-primary size-4" />
               {isProjection ? "Balance Projection" : "Monthly Cashflow"}
             </CardTitle>
             {/* Inline status text — same line height as the default description,
@@ -975,10 +975,10 @@ export function DashboardCashflowSankey({
                     disabled={isCurrentMonth}
                     className="hover:bg-muted rounded-full p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Previous month">
-                    <ChevronLeft className="text-muted-foreground h-4 w-4" />
+                    <ChevronLeft className="text-muted-foreground size-4" />
                   </button>
                   <div className="flex items-center gap-1.5 px-2">
-                    <CalendarDays className="text-muted-foreground h-4 w-4" />
+                    <CalendarDays className="text-muted-foreground size-4" />
                     <span className="text-sm font-medium">
                       {formatMonthDisplay(selectedMonth)}
                     </span>
@@ -988,7 +988,7 @@ export function DashboardCashflowSankey({
                     onClick={goToNextMonth}
                     className="hover:bg-muted rounded-full p-1.5 transition-colors"
                     aria-label="Next month">
-                    <ChevronRight className="text-muted-foreground h-4 w-4" />
+                    <ChevronRight className="text-muted-foreground size-4" />
                   </button>
                 </div>
               </div>

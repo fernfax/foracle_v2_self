@@ -81,7 +81,7 @@ export function StepCpf({
       <div className="flex flex-1 flex-col">
         <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
           <div className="bg-muted mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-            <Info className="text-muted-foreground h-8 w-8" />
+            <Info className="text-muted-foreground size-8" />
           </div>
           <h3 className="mb-2 text-lg font-medium">CPF Not Applicable</h3>
           <p className="text-muted-foreground max-w-sm">
@@ -158,8 +158,8 @@ export function StepCpf({
 
         {/* Customize Later Info Box */}
         <div className="border-brand-terracotta/[0.25] bg-brand-terracotta/[0.06] flex gap-3 rounded-xl border p-4">
-          <div className="bg-brand-terracotta/[0.1] flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-            <Lightbulb className="text-on-warning h-4 w-4" />
+          <div className="bg-brand-terracotta/[0.1] flex size-8 shrink-0 items-center justify-center rounded-full">
+            <Lightbulb className="text-on-warning size-4" />
           </div>
           <div>
             <p className="text-foreground text-sm font-medium">

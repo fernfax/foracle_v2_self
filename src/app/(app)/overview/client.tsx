@@ -150,7 +150,7 @@ export function DashboardClient({
             key={tab}
             href={`/user/${tab}`}
             className="border-border/50 text-muted-foreground hover:border-border hover:text-foreground inline-flex items-center gap-1 rounded-full border bg-transparent px-3 py-1 text-[11px] transition-colors">
-            <Icon className="h-3 w-3" />
+            <Icon className="size-3" />
             {label}
           </Link>
         ))}
@@ -206,8 +206,8 @@ export function DashboardClient({
                 <CardTitle className="text-muted-foreground text-sm font-medium">
                   Active Goals
                 </CardTitle>
-                <div className="bg-brand-teal/[0.12] flex h-10 w-10 items-center justify-center rounded-xl">
-                  <Target className="text-on-success h-5 w-5" />
+                <div className="bg-brand-teal/[0.12] flex size-10 items-center justify-center rounded-xl">
+                  <Target className="text-on-success size-5" />
                 </div>
               </CardHeader>
               <CardContent>
@@ -226,8 +226,8 @@ export function DashboardClient({
                 <CardTitle className="text-muted-foreground text-sm font-medium">
                   Family Members
                 </CardTitle>
-                <div className="bg-brand-terracotta/[0.1] flex h-10 w-10 items-center justify-center rounded-xl">
-                  <Users className="text-on-brand h-5 w-5" />
+                <div className="bg-brand-terracotta/[0.1] flex size-10 items-center justify-center rounded-xl">
+                  <Users className="text-on-brand size-5" />
                 </div>
               </CardHeader>
               <CardContent>

@@ -117,9 +117,9 @@ export function UserBackgroundDecorPicker({
                   </div>
                   {selected ? (
                     isPending ? (
-                      <Loader2 className="text-brand-terracotta h-4 w-4 shrink-0 animate-spin" />
+                      <Loader2 className="text-brand-terracotta size-4 shrink-0 animate-spin" />
                     ) : (
-                      <Check className="text-brand-terracotta h-4 w-4 shrink-0" />
+                      <Check className="text-brand-terracotta size-4 shrink-0" />
                     )
                   ) : null}
                 </div>

@@ -114,8 +114,8 @@ export function BudgetCurrencySelector({
         <DrawerContent>
           <DrawerHeader>
             <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <X className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="size-8">
+                <X className="size-4" />
               </Button>
             </DrawerClose>
             <DrawerTitle className="flex-1 text-center text-lg font-semibold">
@@ -124,10 +124,10 @@ export function BudgetCurrencySelector({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="size-8"
               onClick={fetchRates}
               disabled={loading}>
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+              <RefreshCw className={cn("size-4", loading && "animate-spin")} />
             </Button>
           </DrawerHeader>
 
@@ -220,7 +220,7 @@ export function BudgetCurrencySelector({
                       </div>
                     )}
                     {isSelected && (
-                      <div className="bg-primary ml-2 h-2 w-2 rounded-full" />
+                      <div className="bg-primary ml-2 size-2 rounded-full" />
                     )}
                   </button>
                 )

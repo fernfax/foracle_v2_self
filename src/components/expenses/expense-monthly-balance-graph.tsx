@@ -380,7 +380,7 @@ function CustomTooltip({ active, payload, viewMode }: CustomTooltipProps) {
           </p>
           <div className="flex items-center gap-2">
             <div
-              className="h-3 w-3 rounded-sm"
+              className="size-3 rounded-sm"
               style={{ backgroundColor: color }}
             />
             <span className="text-sm">
@@ -487,7 +487,7 @@ function CustomTooltip({ active, payload, viewMode }: CustomTooltipProps) {
               {specialItems.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <div
-                    className="h-3 w-3 rounded-sm"
+                    className="size-3 rounded-sm"
                     style={{ backgroundColor: ARROW_COLORS[item.type] }}
                   />
                   <span className="text-xs">
@@ -719,7 +719,7 @@ export function ExpenseMonthlyBalanceGraph({
                         size="icon-sm"
                         aria-label="About this projection"
                         className="text-muted-foreground hover:text-foreground">
-                        <Info className="h-4 w-4" />
+                        <Info className="size-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent
@@ -950,7 +950,7 @@ export function ExpenseMonthlyBalanceGraph({
                   handleIncludeInvestmentsChange(checked === true)
                 }
               />
-              <TrendingUp className="text-on-success h-4 w-4 flex-shrink-0" />
+              <TrendingUp className="text-on-success size-4 flex-shrink-0" />
               <span className="text-on-success text-xs font-medium whitespace-nowrap sm:text-sm">
                 Include Investments
               </span>
@@ -1024,7 +1024,7 @@ export function ExpenseMonthlyBalanceGraph({
                     {payload?.map((entry, index) => (
                       <div key={index} className="flex items-center gap-1.5">
                         <div
-                          className="h-3 w-3 rounded-sm"
+                          className="size-3 rounded-sm"
                           style={{ backgroundColor: entry.color }}
                         />
                         <span className="text-foreground">{entry.value}</span>

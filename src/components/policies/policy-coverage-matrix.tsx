@@ -218,7 +218,7 @@ export function PolicyCoverageMatrix({
                 <TableHead key={type} className="min-w-[160px] text-left">
                   <div className="flex items-center gap-2">
                     <span
-                      className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
+                      className="inline-block size-2 flex-shrink-0 rounded-full"
                       style={{ backgroundColor: getPolicyTypeColor(type) }}
                     />
                     {type}
@@ -242,9 +242,9 @@ export function PolicyCoverageMatrix({
                   <TableCell className="bg-background border-border sticky left-0 z-10 border-r py-3">
                     <div className="flex items-center gap-2.5">
                       <div
-                        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${avatarConfig.bgColor}`}>
+                        className={`flex size-8 flex-shrink-0 items-center justify-center rounded-full ${avatarConfig.bgColor}`}>
                         <AvatarIcon
-                          className={`h-4 w-4 ${avatarConfig.iconColor}`}
+                          className={`size-4 ${avatarConfig.iconColor}`}
                         />
                       </div>
                       <div className="min-w-0">
@@ -292,10 +292,10 @@ export function PolicyCoverageMatrix({
                                   </span>
                                   {getChipExpiryLevel(policy) ===
                                     "critical" && (
-                                    <AlertTriangle className="text-on-danger h-3 w-3 flex-shrink-0" />
+                                    <AlertTriangle className="text-on-danger size-3 flex-shrink-0" />
                                   )}
                                   {getChipExpiryLevel(policy) === "warning" && (
-                                    <AlertTriangle className="h-3 w-3 flex-shrink-0 text-[#7A5C00]" />
+                                    <AlertTriangle className="size-3 flex-shrink-0 text-[#7A5C00]" />
                                   )}
                                 </span>
                                 {policy.planName && (
@@ -319,7 +319,7 @@ export function PolicyCoverageMatrix({
                               size="sm"
                               onClick={() => onAddPolicy(member.id)}
                               className="text-muted-foreground hover:text-primary hidden h-auto items-center gap-1 p-0 text-xs no-underline group-hover:flex">
-                              <Plus className="h-3 w-3" />
+                              <Plus className="size-3" />
                               Add
                             </Button>
                           </div>
@@ -354,7 +354,7 @@ export function PolicyCoverageMatrix({
               {/* Actions */}
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleEdit}>
-                  <Pencil className="mr-2 h-4 w-4" />
+                  <Pencil className="mr-2 size-4" />
                   Edit Policy
                 </Button>
               </div>
@@ -475,7 +475,7 @@ export function PolicyCoverageMatrix({
                   size="sm"
                   onClick={handleDelete}
                   className="text-on-danger hover:text-on-danger w-full">
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="mr-2 size-4" />
                   Delete Policy
                 </Button>
               </div>

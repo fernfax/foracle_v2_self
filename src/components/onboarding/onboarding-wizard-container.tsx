@@ -70,8 +70,8 @@ export function OnboardingWizardContainer({
               <div className="flex items-center gap-4">
                 {Icon && iconBgColor && iconColor && (
                   <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-md ${iconBgColor}`}>
-                    <Icon className={`h-6 w-6 ${iconColor}`} />
+                    className={`flex size-12 items-center justify-center rounded-md ${iconBgColor}`}>
+                    <Icon className={`size-6 ${iconColor}`} />
                   </div>
                 )}
                 <div>

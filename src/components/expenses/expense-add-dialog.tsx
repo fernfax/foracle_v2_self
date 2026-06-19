@@ -249,7 +249,7 @@ export function ExpenseAddDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Add Expense
-              <Info className="text-muted-foreground h-4 w-4" />
+              <Info className="text-muted-foreground size-4" />
             </DialogTitle>
             <DialogDescription>
               Add a new expense to track your spending.

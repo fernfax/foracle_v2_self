@@ -302,8 +302,8 @@ export function StepExpenses({
 
         {/* Customize Later Info Box */}
         <div className="border-brand-terracotta/[0.25] bg-brand-terracotta/[0.06] dark:border-brand-terracotta/[0.25]/50 flex gap-3 rounded-xl border p-4">
-          <div className="bg-brand-terracotta/[0.1] dark:bg-brand-terracotta/40 flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-            <Lightbulb className="text-on-warning h-4 w-4" />
+          <div className="bg-brand-terracotta/[0.1] dark:bg-brand-terracotta/40 flex size-8 shrink-0 items-center justify-center rounded-full">
+            <Lightbulb className="text-on-warning size-4" />
           </div>
           <div>
             <p className="text-foreground text-sm font-medium">

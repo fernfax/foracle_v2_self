@@ -106,7 +106,7 @@ export function SlidingTabs({
                 ? "text-brand-terracotta"
                 : "text-muted-foreground hover:text-foreground"
             )}>
-            {Icon && <Icon className="h-4 w-4" />}
+            {Icon && <Icon className="size-4" />}
             <span>{tab.label}</span>
             {tab.badge !== undefined && tab.badge > 0 && (
               <span

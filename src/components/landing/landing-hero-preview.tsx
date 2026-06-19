@@ -61,9 +61,9 @@ export function LandingHeroPreview() {
           {/* Left: net worth + animated line chart */}
           <div className="border-brand-deep-forest/[0.07] border-b p-6 sm:col-span-3 sm:border-r sm:border-b-0 sm:p-8">
             <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex size-2">
                 <span className="bg-brand-teal absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
-                <span className="bg-brand-teal relative inline-flex h-2 w-2 rounded-full" />
+                <span className="bg-brand-teal relative inline-flex size-2 rounded-full" />
               </span>
               <span className="font-display text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase">
                 Net worth · Live
@@ -75,7 +75,7 @@ export function LandingHeroPreview() {
                 S$248,500
               </span>
               <span className="font-display text-on-success bg-brand-teal/[0.12] mb-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold">
-                <TrendingUp className="h-3 w-3" />
+                <TrendingUp className="size-3" />
                 4.2%
               </span>
             </div>
@@ -193,8 +193,8 @@ export function LandingHeroPreview() {
 
       {/* Floating insight chip — overlaps bottom-left */}
       <div className="glass-panel absolute -bottom-5 left-4 hidden items-center gap-2.5 rounded-2xl px-4 py-3 sm:flex">
-        <div className="bg-brand-terracotta/[0.1] flex h-8 w-8 items-center justify-center rounded-lg">
-          <TrendingUp className="text-brand-terracotta h-4 w-4" />
+        <div className="bg-brand-terracotta/[0.1] flex size-8 items-center justify-center rounded-lg">
+          <TrendingUp className="text-brand-terracotta size-4" />
         </div>
         <div className="leading-tight">
           <p className="font-display text-foreground text-[12px] font-semibold">

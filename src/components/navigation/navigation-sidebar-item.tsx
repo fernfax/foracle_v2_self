@@ -107,7 +107,7 @@ export function NavigationSidebarItem({
       {hasSubItems && (
         <ChevronRight
           className={cn(
-            "h-4 w-4 flex-shrink-0 transition-[transform,opacity] duration-200",
+            "size-4 flex-shrink-0 transition-[transform,opacity] duration-200",
             isExpanded ? "opacity-60" : "opacity-0",
             isSubmenuOpen ? "rotate-90" : ""
           )}

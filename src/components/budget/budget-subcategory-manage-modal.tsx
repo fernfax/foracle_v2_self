@@ -123,8 +123,8 @@ export function BudgetSubcategoryManageModal({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 touch-manipulation">
-              <X className="h-4 w-4" />
+              className="size-8 touch-manipulation">
+              <X className="size-4" />
             </Button>
           </DrawerClose>
           <DrawerTitle className="flex-1 text-center text-lg font-semibold">
@@ -150,7 +150,7 @@ export function BudgetSubcategoryManageModal({
               onClick={handleAdd}
               disabled={isSubmitting || !newName.trim()}
               className="min-h-[44px] min-w-[70px] touch-manipulation">
-              <Plus className="mr-1 h-4 w-4" />
+              <Plus className="mr-1 size-4" />
               Add
             </Button>
           </div>
@@ -184,18 +184,18 @@ export function BudgetSubcategoryManageModal({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 touch-manipulation"
+                        className="size-8 touch-manipulation"
                         onClick={handleEdit}
                         disabled={isSubmitting || !editingName.trim()}>
-                        <Check className="text-on-success h-4 w-4" />
+                        <Check className="text-on-success size-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 touch-manipulation"
+                        className="size-8 touch-manipulation"
                         onClick={cancelEditing}
                         disabled={isSubmitting}>
-                        <X className="text-muted-foreground h-4 w-4" />
+                        <X className="text-muted-foreground size-4" />
                       </Button>
                     </div>
                   )
@@ -222,26 +222,26 @@ export function BudgetSubcategoryManageModal({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 touch-manipulation"
+                      className="size-8 touch-manipulation"
                       onClick={(e) => {
                         e.stopPropagation()
                         startEditing(subcategory)
                       }}
                       disabled={isSubmitting}>
-                      <Pencil className="text-muted-foreground h-4 w-4" />
+                      <Pencil className="text-muted-foreground size-4" />
                     </Button>
 
                     {/* Delete button */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 touch-manipulation"
+                      className="size-8 touch-manipulation"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleDelete(subcategory.id)
                       }}
                       disabled={isSubmitting}>
-                      <Trash2 className="text-destructive h-4 w-4" />
+                      <Trash2 className="text-destructive size-4" />
                     </Button>
                   </div>
                 )

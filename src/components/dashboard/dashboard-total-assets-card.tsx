@@ -81,8 +81,8 @@ export function DashboardTotalAssetsCard({
           <CardTitle className="text-muted-foreground text-sm font-medium">
             Total Assets
           </CardTitle>
-          <div className="bg-brand-gold/[0.15] flex h-10 w-10 items-center justify-center rounded-xl">
-            <TrendingUp className="text-on-warning h-5 w-5" />
+          <div className="bg-brand-gold/[0.15] flex size-10 items-center justify-center rounded-xl">
+            <TrendingUp className="text-on-warning size-5" />
           </div>
         </CardHeader>
         <CardContent>
@@ -100,13 +100,13 @@ export function DashboardTotalAssetsCard({
               <div className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
                 {calculatedData.propertyCount > 0 && (
                   <div className="flex items-center gap-1">
-                    <Home className="text-on-success h-3 w-3" />
+                    <Home className="text-on-success size-3" />
                     <span>{calculatedData.propertyCount} property</span>
                   </div>
                 )}
                 {calculatedData.vehicleCount > 0 && (
                   <div className="flex items-center gap-1">
-                    <Car className="text-on-warning h-3 w-3" />
+                    <Car className="text-on-warning size-3" />
                     <span>{calculatedData.vehicleCount} vehicle</span>
                   </div>
                 )}

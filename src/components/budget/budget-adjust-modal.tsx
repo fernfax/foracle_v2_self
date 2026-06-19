@@ -121,8 +121,8 @@ export function BudgetAdjustModal({
             Adjust Budget
           </DrawerTitle>
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="size-8">
+              <X className="size-4" />
             </Button>
           </DrawerClose>
         </DrawerHeader>
@@ -147,7 +147,7 @@ export function BudgetAdjustModal({
           <Field label="Take budget from">
             {sourceCategoryOptions.length === 0 ? (
               <div className="bg-muted text-muted-foreground rounded-lg p-4 text-center text-sm">
-                <AlertCircle className="mx-auto mb-2 h-5 w-5" />
+                <AlertCircle className="mx-auto mb-2 size-5" />
                 No categories have remaining budget to shift
               </div>
             ) : (
@@ -214,7 +214,7 @@ export function BudgetAdjustModal({
                     </span>
                   </div>
                 </div>
-                <ArrowRight className="text-muted-foreground mx-4 h-4 w-4" />
+                <ArrowRight className="text-muted-foreground mx-4 size-4" />
                 <div className="flex-1 text-right">
                   <div className="font-medium">{targetCategory}</div>
                   <div className="text-muted-foreground">

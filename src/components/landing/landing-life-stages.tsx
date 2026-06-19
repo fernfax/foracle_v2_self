@@ -140,9 +140,9 @@ function StageDetails({ s }: { s: Stage }) {
   return (
     <div className="text-left">
       <div
-        className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl"
+        className="mb-5 inline-flex size-12 items-center justify-center rounded-xl"
         style={{ backgroundColor: s.tint, color: s.color }}>
-        <Icon className="h-6 w-6" />
+        <Icon className="size-6" />
       </div>
       <p className="font-display text-muted-foreground text-[11px] font-semibold tracking-[0.16em] uppercase">
         Age {s.age}
@@ -357,7 +357,7 @@ export function LandingLifeStages() {
                     onClick={() => scrollToStage(i)}
                     aria-label={`${s.title}, age ${s.age}`}
                     aria-current={isActive ? "true" : undefined}
-                    className="relative z-10 flex h-5 w-5 items-center justify-center rounded-full">
+                    className="relative z-10 flex size-5 items-center justify-center rounded-full">
                     <span
                       className="rounded-full transition-all duration-300"
                       style={
@@ -394,9 +394,9 @@ export function LandingLifeStages() {
                 className="glass-panel rounded-2xl p-6">
                 <div className="flex items-start gap-4">
                   <div
-                    className="flex h-12 w-12 flex-none items-center justify-center rounded-xl"
+                    className="flex size-12 flex-none items-center justify-center rounded-xl"
                     style={{ backgroundColor: s.tint, color: s.color }}>
-                    <Icon className="h-6 w-6" />
+                    <Icon className="size-6" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-display text-muted-foreground text-[10px] font-semibold tracking-[0.16em] uppercase">

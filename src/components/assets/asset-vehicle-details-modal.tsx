@@ -115,15 +115,15 @@ export function AssetVehicleDetailsModal({
         }}>
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="bg-brand-gold/[0.15] flex h-12 w-12 items-center justify-center rounded-xl">
-              <Car className="text-on-warning h-6 w-6" />
+            <div className="bg-brand-gold/[0.15] flex size-12 items-center justify-center rounded-xl">
+              <Car className="text-on-warning size-6" />
             </div>
             <div>
               <DialogTitle className="text-xl">
                 {vehicle.vehicleName}
               </DialogTitle>
               <p className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
-                <Calendar className="h-3 w-3" />
+                <Calendar className="size-3" />
                 Purchased{" "}
                 {format(new Date(vehicle.purchaseDate), "MMMM d, yyyy")}
               </p>
@@ -131,9 +131,9 @@ export function AssetVehicleDetailsModal({
                 variant="outline"
                 className={`mt-2 text-xs font-medium ${vehicle.linkedExpenseId ? "text-on-success border-brand-teal/[0.25]" : "text-muted-foreground border-border"}`}>
                 {vehicle.linkedExpenseId ? (
-                  <Check className="mr-1 h-3 w-3" />
+                  <Check className="mr-1 size-3" />
                 ) : (
-                  <X className="mr-1 h-3 w-3" />
+                  <X className="mr-1 size-3" />
                 )}
                 {vehicle.linkedExpenseId ? "In Expenses" : "Not in Expenses"}
               </Badge>
@@ -148,7 +148,7 @@ export function AssetVehicleDetailsModal({
               className="border-border rounded-lg border p-4"
               style={{ backgroundColor: cardBg }}>
               <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                <Car className="h-4 w-4" />
+                <Car className="size-4" />
                 <span className="text-sm">Purchase Price</span>
               </div>
               <p className="text-foreground text-2xl font-semibold tabular-nums">
@@ -159,7 +159,7 @@ export function AssetVehicleDetailsModal({
               className="border-border rounded-lg border p-4"
               style={{ backgroundColor: cardBg }}>
               <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                <Wallet className="h-4 w-4" />
+                <Wallet className="size-4" />
                 <span className="text-sm">Loan Amount</span>
               </div>
               <p className="text-foreground text-2xl font-semibold tabular-nums">
@@ -175,7 +175,7 @@ export function AssetVehicleDetailsModal({
               style={{ backgroundColor: "hsl(var(--card))" }}>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-foreground flex items-center gap-2 font-semibold">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="size-4" />
                   COE Expiry
                 </h3>
                 <Badge

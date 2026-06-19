@@ -173,7 +173,7 @@ export function BudgetCategorySelector({
         <CategoryIcon
           iconName={category.icon}
           categoryName={category.name}
-          className={cn("h-4 w-4 shrink-0", iconColor)}
+          className={cn("size-4 shrink-0", iconColor)}
         />
         <span className="truncate">{category.name}</span>
       </DropdownMenuItem>
@@ -191,14 +191,14 @@ export function BudgetCategorySelector({
               <CategoryIcon
                 iconName={selectedCategory.icon}
                 categoryName={selectedCategory.name}
-                className={cn("h-4 w-4", selectedIconColor)}
+                className={cn("size-4", selectedIconColor)}
               />
               <span>{selectedCategory.name}</span>
             </>
           ) : (
             <span>Please Select</span>
           )}
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

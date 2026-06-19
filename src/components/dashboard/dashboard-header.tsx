@@ -487,10 +487,10 @@ export function DashboardHeader({
                   aria-label="Previous month"
                   onClick={goToPreviousMonth}
                   className="hover:bg-muted rounded-full p-1.5 transition-colors">
-                  <ChevronLeft className="text-muted-foreground h-4 w-4" />
+                  <ChevronLeft className="text-muted-foreground size-4" />
                 </button>
                 <div className="flex items-center gap-1.5 px-3">
-                  <CalendarDays className="text-muted-foreground h-4 w-4" />
+                  <CalendarDays className="text-muted-foreground size-4" />
                   <span className="text-sm font-medium">
                     {formatMonthDisplay(selectedMonth)}
                   </span>
@@ -500,7 +500,7 @@ export function DashboardHeader({
                   aria-label="Next month"
                   onClick={goToNextMonth}
                   className="hover:bg-muted rounded-full p-1.5 transition-colors">
-                  <ChevronRight className="text-muted-foreground h-4 w-4" />
+                  <ChevronRight className="text-muted-foreground size-4" />
                 </button>
               </div>
             </div>
@@ -517,7 +517,7 @@ export function DashboardHeader({
                 <span className="text-muted-foreground text-xs font-medium sm:text-sm">
                   Total Nett Income
                 </span>
-                <div className="bg-brand-teal/[0.12] flex h-8 w-8 items-center justify-center rounded-xl">
+                <div className="bg-brand-teal/[0.12] flex size-8 items-center justify-center rounded-xl">
                   <DollarSign className="text-on-success h-3.5 w-3.5" />
                 </div>
               </div>
@@ -548,7 +548,7 @@ export function DashboardHeader({
                 <span className="text-muted-foreground text-xs font-medium sm:text-sm">
                   Total Expenses
                 </span>
-                <div className="bg-brand-alert-red/[0.12] flex h-8 w-8 items-center justify-center rounded-xl">
+                <div className="bg-brand-alert-red/[0.12] flex size-8 items-center justify-center rounded-xl">
                   <TrendingDown className="text-on-danger h-3.5 w-3.5" />
                 </div>
               </div>
@@ -575,7 +575,7 @@ export function DashboardHeader({
                 <span className="text-muted-foreground text-xs font-medium sm:text-sm">
                   Net Savings
                 </span>
-                <div className="bg-brand-terracotta/[0.1] flex h-8 w-8 items-center justify-center rounded-xl">
+                <div className="bg-brand-terracotta/[0.1] flex size-8 items-center justify-center rounded-xl">
                   <Wallet className="text-on-brand h-3.5 w-3.5" />
                 </div>
               </div>

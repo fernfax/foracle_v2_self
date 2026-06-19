@@ -101,15 +101,15 @@ export function AssistantChatComposer({
             onClick={handleSubmit}
             disabled={!canSend}
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
+              "flex size-8 items-center justify-center rounded-md transition-colors",
               canSend
                 ? "bg-primary text-primary-foreground hover:bg-primary/90"
                 : "bg-muted text-muted-foreground"
             )}>
             {isSending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Send className="h-4 w-4" />
+              <Send className="size-4" />
             )}
           </button>
         </div>

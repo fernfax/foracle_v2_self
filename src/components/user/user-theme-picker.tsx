@@ -91,7 +91,7 @@ export function UserThemePicker() {
                     </div>
                   </div>
                   {selected ? (
-                    <Check className="text-brand-terracotta h-4 w-4 shrink-0" />
+                    <Check className="text-brand-terracotta size-4 shrink-0" />
                   ) : null}
                 </div>
               </button>
@@ -123,7 +123,7 @@ function ThemeSwatch({
           <div className="bg-brand-nightfall w-1/2" />
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <Icon className="text-brand-terracotta h-5 w-5" />
+          <Icon className="text-brand-terracotta size-5" />
         </div>
       </div>
     )
@@ -137,7 +137,7 @@ function ThemeSwatch({
       )}>
       <Icon
         className={cn(
-          "h-5 w-5",
+          "size-5",
           isDark ? "text-brand-cream" : "text-brand-terracotta"
         )}
       />

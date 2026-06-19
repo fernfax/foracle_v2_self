@@ -107,9 +107,9 @@ function Calendar({
         <div className="relative mb-4 flex items-center justify-center pt-1">
           <Button
             variant="outline"
-            className="absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            className="absolute left-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
             onClick={handlePrev}>
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="size-4" />
           </Button>
           <button
             onClick={handleHeaderClick}
@@ -118,9 +118,9 @@ function Calendar({
           </button>
           <Button
             variant="outline"
-            className="absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            className="absolute right-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
             onClick={handleNext}>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
           </Button>
         </div>
         <div className="grid grid-cols-4 gap-2">
@@ -149,18 +149,18 @@ function Calendar({
         <div className="relative mb-4 flex items-center justify-center pt-1">
           <Button
             variant="outline"
-            className="absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            className="absolute left-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
             onClick={handlePrev}>
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="size-4" />
           </Button>
           <span className="bg-muted rounded-full px-4 py-1.5 text-sm font-medium">
             {getHeaderLabel()}
           </span>
           <Button
             variant="outline"
-            className="absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            className="absolute right-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
             onClick={handleNext}>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
           </Button>
         </div>
         <div className="grid grid-cols-4 gap-2">
@@ -188,9 +188,9 @@ function Calendar({
       <div className="relative mb-4 flex items-center justify-center pt-1">
         <Button
           variant="outline"
-          className="absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          className="absolute left-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
           onClick={handlePrev}>
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
         </Button>
         <button
           onClick={handleHeaderClick}
@@ -199,9 +199,9 @@ function Calendar({
         </button>
         <Button
           variant="outline"
-          className="absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          className="absolute right-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
           onClick={handleNext}>
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="size-4" />
         </Button>
       </div>
       <DayPicker
@@ -221,9 +221,9 @@ function Calendar({
           head_cell:
             "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
           row: "flex w-full mt-2",
-          cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+          cell: "size-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
           day: cn(
-            "inline-flex h-9 w-9 items-center justify-center rounded-full font-display text-[13px] font-normal text-foreground transition-colors tabular-nums",
+            "inline-flex size-9 items-center justify-center rounded-full font-display text-[13px] font-normal text-foreground transition-colors tabular-nums",
             "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             "aria-selected:opacity-100"
           ),
@@ -240,8 +240,8 @@ function Calendar({
           ...classNames
         }}
         components={{
-          IconLeft: () => <ChevronLeft className="h-4 w-4" />,
-          IconRight: () => <ChevronRight className="h-4 w-4" />
+          IconLeft: () => <ChevronLeft className="size-4" />,
+          IconRight: () => <ChevronRight className="size-4" />
         }}
         {...props}
       />

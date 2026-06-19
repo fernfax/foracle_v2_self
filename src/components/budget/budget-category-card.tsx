@@ -79,13 +79,13 @@ export function BudgetCategoryCard({
       {/* Icon */}
       <div
         className={cn(
-          "mb-3 flex h-12 w-12 items-center justify-center rounded-full",
+          "mb-3 flex size-12 items-center justify-center rounded-full",
           bgColor
         )}>
         <CategoryIcon
           iconName={icon}
           categoryName={categoryName}
-          className={cn("h-6 w-6", iconColor)}
+          className={cn("size-6", iconColor)}
         />
       </div>
 

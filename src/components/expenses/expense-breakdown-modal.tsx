@@ -211,12 +211,12 @@ export function ExpenseBreakdownModal({
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex min-w-0 flex-1 items-center gap-2">
                             {isExpanded ? (
-                              <ChevronDown className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+                              <ChevronDown className="text-muted-foreground size-4 flex-shrink-0" />
                             ) : (
-                              <ChevronRight className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+                              <ChevronRight className="text-muted-foreground size-4 flex-shrink-0" />
                             )}
                             <div
-                              className="h-3 w-3 flex-shrink-0 rounded-full"
+                              className="size-3 flex-shrink-0 rounded-full"
                               style={{ backgroundColor: cat.color }}
                             />
                             <span className="truncate text-sm font-semibold">

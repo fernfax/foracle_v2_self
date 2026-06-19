@@ -108,7 +108,7 @@ export function BudgetSwipeableExpenseRow({
         <div
           className="bg-brand-alert-red flex w-20 flex-shrink-0 cursor-pointer items-center justify-center"
           onClick={handleDeleteClick}>
-          <Trash2 className="h-5 w-5 text-white" />
+          <Trash2 className="size-5 text-white" />
         </div>
       </div>
     </div>

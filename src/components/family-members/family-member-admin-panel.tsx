@@ -226,13 +226,13 @@ export function FamilyMemberAdminPanel({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0"
+            className="size-6 p-0"
             onClick={handleCopyFamilyId}
             aria-label="Copy family ID">
             {familyIdCopied ? (
-              <Check className="h-3 w-3 text-emerald-600" />
+              <Check className="size-3 text-emerald-600" />
             ) : (
-              <Copy className="h-3 w-3" />
+              <Copy className="size-3" />
             )}
           </Button>
         </div>
@@ -255,7 +255,7 @@ export function FamilyMemberAdminPanel({
                           <Badge
                             variant="outline"
                             className="gap-1 border-amber-300 bg-amber-50 text-[10px] text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
-                            <Crown className="h-3 w-3" />
+                            <Crown className="size-3" />
                             Master
                           </Badge>
                         )}
@@ -272,7 +272,7 @@ export function FamilyMemberAdminPanel({
                       </div>
                       {member.email && (
                         <div className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
-                          <Mail className="h-3 w-3 shrink-0" />
+                          <Mail className="size-3 shrink-0" />
                           <span className="truncate">{member.email}</span>
                         </div>
                       )}
@@ -413,10 +413,10 @@ export function FamilyMemberAdminPanel({
                       )}
                     </div>
                     <div className="text-muted-foreground mt-0.5 flex items-center gap-2 text-xs">
-                      <Mail className="h-3 w-3 shrink-0" />
+                      <Mail className="size-3 shrink-0" />
                       <span className="truncate">{invite.email}</span>
                       <span aria-hidden>·</span>
-                      <Clock className="h-3 w-3 shrink-0" />
+                      <Clock className="size-3 shrink-0" />
                       <span>sent {formatRelativeDate(invite.sentAt)}</span>
                     </div>
                   </div>

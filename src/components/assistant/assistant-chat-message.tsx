@@ -64,8 +64,8 @@ export function AssistantChatMessage({
   return (
     <div className="bg-background flex gap-3 px-4 py-4">
       {/* Avatar */}
-      <div className="text-on-success bg-brand-teal/[0.12] flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-        <Bot className="h-4 w-4" />
+      <div className="text-on-success bg-brand-teal/[0.12] flex size-8 shrink-0 items-center justify-center rounded-full">
+        <Bot className="size-4" />
       </div>
 
       {/* Content */}
@@ -269,9 +269,9 @@ export function AssistantChatMessage({
                 Data sources used ({toolsUsed.length})
               </span>
               {showDataUsed ? (
-                <ChevronUp className="h-4 w-4" />
+                <ChevronUp className="size-4" />
               ) : (
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="size-4" />
               )}
             </button>
 

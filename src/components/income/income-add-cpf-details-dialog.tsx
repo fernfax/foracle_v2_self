@@ -179,7 +179,7 @@ export function IncomeAddCpfDetailsDialog({
             <DialogTitle className="flex items-center gap-2">
               {isEdit ? "Edit" : "Add"} CPF Account Details{" "}
               {familyMemberName && `for ${familyMemberName}`}
-              <Info className="text-muted-foreground h-4 w-4" />
+              <Info className="text-muted-foreground size-4" />
             </DialogTitle>
             <DialogDescription>
               Allocate the CPF contributions across the three CPF accounts.
@@ -223,7 +223,7 @@ export function IncomeAddCpfDetailsDialog({
                     variant="ghost"
                     onClick={handleBack}
                     disabled={isSubmitting}>
-                    <ChevronLeft className="mr-1 h-4 w-4" />
+                    <ChevronLeft className="mr-1 size-4" />
                     Back
                   </Button>
                 )}

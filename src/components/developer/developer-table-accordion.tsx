@@ -60,7 +60,7 @@ export function DeveloperTableAccordion({
         <span className="flex items-center gap-2">
           <ChevronRight
             className={cn(
-              "text-muted-foreground h-4 w-4 transition-transform",
+              "text-muted-foreground size-4 transition-transform",
               open && "rotate-90"
             )}
           />

@@ -48,7 +48,7 @@ export function OnboardingWizardNavigation({
               onClick={onBack}
               disabled={isSubmitting}
               className="gap-2">
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="size-4" />
               {backLabel}
             </Button>
           )}
@@ -75,13 +75,13 @@ export function OnboardingWizardNavigation({
             }`}>
             {isSubmitting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
                 {isLastStep ? "Completing..." : "Saving..."}
               </>
             ) : (
               <>
                 {getNextLabel()}
-                {!isLastStep && <ChevronRight className="h-4 w-4" />}
+                {!isLastStep && <ChevronRight className="size-4" />}
               </>
             )}
           </Button>

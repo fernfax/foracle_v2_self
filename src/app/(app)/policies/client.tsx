@@ -352,21 +352,21 @@ export function PoliciesClient({
               size="icon-sm"
               onClick={() => setView("cards")}
               title="Card view">
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="size-4" />
             </Button>
             <Button
               variant={view === "matrix" ? "secondary" : "ghost"}
               size="icon-sm"
               onClick={() => setView("matrix")}
               title="Coverage matrix">
-              <Table2 className="h-4 w-4" />
+              <Table2 className="size-4" />
             </Button>
             <Button
               variant={view === "benefit" ? "secondary" : "ghost"}
               size="icon-sm"
               onClick={() => setView("benefit")}
               title="Benefit coverage">
-              <ShieldCheck className="h-4 w-4" />
+              <ShieldCheck className="size-4" />
             </Button>
           </div>
         </div>
@@ -375,13 +375,13 @@ export function PoliciesClient({
       {/* Main Content */}
       {policies.length === 0 && familyMembers.length === 0 ? (
         <div className="bg-muted/20 flex flex-col items-center justify-center rounded-lg border py-12 text-center">
-          <Shield className="text-muted-foreground mb-4 h-12 w-12" />
+          <Shield className="text-muted-foreground mb-4 size-12" />
           <h3 className="mb-2 text-lg font-semibold">No policies yet</h3>
           <p className="text-muted-foreground mb-4 max-w-sm">
             Start managing your insurance policies by adding your first policy.
           </p>
           <Button onClick={() => handleAddPolicy()}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 size-4" />
             Add Your First Policy
           </Button>
         </div>
@@ -411,9 +411,9 @@ export function PoliciesClient({
                   <div className="mb-4 flex items-center gap-3">
                     {/* Avatar */}
                     <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-full ${avatarConfig.bgColor}`}>
+                      className={`flex size-12 items-center justify-center rounded-full ${avatarConfig.bgColor}`}>
                       <AvatarIcon
-                        className={`h-6 w-6 ${avatarConfig.iconColor}`}
+                        className={`size-6 ${avatarConfig.iconColor}`}
                       />
                     </div>
                     <div>

@@ -14,7 +14,7 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
         return (
           <div
             key={stepNumber}
-            className={`h-2 w-2 rounded-full transition-all ${
+            className={`size-2 rounded-full transition-all ${
               isActive
                 ? "bg-foreground/80"
                 : isCompleted

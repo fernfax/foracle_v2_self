@@ -204,9 +204,9 @@ export default async function Home() {
       <section className="relative overflow-hidden">
         <div className="relative z-10 mx-auto max-w-7xl px-5 pt-16 pb-24 text-center sm:px-6 sm:pt-24 lg:px-8 lg:pt-28 lg:pb-32">
           <div className="border-brand-terracotta/[0.18] bg-brand-terracotta/[0.07] dark:border-brand-coral/[0.3] dark:bg-brand-coral/[0.12] mx-auto mb-7 inline-flex items-center gap-2 rounded-full border px-4 py-1.5">
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex size-2">
               <span className="bg-brand-teal absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
-              <span className="bg-brand-teal relative inline-flex h-2 w-2 rounded-full" />
+              <span className="bg-brand-teal relative inline-flex size-2 rounded-full" />
             </span>
             <span className="font-display text-on-brand text-[11px] font-semibold tracking-[0.16em] uppercase dark:text-[#E8A06A]">
               Made for Singapore, by Singaporeans
@@ -231,7 +231,7 @@ export default async function Home() {
             <Link href="/sign-up" className="w-full sm:w-auto">
               <Button size="lg" className="w-full px-9 sm:w-auto">
                 Start your journey
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 size-4" />
               </Button>
             </Link>
             <Link href="#how" className="w-full sm:w-auto">
@@ -310,9 +310,9 @@ export default async function Home() {
                 <div className="group glass-panel h-full rounded-2xl p-7 transition-transform duration-300 hover:-translate-y-1 sm:p-8">
                   <div className="flex items-center justify-between">
                     <div
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
+                      className="inline-flex size-11 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
                       style={{ backgroundColor: tint, color }}>
-                      <Icon className="h-5 w-5" />
+                      <Icon className="size-5" />
                     </div>
                     <span className="font-display text-muted-foreground/60 text-[12px] font-semibold tracking-[0.1em] tabular-nums">
                       {n}
@@ -354,8 +354,8 @@ export default async function Home() {
               <ul className="space-y-4">
                 {COMPARE.map(([old]) => (
                   <li key={old} className="flex items-start gap-3">
-                    <span className="bg-brand-alert-red/[0.15] mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full">
-                      <X className="text-brand-alert-red-dark h-3 w-3" />
+                    <span className="bg-brand-alert-red/[0.15] mt-0.5 flex size-5 flex-none items-center justify-center rounded-full">
+                      <X className="text-brand-alert-red-dark size-3" />
                     </span>
                     <span className="text-brand-cream/[0.6] text-[14px] leading-relaxed">
                       {old}
@@ -373,8 +373,8 @@ export default async function Home() {
               <ul className="space-y-4">
                 {COMPARE.map(([, neu]) => (
                   <li key={neu} className="flex items-start gap-3">
-                    <span className="bg-brand-teal/[0.18] mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full">
-                      <Check className="text-brand-teal h-3 w-3" />
+                    <span className="bg-brand-teal/[0.18] mt-0.5 flex size-5 flex-none items-center justify-center rounded-full">
+                      <Check className="text-brand-teal size-3" />
                     </span>
                     <span className="text-brand-cream text-[14px] leading-relaxed">
                       {neu}
@@ -405,7 +405,7 @@ export default async function Home() {
                 <span className="font-display text-foreground text-[15px] font-semibold tracking-tight sm:text-base">
                   {f.q}
                 </span>
-                <Plus className="text-muted-foreground h-4 w-4 flex-none transition-transform duration-200 group-open:rotate-45" />
+                <Plus className="text-muted-foreground size-4 flex-none transition-transform duration-200 group-open:rotate-45" />
               </summary>
               <p className="text-muted-foreground px-5 pb-6 text-[14px] leading-relaxed sm:px-6 sm:text-[15px]">
                 {f.a}
@@ -436,7 +436,7 @@ export default async function Home() {
             <Link href="/sign-up" className="w-full sm:w-auto">
               <Button size="lg" className="w-full px-10 sm:w-auto">
                 Get started free
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 size-4" />
               </Button>
             </Link>
             <Link href="/sign-in" className="w-full sm:w-auto">

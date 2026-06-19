@@ -112,7 +112,7 @@ export function FamilyMemberAddDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Add Family Member
-            <Info className="text-muted-foreground h-4 w-4" />
+            <Info className="text-muted-foreground size-4" />
           </DialogTitle>
           <DialogDescription>
             Add a new family member to your profile.

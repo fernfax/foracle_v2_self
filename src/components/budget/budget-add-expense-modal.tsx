@@ -290,8 +290,8 @@ export function BudgetAddExpenseModal({
             {editingExpense ? "Edit Expense" : "Add Expense"}
           </DrawerTitle>
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="size-8">
+              <X className="size-4" />
             </Button>
           </DrawerClose>
           <div className="flex flex-1 justify-center">
@@ -304,9 +304,9 @@ export function BudgetAddExpenseModal({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="size-8"
             onClick={() => setHistoryModalOpen(true)}>
-            <History className="h-4 w-4" />
+            <History className="size-4" />
           </Button>
         </DrawerHeader>
 
@@ -329,7 +329,7 @@ export function BudgetAddExpenseModal({
                 size="sm"
                 className="text-primary touch-manipulation gap-2"
                 onClick={() => setCalendarOpen(!calendarOpen)}>
-                <Calendar className="h-4 w-4" />
+                <Calendar className="size-4" />
                 {isToday ? "Today" : format(date, "d MMM")}
               </Button>
 

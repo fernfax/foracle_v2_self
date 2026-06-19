@@ -162,7 +162,7 @@ export function StepConfirmation({
         {/* Success Header */}
         <div className="py-6 text-center">
           <div className="bg-brand-teal/[0.12] mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-            <Sparkles className="text-on-success h-8 w-8" />
+            <Sparkles className="text-on-success size-8" />
           </div>
           <h2 className="mb-2 text-2xl font-semibold">Great job!</h2>
           <p className="text-muted-foreground">
@@ -178,11 +178,11 @@ export function StepConfirmation({
               key={item.label}
               className="border-border/60 bg-card flex items-center gap-4 rounded-xl border p-4">
               <div
-                className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                className={`flex size-12 items-center justify-center rounded-xl ${
                   item.isSet ? item.bgColor : "bg-muted"
                 }`}>
                 <item.icon
-                  className={`h-6 w-6 ${
+                  className={`size-6 ${
                     item.isSet ? item.iconColor : "text-muted-foreground"
                   }`}
                 />
@@ -197,7 +197,7 @@ export function StepConfirmation({
                 )}
               </div>
               {item.isSet && (
-                <CheckCircle2 className="text-on-success h-5 w-5 shrink-0" />
+                <CheckCircle2 className="text-on-success size-5 shrink-0" />
               )}
             </div>
           ))}

@@ -85,7 +85,7 @@ export function NavigationClerkUserButton(props: ClerkUserButtonProps) {
   const isDark = resolvedTheme === "dark"
 
   if (!mounted) {
-    return <div className="bg-muted h-8 w-8 animate-pulse rounded-full" />
+    return <div className="bg-muted size-8 animate-pulse rounded-full" />
   }
 
   const toggleTheme = () =>
@@ -96,13 +96,13 @@ export function NavigationClerkUserButton(props: ClerkUserButtonProps) {
       <UserButton.UserProfilePage
         label="Family"
         url="family"
-        labelIcon={<Users className="h-4 w-4" />}>
+        labelIcon={<Users className="size-4" />}>
         <FamilyProfilePage />
       </UserButton.UserProfilePage>
       <UserButton.UserProfilePage
         label="Display"
         url="display"
-        labelIcon={<Palette className="h-4 w-4" />}>
+        labelIcon={<Palette className="size-4" />}>
         <div className="px-1 py-2">
           <h2 className="mb-1 text-lg font-semibold">Display</h2>
           <p className="text-muted-foreground mb-4 text-sm">
@@ -121,14 +121,14 @@ export function NavigationClerkUserButton(props: ClerkUserButtonProps) {
         <UserButton.Action
           label={isDark ? "Light mode" : "Dark mode"}
           labelIcon={
-            isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />
+            isDark ? <Sun className="size-4" /> : <Moon className="size-4" />
           }
           onClick={toggleTheme}
         />
         {IS_DEV && (
           <UserButton.Action
             label="Developer Mode"
-            labelIcon={<Code2 className="h-4 w-4" />}
+            labelIcon={<Code2 className="size-4" />}
             onClick={() => router.push("/developer")}
           />
         )}
