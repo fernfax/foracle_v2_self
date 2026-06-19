@@ -70,7 +70,7 @@ function DatePicker({
           type="button"
           className={cn(
             fieldShellClassName,
-            "cursor-pointer items-center gap-2 text-left font-normal",
+            "items-center gap-2 text-left font-normal",
             !value && "text-muted-foreground",
             triggerClassName
           )}>

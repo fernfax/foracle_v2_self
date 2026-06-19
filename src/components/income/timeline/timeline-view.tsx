@@ -5185,7 +5185,9 @@ const IncomeStreamRow = memo(function IncomeStreamRow({
                         className={cn(
                           "focus-visible:ring-ring from-brand-gold absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-md bg-gradient-to-r to-[#E0BD5C] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#5A4500] shadow-sm transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
                           bonusTopClass,
-                          editMode ? "cursor-pointer" : "cursor-default"
+                          // Base layer gives buttons cursor-pointer; force the
+                          // default arrow in view mode (utilities beat base).
+                          !editMode && "cursor-default"
                         )}
                         style={{ left: `${centerPct}%` }}
                         aria-label={`${income.name} bonus, ${formatCurrency(bonusDisplay)}`}>

@@ -169,7 +169,7 @@ export function CategorySelector({
       <DropdownMenuItem
         key={category.id}
         onClick={() => handleSelect(category)}
-        className="flex cursor-pointer items-center gap-2">
+        className="flex items-center gap-2">
         <CategoryIcon
           iconName={category.icon}
           categoryName={category.name}

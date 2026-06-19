@@ -146,7 +146,7 @@ export function BudgetOverview({
           className={cn(
             "-mx-1 mt-4 rounded-lg border-t p-4 pt-4 transition-all",
             pacing.bgColor,
-            onPacingClick && "cursor-pointer hover:opacity-80"
+            onPacingClick && "hover:opacity-80"
           )}
           onClick={onPacingClick}
           role={onPacingClick ? "button" : undefined}

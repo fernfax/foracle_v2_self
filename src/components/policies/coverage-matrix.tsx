@@ -307,7 +307,7 @@ export function CoverageMatrix({
                                 onClick={() =>
                                   handleChipClick(policy, member.name)
                                 }
-                                className="border-border bg-card hover:border-border/60 hover:ring-border/30 flex w-full cursor-pointer flex-col gap-0.5 rounded-lg border px-2.5 py-2 text-left ring-1 ring-transparent transition-all hover:shadow-sm"
+                                className="border-border bg-card hover:border-border/60 hover:ring-border/30 flex w-full flex-col gap-0.5 rounded-lg border px-2.5 py-2 text-left ring-1 ring-transparent transition-all hover:shadow-sm"
                                 style={{
                                   borderLeftWidth: 3,
                                   borderLeftColor: typeColor
