@@ -32,12 +32,18 @@ export function LandingMobileNav({ links, isSignedIn }: LandingMobileNavProps) {
   return (
     <div className="flex items-center gap-2 md:hidden">
       <Link href={primaryHref}>
-        <Button>{primaryLabel}</Button>
+        {/* h-11 (44px) keeps the tap target within WCAG 2.5.5 / Apple HIG. */}
+        <Button className="h-11">{primaryLabel}</Button>
       </Link>
 
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Open menu">
+          {/* size-11 (44px) keeps the tap target within WCAG 2.5.5 / Apple HIG. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11"
+            aria-label="Open menu">
             <Menu className="size-5" />
           </Button>
         </SheetTrigger>
@@ -65,13 +71,13 @@ export function LandingMobileNav({ links, isSignedIn }: LandingMobileNavProps) {
             {isSignedIn ? (
               <SheetClose asChild>
                 <Link href="/user/overview" className="block">
-                  <Button className="w-full">Go to dashboard</Button>
+                  <Button className="h-11 w-full">Go to dashboard</Button>
                 </Link>
               </SheetClose>
             ) : (
               <SheetClose asChild>
                 <Link href="/sign-in" className="block">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="h-11 w-full">
                     Sign In
                   </Button>
                 </Link>
